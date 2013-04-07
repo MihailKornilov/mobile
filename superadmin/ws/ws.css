@@ -1,0 +1,42 @@
+#sa_ws #result {
+  height:17px;
+  padding:12px 10px 0px 10px;
+  font:bold 11px Tahoma;
+  color:#47688D;
+  border-bottom:#DAE1E8 solid 1px;
+}
+#sa_ws #spisok {
+  width:458px;
+  vertical-align:top;
+}
+#sa_ws #right {
+  background-color:#F7F7F7;
+  border-left:#DAE1E8 solid 1px;
+  width:150px;
+  height:300px;
+  vertical-align:top;
+  padding:8px 8px 150px 8px;
+}
+#sa_ws .unit {
+  margin:10px 10px 0px 10px;
+  padding-bottom:5px;
+  border-bottom:#DAE1E8 solid 1px;
+}
+#sa_ws .org_name { color:#3A3; font-weight:bold; }
+#sa_ws .deleted { color:#A88; text-decoration:line-through; }
+#sa_ws .dtime_del { color:#666; font-size:10px; margin-left:6px; }
+#sa_ws .img_del { float:right; position:relative; top:1px; }
+#sa_ws .dtime { float:right; color:#777; }
+#sa_ws .admin { color:#666; }
+#sa_ws .counts { color:#D22; font-size:10px; }
+#sa_ws .counts A { color:#4AA; font-size:10px; }
+#sa_ws .counts B { font-size:10px; }
+#sa_ws .counts EM { font-size:10px; color:#888; margin-left:5px; }
+
+
+
+
+
+
+
+

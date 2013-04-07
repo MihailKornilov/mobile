@@ -1,0 +1,1 @@
+G.clients = [{id:1120,fio:"1323",telefon:"98098"}];

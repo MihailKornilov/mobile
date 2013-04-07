@@ -1,0 +1,16 @@
+/* Виды неисправностей */
+#setup_fault { padding-bottom:50px; }
+#setup_fault .headName { margin:30px; }
+#setup_fault .tabSpisok { margin:0px 0px 1px 80px; }
+#setup_fault TD { background-color:#FFF; }
+#setup_fault .uid { width:20px; text-align:right; }
+#setup_fault .name { width:180px; cursor:move; }
+#setup_fault .edit { width:50px; }
+
+
+
+
+
+
+
+
