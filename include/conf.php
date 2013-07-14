@@ -1,7 +1,7 @@
 <?php
 /** Важные глобальные переменные: **/
 $T = getTime();    // получение начального времени в микросекундах. Чтобы получить разницу: getTime($T)
-$AUTH = null;     // авторизация пользователя в приложении
+$AUTH = null;      // авторизация пользователя в приложении
 $mysql = null;       // настройки mysql
 $VK = null;           // класс для запросов из базы данных
 $vku = null;         // данные текущeго пользователя из VK
@@ -10,7 +10,7 @@ $PATH_FILES = null; //месторасположение файлов для закачки
 $VALUES = null;  // 
 $URL = null;        // готовый url для ссылок
 $SA = null;           // назначение суперадминистраторов
-define(SECRET, "RjnCrjnbyfRjczr"); // секретный ключ в настройках приложения ВКонтакте
+define('SECRET', "RjnCrjnbyfRjczr"); // секретный ключ в настройках приложения ВКонтакте
 
 if (!isset($_GET['viewer_id'])) { $_GET['viewer_id'] = 0; } // id пользователя
 if (!isset($_GET['api_id'])) { $_GET['api_id'] = 0; }            // id приложения
@@ -317,4 +317,3 @@ function GclientsCreate() {
 
   $VK->Query("update workshop set g_clients=g_clients+1 where id=".$vku->ws_id);
 }
-?>

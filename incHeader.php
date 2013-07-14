@@ -1,7 +1,6 @@
 <?php
 $G = $VK->QueryObjectOne("select * from setup_global limit 1");
-?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <HTML xmlns="http://www.w3.org/1999/xhtml" xml:lang="ru" lang="ru">
 <HEAD>
 <meta http-equiv="content-type" content="text/html; charset=windows-1251">
@@ -9,9 +8,8 @@ $G = $VK->QueryObjectOne("select * from setup_global limit 1");
 <SCRIPT type="text/javascript" src="/include/jquery-1.9.1.min.js"></SCRIPT>
 <SCRIPT type="text/javascript" src="/include/xd_connection.js"></SCRIPT>
 <TITLE> Приложение 2031819 Hi-tech Service </TITLE>
-</HEAD>
-<BODY>
-<?php if (isset($SA[$_GET['viewer_id']])) { echo "<SCRIPT type='text/javascript' src='http://nyandoma".($_SERVER["SERVER_NAME"] == 'vkmobile' ? '' : '.ru')."/js/errors.js?".$G->script_style."'></SCRIPT>"; } ?>
+<?php if (isset($SA[$_GET['viewer_id']])) { echo '<SCRIPT type="text/javascript" src="http://nyandoma'.($_SERVER["SERVER_NAME"] == 'vkmobile' ? '' : '.ru').'/js/errors.js?'.$G->script_style.'"></SCRIPT>'; } ?>
+<SCRIPT type="text/javascript" src="/js/highstock.js"></SCRIPT>
 <SCRIPT type="text/javascript" src="/include/globalScript.js?<?php echo $G->script_style; ?>"></SCRIPT>
 <SCRIPT type="text/javascript" src="/include/G_values.js?<?php echo $G->g_values; ?>"></SCRIPT>
 <SCRIPT type="text/javascript">
@@ -37,4 +35,6 @@ G.ws = {
   devs:[<?php echo $WS ? $WS->devs : ''; ?>]
 };
 </SCRIPT>
+</HEAD>
+<BODY>
 <DIV id=frameBody>

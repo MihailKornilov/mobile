@@ -946,51 +946,36 @@ IMG { border:none; }
 
 
 /* днонкмхрекэмне лемч мю яепнл тнме */
-#dopMenu {
-  background-color:#F7F7F7;
-  border-bottom:#dae1e8 solid 1px;
-  padding:9px 12px;
-  }
-#dopMenu .link DIV {
-  font-weight:bold;
-  padding:1px 8px 2px 8px;
-  color:#45688e;
-  }
-#dopMenu .link B, #dopMenu .link I {
-  display:block;
-  height:1px;
-  overflow:hidden;
-  }
-#dopMenu .link I { margin:0px 1px; }
-#dopMenu .link:hover DIV, #dopMenu .link:hover B, #dopMenu .link:hover I { background-color:#e1e7ed; }
-#dopMenu .linkSel, #dopMenu .link {
-  text-decoration:none;
-  float:left;
-  margin-right:10px;
-  display:block;
-  }
-#dopMenu .linkSel DIV {
-  background-color:#597da3;
-  color:#FFF;
-  font-weight:bold;
-  padding:1px 8px 2px 8px;
-  }
+#dopMenu{background-color:#F7F7F7;border-bottom:#dae1e8 solid 1px;padding:9px 12px}
+#dopMenu .link,#dopMenu .linkSel{text-decoration:none;margin-right:10px;display:inline-block}
+#dopMenu .link DIV{font-weight:bold;padding:1px 8px 2px 8px;color:#45688e}
+#dopMenu .link B,#dopMenu .link I{display:block;height:1px;overflow:hidden}
+#dopMenu .link I{margin:0 1px}
+#dopMenu .link:hover DIV,#dopMenu .link:hover B,#dopMenu .link:hover I{background-color:#e1e7ed}
+#dopMenu .linkSel DIV{background-color:#597da3;color:#FFF;font-weight:bold;padding:1px 8px 2px 8px}
 #dopMenu .linkSel B, #dopMenu .linkSel I {
-  border-left:#6a8aac solid 1px;
-  border-right:#6a8aac solid 1px;
-  background-color:#597da3;
-  display:block;
-  height:1px;
-  overflow:hidden;
-  }
-#dopMenu .linkSel I { margin:0px 1px; }
-#dopMenu .del {
-  margin-top:3px;
-  display:block;
-  float:right;
-  }
+    border-left:#6a8aac solid 1px;
+    border-right:#6a8aac solid 1px;
+    background-color:#597da3;
+    display:block;
+    height:1px;
+    overflow:hidden;
+}
+#dopMenu .linkSel I{margin:0 1px}
+#dopMenu .del{margin-top:3px;display:block;float:right}
 
-
+#dopLinks{background-color:#F7F7F7;border-bottom:#dae1e8 solid 1px;padding:9px 12px}
+#dopLinks .link{
+    text-decoration:none;
+    color:#45688e;
+    margin-right:10px;
+    display:inline-block;
+    font-weight:bold;
+    padding:3px 8px 4px 8px;
+    border-radius:2px;
+}
+#dopLinks .link:not(.sel):hover{background-color:#e1e7ed}
+#dopLinks .sel{background-color:#597da3;color:#FFF}
 
 
 

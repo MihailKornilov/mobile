@@ -1,9 +1,14 @@
+Highcharts.setOptions({
+    lang: {
+        months: ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь']
+    }
+});
+
 var G = {
   T:(new Date()).getTime(),
   vkScroll:0,
-  zindex:100,
+  zindex:100
 };
-
 /*
  * Формирование окончаний
  * Пример: 1 день
@@ -103,7 +108,7 @@ $.fn.vkSel = function (obj) {
   $(this).after(html);
 
 
-  
+
   var vksel = $("#vkSel_" + id);       // сохранение текущего селекта
   var results = vksel.find(".results"); // сохранение ссылки на результат
   var inp = vksel.find('.inp');              // сохранение ссылки на поле для ввода
@@ -218,7 +223,7 @@ $.fn.vkSel = function (obj) {
     } else if (obj.ro != 1) { dd += "<DT class=nofind>" + obj.nofind; }
     dd += "</DL>";
     results.html(dd);
-    
+
     dd = results.find("DD");
     len = dd.length;
     if (len > 0) {
@@ -280,7 +285,7 @@ $.fn.vkSel = function (obj) {
             over.removeClass('out').addClass('over');
             over = over[0];
             if (over.offsetTop + over.offsetHeight - dl.scrollTop > 250) { dl.scrollTop = over.offsetTop + over.offsetHeight - 250; } // если элемент ниже видимости, ставится в нижнюю позицию
-            if (over.offsetTop < dl.scrollTop) { dl.scrollTop = over.offsetTop; } // если выше, то в верхнюю 
+            if (over.offsetTop < dl.scrollTop) { dl.scrollTop = over.offsetTop; } // если выше, то в верхнюю
           }
           break;
 
@@ -433,7 +438,7 @@ $.fn.vkSel = function (obj) {
 
     remove:function () { vksel.remove(); return this; }
   };
-  
+
   return t;
 }; // end of vkSel
 
@@ -721,7 +726,7 @@ $.fn.linkMenu = function (obj) {
     html += "<A href='javascript:'>" + selA + "</A>";
     html += "<DIV class=fordl><DL><DT><EM>" + selA + "</EM>" + dl + "</DL></DIV>";
   html += "</DIV>";
-  
+
   T.after(html);
 
   var ID = $("#" + attrId);
@@ -967,8 +972,8 @@ $.fn.myCheck = function (obj) {
 
   var t = $(this);
   var id = t.attr('id');
-  
-  // чекбокс для скрытого INPUT 
+
+  // чекбокс для скрытого INPUT
   if (t[0].tagName == 'INPUT') {
     if($("#check_" + id).length) { $("#check_" + id).remove(); } // удаление, если такой же существует
 
@@ -1018,7 +1023,7 @@ $.fn.myCheck = function (obj) {
       }
     });
   } else {
-    
+
   }
 
   return t;
@@ -1105,7 +1110,7 @@ $.fn.myRadio = function(obj){
     bottom:0,
     func:''
   },obj);
-  
+
   var INP = this;
   var ID = INP.attr('id');
   var VAL = INP.val();
@@ -1179,24 +1184,24 @@ $.fn.myRadioSet = function (VAL) {
       correct:0,       // настройка top и left
       remove:0       // удалить подсказку после показа
     }, o);
-    
+
     var correct = o.correct == 1 ? "<DIV class=correct>top: <SPAN id=correct_top>" + o.top + "</SPAN> left: <SPAN id=correct_left>" + o.left + "</SPAN></DIV>" : '';
-    
+
     var html = "<TABLE cellpadding=0 cellspacing=0 class=cont_table>" +
       "<TR><TD class=ugttd colspan=3>" + (o.ugol == 'top' ? "<DIV class=ugt></DIV>" : '') +
-      "<TR><TD class=ugltd>" + (o.ugol == 'left' ? "<DIV class=ugl></DIV>" : '') + 
+      "<TR><TD class=ugltd>" + (o.ugol == 'left' ? "<DIV class=ugl></DIV>" : '') +
                "<TD class=cont>" + correct + o.msg +
                "<TD class=ugrtd>" + (o.ugol == 'right' ? "<DIV class=ugr></DIV>" : '') +
       "<TR><TD class=ugbtd colspan=3>" + (o.ugol == 'bottom' ? "<DIV class=ugb></DIV>" : '') +
       "</TABLE>";
 
     html = "<TABLE cellpadding=0 cellspacing=0>" +
-      "<TR><TD class=side012><TD>" + html + "<TD class=side012>" + 
+      "<TR><TD class=side012><TD>" + html + "<TD class=side012>" +
       "<TR><TD class=b012 colspan=3>" +
       "</TABLE>";
 
     html = "<TABLE cellpadding=0 cellspacing=0 class=hint_table>" +
-      "<TR><TD class=side005><TD>" + html + "<TD class=side005>" + 
+      "<TR><TD class=side005><TD>" + html + "<TD class=side005>" +
       "<TR><TD class=b005 colspan=3>" +
       "</TABLE>";
 
@@ -1209,7 +1214,7 @@ $.fn.myRadioSet = function (VAL) {
 
     hint_width = hintTable.width();
     hint_height = hintTable.height();
-    
+
     hintTable.hide().css('visibility','visible');
 
     // установка направления всплытия и отступа для уголка
@@ -1344,8 +1349,8 @@ $.fn.myRadioSet = function (VAL) {
     } // end show
 
 
-    
-    
+
+
     // скрытие подсказки
     function hide() {
       if (o.correct != 0) { $(document).off('keydown.hint'); }
@@ -1492,7 +1497,7 @@ $.fn.vkComment = function(obj){
     last_name:'',
     photo:''
     },obj);
-  
+
   var THIS=this;
 
   var HTML="<DIV class=vkComment style=width:"+obj.width+"px;><DIV class=headBlue><DIV id=count><IMG src=/img/upload.gif></DIV>Заметки</DIV></DIV>";
@@ -1503,7 +1508,7 @@ $.fn.vkComment = function(obj){
     obj.first_name=res[0].autor_first_name;
     obj.last_name=res[0].autor_last_name;
     obj.photo=res[0].autor_photo;
-    
+
     var TX="<DIV id=add><TEXTAREA style=width:"+(obj.width-28)+"px;>"+obj.title+"</TEXTAREA>";
     TX+="<DIV class=vkButton><BUTTON onclick=null>Добавить</BUTTON></DIV></DIV>";
     THIS.find(".headBlue").after(TX);
@@ -1546,7 +1551,7 @@ $.fn.vkComment = function(obj){
           }
         }
       }).autosize({callback:frameBodyHeightSet});
-    
+
     THIS.find("#add BUTTON").click(commAdd);
     commCount(res[0].count);
     });
@@ -1567,7 +1572,7 @@ $.fn.vkComment = function(obj){
                       child:0,
                       dtime_add:res.dtime_add
                       }));
-      THIS.find(".cdat A:first").click(function(){ commDopShow($(this)); });  
+      THIS.find(".cdat A:first").click(function(){ commDopShow($(this)); });
       THIS.find("#add TEXTAREA")
         .val(obj.title)
         .css('color','#777')
@@ -1585,7 +1590,7 @@ $.fn.vkComment = function(obj){
       commCount(res.count);
       },'json');
     }
-  
+
   /* создание комментария */
   function createUnit(RES)
     {
@@ -1601,7 +1606,7 @@ $.fn.vkComment = function(obj){
     UNIT+="</TABLE></DIV>";
     return UNIT;
     }
-  
+
   /* создание дополнительного комментария */
   function createUnitDop(RES)
     {
@@ -1642,7 +1647,7 @@ $.fn.vkComment = function(obj){
       setArea(ID);
       },'json');
     }
-  
+
   /* показ дополнительных комментариев и комментирование */
   function commDopShow(OB)
     {
@@ -1699,7 +1704,7 @@ $.fn.vkComment = function(obj){
       setArea(ID);
       });
     }
-  
+
   /* вставление TEXTAREA к дополнительным комментариям */
   function setArea(ID)
     {
@@ -1727,7 +1732,7 @@ $.fn.vkComment = function(obj){
     $("#unit"+ID+" BUTTON").click(function(){ commDopAdd($(this)); });
     frameBodyHeightSet();
     }
-  
+
   /* удаление комментария */
   function commDel(ID)
     {
@@ -2090,7 +2095,7 @@ function vkMsgOk(txt) {
     this.print();
   };
 
-  
+
   // составление элемента списка
   Spisok.prototype.unit = function (sp) { return sp.id; };
 
@@ -2201,7 +2206,7 @@ function vkMsgOk(txt) {
 
     // удаление картинки ожидания загрузки
     if (t.imgPlace) { t.imgPlace.find(".imgUpSpisok").remove(); }
- 
+
     print_result(t, data.all);
     if (t.callback) { t.callback(data.spisok); }
 
