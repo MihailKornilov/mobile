@@ -120,7 +120,32 @@ if(isset($_GET['p'])) {
     _mainLinks();
     switch(@$_GET['p']) {
         case 'report':
-            $html .= statistic();
+            $links = array(
+                array(
+                    'name' => 'Поступления',
+                    'd' => 'prihod',
+                    'sel' => 1
+                ),
+                array(
+                    'name' => 'Расходы',
+                    'd' => 'rashod'
+                ),
+                array(
+                    'name' => 'Касса',
+                    'd' => 'kassa'
+                ),
+                array(
+                    'name' => 'Статистика',
+                    'd' => 'stat'
+                )
+            );
+            $html .= _dopLinks('report', $links, @$_GET['d']);
+            switch(@$_GET['d']){
+                case 'prihod': $html .= 'Приход'; break;
+                case 'rashod': $html .= 'Расходы'; break;
+                case 'kassa': $html .= 'Касса'; break;
+                default: $html .= statistic();
+            }
         break;
     }
     _footer();

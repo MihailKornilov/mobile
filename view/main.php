@@ -77,14 +77,24 @@ function _mainLinks() {
     $html .= $links;
 }//end of _mainLinks()
 
-function _dopMenu() {
-    $links = '<DIV id="dopLinks">'.
-        '<A class="link sel">Информация</A>'.
-        '<A class="link">Деньги</A>'.
-        '<A class="link">История</A>'.
-    '</DIV>';
+function _dopLinks($p, $data, $d='') {
+    $page = false;
+    foreach($data as $link)
+        if($d == $link['d']) {
+            $page = true;
+            break;
+        }
+    $links = '<div id="dopLinks">';
+    foreach($data as $link) {
+        if($page)
+            $sel = $d == $link['d'] ?  ' sel' : '';
+        else
+            $sel = isset($link['sel']) ? ' sel' : '';
+        $links .= '<a href="'.URL.'&p='.$p.'&d='.$link['d'].'" class="link'.$sel.'">'.$link['name'].'</a>';
+    }
+    $links .= '</div>';
     return $links;
-}//end of _dopMenu()
+}//end of _dopLinks()
 
 function statistic() {
     $sql = "SELECT
@@ -112,7 +122,7 @@ function statistic() {
     while($r = mysql_fetch_assoc($q))
         $rashod[] = array(strtotime($r['dtime']) * 1000, intval($r['summa']));
 
-    return _dopMenu().'<div id="statistic"></div>'.
+    return '<div id="statistic"></div>'.
         '<SCRIPT type="text/javascript">'.
             'var statPrihod = '.json_encode($prihod).';'.
             'var statRashod = '.json_encode($rashod).';'.
