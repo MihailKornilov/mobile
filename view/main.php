@@ -7,6 +7,7 @@ function _header() {
         '<meta http-equiv="content-type" content="text/html; charset=windows-1251" />'.
         '<TITLE> Приложение 2031819 Hi-tech Service </TITLE>'.
         '<LINK href="'.SITE.'/include/globalStyle.css?'.VERSION.'" rel="stylesheet" type="text/css" />'.
+        '<LINK href="'.SITE.'/css/global.css?'.VERSION.'" rel="stylesheet" type="text/css" />'.
         (ADMIN ? '<SCRIPT type="text/javascript" src="http://nyandoma'.(DOMAIN == 'vkmobile' ? '' : '.ru').'/js/errors.js?'.VERSION.'"></SCRIPT>' : '').
         '<SCRIPT type="text/javascript" src="'.SITE.'/include/jquery-1.9.1.min.js"></SCRIPT>'.
         '<SCRIPT type="text/javascript" src="'.SITE.'/include/xd_connection.js"></SCRIPT>'.
@@ -129,3 +130,36 @@ function statistic() {
         '</SCRIPT>'.
         '<SCRIPT type="text/javascript" src="'.SITE.'/js/statistic.js"></SCRIPT>';
 }
+
+function report_prihod() {
+    $sql = "SELECT *
+            FROM `money`
+            WHERE `status`=1 AND `summa`>0
+            ORDER BY `dtime_add` DESC
+            LIMIT 20";
+    $q = query($sql);
+    $spisok = 'Поступления отсутствуют.';
+    if(mysql_num_rows($q)) {
+        $spisok = '<TABLE cellpadding=0 cellspacing=0 class=tabSpisok>'.
+            '<TR><TH class=sum>Сумма'.
+                '<TH class=about>Описание'.
+                '<TH class=data>Дата';
+        while($r = mysql_fetch_assoc($q)) {
+            $about = $r['prim'];
+            if($r['zayav_id'] > 0)
+                $about = 'Заявка <A href="'.URL.'&my_page=remZayavkiInfo&id='.$r['zayav_id'].'">№'.$r['zayav_id'].'</A>';
+            if($r['zp_id'] > 0) {
+                $about = 'Продажа запчасти '.
+                    '<A href="'.URL.'&my_page=remZp&id='.$r['zp_id'].'>'.
+                        $r['zp_id'].
+                    '</A>';
+            }
+            $spisok .= '<tr>'.
+                '<TD class="sum"><B>'.$r['summa'].'</B>'.
+                '<TD class="about">'.$about.
+                '<TD class="dtime">'.FullDataTime($r['dtime_add']);
+        }
+        $spisok .= '</TABLE>';
+    }
+    return '<div id="report_prihod">'.$spisok.'</div>';
+}//end of report_prihod()

@@ -141,10 +141,11 @@ if(isset($_GET['p'])) {
             );
             $html .= _dopLinks('report', $links, @$_GET['d']);
             switch(@$_GET['d']){
-                case 'prihod': $html .= 'Приход'; break;
+                case 'prihod': $html .= report_prihod(); break;
                 case 'rashod': $html .= 'Расходы'; break;
                 case 'kassa': $html .= 'Касса'; break;
-                default: $html .= statistic();
+                case 'stat': $html .= statistic(); break;
+                default: $html .= report_prihod();
             }
         break;
     }
