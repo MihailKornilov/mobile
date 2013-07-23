@@ -1,5 +1,6 @@
 <?php
 define('TIME', microtime(true));
+define('DOCUMENT_ROOT', dirname(__FILE__));
 define('NAMES', 'cp1251');
 define('DOMAIN', $_SERVER["SERVER_NAME"]);
 define('VIEWER_ID', $_GET['viewer_id']);
@@ -9,6 +10,9 @@ define('VALUES', 'viewer_id='.VIEWER_ID.
                  '&sid='.@$_GET['sid']);
 define('SITE', 'http://'.DOMAIN);
 define('URL', SITE.'/index.php?'.VALUES);
+
+define('REGEXP_NUMERIC', '/^[0-9]{1,20}$/i');
+define('REGEXP_DATE', '/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/');
 
 $SA[982006] = 1;  // Корнилов Михаил
 $SA[2170788] = 1; // Корнилов Виталий

@@ -1,0 +1,58 @@
+.tabLR{width:100%}
+.tabLR .left{vertical-align:top}
+.tabLR .right{
+    vertical-align:top;
+    padding:8px;
+    width:140px;
+    background-color:#f7f7f7;
+    border-left:#dae1e8 solid 1px
+}
+
+
+
+.rightLink a{display:block;padding:5px 12px;border:transparent solid 1px;color:#29597B}
+.rightLink a:hover{border:#DEE3EF solid 1px;background:#DEE3EF;text-decoration:none}
+.rightLink a.sel,.rightLink a.sel:hover {color:#FFF;background:#6B8EB5;border:#39659C solid 1px}
+
+
+
+#dopLinks{background-color:#F7F7F7;border-bottom:#dae1e8 solid 1px;padding:9px 12px}
+#dopLinks .link{
+    text-decoration:none;
+    color:#45688e;
+    margin-right:10px;
+    display:inline-block;
+    font-weight:bold;
+    padding:3px 8px 4px 8px;
+    border-radius:2px;
+}
+#dopLinks .link:not(.sel):hover{background-color:#e1e7ed}
+#dopLinks .sel{background-color:#597da3;color:#FFF}
+
+
+
+
+
+.ajaxNext{text-align:center;height:30px;line-height:30px;color:#2B587A;cursor:pointer}
+.ajaxNext td{border:0}
+.ajaxNext:hover,.ajaxNext.busy:hover{background-color:#e9edf1}
+.ajaxNext.busy span{display:none}
+.ajaxNext.busy{background:url(/img/upload.gif) no-repeat center center}
+
+
+
+
+
+
+#report_prihod{padding:10px 15px 20px 15px}
+#report_prihod .tabSpisok{width:100%}
+#report_prihod .sum{width:45px; text-align:right}
+#report_prihod .dtime{width:100px;color:#666;font-size:10px;text-align:right}
+#report_prihod .summa{margin-bottom:7px}
+#report_prihod .summa_add{float:right}
+
+
+.report_prihod_rl .label{display:inline-block;width:20px}
+.report_prihod_rl .cal{margin-top:5px}
+
+

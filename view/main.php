@@ -13,9 +13,9 @@ function _header() {
         '<SCRIPT type="text/javascript" src="'.SITE.'/include/xd_connection.js"></SCRIPT>'.
         '<SCRIPT type="text/javascript" src="'.SITE.'/js/highstock.js"></SCRIPT>'.
         '<SCRIPT type="text/javascript" src="'.SITE.'/include/globalScript.js?'.VERSION.'"></SCRIPT>'.
-        '<SCRIPT type="text/javascript" src="'.SITE.'/include/G_values.js?'.G_VALUES.'"></SCRIPT>'.
         '<SCRIPT type="text/javascript">'.
             'if(document.domain=="vkmobile")for(var i in VK)if(typeof VK[i]=="function")VK[i]=function(){return false};'.
+            'G.domain = "'.DOMAIN.'";'.
             'G.values = "'.VALUES.'";'.
             'G.vku = {'.
                 'viewer_id:'.VIEWER_ID.','.
@@ -29,6 +29,8 @@ function _header() {
             'G.clients = [];'.
             'G.ws = {devs:['.($WS ? $WS->devs : '').']};'.
         '</SCRIPT>'.
+        '<SCRIPT type="text/javascript" src="'.SITE.'/js/global.js?'.VERSION.'"></SCRIPT>'.
+        '<SCRIPT type="text/javascript" src="'.SITE.'/include/G_values.js?'.G_VALUES.'"></SCRIPT>'.
         '</HEAD>'.
         '<BODY>'.
         '<DIV id="frameBody">';
@@ -39,6 +41,7 @@ function _footer() {
     if(ADMIN)
         $html .= '<DIV id=admin>'.
                 '<A href="'.URL.'&my_page=superAdmin&pre_page='.$_GET['my_page'].'&pre_id='.$_GET['id'].'">Admin</A> :: '.
+                '<A href="https://github.com/MihailKornilov/vkmobile/issues" target="_blank">Issues</A> :: '.
                 '<A id=script_style>Стили и скрипты ('.VERSION.')</A> :: '.
                 'sql '.$sqlQuery.' :: '.
                 'php '.round(microtime(true) - TIME, 3).' :: '.
@@ -78,23 +81,46 @@ function _mainLinks() {
     $html .= $links;
 }//end of _mainLinks()
 
-function _dopLinks($p, $data, $d='') {
+function _rightLinks($p, $data, $d='') {
     $page = false;
-    foreach($data as $link)
+    foreach($data as $link) {
         if($d == $link['d']) {
             $page = true;
             break;
         }
-    $links = '<div id="dopLinks">';
+    }
+    $send =  '<div class="rightLink">';
     foreach($data as $link) {
         if($page)
-            $sel = $d == $link['d'] ?  ' sel' : '';
+            $sel = $d == $link['d'] ?  ' class="sel"' : '';
+        else
+            $sel = isset($link['sel']) ? ' class="sel"' : '';
+        $send .= '<a href="'.URL.'&p='.$p.'&d='.$link['d'].'"'.$sel.'>'.$link['name'].'</a>';
+    }
+    $send .= '</div>';
+    return $send;
+}//end of _rightLinks()
+
+function _dopLinks($p, $data, $d=false, $d1=false) {
+    $s = $d1 ? $d1 : $d;
+    $page = false;
+    foreach($data as $link) {
+        if($s == $link['d']) {
+            $page = true;
+            break;
+        }
+    }
+    $send = '<div id="dopLinks">';
+    foreach($data as $link) {
+        if($page)
+            $sel = $s == $link['d'] ?  ' sel' : '';
         else
             $sel = isset($link['sel']) ? ' sel' : '';
-        $links .= '<a href="'.URL.'&p='.$p.'&d='.$link['d'].'" class="link'.$sel.'">'.$link['name'].'</a>';
+        $ld = $d1 ? $d.'&d1='.$link['d'] : $link['d'];
+        $send .= '<a href="'.URL.'&p='.$p.'&d='.$ld.'" class="link'.$sel.'">'.$link['name'].'</a>';
     }
-    $links .= '</div>';
-    return $links;
+    $send .= '</div>';
+    return $send;
 }//end of _dopLinks()
 
 function statistic() {
@@ -131,35 +157,100 @@ function statistic() {
         '<SCRIPT type="text/javascript" src="'.SITE.'/js/statistic.js"></SCRIPT>';
 }
 
+//Понедельник в текущей неделе
+function currentMonday() {
+    // Номер текущего дня недели
+    $time = time();
+    $curDay = date("w", $time);
+    if($curDay == 0) $curDay = 7;
+
+    // Приведение дня к понедельнику
+    $time -= 86400 * ($curDay - 1);
+    return strftime('%Y-%m-%d', $time);
+
+}//end of currentMonday()
+
+//Воскресенье в текущей неделе
+function currentSunday() {
+    $time = time();
+    $curDay = date("w", $time);
+    if($curDay == 0) $curDay = 7;
+    $time += 86400 * (7 - $curDay);
+    return strftime('%Y-%m-%d', $time);
+
+}//end of currentMonday()
+
 function report_prihod() {
+    return '<div id="report_prihod">'.report_prihod_spisok(currentMonday(), currentSunday()).'</div>';
+}
+
+function report_prihod_spisok($day_begin, $day_end, $page=1) {
+    $limit = 20;
+    $sql = "SELECT
+                COUNT(`id`) AS `all`,
+                SUM(`summa`) AS `sum`
+            FROM `money`
+            WHERE `status`=1
+              AND `summa`>0
+              AND `dtime_add`>='".$day_begin." 00:00:00'
+              AND `dtime_add`<='".$day_end." 23:59:59'";
+    $r = mysql_fetch_assoc(query($sql));
+    if($r['all'] == 0)
+        return 'Поступления за указанный период отсутствуют.';
+    $all = $r['all'];
+    $start = ($page - 1) * $limit;
+
+    $spisok = '';
+    if($page == 1)
+        $spisok = '<div class="summa">'.
+            '<a class="summa_add">Внести произвольную сумму</a>'.
+            'Всего <b>'.$all.'</b> платежей на сумму <b>'.$r['sum'].'</b> руб.'.
+        '</div>'.
+        '<TABLE class="tabSpisok">'.
+            '<TR><TH class="sum">Сумма'.
+                '<TH>Описание'.
+                '<TH class="data">Дата';
+
     $sql = "SELECT *
             FROM `money`
-            WHERE `status`=1 AND `summa`>0
-            ORDER BY `dtime_add` DESC
-            LIMIT 20";
+            WHERE `status`=1
+              AND `summa`>0
+              AND `dtime_add`>='".$day_begin." 00:00:00'
+              AND `dtime_add`<='".$day_end." 23:59:59'
+            ORDER BY `dtime_add` ASC
+            LIMIT ".$start.",".$limit;
     $q = query($sql);
-    $spisok = 'Поступления отсутствуют.';
-    if(mysql_num_rows($q)) {
-        $spisok = '<TABLE cellpadding=0 cellspacing=0 class=tabSpisok>'.
-            '<TR><TH class=sum>Сумма'.
-                '<TH class=about>Описание'.
-                '<TH class=data>Дата';
-        while($r = mysql_fetch_assoc($q)) {
-            $about = $r['prim'];
-            if($r['zayav_id'] > 0)
-                $about = 'Заявка <A href="'.URL.'&my_page=remZayavkiInfo&id='.$r['zayav_id'].'">№'.$r['zayav_id'].'</A>';
-            if($r['zp_id'] > 0) {
-                $about = 'Продажа запчасти '.
-                    '<A href="'.URL.'&my_page=remZp&id='.$r['zp_id'].'>'.
-                        $r['zp_id'].
-                    '</A>';
-            }
-            $spisok .= '<tr>'.
-                '<TD class="sum"><B>'.$r['summa'].'</B>'.
-                '<TD class="about">'.$about.
-                '<TD class="dtime">'.FullDataTime($r['dtime_add']);
+    while($r = mysql_fetch_assoc($q)) {
+        $about = $r['prim'];
+        if($r['zayav_id'] > 0)
+            $about = 'Заявка <A href="'.URL.'&my_page=remZayavkiInfo&id='.$r['zayav_id'].'">№'.$r['zayav_id'].'</A>';
+        if($r['zp_id'] > 0) {
+            $about = 'Продажа запчасти '.
+                '<A href="'.URL.'&my_page=remZp&id='.$r['zp_id'].'">'.
+                    $r['zp_id'].
+                '</A>';
         }
-        $spisok .= '</TABLE>';
+        $spisok .= '<tr>'.
+            '<TD class="sum"><B>'.$r['summa'].'</B>'.
+            '<TD>'.$about.
+            '<TD class="dtime">'.FullDataTime($r['dtime_add']);
     }
-    return '<div id="report_prihod">'.$spisok.'</div>';
+    if($start + $limit < $all)
+        $spisok .= '<tr class="ajaxNext" id="report_prihod_next" val="'.($page + 1).'"><td colspan="3"><span>Показать ещё платежи...</span></td></tr>';
+    if($page == 1) $spisok .= '</TABLE>';
+//    if($start + $limit < $all)
+//        $spisok .= '<div class="ajaxNext" id="report_prihod_next" val="'.($page + 1).'"><span>Показать ещё платежи...</span></div>';
+    return $spisok;
 }//end of report_prihod()
+
+//Условия поиска справа
+function report_prihod_right() {
+    return '<div class="report_prihod_rl">'.
+        '<DIV class="findHead">Период</DIV>'.
+        '<div class="cal"><EM class="label">от:</EM><INPUT type="hidden" id="report_prihod_day_begin" value="'.currentMonday().'"></div>'.
+        '<div class="cal"><EM class="label">до:</EM><INPUT type="hidden" id="report_prihod_day_end" value="'.currentSunday().'"></div>'.
+    '</div>';
+}
+
+
+

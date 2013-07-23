@@ -122,31 +122,69 @@ if(isset($_GET['p'])) {
         case 'report':
             $links = array(
                 array(
-                    'name' => 'Поступления',
-                    'd' => 'prihod',
+                    'name' => 'История действий',
+                    'd' => 'history',
                     'sel' => 1
                 ),
                 array(
-                    'name' => 'Расходы',
-                    'd' => 'rashod'
+                    'name' => 'Задания',
+                    'd' => 'remind'
                 ),
                 array(
-                    'name' => 'Касса',
-                    'd' => 'kassa'
-                ),
-                array(
-                    'name' => 'Статистика',
-                    'd' => 'stat'
+                    'name' => 'Деньги',
+                    'd' => 'money'
                 )
             );
-            $html .= _dopLinks('report', $links, @$_GET['d']);
+            $rl = _rightLinks('report', $links, @$_GET['d']);
+            $dl = '';
             switch(@$_GET['d']){
-                case 'prihod': $html .= report_prihod(); break;
-                case 'rashod': $html .= 'Расходы'; break;
-                case 'kassa': $html .= 'Касса'; break;
-                case 'stat': $html .= statistic(); break;
-                default: $html .= report_prihod();
+                case 'history': $report = 'История'; break;
+                case 'remind': $report = 'Расходы'; break;
+                case 'money':
+                    switch(@$_GET['d1']) {
+                        case 'prihod':
+                            $report = report_prihod();
+                            $rl .= report_prihod_right();
+                            break;
+                        case 'rashod': $report = 'Расходы'; break;
+                        case 'kassa': $report = 'Касса'; break;
+                        case 'stat': $report = statistic(); break;
+                        default:
+                            $report = report_prihod();
+                            $rl .= report_prihod_right();
+                    }
+                    $links = array(
+                        array(
+                            'name' => 'Поступления',
+                            'd' => 'prihod',
+                            'sel' => 1
+                        ),
+                        array(
+                            'name' => 'Расходы',
+                            'd' => 'rashod'
+                        ),
+                        array(
+                            'name' => 'Касса',
+                            'd' => 'kassa'
+                        ),
+                        array(
+                            'name' => 'Статистика',
+                            'd' => 'stat'
+                        )
+                    );
+                    $d1 = isset($_GET['d1']) ? $_GET['d1'] : 'prihod';
+                    $dl = _dopLinks('report', $links, 'money', $d1);
+                    break;
+                default: $report = 'История';
             }
+            if(@$_GET['d1'] != 'stat') {
+                $report = '<table cellspacing=0 class="tabLR"><tr>'.
+                    '<td class="left">'.$dl.$report.'</td>'.
+                    '<td class="right">'.$rl.'</td>'.
+                    '</tr></table>';
+            } else
+                $report = $dl.$report;
+            $html .= $report;
         break;
     }
     _footer();
