@@ -127,7 +127,7 @@ if(isset($_GET['p'])) {
                     'sel' => 1
                 ),
                 array(
-                    'name' => 'Задания',
+                    'name' => 'Задания'.REMIND_ACTIVE,
                     'd' => 'remind'
                 ),
                 array(
@@ -139,7 +139,7 @@ if(isset($_GET['p'])) {
             $dl = '';
             switch(@$_GET['d']){
                 case 'history': $report = 'История'; break;
-                case 'remind': $report = 'Расходы'; break;
+                case 'remind': $report = 'Задания'; break;
                 case 'money':
                     switch(@$_GET['d1']) {
                         case 'prihod':

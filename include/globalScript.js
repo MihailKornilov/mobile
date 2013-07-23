@@ -5,9 +5,33 @@ Highcharts.setOptions({
 });
 
 var G = {
-  T:(new Date()).getTime(),
-  vkScroll:0,
-  zindex:100
+    T:(new Date()).getTime(),
+    vkScroll:0,
+    zindex:100,
+    backCount:0,
+    backfon:function(add) {
+        if(add === undefined)
+            add = true;
+        var body = $('body');
+        if(add) {
+            this.zindex += 10;
+            if(this.backCount == 0) {
+                body
+                    .find('.backfon').remove().end()
+                    .append('<div class="backfon"></div>');
+            }
+            body.find('.backfon').css({'z-index':G.zindex});
+            this.backCount++;
+        } else {
+            this.backCount--;
+            this.zindex -= 10;
+            if(this.backCount == 0) {
+                body.find('.backfon').remove();
+            } else {
+                body.find('.backfon').css({'z-index':G.zindex});
+            }
+        }
+    }
 };
 /*
  * Формирование окончаний
@@ -1178,11 +1202,11 @@ $.fn.myRadioSet = function (VAL) {
       indent:'center',
       top:0,
       left:0,
-      show:0,          // выводить ли подсказку после загрузки страницы
+      show:0,      // выводить ли подсказку после загрузки страницы
       delayShow:0, // задержка перед всплытием
-      delayHide:0,  // задержка перед скрытием
-      correct:0,       // настройка top и left
-      remove:0       // удалить подсказку после показа
+      delayHide:0, // задержка перед скрытием
+      correct:0,   // настройка top и left
+      remove:0     // удалить подсказку после показа
     }, o);
 
     var correct = o.correct == 1 ? "<DIV class=correct>top: <SPAN id=correct_top>" + o.top + "</SPAN> left: <SPAN id=correct_left>" + o.left + "</SPAN></DIV>" : '';

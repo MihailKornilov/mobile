@@ -10,10 +10,10 @@
 
 
 
-.rightLink a{display:block;padding:5px 12px;border:transparent solid 1px;color:#29597B}
-.rightLink a:hover{border:#DEE3EF solid 1px;background:#DEE3EF;text-decoration:none}
-.rightLink a.sel,.rightLink a.sel:hover {color:#FFF;background:#6B8EB5;border:#39659C solid 1px}
-
+.rightLinks a{display:block;padding:5px 12px;border:transparent solid 1px;color:#29597B}
+.rightLinks a:hover{border:#DEE3EF solid 1px;background:#DEE3EF;text-decoration:none}
+.rightLinks a.sel,.rightLinks a.sel:hover {color:#FFF;background:#6B8EB5;border:#39659C solid 1px}
+.rightLinks a.sel img{float:right;margin-top:3px}
 
 
 #dopLinks{background-color:#F7F7F7;border-bottom:#dae1e8 solid 1px;padding:9px 12px}
@@ -42,6 +42,8 @@
 
 
 
+.money{font:bold 14px Tahoma;width:70px}
+
 
 
 #report_prihod{padding:10px 15px 20px 15px}
@@ -51,6 +53,7 @@
 #report_prihod .summa{margin-bottom:7px}
 #report_prihod .summa_add{float:right}
 
+#report_prihod_add #about{width:170px}
 
 .report_prihod_rl .label{display:inline-block;width:20px}
 .report_prihod_rl .cal{margin-top:5px}

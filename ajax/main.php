@@ -40,6 +40,31 @@ switch(@$_POST['op']) {
         $send['html'] = utf8(report_prihod_spisok($_POST['day_begin'], $_POST['day_end'], intval($_POST['page'])));
         jsonSuccess($send);
         break;
+    case 'report_prohod_add':
+        if(empty($_POST['about']))
+            jsonError();
+        if(!preg_match(REGEXP_NUMERIC, $_POST['sum']))
+            jsonError();
+        if(!preg_match(REGEXP_BOOL, $_POST['kassa']))
+            jsonError();
+        $about = win1251(htmlspecialchars(trim($_POST['about'])));
+        $sum = intval($_POST['sum']);
+        $kassa = intval($_POST['kassa']);
+        $sql = "INSERT INTO `money`
+                    (`ws_id`,`summa`,`prim`,`kassa`,`viewer_id_add`)
+                VALUES
+                    (".WS_ID.",".$sum.",'".$about."',".$kassa.",".VIEWER_ID.")";
+        query($sql);
+
+        if ($kassa == 1) {
+            $sql = "INSERT INTO `kassa`
+                        (`ws_id`, `sum`, `txt`, `money_id`, `viewer_id_add`)
+                    VALUES
+                        (".WS_ID.", ".$sum.", '".$about."', ".mysql_insert_id().", ".VIEWER_ID.")";
+            query($sql);
+        }
+        jsonSuccess();
+        break;
 }
 
 jsonError();

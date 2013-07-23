@@ -1,12 +1,15 @@
-var AJAX_MAIN = 'http://' + G.domain + '/ajax/main.php?' + G.values,
+var REGEXP_NUMERIC = /^\d+$/,
+    AJAX_MAIN = 'http://' + G.domain + '/ajax/main.php?' + G.values,
     reportPrihodLoad = function (data) {
         var send = {
             op:'report_prihod_load',
             day_begin:$('#report_prihod_day_begin').val(),
             day_end:$('#report_prihod_day_end').val()
         };
+        $('.rightLinks a.sel').append('<img src="/img/upload.gif">');
         $.post(AJAX_MAIN, send, function (res) {
             $('#report_prihod').html(res.html);
+            $('.rightLinks a.sel img').remove();
         }, 'json');
     };
 
@@ -18,7 +21,8 @@ $(document).ajaxError(function(event, request, settings) {
 });
 
 
-$(document).on('click', '#report_prihod_next', function () {
+$(document)
+    .on('click', '#report_prihod_next', function () {
     if($(this).hasClass('busy'))
         return;
     var next = $(this),
@@ -36,7 +40,63 @@ $(document).on('click', '#report_prihod_next', function () {
         } else
             next.removeClass('busy');
     }, 'json');
-});
+})
+    .on('click', '#report_prihod .summa_add', function () {
+            var html = '<TABLE cellpadding="0" cellspacing="8" id="report_prihod_add">' +
+                '<TR><TD class=tdAbout>Содержание:<TD><INPUT type="text" id="about" maxlength="100">' +
+                '<TR><TD class=tdAbout>Сумма:<TD><INPUT type="text" id="sum" class="money" maxlength="8"> руб.' +
+                '<TR><TD class=tdAbout>Деньги поступили в кассу?:<TD><INPUT type="hidden" id="kassa" value="-1">' +
+                '</TABLE>';
+        var dialog = vkDialog({
+                width:380,
+                head:"Внесение поступления средств",
+                content:html,
+                submit:submit
+            }),
+            kassa = $('#report_prihod_add #kassa'),
+            sum = $("#report_prihod_add #sum"),
+            about = $("#report_prihod_add #about");
+
+            kassa.vkRadio({
+                display:'inline-block',
+                right:15,
+                spisok:[{uid:1, title:'да'},{uid:0, title:'нет'}]
+            });
+            about.focus();
+
+            function submit() {
+                var send = {
+                    op:'report_prohod_add',
+                    about:about.val(),
+                    sum:sum.val(),
+                    kassa:kassa.val()
+                };
+                var msg;
+                if(!send.about) { msg = "Не указано содержание."; about.focus(); }
+                else if(!REGEXP_NUMERIC.test(send.sum)) { msg = "Некорректно указана сумма."; sum.focus(); }
+                else if(send.kassa == -1) { msg = "Укажите, деньги взяты из кассы или нет."; }
+                else {
+                    dialog.process();
+                    $.post(AJAX_MAIN, send, function (res) {
+                        if(res.success) {
+                            dialog.close();
+                            vkMsgOk("Новое поступление внесено.");
+                            reportPrihodLoad();
+                        }
+                    }, 'json');
+                }
+                if(msg)
+                    dialog.bottom.vkHint({
+                        msg:'<SPAN class="red">' + msg + '</SPAN>',
+                        remove:1,
+                        indent:40,
+                        show:1,
+                        top:-53,
+                        left:103,
+                        correct:0
+                    });
+            }
+    });
 
 $(document).ready(function() {
     $('#report_prihod_day_begin').vkCalendar({lost:1, place:'left', func:reportPrihodLoad});

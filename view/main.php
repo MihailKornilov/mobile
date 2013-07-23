@@ -12,6 +12,7 @@ function _header() {
         '<SCRIPT type="text/javascript" src="'.SITE.'/include/jquery-1.9.1.min.js"></SCRIPT>'.
         '<SCRIPT type="text/javascript" src="'.SITE.'/include/xd_connection.js"></SCRIPT>'.
         '<SCRIPT type="text/javascript" src="'.SITE.'/js/highstock.js"></SCRIPT>'.
+        '<SCRIPT type="text/javascript" src="'.SITE.'/js/vkapi.js?'.VERSION.'"></SCRIPT>'.
         '<SCRIPT type="text/javascript" src="'.SITE.'/include/globalScript.js?'.VERSION.'"></SCRIPT>'.
         '<SCRIPT type="text/javascript">'.
             'if(document.domain=="vkmobile")for(var i in VK)if(typeof VK[i]=="function")VK[i]=function(){return false};'.
@@ -61,24 +62,60 @@ function _mainLinks() {
             WHERE `ws_id`=".$vku->ws_id."
               AND `day`<DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 1 DAY)
               AND `status`=1
-              AND (`private`=0 OR `private`=1 AND `viewer_id_add`=".$vku->viewer_id.")";
+              AND (`private`=0 OR `private`=1 AND `viewer_id_add`=".VIEWER_ID.")";
     $r = mysql_fetch_assoc(query($sql));
-    $remindActive = $r['count'] > 0 ? ' (<B>'.$r['count'].'</B>)' : '';
+    define('REMIND_ACTIVE', $r['count'] > 0 ? ' (<B>'.$r['count'].'</B>)' : '');
 
-    $page = array('remClient', 'remZayavki', 'remDevice',  'remZp',    'no&p=report',          'remSetup');
-    $name = array('Клиенты',   'Заявки',     'Устройства', 'Запчасти', 'Отчёты'.$remindActive, 'Установки');
-    $show = array(1,           1,             0,           1,           $vku->admin,           $vku->admin);
+    $links = array(
+        array(
+            'name' => 'Клиенты',
+            'page' => 'remClient',
+            'show' => 1
+        ),
+        array(
+            'name' => 'Заявки',
+            'page' => 'remZayavki',
+            'show' => 1
+        ),
+        array(
+            'name' => 'Устройства',
+            'page' => 'remDevice',
+            'show' => 0
+        ),
+        array(
+            'name' => 'Запчасти',
+            'page' => 'remZp',
+            'show' => 1
+        ),
+        array(
+            'name' => 'Отчёты'.REMIND_ACTIVE,
+            'page' => 'no&p=report',
+            'show' => $vku->admin
+        ),
+        array(
+            'name' => 'Установки',
+            'page' => 'remSetup',
+            'show' => $vku->admin
+        )
+    );
 
-    $links = "<DIV id=mainLinks>";
-    for ($n = 0; $n < count($page); $n++)
-        if ($show[$n] > 0)
-            $links .= "<A HREF='".URL."&my_page=".$page[$n]."' class='la".($page[$n] == $sel ? ' sel' : '')."'>".
-                "<DIV class=l1></DIV>".
-                "<DIV class=l2></DIV>".
-                "<DIV class=l3>".$name[$n]."</DIV>".
+    $send = '<DIV id="mainLinks">';
+    foreach($links as $l)
+        if($l['show']) {
+            $s = $l['page'] == $sel ? ' sel' : '';
+            // todo для удаления
+            if(!$s) {
+                $page = explode('=', $l['page']);
+                $s = isset($page[1]) && $page[1] == @$_GET['p'] ? ' sel' : '';
+            }
+            $send .= "<A HREF='".URL."&my_page=".$l['page']."' class='la".$s."'>".
+                    "<DIV class=l1></DIV>".
+                    "<DIV class=l2></DIV>".
+                    "<DIV class=l3>".$l['name']."</DIV>".
                 "</A>";
-    $links .= "</DIV>";
-    $html .= $links;
+        }
+    $send .= '</DIV>';
+    $html .= $send;
 }//end of _mainLinks()
 
 function _rightLinks($p, $data, $d='') {
@@ -89,7 +126,7 @@ function _rightLinks($p, $data, $d='') {
             break;
         }
     }
-    $send =  '<div class="rightLink">';
+    $send =  '<div class="rightLinks">';
     foreach($data as $link) {
         if($page)
             $sel = $d == $link['d'] ?  ' class="sel"' : '';
@@ -185,7 +222,7 @@ function report_prihod() {
 }
 
 function report_prihod_spisok($day_begin, $day_end, $page=1) {
-    $limit = 20;
+    $limit = 30;
     $sql = "SELECT
                 COUNT(`id`) AS `all`,
                 SUM(`summa`) AS `sum`
@@ -238,12 +275,10 @@ function report_prihod_spisok($day_begin, $day_end, $page=1) {
     if($start + $limit < $all)
         $spisok .= '<tr class="ajaxNext" id="report_prihod_next" val="'.($page + 1).'"><td colspan="3"><span>Показать ещё платежи...</span></td></tr>';
     if($page == 1) $spisok .= '</TABLE>';
-//    if($start + $limit < $all)
-//        $spisok .= '<div class="ajaxNext" id="report_prihod_next" val="'.($page + 1).'"><span>Показать ещё платежи...</span></div>';
     return $spisok;
 }//end of report_prihod()
 
-//Условия поиска справа
+//Условия поиска справа для отчётов
 function report_prihod_right() {
     return '<div class="report_prihod_rl">'.
         '<DIV class="findHead">Период</DIV>'.
