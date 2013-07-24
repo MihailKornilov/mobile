@@ -160,6 +160,25 @@ function _dopLinks($p, $data, $d=false, $d1=false) {
     return $send;
 }//end of _dopLinks()
 
+function _checkbox($id, $txt, $value=0) {
+    return '<input type="hidden" id="'.$id.'" value="'.$value.'" />'.
+        '<div class="check'.$value.'" id="'.$id.'_check">'.$txt.'</div>';
+}//end of _checkbox()
+
+function _end($count, $o1, $o2, $o5=false) {
+    if(!$o5) $o5 = $o2;
+    if($count / 10 % 10 == 1)
+        return $o5;
+    else
+        switch($count % 10) {
+            case 1: return $o1;
+            case 2: return $o2;
+            case 3: return $o2;
+            case 4: return $o2;
+        }
+    return $o5;
+}
+
 function statistic() {
     $sql = "SELECT
                 SUM(`summa`) AS `summa`,
@@ -192,7 +211,7 @@ function statistic() {
             'var statRashod = '.json_encode($rashod).';'.
         '</SCRIPT>'.
         '<SCRIPT type="text/javascript" src="'.SITE.'/js/statistic.js"></SCRIPT>';
-}
+}//end of statistic()
 
 //Понедельник в текущей неделе
 function currentMonday() {
@@ -200,11 +219,9 @@ function currentMonday() {
     $time = time();
     $curDay = date("w", $time);
     if($curDay == 0) $curDay = 7;
-
     // Приведение дня к понедельнику
     $time -= 86400 * ($curDay - 1);
     return strftime('%Y-%m-%d', $time);
-
 }//end of currentMonday()
 
 //Воскресенье в текущей неделе
@@ -218,19 +235,20 @@ function currentSunday() {
 }//end of currentMonday()
 
 function report_prihod() {
-    return '<div id="report_prihod">'.report_prihod_spisok(currentMonday(), currentSunday()).'</div>';
+    return '<div id="report_prihod">'.report_prihod_spisok(currentMonday(), currentSunday(), 0).'</div>';
 }
 
-function report_prihod_spisok($day_begin, $day_end, $page=1) {
+function report_prihod_spisok($day_begin, $day_end, $del_show=0, $page=1) {
     $limit = 30;
+    $deleted = $del_show && ADMIN ? '' : ' AND `status`=1';
     $sql = "SELECT
                 COUNT(`id`) AS `all`,
                 SUM(`summa`) AS `sum`
             FROM `money`
-            WHERE `status`=1
-              AND `summa`>0
+            WHERE `summa`>0
               AND `dtime_add`>='".$day_begin." 00:00:00'
-              AND `dtime_add`<='".$day_end." 23:59:59'";
+              AND `dtime_add`<='".$day_end." 23:59:59'
+              ".$deleted;
     $r = mysql_fetch_assoc(query($sql));
     if($r['all'] == 0)
         return 'Поступления за указанный период отсутствуют.';
@@ -241,19 +259,20 @@ function report_prihod_spisok($day_begin, $day_end, $page=1) {
     if($page == 1)
         $spisok = '<div class="summa">'.
             '<a class="summa_add">Внести произвольную сумму</a>'.
-            'Всего <b>'.$all.'</b> платежей на сумму <b>'.$r['sum'].'</b> руб.'.
+            'Всего <b>'.$all.'</b> платеж'._end($all, '', 'а', 'ей').' на сумму <b>'.$r['sum'].'</b> руб.'.
         '</div>'.
         '<TABLE class="tabSpisok">'.
             '<TR><TH class="sum">Сумма'.
                 '<TH>Описание'.
-                '<TH class="data">Дата';
+                '<TH class="data">Дата'.
+                '<TH class="del">';
 
     $sql = "SELECT *
             FROM `money`
-            WHERE `status`=1
-              AND `summa`>0
+            WHERE `summa`>0
               AND `dtime_add`>='".$day_begin." 00:00:00'
               AND `dtime_add`<='".$day_end." 23:59:59'
+              ".$deleted."
             ORDER BY `dtime_add` ASC
             LIMIT ".$start.",".$limit;
     $q = query($sql);
@@ -267,13 +286,20 @@ function report_prihod_spisok($day_begin, $day_end, $page=1) {
                     $r['zp_id'].
                 '</A>';
         }
-        $spisok .= '<tr>'.
+        $dtimeTitle = 'Внёс: Виталий Корнилов';
+        if($r['status'] == 0)
+            $dtimeTitle .= "\n".'Удалил: Михаил Корнилов'.
+                           "\n".FullDataTime($r['dtime_del']);
+        $spisok .= '<tr'.($r['status'] == 0 ? ' class="deleted"' : '').'>'.
             '<TD class="sum"><B>'.$r['summa'].'</B>'.
             '<TD>'.$about.
-            '<TD class="dtime">'.FullDataTime($r['dtime_add']);
+            '<TD class="dtime" title="'.$dtimeTitle.'">'.FullDataTime($r['dtime_add']).
+            ($r['status'] == 1 ?
+                '<TD class="del" title="Удалить платёж"><div class="img_del" val="'.$r['id'].'">' :
+                '<TD class="rest" title="Восстановить платёж"><div class="img_rest" val="'.$r['id'].'">');
     }
     if($start + $limit < $all)
-        $spisok .= '<tr class="ajaxNext" id="report_prihod_next" val="'.($page + 1).'"><td colspan="3"><span>Показать ещё платежи...</span></td></tr>';
+        $spisok .= '<tr class="ajaxNext" id="report_prihod_next" val="'.($page + 1).'"><td colspan="4"><span>Показать ещё платежи...</span></td></tr>';
     if($page == 1) $spisok .= '</TABLE>';
     return $spisok;
 }//end of report_prihod()
@@ -281,9 +307,10 @@ function report_prihod_spisok($day_begin, $day_end, $page=1) {
 //Условия поиска справа для отчётов
 function report_prihod_right() {
     return '<div class="report_prihod_rl">'.
-        '<DIV class="findHead">Период</DIV>'.
+        '<div class="findHead">Период</div>'.
         '<div class="cal"><EM class="label">от:</EM><INPUT type="hidden" id="report_prihod_day_begin" value="'.currentMonday().'"></div>'.
         '<div class="cal"><EM class="label">до:</EM><INPUT type="hidden" id="report_prihod_day_end" value="'.currentSunday().'"></div>'.
+        (ADMIN ? _checkbox('prihodShowDel', 'Показывать удалённые платежи') : '').
     '</div>';
 }
 

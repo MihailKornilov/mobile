@@ -23,11 +23,13 @@ function jsonSuccess($send=array())
 
 switch(@$_POST['op']) {
     case 'report_prihod_load':
-        if(!preg_match(REGEXP_DATE, @$_POST['day_begin']))
+        if(!preg_match(REGEXP_DATE, $_POST['day_begin']))
             $_POST['day_begin'] = currentMonday();
-        if(!preg_match(REGEXP_DATE, @$_POST['day_end']))
+        if(!preg_match(REGEXP_DATE, $_POST['day_end']))
             $_POST['day_end'] = currentSunday();
-        $send['html'] = utf8(report_prihod_spisok($_POST['day_begin'], $_POST['day_end']));
+        if(!preg_match(REGEXP_BOOL, $_POST['del_show']) || !ADMIN)
+            $_POST['del_show'] = 0;
+        $send['html'] = utf8(report_prihod_spisok($_POST['day_begin'], $_POST['day_end'], intval($_POST['del_show'])));
         jsonSuccess($send);
         break;
     case 'report_prihod_next':
@@ -37,10 +39,12 @@ switch(@$_POST['op']) {
             jsonError();
         if(!preg_match(REGEXP_DATE, $_POST['day_end']))
             jsonError();
-        $send['html'] = utf8(report_prihod_spisok($_POST['day_begin'], $_POST['day_end'], intval($_POST['page'])));
+        if(!preg_match(REGEXP_BOOL, $_POST['del_show']) || !ADMIN)
+            $_POST['del_show'] = 0;
+        $send['html'] = utf8(report_prihod_spisok($_POST['day_begin'], $_POST['day_end'], intval($_POST['del_show']), intval($_POST['page'])));
         jsonSuccess($send);
         break;
-    case 'report_prohod_add':
+    case 'report_prihod_add':
         if(empty($_POST['about']))
             jsonError();
         if(!preg_match(REGEXP_NUMERIC, $_POST['sum']))
@@ -63,6 +67,32 @@ switch(@$_POST['op']) {
                         (".WS_ID.", ".$sum.", '".$about."', ".mysql_insert_id().", ".VIEWER_ID.")";
             query($sql);
         }
+        jsonSuccess();
+        break;
+    case 'report_prihod_del':
+        if(!ADMIN)
+            jsonError();
+        if(!preg_match(REGEXP_NUMERIC, $_POST['id']))
+            jsonError();
+        $sql = "UPDATE `money` SET
+                    `status`=0,
+                    `viewer_id_del`=".VIEWER_ID.",
+                    `dtime_del`=CURRENT_TIMESTAMP
+                WHERE `id`=".intval($_POST['id']);
+        query($sql);
+        jsonSuccess();
+        break;
+    case 'report_prihod_rest':
+        if(!ADMIN)
+            jsonError();
+        if(!preg_match(REGEXP_NUMERIC, $_POST['id']))
+            jsonError();
+        $sql = "UPDATE `money` SET
+                    `status`=1,
+                    `viewer_id_del`=0,
+                    `dtime_del`='0000-00-00 00:00:00'
+                WHERE `id`=".intval($_POST['id']);
+        query($sql);
         jsonSuccess();
         break;
 }

@@ -15,9 +15,7 @@ define('REGEXP_NUMERIC', '/^[0-9]{1,20}$/i');
 define('REGEXP_BOOL', '/^[0-1]$/');
 define('REGEXP_DATE', '/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/');
 
-$SA[982006] = 1;  // Корнилов Михаил
-$SA[2170788] = 1; // Корнилов Виталий
-define('ADMIN', isset($SA[$_GET['viewer_id']]));
+define('ADMIN', isset($SA[VIEWER_ID]));
 if(ADMIN) {
     ini_set('display_errors',1);
     error_reporting(E_ALL);
