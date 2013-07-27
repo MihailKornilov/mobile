@@ -127,7 +127,7 @@ if(isset($_GET['p'])) {
                     'sel' => 1
                 ),
                 array(
-                    'name' => 'Задания'.REMIND_ACTIVE,
+                    'name' => 'Задания'.REMIND_ACTIVE.'<div class="img_add report_remind_add"></div>',
                     'd' => 'remind'
                 ),
                 array(
@@ -138,8 +138,11 @@ if(isset($_GET['p'])) {
             $rl = _rightLinks('report', $links, @$_GET['d']);
             $dl = '';
             switch(@$_GET['d']){
-                case 'history': $report = 'История'; break;
-                case 'remind': $report = 'Задания'; break;
+                case 'history':
+                    $report = report_history();
+                    $rl .= report_history_right();
+                    break;
+                case 'remind': $report = report_remind(); break;
                 case 'money':
                     switch(@$_GET['d1']) {
                         case 'prihod':
@@ -175,7 +178,9 @@ if(isset($_GET['p'])) {
                     $d1 = isset($_GET['d1']) ? $_GET['d1'] : 'prihod';
                     $dl = _dopLinks('report', $links, 'money', $d1);
                     break;
-                default: $report = 'История';
+                default:
+                    $report = report_history();
+                    $rl .= report_history_right();
             }
             if(@$_GET['d1'] != 'stat') {
                 $report = '<table cellspacing=0 class="tabLR"><tr>'.

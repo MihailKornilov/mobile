@@ -101,23 +101,23 @@ function reminderSpisok() {
     callback:function (data) {
       G.reminder.data = data;
       for (var n = 0; n < data.length; n++) {
-        // сегодня и завтра
+        // сегодня и завтра: yellow
         var sp = data[n],
               unit = '#EED',
               txt = '#FFC',
               day = '#FFFFF4',
               em = '#884';
 
-        // если более 1 дня
+        // если более 1 дня: blue
         if (sp.day_leave > 1) { unit = '#DDE'; txt = '#DDF'; day = '#F7F7FF'; em = '#884'; }
 
-        // просрочено
+        // просрочено: red
         if (sp.day_leave < 0) { unit = '#EDD'; txt = '#FCC'; day = '#FFF7F7'; em = '#844'; }
 
-        // отменено
+        // отменено: grey
         if (sp.status == 0) { unit = '#DDD'; txt = '#DDD'; day = '#F7F7F7'; em = '#444'; }
 
-        // выполнено
+        // выполнено: green
         if (sp.status == 2) { unit = '#DED'; txt = '#CFC'; day = '#F7FFF7'; em = '#484'; }
 
         $("#unit_" + sp.id)

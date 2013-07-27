@@ -416,6 +416,8 @@ $("#zayav_zp_add").click(function () {
     submit:submit
   }).o;
 
+    frameBodyHeightSet();
+
   $("#zayav_dialog .tdAbout").css({
     width:'155px',
     'text-align':'right',

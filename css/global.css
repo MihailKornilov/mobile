@@ -45,6 +45,71 @@
 
 
 
+#report_history{margin:5px}
+#report_history .dtime {
+    width:70px;
+    color:#777;
+    vertical-align:top;
+    text-align:right;
+    white-space:nowrap;
+}
+#report_history i{font:italic 11px Arial;color:#977}
+.report_history_rl .label{display:inline-block;width:20px}
+.report_history_rl .cal{margin-top:5px}
+
+
+#report_remind .info{margin:8px;border:#DDD solid 1px;padding:6px 8px}
+#report_remind .info:not(.show) .text,
+#report_remind .show .opening,
+#report_remind .info:not(.show) .closing{display:none}
+#report_remind .unit{font-size:12px;margin:10px 8px 8px 8px}
+#report_remind .unit B{font-size:12px;color:#555}
+#report_remind .txt{font-size:12px;padding:4px 6px 5px 6px}
+#report_remind .txt a{font-size:12px}
+#report_remind .txt u{font-size:12px;color:#888}
+#report_remind .day{padding-top:3px;padding-bottom:3px;font-weight:bold;color:#884}
+#report_remind .day EM{color:#884; margin-left:4px}
+#report_remind .day SPAN{color:#888}
+#report_remind .action{float:right;display:none;margin-right:4px}
+#report_remind .action a{font-size:10px}
+#report_remind .hist{
+    display:none;
+    background-color:#FFF;
+    font-size:10px;
+    color:#888;
+    border-top:#F8F8F8 solid 1px;
+    border-bottom:#F8F8F8 solid 1px;
+    margin-top:3px;
+    padding:2px 3px;
+}
+#report_remind .yellow{border:#EED solid 1px}
+#report_remind .yellow .txt{background-color:#FFC}
+#report_remind .yellow .day{background-color:#FFFFF4}
+#report_remind .yellow em{color:#884}
+#report_remind .redd{border:#EDD solid 1px}
+#report_remind .redd .txt{background-color:#FCC}
+#report_remind .redd .day{background-color:#FFF7F7}
+#report_remind .redd em{color:#844}
+#report_remind .blue{border:#DDE solid 1px}
+#report_remind .blue .txt{background-color:#ddf}
+#report_remind .blue .day{background-color:#F7F7FF}
+#report_remind .blue em{color:#884}
+#report_remind .green{border:#DED solid 1px}
+#report_remind .green .txt{background-color:#CFC}
+#report_remind .green .day{background-color:#F7FFF7}
+#report_remind .green em{color:#484}
+/* плюсик добавления напоминания */
+.rightLinks a:not(.sel) .report_remind_add{display:none}
+.report_remind_add{float:right;margin:1px 0}
+/* таблица внесения нового напоминания */
+.remind_add_tab .tdAbout {width:160px;text-align:right;padding-right:5px;line-height:32px}
+.remind_add_tab#tab_content{display:none}
+.remind_add_tab #txt{width:240px;height:40px}
+.remind_add_tab #data{cursor:pointer;width:90px;text-align:right}
+.remind_add_tab #zayav_nomer{width:60px}
+.remind_add_tab #img{color:#666;margin-left:5px}
+#report_remind_next{margin:0 8px 8px 8px}
+
 #report_prihod{padding:10px 15px 20px 15px}
 #report_prihod .tabSpisok{width:100%}
 #report_prihod .sum{width:45px; text-align:right}
