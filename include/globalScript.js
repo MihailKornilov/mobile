@@ -20,16 +20,15 @@ var G = {
                     .find('.backfon').remove().end()
                     .append('<div class="backfon"></div>');
             }
-            body.find('.backfon').css({'z-index':G.zindex});
+            body.find('.backfon').css({'z-index':this.zindex});
             this.backCount++;
         } else {
             this.backCount--;
             this.zindex -= 10;
-            if(this.backCount == 0) {
+            if(this.backCount == 0)
                 body.find('.backfon').remove();
-            } else {
-                body.find('.backfon').css({'z-index':G.zindex});
-            }
+            else
+                body.find('.backfon').css({'z-index':this.zindex});
         }
     }
 };
@@ -198,7 +197,7 @@ $.fn.vkSel = function (obj) {
 
         case 'add': // клик по плюсику.
           obj.spisok_new = null; // очистка списка, если производился поиск по буквам
-          obj.funcAdd(obj.spisok);
+          obj.funcAdd(obj.spisok, t.o);
           break;
 
         case 'inp': // клик по инпуту
@@ -1087,6 +1086,7 @@ $.fn.vkRadio = function (obj) {
   obj.light = obj.light || 0; // подсветка выбранного значения
   obj.func = obj.func || function () {};
 
+    $('#' + id + '_radio').remove();
   var html = "<DIV class=radio id=" + id + "_radio val=end_>";
   for(var n = 0; n < obj.spisok.length; n++) {
     var sp = obj.spisok[n];

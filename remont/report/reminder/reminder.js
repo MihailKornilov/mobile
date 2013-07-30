@@ -258,14 +258,6 @@ function reminderAdd(e) {
   }
 } // end reminderAdd
 
-
-
-
-
-
-
-
-
 function reminderAction(num) {
   var sp = G.reminder.data[num];
   var html = "<TABLE cellpadding=0 cellspacing=0 class=remind_action_tab>" +

@@ -142,14 +142,20 @@ if(isset($_GET['p'])) {
                     $report = report_history();
                     $rl .= report_history_right();
                     break;
-                case 'remind': $report = report_remind(); break;
+                case 'remind':
+                    $report = report_remind();
+                    $rl .= report_remind_right();
+                    break;
                 case 'money':
                     switch(@$_GET['d1']) {
                         case 'prihod':
                             $report = report_prihod();
                             $rl .= report_prihod_right();
                             break;
-                        case 'rashod': $report = 'Расходы'; break;
+                        case 'rashod':
+                            $report = report_rashod();
+                            $rl .= report_rashod_right();
+                            break;
                         case 'kassa': $report = 'Касса'; break;
                         case 'stat': $report = statistic(); break;
                         default:

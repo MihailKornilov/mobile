@@ -1,6 +1,5 @@
 // диалог 2013-07-23 14:46
 function vkDialog(obj) {
-    G.zindex += 10;
     var t = $(this);
     var id = t.attr('id');
     obj = $.extend({
@@ -52,6 +51,79 @@ function vkDialog(obj) {
         },
         bottom:(function() {
             return dialog.find('.bottom');
+        })(),
+        content:(function() {
+            return dialog.find('.content');
         })()
     }
 }
+
+$(document).on('click', '.check0,.check1', function() {
+    var cl = Math.abs($(this).attr('class').split('check')[1] - 1);
+    $(this)
+        .attr('class', 'check' + cl)
+        .prev().val(cl);
+});
+
+// перелистывание годов
+$.fn.years = function(obj) {
+    obj = $.extend({
+        year:(new Date()).getFullYear(),
+        start:function () {},
+        func:function () {}
+    }, obj);
+
+    var t = $(this);
+    var id = t.attr('id');
+
+    var html = "<DIV class=years id=years_" + id + ">" +
+        "<TABLE cellpadding=0 cellspacing=0>" +
+        "<TR><TD class=but>&laquo;<TD id=ycenter><SPAN>" + obj.year + "</SPAN><TD class=but>&raquo;" +
+        "</TABLE></DIV>";
+    t.after(html);
+    t.val(obj.year);
+
+    var years = {
+        left:0,
+        speed:2,
+        span:$("#years_" + id + " #ycenter SPAN"),
+        width:Math.round($("#years_" + id + " #ycenter").css('width').split(/px/)[0] / 2),  // ширина центральной части, где год
+        ismove:0
+    };
+    years.next = function (side) {
+        obj.start();
+        var y = years;
+        if (y.ismove == 0) {
+            y.ismove = 1;
+            var changed = 0;
+            var timer = setInterval(function () {
+                var span = y.span;
+                y.left -= y.speed * side;
+
+                if (y.left > 0 && changed == 1 && side == -1 ||
+                    y.left < 0 && changed == 1 && side == 1) {
+                    y.left = 0;
+                    y.ismove = 0;
+                    y.speed = 0;
+                    clearInterval(timer);
+                }
+
+                span[0].style.left = y.left + 'px';
+                y.speed += 2;
+
+                if (y.left > y.width && changed == 0 && side == -1 ||
+                    y.left < -y.width && changed == 0 && side == 1) {
+                    changed = 1;
+                    obj.year += side;
+                    span.html(obj.year);
+                    y.left = y.width * side;
+                    t.val(obj.year);
+                    obj.func(obj.year);
+                }
+            }, 25);
+        }
+    };
+
+    $("#years_" + id + " .but:first").mousedown(function () { allmon = 1; years.next(-1); });
+    $("#years_" + id + " .but:eq(1)").mousedown(function () { allmon = 1; years.next(1); });
+}; // end of years

@@ -25,7 +25,7 @@ switch(@$_POST['op']) {
             $_POST['worker'] = 0;
         if(!preg_match(REGEXP_NUMERIC, $_POST['action']))
             $_POST['action'] = 0;
-        $send['html'] = utf8(report_history(intval($_POST['worker']), intval($_POST['action'])));
+        $send['html'] = utf8(report_history_spisok(intval($_POST['worker']), intval($_POST['action'])));
         jsonSuccess($send);
         break;
     case 'report_history_next':
@@ -35,7 +35,15 @@ switch(@$_POST['op']) {
             $_POST['worker'] = 0;
         if(!preg_match(REGEXP_NUMERIC, $_POST['action']))
             $_POST['action'] = 0;
-        $send['html'] = utf8(report_history(intval($_POST['worker']), intval($_POST['action']), intval($_POST['page'])));
+        $send['html'] = utf8(report_history_spisok(intval($_POST['worker']), intval($_POST['action']), intval($_POST['page'])));
+        jsonSuccess($send);
+        break;
+    case 'report_remind_load':
+        if(!preg_match(REGEXP_NUMERIC, $_POST['status']))
+            $_POST['status'] = 1;
+        if(!preg_match(REGEXP_BOOL, $_POST['private']))
+            $_POST['private'] = 0;
+        $send['html'] = utf8(report_remind_spisok(1, intval($_POST['status']), intval($_POST['private'])));
         jsonSuccess($send);
         break;
     case 'report_remind_add':
@@ -53,9 +61,6 @@ switch(@$_POST['op']) {
         $zayav_id = intval($_POST['zayav_id']);
         $txt = win1251(htmlspecialchars(trim($_POST['txt'])));
         $private = intval($_POST['private']);
-        $sql = "SELECT CONCAT(`first_name`,' ',`last_name`) AS `name` FROM `vk_user` WHERE `viewer_id`=".VIEWER_ID." LIMIT 1";
-        $r = mysql_fetch_assoc(query($sql));
-        $vk_name = $r['name'];
         $sql = "INSERT INTO `reminder` (
                     `ws_id`,
                     `client_id`,
@@ -72,7 +77,7 @@ switch(@$_POST['op']) {
                     '".$txt."',
                     '".$_POST['day']."',
                     ".$private.",
-                    '".FullDataTime(strftime("%Y-%m-%d %H:%M:%S", time()))." ".$vk_name." создал задание.',
+                    '".FullDataTime(strftime("%Y-%m-%d %H:%M:%S", time()))." ".viewerName()." создал задание.',
                     ".VIEWER_ID."
                 )";
         query($sql);
@@ -88,6 +93,61 @@ switch(@$_POST['op']) {
         if(!preg_match(REGEXP_NUMERIC, $_POST['page']))
             jsonError();
         $send['html'] = utf8(report_remind_spisok(intval($_POST['page'])));
+        jsonSuccess($send);
+        break;
+    case 'report_remind_get':
+        if(!preg_match(REGEXP_NUMERIC, $_POST['id']))
+            jsonError();
+        $sql = "SELECT
+                    `client_id`,
+                    `zayav_id`,
+                    `txt`,
+                    `day`,
+                    `dtime_add` AS `dtime`,
+                    `viewer_id_add`
+                FROM `reminder` WHERE `id`=".intval($_POST['id'])." AND `status`=1";
+        if(!$r = mysql_fetch_assoc(query($sql)))
+            jsonError();
+        $r['viewer'] = utf8(viewerName(true, $r['viewer_id_add']));
+        if($r['client_id'] > 0) {
+            $c = get_clients_info(array($r['client_id']));
+            $r['client'] = utf8($c[$r['client_id']]);
+        }
+        if($r['zayav_id'] > 0) {
+            $z = get_zayav_info(array($r['zayav_id']));
+            $r['zayav'] = utf8($z[$r['zayav_id']]);
+        }
+        $r['txt'] = utf8($r['txt']);
+        $r['dtime'] = utf8(FullDataTime($r['dtime']));
+        unset($r['client_id']);
+        unset($r['zayav_id']);
+        unset($r['viewer_id_add']);
+        //echo 1;
+        jsonSuccess($r);
+        break;
+    case 'report_remind_edit':
+        if(!preg_match(REGEXP_NUMERIC, $_POST['id']))
+            jsonError();
+        if(!preg_match(REGEXP_NUMERIC, $_POST['status']))
+            jsonError();
+        if(!preg_match(REGEXP_NUMERIC, $_POST['action']))
+            jsonError();
+        if(!preg_match(REGEXP_DATE, $_POST['day']))
+            jsonError();
+        $history = win1251(htmlspecialchars(trim($_POST['history'])));
+        $action = '';
+        switch($_POST['action']) {
+            case 1: $action = " указал новую дату: ".FullData($_POST['day']).". Причина: ".$history; break;
+            case 2: $action = " выполнил задание.".($history ? " (".$history.")" : ''); break;
+            case 3: $action = " отменил задание. Причина: ".$history; break;
+        }
+        $sql = "UPDATE `reminder`
+                SET `day`='".$_POST['day']."',
+                    `status`=".$_POST['status'].",
+                    `history`=CONCAT(`history`,'<BR>".FullDataTime(strftime("%Y-%m-%d %H:%M:%S", time()))." ".viewerName().$action."')
+                WHERE `id`=".intval($_POST['id']);
+        query($sql);
+        $send['html'] = utf8(report_remind_spisok());
         jsonSuccess($send);
         break;
     case 'report_prihod_load':
@@ -189,6 +249,156 @@ switch(@$_POST['op']) {
             'zp_id' => $r['zp_id'],
         ));
         jsonSuccess();
+        break;
+    case 'report_rashod_next':
+        if(!preg_match(REGEXP_NUMERIC, $_POST['page']))
+            jsonError();
+        $send['html'] = utf8(report_rashod_spisok(intval($_POST['page'])));
+        jsonSuccess($send);
+        break;
+    case 'report_rashod_load':
+        if(!preg_match(REGEXP_YEAR, $_POST['year']))
+            jsonError();
+        if(!preg_match(REGEXP_NUMERIC, $_POST['month']))
+            jsonError();
+        if(!preg_match(REGEXP_NUMERIC, $_POST['category']))
+            jsonError();
+        if(!preg_match(REGEXP_NUMERIC, $_POST['worker']))
+            jsonError();
+        $year = intval($_POST['year']);
+        $send['summ'] = report_rashod_monthSum($year, intval($_POST['category']), intval($_POST['worker']));
+        $send['html'] = utf8(report_rashod_spisok(1, $year.'-'.$_POST['month'], intval($_POST['category']), intval($_POST['worker'])));
+        jsonSuccess($send);
+        break;
+    case 'report_rashod_add':
+        if(!preg_match(REGEXP_NUMERIC, $_POST['category']))
+            jsonError();
+        if(!preg_match(REGEXP_NUMERIC, $_POST['worker']))
+            jsonError();
+        if(!preg_match(REGEXP_NUMERIC, $_POST['sum']))
+            jsonError();
+        if(!preg_match(REGEXP_BOOL, $_POST['kassa']))
+            jsonError();
+        $category = intval($_POST['category']);
+        $about = win1251(htmlspecialchars(trim($_POST['about'])));
+        if($category == 0 && empty($about))
+            jsonError();
+        $sum = intval($_POST['sum']) * -1;
+        $kassa = intval($_POST['kassa']);
+        $worker = intval($_POST['worker']);
+        $sql = "INSERT INTO `money`
+                    (`ws_id`,`summa`,   `prim`,   `kassa`,  `rashod_category`,  `worker_id`,`viewer_id_add`)
+                VALUES
+                    (".WS_ID.",".$sum.",'".$about."',".$kassa.",".$category.",".$worker.",".VIEWER_ID.")";
+        query($sql);
+
+        if($kassa == 1) {
+            $sql = "INSERT INTO `kassa`
+                        (`ws_id`, `sum`, `txt`, `money_id`, `viewer_id_add`)
+                    VALUES
+                        (".WS_ID.", ".$sum.", '".$about."', ".mysql_insert_id().", ".VIEWER_ID.")";
+            query($sql);
+        }
+        history_insert(array(
+            'type' => 21,
+            'value' => abs($sum),
+            'value1' => $about
+        ));
+        jsonSuccess();
+        break;
+    case 'report_rashod_del':
+        if(!ADMIN)
+            jsonError();
+        if(!preg_match(REGEXP_NUMERIC, $_POST['id']))
+            jsonError();
+        $id = intval($_POST['id']);
+        $sql = "UPDATE `money` SET
+                    `status`=0,
+                    `viewer_id_del`=".VIEWER_ID.",
+                    `dtime_del`=CURRENT_TIMESTAMP
+                WHERE `id`=".$id;
+        query($sql);
+        $sql = "SELECT * FROM `money` WHERE `id`=".$id;
+        $r = mysql_fetch_assoc(query($sql));
+        history_insert(array(
+            'type' => 22,
+            'value' => abs($r['summa'])
+        ));
+        jsonSuccess();
+        break;
+    case 'report_rashod_get':
+        if(!preg_match(REGEXP_NUMERIC, $_POST['id']))
+            jsonError();
+        $sql = "SELECT
+                    `summa` * -1 AS `sum`,
+                    `prim` AS `about`,
+                    `kassa`,
+                    `worker_id`,
+                    `rashod_category` AS `category`
+                FROM `money`
+                WHERE `status`=1
+                  AND `id`=".intval($_POST['id'])."
+                LIMIT 1";
+        if(!$send = mysql_fetch_assoc(query($sql)))
+            jsonError();
+        $send['about'] = utf8($send['about']);
+        jsonSuccess($send);
+        break;
+    case 'report_rashod_edit':
+        if(!preg_match(REGEXP_NUMERIC, $_POST['id']))
+            jsonError();
+        if(!preg_match(REGEXP_NUMERIC, $_POST['worker']))
+            jsonError();
+        if(!preg_match(REGEXP_NUMERIC, $_POST['sum']))
+            jsonError();
+        if(!preg_match(REGEXP_BOOL, $_POST['kassa']))
+            jsonError();
+        $id = intval($_POST['id']);
+        $category = intval($_POST['category']);
+        $about = win1251(htmlspecialchars(trim($_POST['about'])));
+        if($category == 0 && empty($about))
+            jsonError();
+        $sum = intval($_POST['sum']) * -1;
+        $kassa = intval($_POST['kassa']);
+        $worker = intval($_POST['worker']);
+        $sql = "UPDATE `money` SET
+                    `summa`=".$sum.",
+                    `prim`='".$about."',
+                    `kassa`=".$kassa.",
+                    `rashod_category`=".$category.",
+                    `worker_id`=".$worker."
+                WHERE `id`=".$id;
+        query($sql);
+
+        $sql = "DELETE FROM `kassa` WHERE `money_id`=".$id;
+        query($sql);
+        if($kassa == 1) {
+            $sql = "SELECT `dtime_add` FROM `money` WHERE `id`=".$id;
+            $r = mysql_fetch_assoc(query($sql));
+            $sql = "INSERT INTO `kassa`
+                        (`ws_id`,`sum`,`txt`,`money_id`,`viewer_id_add`,`dtime_add`)
+                    VALUES
+                        (".WS_ID.",".$sum.",'".$about."',".$id.",".VIEWER_ID.",'".$r['dtime_add']."')";
+            query($sql);
+        }
+        history_insert(array(
+            'type' => 23,
+            'value' => abs($sum),
+            'value1' => $about
+        ));
+        jsonSuccess();
+        break;
+    case 'setup_rashod_category_add':
+        if(empty($_POST['name']))
+            jsonError();
+        $sql = "INSERT INTO `setup_rashod_category` (
+                    `name`,`viewer_id_add`
+                ) VALUES (
+                    '".win1251(htmlspecialchars(trim($_POST['name'])))."',".VIEWER_ID."
+                )";
+        query($sql);
+        $send['id'] = mysql_insert_id();
+        jsonSuccess($send);
         break;
 }
 

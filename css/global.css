@@ -31,12 +31,20 @@
 
 
 
-
-
 .ajaxNext{text-align:center;height:30px;line-height:30px;color:#2B587A;cursor:pointer}
 .ajaxNext td{border:0}
 .ajaxNext:hover,.ajaxNext.busy:hover{background-color:#e9edf1}
 .ajaxNext.busy span{display:none}
+
+
+
+/* ѕерелистывание годов */
+.years{margin:6px 0;background-color:#E8E8E8;height:25px;cursor:pointer}
+.years TABLE{height:100%;width:100%}
+.years .but{color:#CCC;font:bold 20px Arial;width:18px;text-align:center;padding:0 5px}
+.years .but:hover{background-color:#DDD;color:#AAA}
+.years #ycenter{width:90px;text-align:center;overflow:hidden}
+.years #ycenter SPAN{font:bold 12px Verdana;color:#666;top:1px;left:0;position:relative}
 
 
 
@@ -45,19 +53,16 @@
 
 
 
-#report_history{margin:5px}
-#report_history .dtime {
-    width:70px;
-    color:#777;
-    vertical-align:top;
-    text-align:right;
-    white-space:nowrap;
-}
+#report_history{margin:8px}
+#report_history .head{font-size:10px;color:#777;margin-top:10px}
+#report_history .head a{font-size:10px;margin-left:10px}
+#report_history .txt{margin:0 0 5px 30px}
 #report_history i{font:italic 11px Arial;color:#977}
 .report_history_rl .label{display:inline-block;width:20px}
 .report_history_rl .cal{margin-top:5px}
 
 
+#remind_private_check{margin-top:20px}
 #report_remind .info{margin:8px;border:#DDD solid 1px;padding:6px 8px}
 #report_remind .info:not(.show) .text,
 #report_remind .show .opening,
@@ -98,6 +103,10 @@
 #report_remind .green .txt{background-color:#CFC}
 #report_remind .green .day{background-color:#F7FFF7}
 #report_remind .green em{color:#484}
+#report_remind .grey{border:#DDD solid 1px}
+#report_remind .grey .txt{background-color:#DDD}
+#report_remind .grey .day{background-color:#F7F7F7}
+#report_remind .grey em{color:#444}
 /* плюсик добавлени€ напоминани€ */
 .rightLinks a:not(.sel) .report_remind_add{display:none}
 .report_remind_add{float:right;margin:1px 0}
@@ -109,23 +118,55 @@
 .remind_add_tab #zayav_nomer{width:60px}
 .remind_add_tab #img{color:#666;margin-left:5px}
 #report_remind_next{margin:0 8px 8px 8px}
+/* Ќовое действие дл€ напоминани€ */
+.remind_action_tab{margin:0 10px}
+.remind_action_tab .tdAbout{width:80px;text-align:right;padding-right:5px;line-height:28px}
+.remind_action_tab B{
+    display:block;
+    border:#DDD solid 1px;
+    padding:2px 4px;
+    font-weight:bold;
+    font-size:12px;
+    color:#444;
+    background-color:#FAFAFA;
+}
+.remind_action_tab#new_action{display:none;margin-top:6px}
+.remind_action_tab#new_action .tdAbout{line-height:32px}
+.remind_action_tab #comment{width:240px; height:40px}
+
+
 
 #report_prihod{padding:10px 15px 20px 15px}
 #report_prihod .tabSpisok{width:100%}
-#report_prihod .sum{width:45px; text-align:right}
+#report_prihod .sum{width:30px;text-align:right;white-space:nowrap}
 #report_prihod .dtime{width:70px;color:#666;font-size:10px;text-align:right;white-space:nowrap;cursor:help}
-#report_prihod .del,#report_prihod .rest{padding:0;text-align:center;width:23px}
+#report_prihod .edit{padding:0;text-align:center;width:19px}
 #report_prihod .img_del{margin:0 0 -3px 2px}
 #report_prihod .deleting{text-align:center;color:#555}
 #report_prihod .deleted{background-color:#eee}
 #report_prihod .deleted *{color:#999}
 #report_prihod .summa{margin-bottom:7px}
 #report_prihod .summa_add{float:right}
-
 #report_prihod_add #about{width:170px}
-
 .report_prihod_rl .label{display:inline-block;width:20px}
 .report_prihod_rl .cal{margin-top:5px}
 #prihodShowDel_check{margin-top:15px}
 
 
+#report_rashod{margin:12px}
+#report_rashod .headName{margin:10px 0}
+#report_rashod .headName a{float:right;color:#9fb7c9}
+#report_rashod .headName a:hover{color:#2B587A}
+#report_rashod .tabSpisok{width:100%;margin-top:5px}
+#report_rashod .sum{width:30px;text-align:right;white-space:nowrap}
+#report_rashod .dtime{width:70px;color:#666;font-size:10px;text-align:right;white-space:nowrap;cursor:help}
+#report_rashod .edit{padding:0 0 0 4px;text-align:center;width:11px;white-space:nowrap}
+#report_rashod .img_edit{margin:0 2px -3px 0}
+#report_rashod .img_del{margin:0 2px -3px 0}
+#report_rashod .deleting{text-align:center;color:#555}
+#report_rashod em{margin-right:5px;color:#770}
+#years_rashod_year{margin-top:20px}
+#rashod_monthSum_radio .sum{float:right}
+#rashod_monthSum_radio .off .sum{color:#888}
+#report_rashod_add #about{width:190px}
+#rashod_category_name{width:190px}
