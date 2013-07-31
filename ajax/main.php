@@ -187,14 +187,6 @@ switch(@$_POST['op']) {
                 VALUES
                     (".WS_ID.",".$sum.",'".$about."',".$kassa.",".VIEWER_ID.")";
         query($sql);
-
-        if ($kassa == 1) {
-            $sql = "INSERT INTO `kassa`
-                        (`ws_id`, `sum`, `txt`, `money_id`, `viewer_id_add`)
-                    VALUES
-                        (".WS_ID.", ".$sum.", '".$about."', ".mysql_insert_id().", ".VIEWER_ID.")";
-            query($sql);
-        }
         history_insert(array(
             'type' => 6,
             'value' => $sum,
@@ -238,15 +230,13 @@ switch(@$_POST['op']) {
                     `dtime_del`='0000-00-00 00:00:00'
                 WHERE `id`=".$id;
         query($sql);
-        $sql = "SELECT * FROM `money` WHERE `id`=".$id;
-        $r = mysql_fetch_assoc(query($sql));
         history_insert(array(
             'type' => 19,
             'value' => $r['summa'],
             'value1' => $r['prim'],
             'client_id' => $r['client_id'],
             'zayav_id' => $r['zayav_id'],
-            'zp_id' => $r['zp_id'],
+            'zp_id' => $r['zp_id']
         ));
         jsonSuccess();
         break;
@@ -291,14 +281,6 @@ switch(@$_POST['op']) {
                 VALUES
                     (".WS_ID.",".$sum.",'".$about."',".$kassa.",".$category.",".$worker.",".VIEWER_ID.")";
         query($sql);
-
-        if($kassa == 1) {
-            $sql = "INSERT INTO `kassa`
-                        (`ws_id`, `sum`, `txt`, `money_id`, `viewer_id_add`)
-                    VALUES
-                        (".WS_ID.", ".$sum.", '".$about."', ".mysql_insert_id().", ".VIEWER_ID.")";
-            query($sql);
-        }
         history_insert(array(
             'type' => 21,
             'value' => abs($sum),
@@ -369,24 +351,101 @@ switch(@$_POST['op']) {
                     `worker_id`=".$worker."
                 WHERE `id`=".$id;
         query($sql);
-
-        $sql = "DELETE FROM `kassa` WHERE `money_id`=".$id;
-        query($sql);
-        if($kassa == 1) {
-            $sql = "SELECT `dtime_add` FROM `money` WHERE `id`=".$id;
-            $r = mysql_fetch_assoc(query($sql));
-            $sql = "INSERT INTO `kassa`
-                        (`ws_id`,`sum`,`txt`,`money_id`,`viewer_id_add`,`dtime_add`)
-                    VALUES
-                        (".WS_ID.",".$sum.",'".$about."',".$id.",".VIEWER_ID.",'".$r['dtime_add']."')";
-            query($sql);
-        }
         history_insert(array(
             'type' => 23,
             'value' => abs($sum),
             'value1' => $about
         ));
         jsonSuccess();
+        break;
+    case 'report_kassa_set':
+        if(!preg_match(REGEXP_NUMERIC, $_POST['sum']))
+            jsonError();
+        $set_sum = intval($_POST['sum']);
+
+        $sql = "SELECT SUM(`sum`) AS `sum` FROM `kassa` WHERE `ws_id`=".WS_ID." AND `status`=1 LIMIT 1";
+        $r = mysql_fetch_assoc(query($sql));
+        $kassa_sum = $r['sum'];
+
+        $sql = "SELECT SUM(`summa`) AS `sum` FROM `money` WHERE `ws_id`=".WS_ID." AND `status`=1 AND `kassa`=1 LIMIT 1";
+        $r = mysql_fetch_assoc(query($sql));
+        $money_sum = $r['sum'];
+
+        $kassa_start = $set_sum - $kassa_sum - $money_sum;
+        $sql = "UPDATE `workshop` SET `kassa_start`=".$kassa_start." WHERE `id`=".WS_ID;
+        query($sql);
+        history_insert(array(
+            'type' => 24,
+            'value' => $set_sum
+        ));
+        jsonSuccess();
+        break;
+    case 'report_kassa_load':
+        if(!preg_match(REGEXP_BOOL, $_POST['del_show']) || !ADMIN)
+            $_POST['del_show'] = 0;
+        $send['html'] = utf8(report_kassa_spisok(1, intval($_POST['del_show'])));
+        jsonSuccess($send);
+        break;
+    case 'report_kassa_next':
+        if(!preg_match(REGEXP_NUMERIC, $_POST['page']))
+            jsonError();
+        $send['html'] = utf8(report_kassa_spisok(intval($_POST['page'])));
+        jsonSuccess($send);
+        break;
+    case 'report_kassa_action':
+        if(!preg_match(REGEXP_NUMERIC, $_POST['sum']))
+            jsonError();
+        if(!preg_match(REGEXP_BOOL, $_POST['down']))
+            jsonError();
+        $sum = intval($_POST['sum']) * (intval($_POST['down']) == 1 ? -1 : 1);
+        $txt = win1251(htmlspecialchars(trim($_POST['txt'])));
+        $sql = "INSERT INTO `kassa` (
+                    `ws_id`,`sum`,`txt`,`viewer_id_add`
+                ) VALUES (
+                    ".WS_ID.",".$sum.",'".$txt."',".VIEWER_ID."
+                )";
+        query($sql);
+        jsonSuccess();
+        break;
+    case 'report_kassa_del':
+        if(!preg_match(REGEXP_NUMERIC, $_POST['id']))
+            jsonError();
+        $id = intval($_POST['id']);
+        $sql = "UPDATE `kassa` SET
+                    `status`=0,
+                    `viewer_id_del`=".VIEWER_ID.",
+                    `dtime_del`=CURRENT_TIMESTAMP
+                WHERE `id`=".$id;
+        query($sql);
+        $sql = "SELECT * FROM `kassa` WHERE `id`=".$id;
+        $r = mysql_fetch_assoc(query($sql));
+        history_insert(array(
+            'type' => 25,
+            'value' => $r['sum'],
+            'value1' => $r['txt']
+        ));
+        $send['sum'] = kassa_sum();
+        jsonSuccess($send);
+        break;
+    case 'report_kassa_rest':
+        if(!preg_match(REGEXP_NUMERIC, $_POST['id']))
+            jsonError();
+        $id = intval($_POST['id']);
+        $sql = "UPDATE `kassa` SET
+                    `status`=1,
+                    `viewer_id_del`=0,
+                    `dtime_del`='0000-00-00 00:00:00'
+                WHERE `id`=".$id;
+        query($sql);
+        $sql = "SELECT * FROM `kassa` WHERE `id`=".$id;
+        $r = mysql_fetch_assoc(query($sql));
+        history_insert(array(
+            'type' => 26,
+            'value' => $r['sum'],
+            'value1' => $r['txt']
+        ));
+        $send['sum'] = kassa_sum();
+        jsonSuccess($send);
         break;
     case 'setup_rashod_category_add':
         if(empty($_POST['name']))
@@ -398,6 +457,36 @@ switch(@$_POST['op']) {
                 )";
         query($sql);
         $send['id'] = mysql_insert_id();
+        jsonSuccess($send);
+        break;
+    case 'tooltip_zayav_info_get':
+        if(!preg_match(REGEXP_NUMERIC, $_POST['id']))
+            jsonError();
+        $sql = "SELECT * FROM `zayavki` WHERE `id`=".intval($_POST['id']);
+        $zayav = mysql_fetch_assoc(query($sql));
+
+        $sql = "SELECT `name` FROM `setup_zayavki_category` WHERE `id`=".$zayav['category'];
+        $r = mysql_fetch_assoc(query($sql));
+        $category = $r['name'];
+
+        $sql = "SELECT `name` FROM `base_device` WHERE `id`=".$zayav['base_device_id'];
+        $r = mysql_fetch_assoc(query($sql));
+        $device = $r['name'];
+
+        $sql = "SELECT `name` FROM `base_vendor` WHERE `id`=".$zayav['base_vendor_id'];
+        $r = mysql_fetch_assoc(query($sql));
+        $vendor = $r['name'];
+
+        $sql = "SELECT `name` FROM `base_model` WHERE `id`=".$zayav['base_model_id'];
+        $r = mysql_fetch_assoc(query($sql));
+        $model = $r['name'];
+
+        $html = '<table><tr>'.
+                    '<td><img src="/img/nofoto.gif"></td>'.
+                    '<td class="inf">'.$category.'<br />'.$device.'<br />'.$vendor.' '.$model.'</td>'.
+                '</tr></table>';
+
+        $send['html'] = utf8($html);
         jsonSuccess($send);
         break;
 }

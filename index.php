@@ -156,7 +156,10 @@ if(isset($_GET['p'])) {
                             $report = report_rashod();
                             $rl .= report_rashod_right();
                             break;
-                        case 'kassa': $report = 'Касса'; break;
+                        case 'kassa':
+                            $report = report_kassa();
+                            $rl .= report_kassa_right();
+                            break;
                         case 'stat': $report = statistic(); break;
                         default:
                             $report = report_prihod();

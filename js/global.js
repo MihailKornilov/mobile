@@ -111,6 +111,19 @@ var REGEXP_NUMERIC = /^\d+$/,
                 }, 'json');
             }
         }
+    },
+    reportKassaLoad = function() {
+        var send = {
+            op:'report_kassa_load',
+            del_show:$('#kassaShowDel').val() == 1 ? 1 : 0
+        };
+        $('#mainLinks')
+            .find('img').remove().end()
+            .append('<img src="/img/upload.gif">');
+        $.post(AJAX_MAIN, send, function (res) {
+            $('#report_kassa #spisok').html(res.html);
+            $('#mainLinks img').remove();
+        }, 'json');
     };
 
 
@@ -118,6 +131,22 @@ $(document).ajaxError(function(event, request, settings) {
     if(!request.responseText)
         return;
     alert('Ошибка:\n\n' + request.responseText);
+});
+
+$(document).on('mouseenter', '.zayav_link', function(e) {
+    var t = $(this),
+        tooltip = t.find('.tooltip');
+    if(!tooltip.hasClass('empty'))
+        return;
+    var send = {
+        op:'tooltip_zayav_info_get',
+        id:t.attr('val')
+    };
+    $.post(AJAX_MAIN, send, function(res) {
+        tooltip
+            .html(res.html)
+            .removeClass('empty');
+    }, 'json');
 });
 
 $(document)
@@ -157,15 +186,15 @@ $(document)
         $(this).parent().parent().find('.hist').slideToggle();
     })
     .on('click', '.report_remind_add', function() {
-        var html = '<TABLE class="remind_add_tab">' +
-            '<TR><TD class=tdAbout>Назначение:<TD><INPUT type=hidden id=destination>' +
-            '<TR><TD class=tdAbout id=target_name><TD id=target>' +
+        var html = '<TABLE class="remind_add_tab" cellspacing="6">' +
+            '<TR><TD class="label r">Назначение:<TD><INPUT type=hidden id=destination>' +
+            '<TR><TD class="label r" id=target_name><TD id=target>' +
             '</TABLE>' +
 
-            '<TABLE class=remind_add_tab id=tab_content>' +
-            '<TR><TD class=tdAbout>Задание:<TD><TEXTAREA id=txt></TEXTAREA>' +
-            '<TR><TD class=tdAbout>Крайний день выполнения:<TD><INPUT type=hidden id=data>' +
-            '<TR><TD class=tdAbout>Личное:<TD><INPUT type=hidden id=private>' +
+            '<TABLE class="remind_add_tab" id="tab_content" cellspacing="6">' +
+            '<TR><TD class="label r top">Задание:<TD><TEXTAREA id=txt></TEXTAREA>' +
+            '<TR><TD class="label r">Крайний день выполнения:<TD><INPUT type=hidden id=data>' +
+            '<TR><TD class="label r">Личное:<TD><INPUT type=hidden id=private>' +
             '</TABLE>';
         var dialog = vkDialog({
             top:30,
@@ -711,6 +740,196 @@ $(document)
         }
     });
 
+$(document)
+    .on('click', '#report_kassa #set_go', function() {
+        if($(this).hasClass('busy'))
+            return;
+        var t = $(this),
+            sum = $('#set_summa'),
+            send = {
+                op:'report_kassa_set',
+                sum:sum.val()
+            };
+        if(!REGEXP_NUMERIC.test(send.sum)) {
+            sum.vkHint({
+                msg:'<SPAN class=red>Некорректно введена сумма.</SPAN>',
+                remove:1,
+                indent:40,
+                show:1,
+                top:-70,
+                left:16,
+                correct:0
+            });
+            sum.focus();
+        } else {
+            t.addClass('busy');
+            $.post(AJAX_MAIN, send, function (res) {
+                if(res.success) {
+                    location.reload();
+                } else
+                    t.removeClass('busy');
+            }, 'json');
+        }
+    })
+    .on('click', '#report_kassa_next', function() {
+        if($(this).hasClass('busy'))
+            return;
+        var next = $(this),
+            send = {
+                op:'report_kassa_next',
+                page:$(this).attr('val')
+            };
+        next.addClass('busy');
+        $.post(AJAX_MAIN, send, function (res) {
+            if(res.success) {
+                next.remove();
+                $('#report_kassa .tabSpisok').append(res.html);
+            } else
+                next.removeClass('busy');
+        }, 'json');
+    })
+    .on('click', '#report_kassa .actions a:first', function() {
+        var kassa = $('#kassa_summa'),
+            kassa_sum = parseInt(kassa.html()),
+            html = '<TABLE cellspacing="8">' +
+                '<TR><TD class="label r">Сумма:<TD><INPUT type="text" class="money" id="kassa_down_sum" maxlength="8" />' +
+                '<TR><TD class="label r">Комментарий:<TD><INPUT type="text" id="kassa_down_txt" />' +
+                '</TABLE>',
+            dialog = vkDialog({
+                head:"Внесение денег в кассу",
+                content:html,
+                submit:submit
+            }),
+            sum = $("#kassa_down_sum"),
+            txt = $("#kassa_down_txt");
+
+        sum.focus();
+
+        function submit() {
+            var send = {
+                op:'report_kassa_action',
+                txt:txt.val(),
+                sum:sum.val(),
+                down:0
+            };
+            var msg;
+            if(!REGEXP_NUMERIC.test(send.sum)) { msg = "Некорректно указана сумма."; sum.focus(); }
+            else if(!send.txt) { msg = "Не указан комментарий."; txt.focus(); }
+            else {
+                dialog.process();
+                $.post(AJAX_MAIN, send, function (res) {
+                    if(res.success) {
+                        dialog.close();
+                        vkMsgOk("Новая запись внесёна.");
+                        kassa.html(kassa_sum += parseInt(send.sum));
+                        reportKassaLoad();
+                    }
+                }, 'json');
+            }
+            if(msg)
+                dialog.bottom.vkHint({
+                    msg:'<SPAN class="red">' + msg + '</SPAN>',
+                    remove:1,
+                    indent:40,
+                    show:1,
+                    top:-47,
+                    left:92,
+                    correct:0
+                });
+        }
+    })
+    .on('click', '#report_kassa .actions a:last', function() {
+        var kassa = $('#kassa_summa'),
+            kassa_sum = kassa.html(),
+            html = '<TABLE cellspacing="8">' +
+                '<TR><TD class="label r">Сумма:' +
+                    '<TD><INPUT type="text" class="money" id="kassa_down_sum" maxlength="8" /> max: ' + kassa_sum +
+                '<TR><TD class="label r">Комментарий:<TD><INPUT type="text" id="kassa_down_txt" />' +
+                '</TABLE>',
+            dialog = vkDialog({
+                head:"Взятие денег из кассы",
+                content:html,
+                submit:submit
+            }),
+            sum = $("#kassa_down_sum"),
+            txt = $("#kassa_down_txt");
+
+        sum.focus();
+
+        function submit() {
+            var send = {
+                op:'report_kassa_action',
+                txt:txt.val(),
+                sum:sum.val(),
+                down:1
+            };
+            var msg;
+            if(!REGEXP_NUMERIC.test(send.sum)) { msg = "Некорректно указана сумма."; sum.focus(); }
+            else if(send.sum > kassa_sum) { msg = "Введённая сумма превышает сумму в кассе."; sum.focus(); }
+            else if(!send.txt) { msg = "Не указан комментарий."; txt.focus(); }
+            else {
+                dialog.process();
+                $.post(AJAX_MAIN, send, function (res) {
+                    if(res.success) {
+                        dialog.close();
+                        vkMsgOk("Новая запись внесёна.");
+                        kassa.html(kassa_sum -= send.sum);
+                        reportKassaLoad();
+                    }
+                }, 'json');
+            }
+            if(msg)
+                dialog.bottom.vkHint({
+                    msg:'<SPAN class="red">' + msg + '</SPAN>',
+                    remove:1,
+                    indent:40,
+                    show:1,
+                    top:-47,
+                    left:92,
+                    correct:0
+                });
+        }
+    })
+    .on('click', '#report_kassa .img_del', function() {
+        var send = {
+            op:'report_kassa_del',
+            id:$(this).attr('val')
+        };
+        var tr = $(this).parent().parent(),
+            trSave = tr.html();
+        tr.html('<td colspan="4" class="deleting">Удаление... <img src=/img/upload.gif></td>');
+        $.post(AJAX_MAIN, send, function(res) {
+            if(res.success) {
+                vkMsgOk("Удаление произведено.");
+                if($('#kassaShowDel').val() == 1)
+                    tr.addClass('deleted')
+                        .html(trSave)
+                        .find('.img_del').attr('class', 'img_rest').attr('title', 'Восстановить');
+                else
+                    tr.remove();
+                $('#kassa_summa').html(res.sum);
+            }
+        }, 'json');
+    })
+    .on('click', '#report_kassa .img_rest', function() {
+        var send = {
+            op:'report_kassa_rest',
+            id:$(this).attr('val')
+        };
+        var tr = $(this).parent().parent(),
+            trSave = tr.html();
+        tr.html('<td colspan="4" class="deleting">Восстановление... <img src=/img/upload.gif></td>');
+        $.post(AJAX_MAIN, send, function(res) {
+            if(res.success) {
+                vkMsgOk("Восстановление произведено.");
+                tr.removeClass('deleted')
+                    .html(trSave)
+                    .find('.img_rest').attr('class', 'img_del').attr('title', 'Удалить платёж');
+                $('#kassa_summa').html(res.sum);
+            }
+        }, 'json');
+    })
+    .on('click', '#kassaShowDel_check', reportKassaLoad);
 
 $(document).ready(function() {
     $('#report_prihod_day_begin').vkCalendar({lost:1, place:'left', func:reportPrihodLoad});

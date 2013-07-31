@@ -38,6 +38,9 @@ $sql = "SELECT * FROM `vk_user` WHERE `viewer_id`='".VIEWER_ID."' LIMIT 1";
 $r = mysql_fetch_assoc(query($sql));
 define('WS_ID', $r['ws_id']);
 
+$sql = "SELECT `kassa_start` FROM `workshop` WHERE `id`=".WS_ID." LIMIT 1";
+$r = mysql_fetch_assoc(query($sql));
+define('KASSA_START', $r['kassa_start']);
 
 
 function query($sql) {

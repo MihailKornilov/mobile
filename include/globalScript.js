@@ -1191,216 +1191,216 @@ $.fn.myRadioSet = function (VAL) {
 
 // Подсказки vkHint 2013-02-14 14:43
 (function () {
-  var Hint = function (t, o) { this.create(t, o); return t; };
+    var Hint = function (t, o) { this.create(t, o); return t; };
 
-  Hint.prototype.create = function (t, o) {
-    var o = $.extend({
-      msg:'Сообщение подсказки',
-      width:0,
-      event:'mouseenter', // событие, при котором происходит всплытие подсказки
-      ugol:'bottom',
-      indent:'center',
-      top:0,
-      left:0,
-      show:0,      // выводить ли подсказку после загрузки страницы
-      delayShow:0, // задержка перед всплытием
-      delayHide:0, // задержка перед скрытием
-      correct:0,   // настройка top и left
-      remove:0     // удалить подсказку после показа
-    }, o);
+    Hint.prototype.create = function (t, o) {
+        o = $.extend({
+            msg:'Сообщение подсказки',
+            width:0,
+            event:'mouseenter', // событие, при котором происходит всплытие подсказки
+            ugol:'bottom',
+            indent:'center',
+            top:0,
+            left:0,
+            show:0,      // выводить ли подсказку после загрузки страницы
+            delayShow:0, // задержка перед всплытием
+            delayHide:0, // задержка перед скрытием
+            correct:0,   // настройка top и left
+            remove:0     // удалить подсказку после показа
+        }, o);
 
-    var correct = o.correct == 1 ? "<DIV class=correct>top: <SPAN id=correct_top>" + o.top + "</SPAN> left: <SPAN id=correct_left>" + o.left + "</SPAN></DIV>" : '';
+        var correct = o.correct == 1 ? "<DIV class=correct>top: <SPAN id=correct_top>" + o.top + "</SPAN> left: <SPAN id=correct_left>" + o.left + "</SPAN></DIV>" : '';
 
-    var html = "<TABLE cellpadding=0 cellspacing=0 class=cont_table>" +
-      "<TR><TD class=ugttd colspan=3>" + (o.ugol == 'top' ? "<DIV class=ugt></DIV>" : '') +
-      "<TR><TD class=ugltd>" + (o.ugol == 'left' ? "<DIV class=ugl></DIV>" : '') +
-               "<TD class=cont>" + correct + o.msg +
-               "<TD class=ugrtd>" + (o.ugol == 'right' ? "<DIV class=ugr></DIV>" : '') +
-      "<TR><TD class=ugbtd colspan=3>" + (o.ugol == 'bottom' ? "<DIV class=ugb></DIV>" : '') +
-      "</TABLE>";
+        var html = "<TABLE cellpadding=0 cellspacing=0 class=cont_table>" +
+            "<TR><TD class=ugttd colspan=3>" + (o.ugol == 'top' ? "<DIV class=ugt></DIV>" : '') +
+            "<TR><TD class=ugltd>" + (o.ugol == 'left' ? "<DIV class=ugl></DIV>" : '') +
+            "<TD class=cont>" + correct + o.msg +
+            "<TD class=ugrtd>" + (o.ugol == 'right' ? "<DIV class=ugr></DIV>" : '') +
+            "<TR><TD class=ugbtd colspan=3>" + (o.ugol == 'bottom' ? "<DIV class=ugb></DIV>" : '') +
+            "</TABLE>";
 
-    html = "<TABLE cellpadding=0 cellspacing=0>" +
-      "<TR><TD class=side012><TD>" + html + "<TD class=side012>" +
-      "<TR><TD class=b012 colspan=3>" +
-      "</TABLE>";
+        html = "<TABLE cellpadding=0 cellspacing=0>" +
+            "<TR><TD class=side012><TD>" + html + "<TD class=side012>" +
+            "<TR><TD class=b012 colspan=3>" +
+            "</TABLE>";
 
-    html = "<TABLE cellpadding=0 cellspacing=0 class=hint_table>" +
-      "<TR><TD class=side005><TD>" + html + "<TD class=side005>" +
-      "<TR><TD class=b005 colspan=3>" +
-      "</TABLE>";
+        html = "<TABLE cellpadding=0 cellspacing=0 class=hint_table>" +
+            "<TR><TD class=side005><TD>" + html + "<TD class=side005>" +
+            "<TR><TD class=b005 colspan=3>" +
+            "</TABLE>";
 
-    t.prev().remove('.hint'); // удаление предыдущей такой же подсказки
-    t.before("<DIV class=hint>" + html + "</DIV>"); // вставка перед элементом
+        t.prev().remove('.hint'); // удаление предыдущей такой же подсказки
+        t.before("<DIV class=hint>" + html + "</DIV>"); // вставка перед элементом
 
-    var hi = t.prev(); // поле absolute для подсказки
-    var hintTable = hi.find('.hint_table:first'); // сама подсказка
-    if (o.width > 0) { hintTable.find('.cont_table:first').width(o.width); }
+        var hi = t.prev(); // поле absolute для подсказки
+        var hintTable = hi.find('.hint_table:first'); // сама подсказка
+        if (o.width > 0) { hintTable.find('.cont_table:first').width(o.width); }
 
-    hint_width = hintTable.width();
-    hint_height = hintTable.height();
+        var hint_width = hintTable.width();
+        var hint_height = hintTable.height();
 
-    hintTable.hide().css('visibility','visible');
+        hintTable.hide().css('visibility','visible');
 
-    // установка направления всплытия и отступа для уголка
-    var top = o.top; // установка конечного положения
-    var left = o.left;
-    switch (o.ugol) {
-      case 'top':
-        top = o.top - 15;
-        var ugttd = hintTable.find('.ugttd:first');
-        if (o.indent == 'center') { ugttd.css('text-align', 'center'); }
-        else if (o.indent == 'right') { ugttd.css('text-align', 'right'); }
-        else if (o.indent == 'left') { ugttd.css('text-align', 'left'); }
-        else if (!isNaN(o.indent)) {
-          ugttd.css('text-align', 'left');
-          if (o.indent < 10) { o.indent = 10; }
-          if (o.indent > hint_width) { o.indent = hint_width - 28; }
-          hintTable.find('.ugt:first').css('margin-left', o.indent + 'px');
+        // установка направления всплытия и отступа для уголка
+        var top = o.top; // установка конечного положения
+        var left = o.left;
+        switch (o.ugol) {
+            case 'top':
+                top = o.top - 15;
+                var ugttd = hintTable.find('.ugttd:first');
+                if (o.indent == 'center') { ugttd.css('text-align', 'center'); }
+                else if (o.indent == 'right') { ugttd.css('text-align', 'right'); }
+                else if (o.indent == 'left') { ugttd.css('text-align', 'left'); }
+                else if (!isNaN(o.indent)) {
+                    ugttd.css('text-align', 'left');
+                    if (o.indent < 10) { o.indent = 10; }
+                    if (o.indent > hint_width) { o.indent = hint_width - 28; }
+                    hintTable.find('.ugt:first').css('margin-left', o.indent + 'px');
+                }
+                break;
+
+            case 'right':
+                left = o.left + 25;
+                var ugrtd = hintTable.find('.ugrtd:first');
+                if (o.indent == 'center') { ugrtd.css('vertical-align', 'middle'); }
+                else if (o.indent == 'bottom') { ugrtd.css('vertical-align', 'bottom'); }
+                else if (!isNaN(o.indent)) {
+                    if (o.indent < 3) { o.indent = 3; }
+                    if (o.indent > hint_height) { o.indent = hint_height - 31; }
+                    hintTable.find('.ugr:first').css('margin-top', o.indent + 'px');
+                }
+                break;
+
+            case 'bottom':
+                top = o.top + 15;
+                var ugbtd = hintTable.find('.ugbtd:first');
+                if (o.indent == 'center') { ugbtd.css('text-align', 'center'); }
+                else if (o.indent == 'right') { ugbtd.css('text-align', 'right'); }
+                else if (o.indent == 'left') { ugbtd.css('text-align', 'left'); }
+                else if (!isNaN(o.indent)) {
+                    ugbtd.css('text-align', 'left');
+                    if (o.indent < 10) { o.indent = 10; }
+                    if (o.indent > hint_width) { o.indent = hint_width - 28; }
+                    hintTable.find('.ugb:first').css('margin-left', o.indent + 'px');
+                }
+                break;
+
+            case 'left':
+                left = o.left - 25;
+                var ugltd = hintTable.find('.ugltd:first');
+                if (o.indent == 'center') { ugltd.css('vertical-align', 'middle'); }
+                else if (o.indent == 'bottom') { ugltd.css('vertical-align', 'bottom'); }
+                else if (!isNaN(o.indent)) {
+                    if (o.indent < 3) { o.indent = 3; }
+                    if (o.indent > hint_height) { o.indent = hint_height - 31; }
+                    hintTable.find('.ugl:first').css('margin-top', o.indent + 'px');
+                }
+                break;
         }
-        break;
-
-      case 'right':
-        left = o.left + 25;
-        var ugrtd = hintTable.find('.ugrtd:first');
-        if (o.indent == 'center') { ugrtd.css('vertical-align', 'middle'); }
-        else if (o.indent == 'bottom') { ugrtd.css('vertical-align', 'bottom'); }
-        else if (!isNaN(o.indent)) {
-          if (o.indent < 3) { o.indent = 3; }
-          if (o.indent > hint_height) { o.indent = hint_height - 31; }
-          hintTable.find('.ugr:first').css('margin-top', o.indent + 'px');
-        }
-        break;
-
-      case 'bottom':
-        top = o.top + 15;
-        var ugbtd = hintTable.find('.ugbtd:first');
-        if (o.indent == 'center') { ugbtd.css('text-align', 'center'); }
-        else if (o.indent == 'right') { ugbtd.css('text-align', 'right'); }
-        else if (o.indent == 'left') { ugbtd.css('text-align', 'left'); }
-        else if (!isNaN(o.indent)) {
-          ugbtd.css('text-align', 'left');
-          if (o.indent < 10) { o.indent = 10; }
-          if (o.indent > hint_width) { o.indent = hint_width - 28; }
-          hintTable.find('.ugb:first').css('margin-left', o.indent + 'px');
-        }
-        break;
-
-      case 'left':
-        left = o.left - 25;
-        var ugltd = hintTable.find('.ugltd:first');
-        if (o.indent == 'center') { ugltd.css('vertical-align', 'middle'); }
-        else if (o.indent == 'bottom') { ugltd.css('vertical-align', 'bottom'); }
-        else if (!isNaN(o.indent)) {
-          if (o.indent < 3) { o.indent = 3; }
-          if (o.indent > hint_height) { o.indent = hint_height - 31; }
-          hintTable.find('.ugl:first').css('margin-top', o.indent + 'px');
-        }
-        break;
-    }
 
 
 
 
-    // отключение событий от предыдущей такой же подсказки
-    t.off(o.event + '.hint');
-    t.off('mouseleave.hint');
+        // отключение событий от предыдущей такой же подсказки
+        t.off(o.event + '.hint');
+        t.off('mouseleave.hint');
 
-    // установка событий
-    t.on(o.event + '.hint', show);
-    t.on('mouseleave.hint', hide);
-    hintTable.on('mouseenter.hint', show);
-    hintTable.on('mouseleave.hint', hide);
+        // установка событий
+        t.on(o.event + '.hint', show);
+        t.on('mouseleave.hint', hide);
+        hintTable.on('mouseenter.hint', show);
+        hintTable.on('mouseleave.hint', hide);
 
 
 
-    // процессы всплытия подсказки:
-    // - wait_to_showind - ожидает показа (мышь была наведена)
-    // - showing - выплывает
-    // - show - показана
-    // - wait_to_hidding - ожидает скрытия (мышь была отведена)
-    // - hidding - скрывается
-    // - hidden - скрыта
-    var process = 'hidden';
+        // процессы всплытия подсказки:
+        // - wait_to_showind - ожидает показа (мышь была наведена)
+        // - showing - выплывает
+        // - show - показана
+        // - wait_to_hidding - ожидает скрытия (мышь была отведена)
+        // - hidding - скрывается
+        // - hidden - скрыта
+        var process = 'hidden';
 
-    var timer = 0;
+        var timer = 0;
 
-    // автоматический показ подсказки, если нужно
-    if (o.show != 0) { show(); }
+        // автоматический показ подсказки, если нужно
+        if (o.show != 0) { show(); }
 
-    // всплытие подсказки
-    function show() {
-       if (o.correct != 0) { $(document).off('keydown.hint'); }
-      switch (process) {
-      case 'wait_to_hidding': clearTimeout(timer); process = 'show'; break;
-      case 'hidding':
-        process = 'showing';
-        hintTable
-          .stop()
-          .animate({top:top, left:left, opacity:1}, 200, showed);
-        break;
-      case 'hidden':
-        if (o.delayShow > 0) {
-          process = 'wait_to_showing';
-          timer = setTimeout(action, o.delayShow);
-        } else { action(); }
-        break;
-      }
-      // действие всплытия подсказки
-      function action() {
-        process = 'showing';
-        hintTable
-          .css({top:o.top, left:o.left})
-          .animate({top:top, left:left, opacity:'show'}, 200, showed);
-      }
-      // действие по завершению всплытия
-      function showed() {
-        process = 'show';
-        if (o.correct != 0) {
-          $(document).on('keydown.hint', function (e) {
-            e.preventDefault();
-            switch (e.keyCode) {
-            case 38: o.top--; top--; break; // вверх
-            case 40: o.top++; top++; break; // вниз
-            case 37: o.left--; left--; break; // влево
-            case 39: o.left++; left++; break; // вправо
+        // всплытие подсказки
+        function show() {
+            if (o.correct != 0) { $(document).off('keydown.hint'); }
+            switch (process) {
+                case 'wait_to_hidding': clearTimeout(timer); process = 'show'; break;
+                case 'hidding':
+                    process = 'showing';
+                    hintTable
+                        .stop()
+                        .animate({top:top, left:left, opacity:1}, 200, showed);
+                    break;
+                case 'hidden':
+                    if (o.delayShow > 0) {
+                        process = 'wait_to_showing';
+                        timer = setTimeout(action, o.delayShow);
+                    } else { action(); }
+                    break;
             }
-          hintTable.css({top:top, left:left});
-          hintTable.find('#correct_top').html(o.top);
-          hintTable.find('#correct_left').html(o.left);
-          });
-        }
-      }
-    } // end show
+            // действие всплытия подсказки
+            function action() {
+                process = 'showing';
+                hintTable
+                    .css({top:o.top, left:o.left})
+                    .animate({top:top, left:left, opacity:'show'}, 200, showed);
+            }
+            // действие по завершению всплытия
+            function showed() {
+                process = 'show';
+                if (o.correct != 0) {
+                    $(document).on('keydown.hint', function (e) {
+                        e.preventDefault();
+                        switch (e.keyCode) {
+                            case 38: o.top--; top--; break; // вверх
+                            case 40: o.top++; top++; break; // вниз
+                            case 37: o.left--; left--; break; // влево
+                            case 39: o.left++; left++; break; // вправо
+                        }
+                        hintTable.css({top:top, left:left});
+                        hintTable.find('#correct_top').html(o.top);
+                        hintTable.find('#correct_left').html(o.left);
+                    });
+                }
+            }
+        } // end show
 
 
 
 
-    // скрытие подсказки
-    function hide() {
-      if (o.correct != 0) { $(document).off('keydown.hint'); }
-      if (process == 'wait_to_showing') { clearTimeout(timer); process = 'hidden'; }
-      if (process == 'showing') { hintTable.stop(); action(); }
-      if (process == 'show') {
-        if (o.delayHide > 0) {
-          process = 'wait_to_hidding';
-          timer = setTimeout(action, o.delayHide);
-        } else { action(); }
-      }
-      function action() {
-        process = 'hidding';
-        hintTable.animate({opacity:'hide'}, 200, function () {
-          process = 'hidden';
-          if (o.remove != 0) {
-            hi.remove();
-            t.off(o.event + '.hint');
-            t.off('mouseleave.hint');
-          }
-        });
-      }
-    } // end hide
-  };// end Hint.prototype.create
+        // скрытие подсказки
+        function hide() {
+            if (o.correct != 0) { $(document).off('keydown.hint'); }
+            if (process == 'wait_to_showing') { clearTimeout(timer); process = 'hidden'; }
+            if (process == 'showing') { hintTable.stop(); action(); }
+            if (process == 'show') {
+                if (o.delayHide > 0) {
+                    process = 'wait_to_hidding';
+                    timer = setTimeout(action, o.delayHide);
+                } else { action(); }
+            }
+            function action() {
+                process = 'hidding';
+                hintTable.animate({opacity:'hide'}, 200, function () {
+                    process = 'hidden';
+                    if (o.remove != 0) {
+                        hi.remove();
+                        t.off(o.event + '.hint');
+                        t.off('mouseleave.hint');
+                    }
+                });
+            }
+        } // end hide
+    };// end Hint.prototype.create
 
-  $.fn.vkHint = function (obj) { return new Hint($(this), obj); };
+    $.fn.vkHint = function (obj) { return new Hint($(this), obj); };
 })();
 
 

@@ -102,7 +102,7 @@ function moneySpisok() {
         $("#prihod_kassa").vkRadio({
             display:'inline-block',
             right:15,
-            spisok:[{uid:1, title:'да'},{uid:0, title:'нет'}],
+            spisok:[{uid:1, title:'да'},{uid:0, title:'нет'}]
         });
         $("#prihod_txt").focus();
 
@@ -204,7 +204,7 @@ function moneySpisok() {
         $("#rashod_kassa").vkRadio({
             display:'inline-block',
             right:15,
-            spisok:[{uid:1, title:'да'},{uid:0, title:'нет'}],
+            spisok:[{uid:1, title:'да'},{uid:0, title:'нет'}]
         });
         $("#rashod_txt").focus();
 

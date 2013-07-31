@@ -1,7 +1,9 @@
 <?php
 function _header() {
     global $html, $vku, $WS;
-    $html = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">'.
+    $html =
+        '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">'.
+        //'<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">'.
         '<HTML xmlns="http://www.w3.org/1999/xhtml" xml:lang="ru" lang="ru">'.
         '<HEAD>'.
         '<meta http-equiv="content-type" content="text/html; charset=windows-1251" />'.
@@ -290,7 +292,11 @@ function get_zayav_info($arr) {
     $q = query($sql);
     $send = array();
     while($r = mysql_fetch_assoc($q))
-        $send[$r['id']] = '<A href="'.URL.'&my_page=remZayavkiInfo&id='.$r['id'].'">№'.$r['nomer'].'</a>';
+        $send[$r['id']] =
+            '<A href="'.URL.'&my_page=remZayavkiInfo&id='.$r['id'].'" class="zayav_link" val="'.$r['id'].'">'.
+                '№'.$r['nomer'].
+                '<div class="tooltip empty"></div>'.
+            '</a>';
     return $send;
 }//end of get_zayav_info()
 
@@ -431,8 +437,11 @@ function history_types($arr) {
                 ($arr['client_id'] ? ' для клиента '.$arr['client_link'] : '').
                 '.';
         case 21: return 'Внёс расход на сумму <b>'.$arr['value'].'</b> руб.';
-        case 22: return 'Удалил расход на сумму <b>'.$arr['value'].'</b> руб. ';
-        case 23: return 'Изменил данные расхода на сумму <b>'.$arr['value'].'</b> руб. ';
+        case 22: return 'Удалил расход на сумму <b>'.$arr['value'].'</b> руб.';
+        case 23: return 'Изменил данные расхода на сумму <b>'.$arr['value'].'</b> руб.';
+        case 24: return 'Установил начальное значение в кассе = <b>'.$arr['value'].'</b> руб.';
+        case 25: return 'Удалил запись в кассе на сумму <b>'.$arr['value'].'</b> руб. ('.$arr['value1'].')';
+        case 26: return 'Восстановил запись в кассе на сумму <b>'.$arr['value'].'</b> руб. ('.$arr['value1'].')';
         default: return $arr['type'];
     }
 }//end of history_types()
@@ -626,7 +635,6 @@ function report_remind_spisok($page=1, $status=1, $private=0) {
         elseif($day_leave < 0) $color = 'redd';
         else $color = 'yellow';
         // состояние задачи
-        $rem_cond = '';
         switch($r['status']) {
             case 2: $rem_cond = "<EM>Выполнено.</EM>"; break;
             case 0: $rem_cond = "<EM>Отменено.</EM>"; break;
@@ -691,9 +699,9 @@ function report_prihod_spisok($day_begin, $day_end, $del_show=0, $page=1) {
     $all = $r['all'];
     $start = ($page - 1) * $limit;
 
-    $spisok = '';
+    $send = '';
     if($page == 1)
-        $spisok = '<div class="summa">'.
+        $send = '<div class="summa">'.
                 '<a class="summa_add">Внести произвольную сумму</a>'.
                 'Показан'._end($all, '', 'о').' <b>'.$all.'</b> платеж'._end($all, '', 'а', 'ей').' на сумму <b>'.$r['sum'].'</b> руб.'.
             '</div>'.
@@ -735,7 +743,7 @@ function report_prihod_spisok($day_begin, $day_end, $del_show=0, $page=1) {
         if($r['status'] == 0)
             $dtimeTitle .= "\n".'Удалил: '.$viewer[$r['viewer_id_del']]['name'].
                 "\n".FullDataTime($r['dtime_del']);
-        $spisok .= '<tr'.($r['status'] == 0 ? ' class="deleted"' : '').'>'.
+        $send .= '<tr'.($r['status'] == 0 ? ' class="deleted"' : '').'>'.
             '<TD class="sum"><B>'.$r['summa'].'</B>'.
             '<TD>'.$about.
             '<TD class="dtime" title="'.$dtimeTitle.'">'.FullDataTime($r['dtime_add']).
@@ -744,11 +752,10 @@ function report_prihod_spisok($day_begin, $day_end, $del_show=0, $page=1) {
                 '<div class="img_rest" val="'.$r['id'].'" title="Восстановить платёж"></div>');
     }
     if($start + $limit < $all)
-        $spisok .= '<tr class="ajaxNext" id="report_prihod_next" val="'.($page + 1).'"><td colspan="4"><span>Показать ещё платежи...</span></td></tr>';
-    if($page == 1) $spisok .= '</TABLE>';
-    return $spisok;
+        $send .= '<tr class="ajaxNext" id="report_prihod_next" val="'.($page + 1).'"><td colspan="4"><span>Показать ещё платежи...</span></td></tr>';
+    if($page == 1) $send .= '</TABLE>';
+    return $send;
 }//end of report_prihod_spisok()
-
 
 
 
@@ -896,3 +903,83 @@ function report_rashod_spisok($page=1, $month=false, $category=0, $worker=0) {
 
 
 
+function kassa_sum() {
+    $sql = "SELECT SUM(`sum`) AS `sum` FROM `kassa` WHERE `ws_id`=".WS_ID." AND `status`=1 LIMIT 1";
+    $r = mysql_fetch_assoc(query($sql));
+    $kassa_sum = $r['sum'];
+    $sql = "SELECT SUM(`summa`) AS `sum` FROM `money` WHERE `ws_id`=".WS_ID." AND `status`=1 AND `kassa`=1 LIMIT 1";
+    $r = mysql_fetch_assoc(query($sql));
+    return KASSA_START + $kassa_sum + $r['sum'];
+}//end of kassa_sum()
+
+function report_kassa() {
+    if(KASSA_START == -1)
+        $send = '<DIV class="set_info">Установите значение, равное текущей сумме денег, находящейся сейчас в мастерской. '.
+                'От этого значения будет вестись дальнейший учёт средств, поступающих, либо забирающихся из кассы.<BR>'.
+                '<B>Внимание!</B> Данное действие можно произвести только один раз.'.
+            '</DIV>'.
+            '<TABLE class="set_tab"><tr>'.
+                '<td>Сумма: <INPUT type=text id="set_summa" maxlength=8> руб.</td>'.
+                '<td><DIV class="vkButton" id="set_go"><BUTTON>Установить</BUTTON></DIV></td>'.
+            '</tr></TABLE>';
+    else
+        $send = '<DIV class="in">В кассе: <B id="kassa_summa">'.kassa_sum().'</B> руб. '.
+                    '<div class="actions"><A>Внести в кассу</A> :: <A>Взять из кассы</A></div>'.
+                '</DIV>'.
+                '<DIV id="spisok">'.report_kassa_spisok().'</DIV>';
+    return '<DIV id="report_kassa">'.$send.'</DIV>';
+}//end of report_kassa()
+
+function report_kassa_right() {
+    return KASSA_START == -1 ? '' : _checkbox('kassaShowDel', 'Показывать удалённые записи');
+}//end of report_kassa_right()
+
+function report_kassa_spisok($page=1, $del_show=0) {
+    $limit = 30;
+    $cond = "`ws_id`=".WS_ID."
+         ".($del_show ? '' : ' AND `status`=1');
+    $sql = "SELECT COUNT(`id`) AS `all`
+            FROM `kassa`
+            WHERE ".$cond;
+    $r = mysql_fetch_assoc(query($sql));
+    if($r['all'] == 0)
+        return 'Действий с кассой нет.';
+    $all = $r['all'];
+    $start = ($page - 1) * $limit;
+
+    $send = '';
+    if($page == 1)
+        $send = '<div class="all">'.'Показан'._end($all, '', 'о').' <b>'.$all.'</b> запис'._end($all, 'ь', 'и', 'ей').'.</div>'.
+            '<TABLE class="tabSpisok">'.
+                '<TR><TH class="sum">Сумма'.
+                    '<TH>Описание'.
+                    '<TH class="data">Дата'.
+                    '<TH>';
+
+        $sql = "SELECT *
+                FROM `kassa`
+                WHERE ".$cond."
+                ORDER BY `dtime_add` ASC
+                LIMIT ".$start.",".$limit;
+        $q = query($sql);
+        $viewer = array();
+        $money = array();
+        while($r = mysql_fetch_assoc($q)) {
+            $viewer[$r['viewer_id_add']] = $r['viewer_id_add'];
+        $money[] = $r;
+    }
+    $viewer = get_viewers_info($viewer);
+    foreach($money as $r) {
+        $send .= '<tr'.($r['status'] == 0 ? ' class="deleted"' : '').'>'.
+            '<TD class="sum"><B>'.$r['sum'].'</B>'.
+            '<TD>'.$r['txt'].
+            '<TD class="dtime" title="Внёс: '.$viewer[$r['viewer_id_add']]['name'].'">'.FullDataTime($r['dtime_add']).
+            '<TD class="edit">'.($r['status'] == 1 ?
+                '<div class="img_del" val="'.$r['id'].'" title="Удалить"></div>' :
+                '<div class="img_rest" val="'.$r['id'].'" title="Восстановить"></div>');
+    }
+    if($start + $limit < $all)
+        $send .= '<tr class="ajaxNext" id="report_kassa_next" val="'.($page + 1).'"><td colspan="4"><span>Показать ещё платежи...</span></td></tr>';
+    if($page == 1) $send .= '</TABLE>';
+    return $send;
+}//end of report_kassa_spisok()
