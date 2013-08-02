@@ -19,7 +19,7 @@ $VK->Query("delete from workshop where id=".$_POST['ws_id']); // удаление самой 
 $VK->Query("update vk_user set ws_id=0,admin=0 where ws_id=".$_POST['ws_id']); // снятие пользователя с мастерской
 
 // удаление json-файла с клиентами
-$g_clients = $PATH_FILES."../include/clients/G_clients_".$_POST['ws_id'].".js";
+$g_clients = PATH_FILES."../include/clients/G_clients_".$_POST['ws_id'].".js";
 if (file_exists($g_clients)) { unlink($g_clients); };
 
 $send->time = 1;

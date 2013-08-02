@@ -14,13 +14,13 @@ if (!$fp) {
   $out .= "Connection: Close\r\n\r\n";
 
   fwrite($fp, $out);
-  $file = fopen($PATH_FILES."sockets.txt", "w");
+  $file = fopen(PATH_FILES."sockets.txt", "w");
   for ($n = 1; $n < 12; $n++) { fgets($fp, 128); }
   while (!feof($fp)) { fwrite($file, fgets($fp, 128)); }
   fclose($fp);
 }
 
-$fp = fopen($PATH_FILES."sockets.txt", "r");
+$fp = fopen(PATH_FILES."sockets.txt", "r");
 while($stroka = fgets($fp,10000)) {
   if($stroka = strstr($stroka,"b-model-pictures__big")) {
     $stroka = explode("b-model-prices",$stroka);

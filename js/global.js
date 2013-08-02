@@ -126,7 +126,6 @@ var REGEXP_NUMERIC = /^\d+$/,
         }, 'json');
     };
 
-
 $(document).ajaxError(function(event, request, settings) {
     if(!request.responseText)
         return;
@@ -932,8 +931,7 @@ $(document)
     .on('click', '#kassaShowDel_check', reportKassaLoad);
 
 $(document).ready(function() {
-    $('#report_prihod_day_begin').vkCalendar({lost:1, place:'left', func:reportPrihodLoad});
-    $('#report_prihod_day_end').vkCalendar({lost:1, place:'left', func:reportPrihodLoad});
+    frameHidden.onresize = frameBodyHeightSet;
 
     if($('#report_history').length > 0) {
         $('#report_history_worker').vkSel({
@@ -966,6 +964,10 @@ $(document).ready(function() {
             func:reportRemindLoad
         });
     }
+    if($('#report_prihod').length > 0) {
+        $('#report_prihod_day_begin').vkCalendar({lost:1, place:'left', func:reportPrihodLoad});
+        $('#report_prihod_day_end').vkCalendar({lost:1, place:'left', func:reportPrihodLoad});
+    }
     if($('#report_rashod').length > 0) {
         $('#rashod_category').vkSel({
             width:140,
@@ -982,4 +984,40 @@ $(document).ready(function() {
         $('#rashod_year').years({func:reportRashodLoad});
         reportRashodMonthPrint();
     }
+
+    if($('#zayavAdd').length > 0) {
+        $("#client_id").clientSel({add:1});
+        $("#category").vkSel({width:150, spisok:G.category_spisok});
+        // создание нового списка устройств, которые выбраны для этой мастерской
+        G.device_spisok = [];
+        for (var n = 0; n < G.ws.devs.length; n++) {
+            var uid = G.ws.devs[n];
+            G.device_spisok.push({uid:uid, title:G.device_ass[uid]});
+        }
+        $("#dev").device({
+            width:190,
+            add:1,
+            func:function() {
+                var send = {
+                        op:'model_img_get',
+                        model_id:$("#dev_model").val()
+                    },
+                    dev = $("#device_image");
+                dev.html('');
+                if(send.model_id > 0) {
+                    dev.addClass('busy');
+                    $.post(AJAX_MAIN, send, function(res) {
+                        if(res.success)
+                            dev.html('<img src="' + res.img + '">')
+                               .find('img').on('load', function() {
+                                    $(this).show().parent().removeClass('busy');
+                                });
+                    }, 'json');
+                }
+            }
+        });
+
+    }
+
+    frameBodyHeightSet();
 });

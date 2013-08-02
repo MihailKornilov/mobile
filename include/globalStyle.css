@@ -83,12 +83,20 @@ TABLE{border:0}
 
 /* нямнбмне нймн тпеилю */
 #frameBody {
+    position:relative;
   background-color:#FFF;
   width:625px;
   border-bottom:#DAE1E8 solid 1px;
   overflow:hidden;
 }
-
+#frameHidden{
+    background-color:#ffd;
+    border:0;
+    width:100%;
+    height:100%;
+    position:absolute;
+    z-index:-1;
+}
 
 
 
@@ -264,7 +272,7 @@ TABLE{border:0}
     background-image:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAABUCAIAAADMNMqaAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAABXSURBVHjapI7BDYAwDANNxmYVZmGxPOKmkKgNqvj0YflaWcrJed0CQEh482nSe+ZPLNkwOP/N6qazJdd9DeImi0t38xyqGp7vZubVe+kdbrubn9tNgAEAaD7UiMhv1xkAAAAASUVORK5CYII=");
 }
 .vkButton.busy button{visibility:hidden}
-.vkButton.busy,.ajaxNext.busy,.tooltip.empty{
+.vkButton.busy,.ajaxNext.busy,.tooltip.empty,#device_image.busy{
     background-image:url("data:image/gif;base64,R0lGODlhIAAIAKECAEVojoSctMHN2QAAACH/C05FVFNDQVBFMi4wAwEAAAAh+QQFCgADACwAAAAAIAAIAAACFZyPqcvtD6KMr445LcRUN9554kiSBQAh+QQFCgADACwCAAIAEgAEAAACD4xvM8DNiJRz8Mj5ari4AAAh+QQFCgADACwCAAIAHAAEAAACGJRvM8HNCqKMCCnn4JT1XPwMG9cJH6iNBQAh+QQFCgADACwMAAIAEgAEAAACD5RvM8HNiJRz8Mj5qri4AAAh+QQFCgADACwWAAIACAAEAAACBZSPqYsFACH5BAUUAAMALAAAAAAgAAgAAAIOnI+py+0Po5y02ouzPgUAOw==");
     background-repeat:no-repeat;
     background-position:center center;

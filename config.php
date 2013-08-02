@@ -11,6 +11,8 @@ define('VALUES', 'viewer_id='.VIEWER_ID.
 define('SITE', 'http://'.DOMAIN);
 define('URL', SITE.'/index.php?'.VALUES);
 
+require_once(DOCUMENT_ROOT.'/syncro.php');
+
 define('REGEXP_NUMERIC', '/^[0-9]{1,20}$/i');
 define('REGEXP_BOOL', '/^[0-1]$/');
 define('REGEXP_DATE', '/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/');

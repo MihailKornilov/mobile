@@ -20,6 +20,15 @@ function jsonSuccess($send=array()) {
 }//end of jsonSuccess()
 
 switch(@$_POST['op']) {
+    case 'zayav_add':
+        break;
+    case 'model_img_get':
+        if(!preg_match(REGEXP_NUMERIC, $_POST['model_id']))
+            jsonError();
+        $send['img'] = model_image_get(intval($_POST['model_id']));
+        jsonSuccess($send);
+        break;
+
     case 'report_history_load':
         if(!preg_match(REGEXP_NUMERIC, $_POST['worker']))
             $_POST['worker'] = 0;
@@ -230,6 +239,8 @@ switch(@$_POST['op']) {
                     `dtime_del`='0000-00-00 00:00:00'
                 WHERE `id`=".$id;
         query($sql);
+        $sql = "SELECT * FROM `money` WHERE `id`=".$id;
+        $r = mysql_fetch_assoc(query($sql));
         history_insert(array(
             'type' => 19,
             'value' => $r['summa'],
@@ -447,6 +458,7 @@ switch(@$_POST['op']) {
         $send['sum'] = kassa_sum();
         jsonSuccess($send);
         break;
+
     case 'setup_rashod_category_add':
         if(empty($_POST['name']))
             jsonError();
@@ -462,8 +474,13 @@ switch(@$_POST['op']) {
     case 'tooltip_zayav_info_get':
         if(!preg_match(REGEXP_NUMERIC, $_POST['id']))
             jsonError();
-        $sql = "SELECT * FROM `zayavki` WHERE `id`=".intval($_POST['id']);
+        $id = intval($_POST['id']);
+        $sql = "SELECT * FROM `zayavki` WHERE `id`=".$id;
         $zayav = mysql_fetch_assoc(query($sql));
+
+        $sql = "SELECT `fio` FROM `client` WHERE `id`=".$zayav['client_id'];
+        $r = mysql_fetch_assoc(query($sql));
+        $client = $r['fio'];
 
         $sql = "SELECT `name` FROM `setup_zayavki_category` WHERE `id`=".$zayav['category'];
         $r = mysql_fetch_assoc(query($sql));
@@ -482,8 +499,14 @@ switch(@$_POST['op']) {
         $model = $r['name'];
 
         $html = '<table><tr>'.
-                    '<td><img src="/img/nofoto.gif"></td>'.
-                    '<td class="inf">'.$category.'<br />'.$device.'<br />'.$vendor.' '.$model.'</td>'.
+                    '<td><div class="img"><img src="'.zayav_image_get($id).'"></div></td>'.
+                    '<td class="inf">'.
+                        $category.'<br />'.
+                        $device.'<br />'.
+                        '<b>'.$vendor.' '.$model.'</b><br /><br />'.
+                        '<span style="color:#000">Клиент:</span> '.$client.
+                        //'<br />time: '.round(microtime(true) - TIME, 3).
+                    '</td>'.
                 '</tr></table>';
 
         $send['html'] = utf8($html);

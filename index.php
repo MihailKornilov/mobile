@@ -65,12 +65,12 @@ current_timestamp)");
 if ($_GET['hash']) {
   $ex = explode('_',$_GET['hash']);
   $_GET['my_page'] = $ex[0];
-  $_GET['id'] = $ex[1];
+  $_GET['id'] = isset($ex[1]) ? $ex[1] : '';
 }
 
 
 
-switch ($_GET['my_page']) {
+switch($_GET['my_page']) {
   // суперадминистратор
   case 'superAdmin':    include('superadmin/saIndex_tpl.php');break;
   case 'saVkUser':      include('superadmin/vk_user/vk_user_tpl.php');break;
@@ -101,13 +101,6 @@ switch ($_GET['my_page']) {
   case 'remSetup':      include('remont/setup/ws/ws_tpl.php');break;
   case 'remSetupWorker':include('remont/setup/worker/worker_tpl.php');break;
 
-  case 'catZp':         include('catalog/zp/catalogZp_tpl.php');break;
-  case 'catZpAdd':      include('catalog/zp/catalogZpAdd_tpl.php');break;
-  case 'catZpView':     include('catalog/zp/catalogZpView_tpl.php');break;
-  case 'catZpEdit':     include('catalog/zp/catalogZpEdit_tpl.php');break;
-
-  case 'remReport':     include('remont/report/report_tpl.php');break; // отчёты
-
   case 'nopage':        include('nopage_tpl.php');break;      // несуществующая страница
 
   // создание мастерской
@@ -119,6 +112,11 @@ if(isset($_GET['p'])) {
     _header();
     _mainLinks();
     switch(@$_GET['p']) {
+        case 'zayav':
+            switch(@$_GET['d']) {
+                case 'add': $html .= zayav_add(); break;
+            }
+            break;
         case 'report':
             $links = array(
                 array(
@@ -137,21 +135,13 @@ if(isset($_GET['p'])) {
             );
             $rl = _rightLinks('report', $links, @$_GET['d']);
             $dl = '';
-            switch(@$_GET['d']){
-                case 'history':
-                    $report = report_history();
-                    $rl .= report_history_right();
-                    break;
+            switch(@$_GET['d']) {
                 case 'remind':
                     $report = report_remind();
                     $rl .= report_remind_right();
                     break;
                 case 'money':
                     switch(@$_GET['d1']) {
-                        case 'prihod':
-                            $report = report_prihod();
-                            $rl .= report_prihod_right();
-                            break;
                         case 'rashod':
                             $report = report_rashod();
                             $rl .= report_rashod_right();
@@ -161,7 +151,7 @@ if(isset($_GET['p'])) {
                             $rl .= report_kassa_right();
                             break;
                         case 'stat': $report = statistic(); break;
-                        default:
+                        default: // prihod
                             $report = report_prihod();
                             $rl .= report_prihod_right();
                     }
@@ -187,7 +177,7 @@ if(isset($_GET['p'])) {
                     $d1 = isset($_GET['d1']) ? $_GET['d1'] : 'prihod';
                     $dl = _dopLinks('report', $links, 'money', $d1);
                     break;
-                default:
+                default: // history
                     $report = report_history();
                     $rl .= report_history_right();
             }
@@ -205,3 +195,6 @@ if(isset($_GET['p'])) {
     mysql_close();
     echo $html;
 }
+
+if(empty($_GET['my_page']) && empty($_GET['p']))
+    include('remont/zayavki/spisok/zayavki_tpl.php');

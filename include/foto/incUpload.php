@@ -117,6 +117,6 @@ require_once('../AjaxHeader.php');
 ini_set('memory_limit','120M');
 
 $file_name = $_GET['owner']."-".fileNameCreate();
-$path = $PATH_FILES."images/";        // путь для хранения изображений
+$path = PATH_FILES."images/";        // путь для хранения изображений
 $im = null;
 ?>

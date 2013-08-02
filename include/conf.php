@@ -6,11 +6,10 @@ $mysql = null;       // настройки mysql
 $VK = null;           // класс для запросов из базы данных
 $vku = null;         // данные текущeго пользователя из VK
 $WS = null;         // данные мастерской
-$PATH_FILES = null; //месторасположение файлов для закачки
-$VALUES = null;  // 
+$VALUES = null;  //
 $URL = null;        // готовый url для ссылок
 $SA = null;           // назначение суперадминистраторов
-define('SECRET', "RjnCrjnbyfRjczr"); // секретный ключ в настройках приложения ВКонтакте
+
 
 if (!isset($_GET['viewer_id'])) { $_GET['viewer_id'] = 0; } // id пользователя
 if (!isset($_GET['api_id'])) { $_GET['api_id'] = 0; }            // id приложения
@@ -26,43 +25,7 @@ $SA[982006] = 1; // Корнилов Михаил
 $SA[2170788] = 1; // Корнилов Виталий
 
 
-
-
-switch($_SERVER["SERVER_NAME"]) {
-
-// локальный вход в программу
-case 'vkmobile':
-  ini_set('display_errors', 1);
-  error_reporting(E_ALL);
-  $mysql = array(
-    'host' => '127.0.0.1',
-    'user' => 'root',
-    'pass' => '4909099',
-    'database' => 'vk_mobile',
-    'names' => 'cp1251'
-  );
-  $PATH_FILES = "c:/www/vkmobile/files/";
-  $_GET['viewer_id'] = 982006;
-  $_GET['api_id'] = 2031819;
-  $AUTH = 1;
-  break;
-
-// вход из контакта
-case 'mobile.nyandoma.ru':
-  if($_GET['auth_key'] == md5($_GET['api_id']."_".$_GET['viewer_id']."_".SECRET)) { $AUTH = 1; }
-  $mysql = array(
-    'host' => 'a6460.mysql.mchost.ru',
-    'user' => 'a6460_vk_mobile',
-    'pass' => '4909099',
-    'database' => 'a6460_vk_mobile',
-    'names' => 'cp1251'
-  );
-  $PATH_FILES = "/home/httpd/vhosts/nyandoma.ru/subdomains/mobile/httpdocs/files/";
-  break;
-
-default: echo "Неверный хост: ".$_SERVER["SERVER_NAME"]; exit(); break;
-}
-
+require_once(dirname(dirname(__FILE__)).'/syncro.php');
 
 header('P3P: CP="IDC DSP COR ADM DEVi TAIi PSA PSD IVAi IVDi CONi HIS OUR IND CNT"'); // ВКЛЮЧАЕТ РАБОТУ КУКОВ В ie ЧЕРЕЗ ФРЕЙМ
 require_once('class_MysqlDB.php');
@@ -234,7 +197,7 @@ function number($val) { return preg_match("|^[\d]+$|", $val) ? $val : 0; }
 //GvaluesCreate();
 // составление файла G_values.js
 function GvaluesCreate() {
-  global $VK, $PATH_FILES;
+  global $VK;
 
   $save = "function SpisokToAss(s) { var a = []; for (var n = 0; n < s.length; a[s[n].uid] = s[n].title, n++); return a; }";
 
@@ -279,7 +242,7 @@ function GvaluesCreate() {
   $save .= "G.model_spisok = {".implode(',',$model)."};";
   $save .= "G.model_ass = []; G.model_ass[0] = ''; for (var k in G.model_spisok) { for (var n = 0; n < G.model_spisok[k].length; n++) { var sp = G.model_spisok[k][n]; G.model_ass[sp.uid] = sp.title; } }";
 
-  $fp = fopen($PATH_FILES."../include/G_values.js","w+");
+  $fp = fopen(PATH_FILES."../include/G_values.js","w+");
   fwrite($fp, $save);
   fclose($fp);
 
@@ -296,7 +259,7 @@ function GvaluesCreate() {
 //GclientsCreate();
 // составление списка с клиентами: файл G_clients.js
 function GclientsCreate() {
-  global $VK, $PATH_FILES, $vku;
+  global $VK, $vku;
 
   $spisok = $VK->QueryObjectArray("select id,fio,telefon,zayav_count,balans from client where ws_id=".$vku->ws_id." order by id desc");
   $clients = array();
@@ -311,7 +274,7 @@ function GclientsCreate() {
   }
   $save = "G.clients = [".implode(',',$clients)."];";
 
-  $fp = fopen($PATH_FILES."../include/clients/G_clients_".$vku->ws_id.".js","w+");
+  $fp = fopen(PATH_FILES."../include/clients/G_clients_".$vku->ws_id.".js","w+");
   fwrite($fp, $save);
   fclose($fp);
 

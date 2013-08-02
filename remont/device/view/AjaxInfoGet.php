@@ -26,13 +26,13 @@ if (!$fp) {
   $out .= "Connection: Close\r\n\r\n";
 
   fwrite($fp, $out);
-  $file = fopen($PATH_FILES."sockets.txt", "w");
+  $file = fopen(PATH_FILES."sockets.txt", "w");
   for($n=1;$n<12;$n++) fgets($fp, 128);
   while (!feof($fp))  fwrite($file, fgets($fp, 128));
   fclose($fp);
 }
 
-$fp=fopen($PATH_FILES."sockets.txt", "r");
+$fp=fopen(PATH_FILES."sockets.txt", "r");
 while($stroka = fgets($fp,10000)) {
   $stroka = trim($stroka);
   if($stroka == '<table class="l-page l-page_layout_72-20"><tr><td class="l-page__gap"><i></i></td><td class="l-page__left">') $add=1;

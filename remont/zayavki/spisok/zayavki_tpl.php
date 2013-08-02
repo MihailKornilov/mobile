@@ -10,6 +10,8 @@ $sel = 'remZayavki'; include('remont/mainLinks.php');
       <TD id=spisok>&nbsp;
       <TD id=right>
           <DIV id=buttonCreate><A HREF="<?php echo $URL; ?>&my_page=remZayavkiAdd&back=remZayavki">Новая заявка</A></DIV>
+          <DIV id=buttonCreate><A HREF="<?= $URL; ?>&p=zayav&d=add&back=zayav">Новая заявка</A></DIV>
+
 
           <DIV id=fast></DIV>
 

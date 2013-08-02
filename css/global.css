@@ -11,7 +11,7 @@
 
 
 td.label{line-height:16px;color:#888}
-td.top{vertical-align:top}
+td.top{vertical-align:top;padding-top:3px}
 td.r{text-align:right}
 
 .money{font:bold 14px Tahoma;width:70px}
@@ -64,16 +64,31 @@ td.r{text-align:right}
     position:absolute;
     background-color:#fff;
     border:#ccc solid 1px;
-    min-width:70px;
-    min-height:45px;
+    min-width:100px;
+    min-height:75px;
     padding:5px;
-    top:-56px;
+    top:-86px;
     left:-10px;
 }
 .zayav_link:not(:hover) .tooltip{display:none}
 .zayav_link td{border:0;padding:0}
-.zayav_link img{height:40px}
+.zayav_link .img{max-width:100px;overflow:hidden}
+.zayav_link img{height:70px}
 .zayav_link .inf{white-space:nowrap;padding-left:5px}
+
+
+
+
+
+
+/* внесение новой заявки */
+#zayavAdd{padding:20px 10px 140px 10px;background-color:#F7F7F7}
+#zayavAdd .headName{margin-bottom:15px}
+#zayavAdd .label{width:190px;text-align:right}
+#zayavAdd #device_image{padding-left:5px;vertical-align:top;min-width:50px}
+#zayavAdd #device_image img{height:72px;display:none}
+
+
 
 
 

@@ -25,7 +25,7 @@ function _header() {
                 'first_name:"'.$vku->first_name.'",'.
                 'last_name:"'.$vku->last_name.'",'.
                 'name:"'.$vku->first_name.' '.$vku->last_name.'",'.
-                'ws_id:'.$vku->ws_id.','.
+                'ws_id:'.WS_ID.','.
                 'country_id:'.$vku->country_id.','.
                 'city_id:'.$vku->city_id.
             '};'.
@@ -36,15 +36,17 @@ function _header() {
         '<SCRIPT type="text/javascript" src="'.SITE.'/include/G_values.js?'.G_VALUES.'"></SCRIPT>'.
         '<SCRIPT type="text/javascript" src="/include/clients/G_clients_'.WS_ID.'.js?'.VERSION.'"></SCRIPT>'.//todo для удаления
         '<SCRIPT type="text/javascript" src="/include/clients/clients.js?'.VERSION.'"></SCRIPT>'.//todo для удаления
+        '<SCRIPT type="text/javascript" src="/include/device/device.js?'.VERSION.'"></SCRIPT>'.//todo для удаления
         '</HEAD>'.
         '<BODY>'.
-        '<DIV id="frameBody">';
+        '<div id="frameBody">'.
+        '<iframe id="frameHidden" name="frameHidden"></iframe>';
 }//end of _header()
 
 function _footer() {
     global $html, $sqlQuery;
     if(ADMIN)
-        $html .= '<DIV id=admin>'.
+        $html .= '<DIV id="admin">'.
                 '<A href="'.URL.'&my_page=superAdmin&pre_page='.$_GET['my_page'].'&pre_id='.$_GET['id'].'">Admin</A> :: '.
                 '<A href="https://github.com/MihailKornilov/vkmobile/issues" target="_blank">Issues</A> :: '.
                 '<A id=script_style>Стили и скрипты ('.VERSION.')</A> :: '.
@@ -204,7 +206,7 @@ function _monthFull($n) {
 function statistic() {
     $sql = "SELECT
                 SUM(`summa`) AS `summa`,
-                DATE_FORMAT(`dtime_add`, '%Y-%m-01') AS `dtime`
+                DATE_FORMAT(`dtime_add`, '%Y-%m-15') AS `dtime`
             FROM `money`
             WHERE `status`=1
               AND `summa`>0
@@ -216,7 +218,7 @@ function statistic() {
         $prihod[] = array(strtotime($r['dtime']) * 1000, intval($r['summa']));
     $sql = "SELECT
                 SUM(`summa`)*-1 AS `summa`,
-                DATE_FORMAT(`dtime_add`, '%Y-%m-01') AS `dtime`
+                DATE_FORMAT(`dtime_add`, '%Y-%m-15') AS `dtime`
             FROM `money`
             WHERE `status`=1
               AND `summa`<0
@@ -365,6 +367,60 @@ function get_zayav_status($id=false) {
     );
     return $id ? $arr[$id] : $arr;
 }//end of get_zayav_status()
+
+function zayav_image_get($zayav_id) {
+    $sql = "SELECT `link` FROM `images` WHERE `status`=1 AND `sort`=0 AND `owner`='zayav".$zayav_id."' LIMIT 1";
+    if($r = mysql_fetch_assoc(query($sql)))
+        $send = $r['link'].'-small.jpg';
+    else {
+        $sql = "SELECT `base_model_id` FROM `zayavki` WHERE `id`=".$zayav_id." LIMIT 1";
+        $r = mysql_fetch_assoc(query($sql));
+        $send = model_image_get($r['base_model_id']);
+    }
+    return $send;
+}//end of zayav_image_get()
+
+function model_image_get($model_id) {
+    $send = '/img/nofoto.gif';
+    $sql = "SELECT `link` FROM `images` WHERE `status`=1 AND `sort`=0 AND `owner`='dev".$model_id."' LIMIT 1";
+    if($r = mysql_fetch_assoc(query($sql)))
+        $send = $r['link'].'-small.jpg';
+    return $send;
+}//end of model_image_get()
+
+
+// ---===! zayav !===--- Секция заявок
+function zayav_add() {
+    return '<DIV id="zayavAdd">'.
+        '<DIV class="headName">Внесение новой заявки</DIV>'.
+        '<TABLE cellspacing="8">'.
+            '<TR><TD class="label">Клиент:        <TD><INPUT TYPE="hidden" id="client_id" value="'.@$_GET['id'].'" />'.
+            '<TR><TD class="label">Категория:     <TD><INPUT TYPE="hidden" id="category" value="1" />'.
+            '<TR><TD class="label top">Устройство:    <TD><TABLE cellspacing="0"><TD id="dev"><TD id="device_image"></TABLE>'.
+            '<TR><TD class="label">Местонахождение устройства<br />после внесения заявки:<TD><INPUT type="hidden" id="place" />'.
+            '<TR><TD class="label">IMEI:          <TD><INPUT type="text" id="imei" maxlength="20" />'.
+            '<TR><TD class="label">Серийный номер:<TD><INPUT type="text" id="serial" maxlength="30" />'.
+            '<TR><TD class="label">Цвет:          <TD><INPUT TYPE="hidden" id="color_id" value="0" />'.
+            '<TR><TD class="label">Неисправности: <TD id="fault">'.
+            '<TR><TD class="label">Заметка:       <TD><textarea id="comm"></textarea>'.
+            '<TR><TD class="label">Добавить напоминание:<TD><INPUT TYPE="hidden" id="reminder">'.
+        '</TABLE>'.
+
+        '<TABLE cellspacing="8" id="reminder_tab">'.
+            '<TR><TD class="label">Содержание: <TD><INPUT TYPE="text" id="reminder_txt" />'.
+            '<TR><TD class="label">Дата:       <TD><INPUT TYPE="hidden" id="reminder_day" />'.
+        '</TABLE>'.
+
+        '<DIV class="vkButton"><BUTTON>Внести</BUTTON></DIV>'.
+        '<DIV class="vkCancel"><BUTTON>Отмена</BUTTON></DIV>'.
+    '</DIV>';
+}//end of zayav_add()
+
+
+
+
+
+// ---===! report !===--- Секция отчётов
 
 function history_insert($arr) {
     $sql = "INSERT INTO `history` (
@@ -537,6 +593,7 @@ function report_history_spisok($worker=0, $action=0, $page=1) {
     return $send;
 }//end of report_history_spisok()
 
+
 function report_remind() {
     $send = '<div id="report_remind">'.
         '<div class="info">'.
@@ -667,6 +724,7 @@ function report_remind_spisok($page=1, $status=1, $private=0) {
     return $send;
 }//end of report_remind_spisok()
 
+
 //Условия поиска справа для отчётов
 function report_prihod_right() {
     return '<div class="report_prihod_rl">'.
@@ -756,9 +814,6 @@ function report_prihod_spisok($day_begin, $day_end, $del_show=0, $page=1) {
     if($page == 1) $send .= '</TABLE>';
     return $send;
 }//end of report_prihod_spisok()
-
-
-
 
 
 function report_rashod_right() {
@@ -900,7 +955,6 @@ function report_rashod_spisok($page=1, $month=false, $category=0, $worker=0) {
     if($page == 1) $send .= '</TABLE>';
     return $send;
 }//end of report_rashod_spisok()
-
 
 
 function kassa_sum() {
