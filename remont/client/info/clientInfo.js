@@ -8,7 +8,7 @@ $("#cLinks").infoLink({
   func:function (id) {
     switch (id) {
     case '2': clientEdit(); break;
-    case '3': location.href="/index.php?" + G.values + "&my_page=remZayavkiAdd&back=remClientInfo&id=" + G.client.id; break;
+    case '3': location.href="/index.php?" + G.values + "&p=zayav&d=add&back=remClientInfo&id=" + G.client.id; break;
     }
   }
 });

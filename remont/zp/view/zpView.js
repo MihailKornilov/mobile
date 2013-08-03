@@ -242,6 +242,7 @@ G.zp.view = function (sp) {
             width:220,
             device_id:sp.device_id,
             vendor_id:sp.vendor_id,
+            add:1,
             func:devSelect
         });
 

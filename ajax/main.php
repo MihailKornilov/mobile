@@ -21,6 +21,135 @@ function jsonSuccess($send=array()) {
 
 switch(@$_POST['op']) {
     case 'zayav_add':
+        if(!preg_match(REGEXP_NUMERIC, $_POST['client']) || $_POST['client'] == 0)
+            jsonError();
+        if(!preg_match(REGEXP_NUMERIC, $_POST['category']))
+            jsonError();
+        if(!preg_match(REGEXP_NUMERIC, $_POST['device']) || $_POST['device'] == 0)
+            jsonError();
+        $client = intval($_POST['client']);
+        $category = intval($_POST['category']);
+        $device = intval($_POST['device']);
+        $vendor = intval($_POST['vendor']);
+        $model = intval($_POST['model']);
+        $place = intval($_POST['place']);
+        $place_other = $place == 0 ? win1251(htmlspecialchars(trim($_POST['place_other']))) : '';
+        $imei = win1251(htmlspecialchars(trim($_POST['imei'])));
+        $serial = win1251(htmlspecialchars(trim($_POST['serial'])));
+        $color = intval($_POST['color']);
+        $comm = win1251(htmlspecialchars(trim($_POST['comm'])));
+        $reminder = intval($_POST['reminder']);
+        $reminder_txt = win1251(htmlspecialchars(trim($_POST['reminder_txt'])));
+        $reminder_day = htmlspecialchars(trim($_POST['reminder_day']));
+        if($reminder) {
+            if(!$reminder_txt)
+                jsonError();
+            if(!preg_match(REGEXP_DATE, $reminder_day))
+                jsonError();
+        }
+        $modelName = '';
+        if($model > 0) {
+            $sql = "select `name` FROM `base_model` WHERE `id`=".$model;
+            $r = mysql_fetch_assoc(query($sql));
+            $modelName = $r['name'];
+        }
+        $sql = "SELECT IFNULL(MAX(`nomer`),0)+1 AS `nomer` FROM `zayavki` WHERE `ws_id`=".WS_ID." LIMIT 1";
+        $r = mysql_fetch_assoc(query($sql));
+        $nomer = $r['nomer'];
+
+        $sql = "INSERT INTO `zayavki` (
+                    `ws_id`,
+                    `nomer`,
+                    `client_id`,
+                    `category`,
+
+                    `base_device_id`,
+                    `base_vendor_id`,
+                    `base_model_id`,
+
+                    `imei`,
+                    `serial`,
+                    `color_id`,
+
+                    `zayav_status`,
+                    `zayav_status_dtime`,
+
+                    `device_status`,
+                    `device_place`,
+                    `device_place_other`,
+
+                    `viewer_id_add`,
+                    `find`
+                ) VALUES (
+                    ".WS_ID.",
+                    ".$nomer.",
+                    ".$client.",
+                    ".$category.",
+
+                    ".$device.",
+                    ".$vendor.",
+                    ".$model.",
+
+                    '".$imei."',
+                    '".$serial."',
+                    ".$color.",
+
+                    1,
+                    current_timestamp,
+
+                    1,
+                    ".$place.",
+                    '".$place_other."',
+
+                    ".VIEWER_ID.",
+                    '".$modelName." ".$imei." ".$serial."'
+                )";
+        query($sql);
+        $insert_id = mysql_insert_id();
+
+        query("UPDATE `client` SET `zayav_count`=`zayav_count`+1 WHERE `id`=".$client);
+        GclientsCreate();
+
+        if($comm) {
+            $sql = "INSERT INTO `vk_comment` (
+                        `table_name`,
+                        `table_id`,
+                        `txt`,
+                        `viewer_id_add`
+                    ) VALUES (
+                        'zayav',
+                        ".$insert_id.",
+                        '".$comm."',
+                        ".VIEWER_ID."
+                    )";
+            query($sql);
+        }
+
+        if($reminder) {
+            $sql = "INSERT INTO `reminder` (
+                `ws_id`,
+                `zayav_id`,
+                `txt`,
+                `day`,
+                `history`,
+                `viewer_id_add`
+             ) VALUES (
+                ".WS_ID.",
+                ".$insert_id.",
+                '".$reminder_txt."',
+                '".$reminder_day."',
+                '".FullDataTime(curTime())." ".viewerName()." добавил напоминание для заявки.',
+                ".VIEWER_ID."
+            )";
+            query($sql);
+        }
+        history_insert(array(
+            'type' => 1,
+            'client_id' => $client,
+            'zayav_id' => $insert_id
+        ));
+        $send['id'] = $insert_id;
+        jsonSuccess($send);
         break;
     case 'model_img_get':
         if(!preg_match(REGEXP_NUMERIC, $_POST['model_id']))

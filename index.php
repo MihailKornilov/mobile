@@ -89,7 +89,6 @@ switch($_GET['my_page']) {
   case 'remClientInfo': include('remont/client/info/clientInfo_tpl.php');break;     // информация о клиенте
 
   case 'remZayavki':    include('remont/zayavki/spisok/zayavki_tpl.php');break;
-  case 'remZayavkiAdd': include('remont/zayavki/add/zayavkiAdd_tpl.php');break;
   case 'remZayavkiInfo':include('remont/zayavki/info/zayavkiInfo_tpl.php');break;
 
   case 'remZp':         include('remont/zp/zp_tpl.php');break; // запчасти

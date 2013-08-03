@@ -1,4 +1,5 @@
 var REGEXP_NUMERIC = /^\d+$/,
+    URL = 'http://' + G.domain + '/index.php?' + G.values,
     AJAX_MAIN = 'http://' + G.domain + '/ajax/main.php?' + G.values,
     reportHistoryLoad = function() {
         var send = {
@@ -990,11 +991,11 @@ $(document).ready(function() {
         $("#category").vkSel({width:150, spisok:G.category_spisok});
         // создание нового списка устройств, которые выбраны для этой мастерской
         G.device_spisok = [];
-        for (var n = 0; n < G.ws.devs.length; n++) {
+        for(var n = 0; n < G.ws.devs.length; n++) {
             var uid = G.ws.devs[n];
             G.device_spisok.push({uid:uid, title:G.device_ass[uid]});
         }
-        $("#dev").device({
+        $('#dev').device({
             width:190,
             add:1,
             func:function() {
@@ -1016,7 +1017,80 @@ $(document).ready(function() {
                 }
             }
         });
+        G.device_place_spisok.push({uid:0, title:'другое: <DIV id="place_other_div"><INPUT type="text" id="place_other" maxlength="20"></DIV>'});
+        $('#place').vkRadio({
+            spisok:G.device_place_spisok,
+            top:4,
+            bottom:6,
+            func:function (val) {
+                $('#place_other_div').css('display', val == 0 ? 'inline-block' : 'none');
+                if(val == 0) $('#place_other').val('').focus();
+            }
+        });
+        $('#color_id').vkSel({width:170, title0:'Цвет не указан', spisok:G.color_spisok});
+        $(document).on('click', '#fault', function() {
+            var i = $(this).find('INPUT');
+            var arr = [];
+            for(var n = 0; n < i.length; n++) {
+                if(i.eq(n).val() == 1) {
+                    var uid = i.eq(n).attr('id').split('_')[1];
+                    arr.push(G.fault_ass[uid]);
+                }
+            }
+            $("#comm").val(arr.join(', '));
+        });
+        $('#comm').autosize();
+        $('#reminder_check').click(function(id) {
+            $('#reminder_tab').toggle();
+            $('#reminder_txt').focus();
+        });
+        $('#reminder_day').vkCalendar();
+        $('.vkCancel').click(function() {
+            location.href = URL + '&my_page=' + $(this).attr('val');
+        });
+        $(".vkButton").click(function () {
+            var send = {
+                op:'zayav_add',
+                client:$("#client_id").val(),
+                category:$("#category").val(),
+                device:$("#dev_device").val(),
+                vendor:$("#dev_vendor").val(),
+                model:$("#dev_model").val(),
+                place:$("#place").val(),
+                place_other:$("#place_other").val(),
+                imei:$("#imei").val(),
+                serial:$("#serial").val(),
+                color:$("#color_id").val(),
+                comm:$("#comm").val(),
+                reminder:$("#reminder").val()
+            };
+            send.reminder_txt = send.reminder == 1 ? $("#reminder_txt").val() : '';
+            send.reminder_day = send.reminder == 1 ? $("#reminder_day").val() : '';
 
+            var msg = '';
+            if(send.client == 0) msg = 'Не выбран клиент';
+            else if(send.device == 0) msg = 'Не выбрано устройство';
+            else if(send.place == '' || send.place == 0 && !send.place_other) msg = 'Не указано местонахождение устройства';
+            else if(send.reminder == 1 && !send.reminder_txt) msg = 'Не указан текст напоминания';
+            else {
+                if(send.place > 0) send.place_other = '';
+                $(this).addClass('busy');
+                $.post(AJAX_MAIN, send, function (res) {
+                    location.href = URL + "&my_page=remZayavkiInfo&id=" + res.id;
+                }, 'json');
+            }
+
+            if(msg)
+                $(this).vkHint({
+                    msg:"<SPAN class=red>" + msg + "</SPAN>",
+                    top:-48,
+                    left:201,
+                    indent:30,
+                    remove:1,
+                    show:1,
+                    correct:0
+                });
+        });
     }
 
     frameBodyHeightSet();

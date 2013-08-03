@@ -166,7 +166,7 @@ function _dopLinks($p, $data, $d=false, $d1=false) {
     return $send;
 }//end of _dopLinks()
 
-function _checkbox($id, $txt, $value=0) {
+function _checkbox($id, $txt='', $value=0) {
     return '<input type="hidden" id="'.$id.'" value="'.$value.'" />'.
         '<div class="check'.$value.'" id="'.$id.'_check">'.$txt.'</div>';
 }//end of _checkbox()
@@ -391,19 +391,34 @@ function model_image_get($model_id) {
 
 // ---===! zayav !===--- Секция заявок
 function zayav_add() {
+    $sql = "SELECT `id`,`name` FROM `setup_fault` ORDER BY SORT";
+    $q = query($sql);
+    $fault = '<table cellspacing="0">';
+    $k = 0;
+    while($r = mysql_fetch_assoc($q))
+        $fault .= (++$k%2 ? '<tr>' : '').'<td>'._checkbox('f_'.$r['id'], $r['name']);
+    $fault .= '</table>';
+    switch(@$_GET['back']) {
+        case 'remZayavki': $back = 'remZayavki'; break;
+        case 'remClientInfo': $back = 'remClientInfo'; break;
+        default: $back = 'zayav';
+
+    }
+    $client_id = empty($_GET['id']) ? 0 : intval($_GET['id']);
+    $id = !empty($_GET['id']) ? '&id='.$client_id : '';
     return '<DIV id="zayavAdd">'.
         '<DIV class="headName">Внесение новой заявки</DIV>'.
         '<TABLE cellspacing="8">'.
-            '<TR><TD class="label">Клиент:        <TD><INPUT TYPE="hidden" id="client_id" value="'.@$_GET['id'].'" />'.
+            '<TR><TD class="label">Клиент:        <TD><INPUT TYPE="hidden" id="client_id" value="'.$client_id.'" />'.
             '<TR><TD class="label">Категория:     <TD><INPUT TYPE="hidden" id="category" value="1" />'.
-            '<TR><TD class="label top">Устройство:    <TD><TABLE cellspacing="0"><TD id="dev"><TD id="device_image"></TABLE>'.
-            '<TR><TD class="label">Местонахождение устройства<br />после внесения заявки:<TD><INPUT type="hidden" id="place" />'.
+            '<TR><TD class="label top">Устройство:<TD><TABLE cellspacing="0"><TD id="dev"><TD id="device_image"></TABLE>'.
+            '<TR><TD class="label top">Местонахождение устройства<br />после внесения заявки:<TD><INPUT type="hidden" id="place" />'.
             '<TR><TD class="label">IMEI:          <TD><INPUT type="text" id="imei" maxlength="20" />'.
             '<TR><TD class="label">Серийный номер:<TD><INPUT type="text" id="serial" maxlength="30" />'.
             '<TR><TD class="label">Цвет:          <TD><INPUT TYPE="hidden" id="color_id" value="0" />'.
-            '<TR><TD class="label">Неисправности: <TD id="fault">'.
-            '<TR><TD class="label">Заметка:       <TD><textarea id="comm"></textarea>'.
-            '<TR><TD class="label">Добавить напоминание:<TD><INPUT TYPE="hidden" id="reminder">'.
+            '<TR><TD class="label top">Неисправности: <TD id="fault">'.$fault.
+            '<TR><TD class="label top">Заметка:       <TD><textarea id="comm"></textarea>'.
+            '<TR><TD class="label">Добавить напоминание:<TD>'._checkbox('reminder').
         '</TABLE>'.
 
         '<TABLE cellspacing="8" id="reminder_tab">'.
@@ -412,7 +427,7 @@ function zayav_add() {
         '</TABLE>'.
 
         '<DIV class="vkButton"><BUTTON>Внести</BUTTON></DIV>'.
-        '<DIV class="vkCancel"><BUTTON>Отмена</BUTTON></DIV>'.
+        '<DIV class="vkCancel" val="'.$back.$id.'"><BUTTON>Отмена</BUTTON></DIV>'.
     '</DIV>';
 }//end of zayav_add()
 
