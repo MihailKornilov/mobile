@@ -80,7 +80,7 @@ function _mainLinks() {
         ),
         array(
             'name' => 'Заявки',
-            'page' => 'remZayavki',
+            'page' => 'no&p=zayav',
             'show' => 1
         ),
         array(
@@ -287,6 +287,7 @@ function get_clients_info($arr) {
     return $send;
 }//end of get_clients_info()
 
+//Вывод номеров заявок с возможностью отображения дополнительной информации при наведении
 function get_zayav_info($arr) {
     if(empty($arr))
         return array();
@@ -350,7 +351,16 @@ function get_zp_info($arr) {
     return $send;
 }//end of get_zp_info()
 
-function get_zayav_status($id=false) {
+function zayav_category($id=false) {
+    $arr = array(
+        '1' => 'Приём в ремонт',
+        '2' => 'Заказ запчастей',
+        '3' => 'Консультация'
+    );
+    return $id ? $arr[$id] : $arr;
+}//end of zayav_category()
+
+function zayav_status($id=false) {
     $arr = array(
         '1' => array(
             'name' => 'Ожидает выполнения',
@@ -366,30 +376,33 @@ function get_zayav_status($id=false) {
         )
     );
     return $id ? $arr[$id] : $arr;
-}//end of get_zayav_status()
+}//end of zayav_status()
 
-function zayav_image_get($zayav_id) {
+function zayav_image_link($zayav_id) {
     $sql = "SELECT `link` FROM `images` WHERE `status`=1 AND `sort`=0 AND `owner`='zayav".$zayav_id."' LIMIT 1";
     if($r = mysql_fetch_assoc(query($sql)))
         $send = $r['link'].'-small.jpg';
     else {
         $sql = "SELECT `base_model_id` FROM `zayavki` WHERE `id`=".$zayav_id." LIMIT 1";
         $r = mysql_fetch_assoc(query($sql));
-        $send = model_image_get($r['base_model_id']);
+        $send = model_image_link($r['base_model_id']);
     }
     return $send;
-}//end of zayav_image_get()
+}//end of zayav_image_link()
 
-function model_image_get($model_id) {
+function model_image_link($model_id) {
     $send = '/img/nofoto.gif';
     $sql = "SELECT `link` FROM `images` WHERE `status`=1 AND `sort`=0 AND `owner`='dev".$model_id."' LIMIT 1";
     if($r = mysql_fetch_assoc(query($sql)))
         $send = $r['link'].'-small.jpg';
     return $send;
-}//end of model_image_get()
+}//end of model_image_link()
+
+
 
 
 // ---===! zayav !===--- Секция заявок
+
 function zayav_add() {
     $sql = "SELECT `id`,`name` FROM `setup_fault` ORDER BY SORT";
     $q = query($sql);
@@ -431,6 +444,145 @@ function zayav_add() {
     '</DIV>';
 }//end of zayav_add()
 
+function get_zayav_list($page=1) {
+    $cond = "`ws_id`=".WS_ID." AND `zayav_status`>0";
+    $sql = "SELECT COUNT(`id`) AS `all` FROM `zayavki` WHERE ".$cond." LIMIT 1";
+    $r = mysql_fetch_assoc(query($sql));
+    $send['all'] = $r['all'];
+    if($send['all'] == 0)
+        return $send;
+
+    $limit = 20;
+    $sql = "SELECT *
+            FROM `zayavki`
+            WHERE ".$cond."
+            ORDER BY `dtime_add` DESC
+            LIMIT ".$limit;
+    $q = query($sql);
+    $zayav = array();
+    $client = array();
+    $device = array();
+    $vendor = array();
+    $model = array();
+    $images = array();
+    while($r = mysql_fetch_assoc($q)) {
+        $zayav[$r['id']] = $r;
+        $client[$r['client_id']] = $r['client_id'];
+        $device[$r['base_device_id']] = $r['base_device_id'];
+        $vendor[$r['base_vendor_id']] = $r['base_vendor_id'];
+        $model[$r['base_model_id']] = $r['base_model_id'];
+        $images['zayav'.$r['id']] = '"zayav'.$r['id'].'"';
+        $images['dev'.$r['base_model_id']] = '"dev'.$r['base_model_id'].'"';
+    }
+    $client = get_clients_info($client);
+    $status = zayav_status();
+
+    $sql = "SELECT `owner`,`link` FROM `images` WHERE `status`=1 AND `sort`=0 AND `owner` IN (".implode(',', $images).")";
+    $q = query($sql);
+    $imgLinks = array();
+    while($r = mysql_fetch_assoc($q))
+        $imgLinks[$r['owner']] = $r['link'].'-small.jpg';
+    unset($images);
+
+    $sql = "SELECT `id`,`name` FROM `base_device` WHERE `id` IN (".implode(',', $device).")";
+    $q = query($sql);
+    while($r = mysql_fetch_assoc($q))
+        $device[$r['id']] = $r['name'];
+
+    $sql = "SELECT `id`,`name` FROM `base_vendor` WHERE `id` IN (".implode(',', $vendor).")";
+    $q = query($sql);
+    while($r = mysql_fetch_assoc($q))
+        $vendor[$r['id']] = $r['name'];
+
+    $sql = "SELECT `id`,`name` FROM `base_model` WHERE `id` IN (".implode(',', $model).")";
+    $q = query($sql);
+    while($r = mysql_fetch_assoc($q))
+        $model[$r['id']] = $r['name'];
+
+    $sql = "SELECT
+                `table_id`,
+                `txt`
+            FROM `vk_comment`
+            WHERE `table_name`='zayav'
+              AND `table_id` IN (".implode(',', array_keys($zayav)).")
+              AND `status`=1
+            ORDER BY `id` ASC";
+    $articles = array();
+    $q = query($sql);
+    while($r = mysql_fetch_assoc($q))
+        $articles[$r['table_id']] = $r['txt'];
+
+    foreach($zayav as $r) {
+        $img = '/img/nofoto.gif';
+        if(isset($imgLinks['zayav'.$r['id']]))
+            $img = $imgLinks['zayav'.$r['id']];
+        elseif(isset($imgLinks['dev'.$r['base_model_id']]))
+            $img = $imgLinks['dev'.$r['base_model_id']];
+        $send['spisok'][$r['id']] = array(
+            'status_color' => $status[$r['zayav_status']]['color'],
+            'nomer' => $r['nomer'],
+            'category' => zayav_category($r['category']),
+            'device' => $device[$r['base_device_id']],
+            'vendor' => $vendor[$r['base_vendor_id']] ? $vendor[$r['base_vendor_id']] : '',
+            'model' => $model[$r['base_model_id']] ? $model[$r['base_model_id']] : '',
+            'client' => $client[$r['client_id']],
+            'dtime' => FullData($r['dtime_add'], 1),
+            'img' => $img,
+            'article' => isset($articles[$r['id']]) ? $articles[$r['id']] : ''
+        );
+
+    }
+    return $send;
+}//end of get_zayav_list()
+
+function show_zayav_count($count) {
+    return 'Показан'._end($count, 'а', 'о').' '.$count.' заяв'._end($count, 'ка', 'ки', 'ок');
+}//end of show_zayav_count()
+
+function show_zayav_list($data) {
+    return '<DIV id="zayav">'.
+        '<DIV class="result">'.show_zayav_count($data['all']).'</DIV>'.
+        '<TABLE cellspacing=0 class="tabLR">'.
+            '<TR><TD id="spisok">'.show_zayav_spisok($data).
+                '<TD class="right">'.
+                    '<DIV id=buttonCreate><A HREF="'.URL.'&p=zayav&d=add&back=remZayavki">Новая заявка</A></DIV>'. //todo заменить back
+        /*          <DIV id=fast></DIV>
+
+          <DIV class=findHead>Порядок</DIV>
+          <DIV class=findContent>
+            <INPUT TYPE=hidden id=sort value=1>
+            <h2><INPUT TYPE=hidden id=desc></h2>
+          </DIV>
+
+          <DIV class=findHead>Статус заявки</DIV><DIV id=status></DIV>
+          <DIV class=findHead>Устройство</DIV><DIV class=findContent id=dev></DIV>
+          <DIV class=findHead>Нахождение устройства</DIV><INPUT TYPE=hidden id=device_place>
+          <DIV class=findHead>Состояние устройства</DIV><INPUT TYPE=hidden id=device_status>
+        */
+        '</TABLE>'.
+    '</DIV>';
+}//end of show_zayav_list()
+
+function show_zayav_spisok($data) {
+    $send = '';
+    foreach($data['spisok'] as $id => $sp) {
+        $send .= '<div class="unit" style="background-color:#'.$sp['status_color'].'" val="'.$id.'">'.
+            '<TABLE cellspacing="0" width="100%">'.
+                '<TR><TD valign=top>'.
+                        '<h2>#'.$sp['nomer'].'</h2>'.
+                        '<H1>'.$sp['category'].' <A>'.$sp['device'].' <B>'.$sp['vendor'].' '.$sp['model'].'</B></A></H1>'.
+                        '<TABLE cellspacing="2">'.
+                            '<TR><TD class="label">Клиент:<TD>'.$sp['client'].
+                            '<TR><TD class="label">Дата подачи:<TD>'.$sp['dtime'].
+                            '<TR><TD colspan=2>'.
+                        '</TABLE>'.
+                    '<TD class="image"><IMG src="'.$sp['img'].'" />'.
+            '</TABLE>'.
+            '<input type="hidden" class="msg" value="'.$sp['article'].'">'.
+        '</div>';
+    }
+    return $send;
+}//end of show_zayav_spisok()
 
 
 
@@ -472,7 +624,7 @@ function history_types($arr) {
         case 2: return 'Удалил заявку №'.$arr['value'].'.';
         case 3: return 'Внёс в базу нового клиента '.$arr['client_link'].'.';
         case 4:
-            $status = get_zayav_status($arr['value']);
+            $status = zayav_status($arr['value']);
             return 'Изменил статус заявки '.$arr['zayav_link'].' на <span style="background-color:#'.$status['color'].'">'.$status['name'].'</span>.';
         case 5: return 'Произвёл начисление на сумму <b>'.$arr['value'].'</b> руб. для заявки '.$arr['zayav_link'].'.';
         case 6: return

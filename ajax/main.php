@@ -154,7 +154,7 @@ switch(@$_POST['op']) {
     case 'model_img_get':
         if(!preg_match(REGEXP_NUMERIC, $_POST['model_id']))
             jsonError();
-        $send['img'] = model_image_get(intval($_POST['model_id']));
+        $send['img'] = model_image_link(intval($_POST['model_id']));
         jsonSuccess($send);
         break;
 
@@ -611,10 +611,6 @@ switch(@$_POST['op']) {
         $r = mysql_fetch_assoc(query($sql));
         $client = $r['fio'];
 
-        $sql = "SELECT `name` FROM `setup_zayavki_category` WHERE `id`=".$zayav['category'];
-        $r = mysql_fetch_assoc(query($sql));
-        $category = $r['name'];
-
         $sql = "SELECT `name` FROM `base_device` WHERE `id`=".$zayav['base_device_id'];
         $r = mysql_fetch_assoc(query($sql));
         $device = $r['name'];
@@ -628,9 +624,9 @@ switch(@$_POST['op']) {
         $model = $r['name'];
 
         $html = '<table><tr>'.
-                    '<td><div class="img"><img src="'.zayav_image_get($id).'"></div></td>'.
+                    '<td><div class="img"><img src="'.zayav_image_link($id).'"></div></td>'.
                     '<td class="inf">'.
-                        $category.'<br />'.
+                        zayav_category($zayav['category']).'<br />'.
                         $device.'<br />'.
                         '<b>'.$vendor.' '.$model.'</b><br /><br />'.
                         '<span style="color:#000">Клиент:</span> '.$client.

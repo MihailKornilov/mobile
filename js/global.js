@@ -986,6 +986,26 @@ $(document).ready(function() {
         reportRashodMonthPrint();
     }
 
+    if($('#zayav').length > 0) {
+        $('.unit').click(function() {
+            location.href = URL + '&my_page=remZayavkiInfo&id=' + $(this).attr('val'); // todo поправить ссылку
+        });
+        $(document).on('mouseenter', '.unit', function() {
+            var t = $(this),
+                msg = t.find('.msg').val();
+            if(msg)
+                t.vkHint({
+                    width:150,
+                    msg:msg,
+                    ugol:'left',
+                    top:6,
+                    left:484,
+                    show:1,
+                    indent:5,
+                    delayShow:500
+                });
+        });
+    }
     if($('#zayavAdd').length > 0) {
         $("#client_id").clientSel({add:1});
         $("#category").vkSel({width:150, spisok:G.category_spisok});

@@ -114,6 +114,7 @@ if(isset($_GET['p'])) {
         case 'zayav':
             switch(@$_GET['d']) {
                 case 'add': $html .= zayav_add(); break;
+                default: $html .= show_zayav_list(get_zayav_list()); break;
             }
             break;
         case 'report':
