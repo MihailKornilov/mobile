@@ -157,6 +157,20 @@ switch(@$_POST['op']) {
         $send['img'] = model_image_link(intval($_POST['model_id']));
         jsonSuccess($send);
         break;
+    case 'zayav_spisok_load':
+        $_POST['find'] = win1251($_POST['find']);
+        $data = get_zayav_list(1, zayavfilter($_POST));
+        $send['all'] = utf8(show_zayav_count($data['all']));
+        $send['html'] = utf8(show_zayav_spisok($data));
+        jsonSuccess($send);
+        break;
+    case 'zayav_next':
+        $_POST['find'] = win1251($_POST['find']);
+        if(!preg_match(REGEXP_NUMERIC, $_POST['page']))
+            jsonError();
+        $send['html'] = utf8(show_zayav_spisok(get_zayav_list(intval($_POST['page']), zayavfilter($_POST))));
+        jsonSuccess($send);
+        break;
 
     case 'report_history_load':
         if(!preg_match(REGEXP_NUMERIC, $_POST['worker']))

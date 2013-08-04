@@ -78,7 +78,7 @@ function menu(val) {
   $("#dopMenu A.linkSel").attr('class','link');
   $("#dopMenu A.link:eq(" + val + ")").attr('class','linkSel');
   $("#zDop").css('display', val == 0 ? 'block' : 'none');
-  $("#zayavki").css('display', val == 0 ? 'block' : 'none');
+  $("#zayav").css('display', val == 0 ? 'block' : 'none');
   $("#result").css('display', val == 0 ? 'block' : 'none');
   $("#client_money").css('display', val == 1 ? 'block' : 'none');
   $("#client_comment").css('display', val == 2 ? 'block' : 'none');
@@ -140,7 +140,7 @@ G.spisok.unit = function (sp) {
 G.articles = [];
 G.spisok.create({
   json:G.zayavki,
-  view:$("#zayavki"),
+  view:$("#zayav"),
   limit:10,
   result_view:$("#result"),
   result:"Показан$show $count заяв$zayav",

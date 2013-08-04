@@ -88,7 +88,6 @@ switch($_GET['my_page']) {
   case 'remClient':     include('remont/client/spisok/client_tpl.php');break;          // список клиентов
   case 'remClientInfo': include('remont/client/info/clientInfo_tpl.php');break;     // информация о клиенте
 
-  case 'remZayavki':    include('remont/zayavki/spisok/zayavki_tpl.php');break;
   case 'remZayavkiInfo':include('remont/zayavki/info/zayavkiInfo_tpl.php');break;
 
   case 'remZp':         include('remont/zp/zp_tpl.php');break; // запчасти
@@ -114,7 +113,19 @@ if(isset($_GET['p'])) {
         case 'zayav':
             switch(@$_GET['d']) {
                 case 'add': $html .= zayav_add(); break;
-                default: $html .= show_zayav_list(get_zayav_list()); break;
+                default:
+                    $values = array(
+                        'find' => isset($_COOKIE['zayav_find']) ? unescape($_COOKIE['zayav_find']) : '',
+                        'sort' => isset($_COOKIE['zayav_sort']) ? intval($_COOKIE['zayav_sort']) : 1,
+                        'desc' => isset($_COOKIE['zayav_desc']) && intval($_COOKIE['zayav_desc']) == 1 ? 1 : 0,
+                        'status' => isset($_COOKIE['zayav_status']) ? intval($_COOKIE['zayav_status']) : 0,
+                        'device' => isset($_COOKIE['zayav_device']) ? intval($_COOKIE['zayav_device']) : 0,
+                        'vendor' => isset($_COOKIE['zayav_vendor']) ? intval($_COOKIE['zayav_vendor']) : 0,
+                        'model' => isset($_COOKIE['zayav_model']) ? intval($_COOKIE['zayav_model']) : 0,
+                        'place' => isset($_COOKIE['zayav_place']) ? $_COOKIE['zayav_place'] : 0,
+                        'dev_status' => isset($_COOKIE['zayav_dev_status']) ? $_COOKIE['zayav_dev_status'] : 0
+                    );
+                    $html .= show_zayav_list(get_zayav_list(1, zayavfilter($values)), $values);
             }
             break;
         case 'report':

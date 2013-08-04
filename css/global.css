@@ -89,22 +89,6 @@ td.r{text-align:right}
 
 
 
-/* список заявок */
-#zayav #spisok{padding-bottom:10px;background-color:#f7f7f7}
-#zayav .right{border:0;width:155px}
-#zayav .unit{cursor:pointer;margin:6px 0 0 8px;border:#DDD solid 1px;border-radius:2px}
-#zayav .unit:hover{border:#AAA solid 1px}
-#zayav .unit H1{margin:4px 0 2px 6px}
-#zayav .unit H2{float:right;font-size:10px;color:#777;margin:4px}
-#zayav .label{width:90px;padding-left:10px}
-#zayav .image {
-    width:80px;
-    height:80px;
-    vertical-align:middle;
-    text-align:center;
-    border-left:#DDD solid 1px;
-    background-color:#FFF;
-}
 
 
 

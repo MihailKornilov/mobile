@@ -680,7 +680,7 @@ function accrualAdd() {
         dialog.close();
         vkMsgOk("Начисление успешно произведено!");
         G.zayav.status = obj.status;
-        G.zayav.device_status = obj.device_status;
+        G.zayav.device_status = obj.rdevice_status;
         if (obj.status_new == 1) { G.zayav.status_dtime = res[res.length - 1].dtime; }
         G.zayav.update();
       }, 'json');

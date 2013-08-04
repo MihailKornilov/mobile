@@ -1557,6 +1557,7 @@ TABLE{border:0}
 #clientInfo #edit #telefon { width:220px; }
 #clientInfo #edit .tr_join { display:none; }
 
+#clientInfo #zayav .unit{margin-right:8px}/* todo удалить */
 
 
 
@@ -1565,61 +1566,6 @@ TABLE{border:0}
 
 
 
-
-
-
-
-/* ЗАЯВКИ */
-#zayavki #findResult IMG {
-  margin-right:5px;
-  position:relative;
-  top:3px;
-}
-#zayavki #tab { background:#F7F7F7; }
-#zayavki #spisok {
-  width:464px;
-  vertical-align:top;
-  padding-bottom:15px;
-}
-#zayavki #right {
-  width:155px;
-  padding:8px 8px 300px 0;
-  vertical-align:top;
-}
-#zayavki .unit {
-  cursor:pointer;
-  margin:6px 8px 0 8px;
-  border:#DDD solid 1px;
-  background-color:#FFF;
-  }
-#zayavki .unit:hover { border:#AAA solid 1px; }
-#zayavki .unit H1 { margin:4px 0 2px 6px; }
-#zayavki .unit H1 B { font-weight:bold; }
-#zayavki .unit H2 {
-  float:right;
-  font-size:10px;
-  color:#777;
-  margin:4px;
-  }
-#zayavki .tdAbout {
-    width:90px;
-    padding-left:10px;
-}
-#zayavki .image {
-  width:80px;
-  height:80px;
-  vertical-align:middle;
-  text-align:center;
-  border-left:#DDD solid 1px;
-  background-color:#FFF;
-  }
-#zayavki .tabInfo { margin-bottom:4px; }
-#zayavki .unit I {
-  color:#933;
-  font:italic 10px Verdana;
-  }
-#zayavki #ajaxNext { margin:8px 4px 0 8px; }
-#zayavki #fast { margin-top:15px; }
 
 
 
@@ -1759,6 +1705,31 @@ TABLE{border:0}
 
 
 
+/* todo перенести после переделки информации о клиенте */
+/* список заявок */
+#zayav #filter_break{float:right}
+#zayav #spisok{padding-bottom:10px;background-color:#f7f7f7;vertical-align:top}
+#zayav .right{border:0;width:155px;padding-bottom:300px}
+#zayav .unit{cursor:pointer;margin:6px 0 0 8px;border:#DDD solid 1px;border-radius:2px}
+#zayav .unit:hover{border:#AAA solid 1px}
+#zayav .unit H1{margin:4px 0 2px 6px}
+#zayav .unit H2{float:right;font-size:10px;color:#777;margin:4px}
+#zayav .unit H2.finded{background:#FFC;color:#444;text-decoration:underline}
+#zayav .unit em{background:#FFC;border-bottom:1px solid #FE2}
+#zayav .unit b em{font-weight:bold}
+#zayav .label{width:90px;padding-left:10px}
+#zayav .image {
+    width:80px;
+    height:80px;
+    vertical-align:middle;
+    text-align:center;
+    border-left:#DDD solid 1px;
+    background-color:#FFF;
+}
+#zayav_next{margin-top:6px}
+#zayav #find{margin-top:15px}
+#zayav #desc_check{margin-top:10px}
+#zayav .findEmpty{margin-right:6px;}
 
 
 

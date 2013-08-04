@@ -827,10 +827,11 @@ $.fn.infoLink = function(obj) {
     func:''
     },obj);
   var dl = '';
-  for (var n = 0; n < obj.spisok.length; n++) { dl += "<DD val=" + obj.spisok[n].uid + ">" + obj.spisok[n].title; }
+  for (var n = 0; n < obj.spisok.length; n++) {
+      dl += "<DD val=" + obj.spisok[n].uid + ">" + obj.spisok[n].title;
+  }
   var TS = $(this);
-  TS
-    .addClass('infoLink')
+  TS.addClass('infoLink')
     .html("<INPUT type=hidden value='" + obj.spisok[0].uid + "'><DL>" + dl + "</DL>")
     .find('DD:first').addClass('sel');
   TS.find('DD').click(function () {
@@ -964,6 +965,7 @@ $.fn.topSearchSet = function (VAL) {
     this.find(".img_del").show().next().val(VAL);
     this.find("H5 DIV:first").hide();
   }
+    return $(this);
 }
 
 

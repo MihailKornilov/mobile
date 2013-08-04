@@ -61,57 +61,13 @@ G.spisok.create({
 
 
 
-$("#fast").topSearch({
-  width:134,
-  focus:1,
-  txt:'Быстрый поиск...',
-  enter:1,
-  func:function (val) {
-    setCookie('zFindFast', val);
-    G.spisok.print({fast:val});
-  }
-}).topSearchSet(G.spisok.values.fast);
-
-$("#sort")
-  .val(G.spisok.values.sort)
-  .myRadio({
-    spisok:[{uid:1,title:'По дате добавления'},{uid:2,title:'По обновлению статуса'}],
-    bottom:5,
-    func:function (id) {
-      setCookie('zFindSort', id);
-      G.spisok.print({sort:id});
-    }
-  });
-
-$("#desc").myCheck({
-  title:"Обратный порядок",
-  value:G.spisok.values.desc,
-  func:function (id) {
-    setCookie('zFindDesc', id);
-    G.spisok.print({desc:id});
-  }
-});
-
-
-
-// список-меню статусов
-G.status_spisok.unshift({uid:0, title:'Любой статус'});
-$("#status").infoLink({
-  spisok:G.status_spisok,
-  func:function (id) {
-    setCookie('zFindStatus', id);
-    G.spisok.print({status:id});
-  }
-}).infoLinkSet(G.spisok.values.status);
-
-
 
 
 deviceSet();
 
 
 // Нахождение устройства
-for (var n = 0; n < G.device_place_other.length; n++) {
+for(var n = 0; n < G.device_place_other.length; n++) {
   var sp = G.device_place_other[n];
   G.device_place_spisok.push({uid:encodeURI(sp), title:sp});
 }

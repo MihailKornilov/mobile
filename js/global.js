@@ -1,6 +1,42 @@
 var REGEXP_NUMERIC = /^\d+$/,
     URL = 'http://' + G.domain + '/index.php?' + G.values,
     AJAX_MAIN = 'http://' + G.domain + '/ajax/main.php?' + G.values,
+    zayavFilterValues = {},
+    zayavFilterValuesGet = function () {
+        zayavFilterValues =  {
+            find:$('#find').find('input').val(),
+            sort:$('#sort').val(),
+            desc:$('#desc').val(),
+            status:$('#status .sel').attr('val'),
+            device:$('#dev_device').val(),
+            vendor:$('#dev_vendor').val(),
+            model:$('#dev_model').val(),
+            place:$('#device_place').val(),
+            dev_status:$('#dev_status').val()
+        };
+        return zayavFilterValues;
+    },
+    zayavSpisokLoad = function() {
+        var send = zayavFilterValuesGet();
+        send.op = 'zayav_spisok_load';
+        setCookie('zayav_find', escape(send.find));
+        setCookie('zayav_sort', send.sort);
+        setCookie('zayav_desc', send.desc);
+        setCookie('zayav_status', send.status);
+        setCookie('zayav_device', send.device);
+        setCookie('zayav_vendor', send.vendor);
+        setCookie('zayav_model', send.model);
+        setCookie('zayav_place', encodeURI(send.place));
+        setCookie('zayav_dev_status', send.dev_status);
+        $('#mainLinks')
+            .find('img').remove().end()
+            .append('<img src="/img/upload.gif">');
+        $.post(AJAX_MAIN, send, function (res) {
+            $('#zayav .result').html(res.all);
+            $('#zayav #spisok').html(res.html);
+            $('#mainLinks img').remove();
+        }, 'json');
+    },
     reportHistoryLoad = function() {
         var send = {
             op:'report_history_load',
@@ -148,6 +184,59 @@ $(document).on('mouseenter', '.zayav_link', function(e) {
             .removeClass('empty');
     }, 'json');
 });
+
+$(document)
+    .on('click', '#zayav_next', function() {
+        if($(this).hasClass('busy'))
+            return;
+        var next = $(this);
+        zayavFilterValues.op = 'zayav_next';
+        zayavFilterValues.page = $(this).attr('val');
+        next.addClass('busy');
+        $.post(AJAX_MAIN, zayavFilterValues, function (res) {
+            if(res.success) {
+                next.remove();
+                $('#zayav #spisok').append(res.html);
+            } else
+                next.removeClass('busy');
+        }, 'json');
+    })
+    .on('click', '#zayav .unit', function() {
+        location.href = URL + '&my_page=remZayavkiInfo&id=' + $(this).attr('val'); // todo поправить ссылку
+    })
+    .on('mouseenter', '#zayav .unit', function() {
+        var t = $(this),
+            msg = t.find('.msg').val();
+        if(msg)
+            t.vkHint({
+                width:150,
+                msg:msg,
+                ugol:'left',
+                top:6,
+                left:484,
+                show:1,
+                indent:5,
+                delayShow:500
+            });
+    })
+    .on('click', '#zayav #desc_check', zayavSpisokLoad)
+    .on('click', '#zayav #filter_break', function() {
+        $('#find').topSearchClear();
+        $('#sort').myRadioSet(1);
+        $('#desc').val(0).next().attr('class', 'check0');
+        $('#status').infoLinkSet(0);
+        $("#dev").device({
+            width:155,
+            type_no:1,
+            device_ids:G.device_ids,
+            vendor_ids:G.vendor_ids,
+            model_ids:G.model_ids,
+            func:zayavSpisokLoad
+        });
+        G.vkSel_device_place.val(0);
+        G.vkSel_device_status.val(0);
+        zayavSpisokLoad();
+    });
 
 $(document)
     .on('click', '#report_history_next', function() {
@@ -987,24 +1076,69 @@ $(document).ready(function() {
     }
 
     if($('#zayav').length > 0) {
-        $('.unit').click(function() {
-            location.href = URL + '&my_page=remZayavkiInfo&id=' + $(this).attr('val'); // todo поправить ссылку
+        $("#find")
+            .topSearch({
+                width:134,
+                focus:1,
+                txt:'Быстрый поиск...',
+                enter:1,
+                func:zayavSpisokLoad
+            })
+            .topSearchSet(G.zayav_find)
+            .vkHint({
+                msg:'Поиск производится по<br />совпадению в названии<br />модели, imei и серийном<br />номере.',
+                ugol:'right',
+                top:-9,
+                left:-178,
+                delayShow:800,
+                correct:0
+            });
+        $("#sort").myRadio({
+            spisok:[
+                {uid:1,title:'По дате добавления'},
+                {uid:2,title:'По обновлению статуса'}
+            ],
+            bottom:5,
+            func:zayavSpisokLoad
         });
-        $(document).on('mouseenter', '.unit', function() {
-            var t = $(this),
-                msg = t.find('.msg').val();
-            if(msg)
-                t.vkHint({
-                    width:150,
-                    msg:msg,
-                    ugol:'left',
-                    top:6,
-                    left:484,
-                    show:1,
-                    indent:5,
-                    delayShow:500
-                });
+        G.status_spisok.unshift({uid:0, title:'Любой статус'});
+        $("#status").infoLink({
+            spisok:G.status_spisok,
+            func:zayavSpisokLoad
+        }).infoLinkSet(G.zayav_status);
+        $("#dev").device({
+            width:155,
+            type_no:1,
+            device_id:G.zayav_device,
+            vendor_id:G.zayav_vendor,
+            model_id:G.zayav_model,
+            device_ids:G.device_ids,
+            vendor_ids:G.vendor_ids,
+            model_ids:G.model_ids,
+            func:zayavSpisokLoad
         });
+        // Нахождение устройства
+        for(var n = 0; n < G.place_other.length; n++) {
+            var sp = G.place_other[n];
+            G.device_place_spisok.push({uid:encodeURI(sp), title:sp});
+        }
+        G.device_place_spisok.push({uid:-1, title:'не известно', content:'<B>не известно</B>'});
+        G.vkSel_device_place = $("#device_place").vkSel({
+            width:155,
+            title0:'Любое местонахождение',
+            spisok:G.device_place_spisok,
+            func:zayavSpisokLoad
+        }).o;
+        // Состояние устройства
+        G.device_status_spisok.splice(0, 1);
+        G.device_status_spisok.push({uid:-1, title:'не известно', content:'<B>не известно</B>'});
+        G.vkSel_device_status = $("#dev_status").vkSel({
+            width:155,
+            title0:'Любое состояние',
+            spisok:G.device_status_spisok,
+            func:zayavSpisokLoad
+        }).o;
+        zayavFilterValuesGet();
     }
     if($('#zayavAdd').length > 0) {
         $("#client_id").clientSel({add:1});

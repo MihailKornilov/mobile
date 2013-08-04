@@ -81,7 +81,7 @@ if (count($spisok) > 0) {
                 <DIV style=clear:both;></DIV>
               </DIV>
 
-              <DIV id=zayavki></DIV>
+              <DIV id=zayav></DIV>
               <DIV id=client_money><?php echo $money_spisok; ?></DIV>
               <DIV id=client_comment></DIV>
 
