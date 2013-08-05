@@ -1,33 +1,76 @@
 var REGEXP_NUMERIC = /^\d+$/,
     URL = 'http://' + G.domain + '/index.php?' + G.values,
     AJAX_MAIN = 'http://' + G.domain + '/ajax/main.php?' + G.values,
-    zayavFilterValues = {},
+    hashLoc,
+    hashSet = function(hash) {
+        if(!hash && !hash.p)
+            return;
+        hashLoc = hash.p;
+        var s = true;
+        switch(hash.p) {
+            case 'zayav':
+                if(hash.d == 'info')
+                    hashLoc += '_' + hash.id;
+                else if(hash.d == 'add')
+                    hashLoc += '_add' + (REGEXP_NUMERIC.test(hash.id) ? '_' + hash.id : '');
+                else if(!hash.d)
+                    s = false;
+                break;
+            default:
+                if(hash.d) {
+                    hashLoc += '_' + hash.d;
+                    if(hash.d1)
+                        hashLoc += '_' + hash.d1;
+                }
+        }
+        if(s)
+            VK.callMethod('setLocation', hashLoc);
+    },
+    zayavFilterValues,
     zayavFilterValuesGet = function () {
-        zayavFilterValues =  {
-            find:$('#find').find('input').val(),
-            sort:$('#sort').val(),
-            desc:$('#desc').val(),
-            status:$('#status .sel').attr('val'),
-            device:$('#dev_device').val(),
-            vendor:$('#dev_vendor').val(),
-            model:$('#dev_model').val(),
-            place:$('#device_place').val(),
-            dev_status:$('#dev_status').val()
-        };
+        var v = {
+                find:$.trim($('#find').find('input').val()),
+                sort:$('#sort').val(),
+                desc:$('#desc').val(),
+                status:$('#status .sel').attr('val'),
+                device:$('#dev_device').val(),
+                vendor:$('#dev_vendor').val(),
+                model:$('#dev_model').val(),
+                place:$('#device_place').val(),
+                devstatus:$('#devstatus').val()
+            },
+            loc = '';
+        if(v.sort != 1) loc += '.sort=' + v.sort;
+        if(v.desc != 0) loc += '.desc=' + v.desc;
+        if(v.find) loc += '.find=' + escape(v.find);
+        else {
+            if(v.status > 0) loc += '.status=' + v.status;
+            if(v.device > 0) loc += '.device=' + v.device;
+            if(v.vendor > 0) loc += '.vendor=' + v.vendor;
+            if(v.model > 0) loc += '.model=' + v.model;
+            if(v.place != 0) loc += '.place=' + v.place;
+            if(v.devstatus > 0) loc += '.devstatus=' + v.devstatus;
+        }
+        VK.callMethod('setLocation', hashLoc + loc);
+        zayavFilterValues = v;
+
+        setCookie('zayav_find', escape(v.find));
+        setCookie('zayav_sort', v.sort);
+        setCookie('zayav_desc', v.desc);
+        setCookie('zayav_status', v.status);
+        setCookie('zayav_device', v.device);
+        setCookie('zayav_vendor', v.vendor);
+        setCookie('zayav_model', v.model);
+        setCookie('zayav_place', encodeURI(v.place));
+        setCookie('zayav_devstatus', v.devstatus);
+
         return zayavFilterValues;
     },
     zayavSpisokLoad = function() {
         var send = zayavFilterValuesGet();
+        $('.condLost')[(send.find ? 'add' : 'remove') + 'Class']('hide');
         send.op = 'zayav_spisok_load';
-        setCookie('zayav_find', escape(send.find));
-        setCookie('zayav_sort', send.sort);
-        setCookie('zayav_desc', send.desc);
-        setCookie('zayav_status', send.status);
-        setCookie('zayav_device', send.device);
-        setCookie('zayav_vendor', send.vendor);
-        setCookie('zayav_model', send.model);
-        setCookie('zayav_place', encodeURI(send.place));
-        setCookie('zayav_dev_status', send.dev_status);
+
         $('#mainLinks')
             .find('img').remove().end()
             .append('<img src="/img/upload.gif">');
@@ -1132,7 +1175,7 @@ $(document).ready(function() {
         // Состояние устройства
         G.device_status_spisok.splice(0, 1);
         G.device_status_spisok.push({uid:-1, title:'не известно', content:'<B>не известно</B>'});
-        G.vkSel_device_status = $("#dev_status").vkSel({
+        G.vkSel_device_status = $("#devstatus").vkSel({
             width:155,
             title0:'Любое состояние',
             spisok:G.device_status_spisok,
@@ -1200,7 +1243,7 @@ $(document).ready(function() {
         });
         $('#reminder_day').vkCalendar();
         $('.vkCancel').click(function() {
-            location.href = URL + '&my_page=' + $(this).attr('val');
+            location.href = URL + '&p=' + $(this).attr('val');
         });
         $(".vkButton").click(function () {
             var send = {

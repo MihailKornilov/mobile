@@ -1710,6 +1710,7 @@ TABLE{border:0}
 #zayav #filter_break{float:right}
 #zayav #spisok{padding-bottom:10px;background-color:#f7f7f7;vertical-align:top}
 #zayav .right{border:0;width:155px;padding-bottom:300px}
+#zayav .condLost.hide{display:none}
 #zayav .unit{cursor:pointer;margin:6px 0 0 8px;border:#DDD solid 1px;border-radius:2px}
 #zayav .unit:hover{border:#AAA solid 1px}
 #zayav .unit H1{margin:4px 0 2px 6px}
@@ -1726,7 +1727,7 @@ TABLE{border:0}
     border-left:#DDD solid 1px;
     background-color:#FFF;
 }
-#zayav_next{margin-top:6px}
+#zayav_next{margin-top:6px;margin-left:8px}
 #zayav #find{margin-top:15px}
 #zayav #desc_check{margin-top:10px}
 #zayav .findEmpty{margin-right:6px;}

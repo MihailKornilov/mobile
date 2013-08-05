@@ -58,17 +58,11 @@ current_timestamp)");
   setcookie('id', $_GET['id'], time() + 2592000, '/');
 }
 
-
-
-
-
-if ($_GET['hash']) {
-  $ex = explode('_',$_GET['hash']);
-  $_GET['my_page'] = $ex[0];
-  $_GET['id'] = isset($ex[1]) ? $ex[1] : '';
+if(!empty($_GET['hash'])) {
+    $ex = explode('_',$_GET['hash']);
+    $_GET['my_page'] = $ex[0];
+    $_GET['id'] = isset($ex[1]) ? $ex[1] : '';
 }
-
-
 
 switch($_GET['my_page']) {
   // суперадминистратор
@@ -104,8 +98,14 @@ switch($_GET['my_page']) {
   // создание мастерской
   case 'wsIndex':       include('workshop/wsIndex_tpl.php');break;
   case 'wsStep1':       include('workshop/wsStep1_tpl.php');break;
+    default: unset($_GET['my_page']);
 }
 
+
+if(empty($_GET['my_page']) && empty($_GET['p']))
+    $_GET['p'] = 'zayav';
+
+hashRead($_GET['hash']);
 if(isset($_GET['p'])) {
     _header();
     _mainLinks();
@@ -114,16 +114,30 @@ if(isset($_GET['p'])) {
             switch(@$_GET['d']) {
                 case 'add': $html .= zayav_add(); break;
                 default:
+                    $values = array();
+                    if(HASH_VALUES) {
+                        $ex = explode('.', HASH_VALUES);
+                        foreach($ex as $r) {
+                            $arr = explode('=', $r);
+                            $values[$arr[0]] = $arr[1];
+                        }
+                    } else {
+                        foreach($_COOKIE as $k => $val) {
+                            $arr = explode('zayav_', $k);
+                            if(isset($arr[1]))
+                                $values[$arr[1]] = $val;
+                        }
+                    }
                     $values = array(
-                        'find' => isset($_COOKIE['zayav_find']) ? unescape($_COOKIE['zayav_find']) : '',
-                        'sort' => isset($_COOKIE['zayav_sort']) ? intval($_COOKIE['zayav_sort']) : 1,
-                        'desc' => isset($_COOKIE['zayav_desc']) && intval($_COOKIE['zayav_desc']) == 1 ? 1 : 0,
-                        'status' => isset($_COOKIE['zayav_status']) ? intval($_COOKIE['zayav_status']) : 0,
-                        'device' => isset($_COOKIE['zayav_device']) ? intval($_COOKIE['zayav_device']) : 0,
-                        'vendor' => isset($_COOKIE['zayav_vendor']) ? intval($_COOKIE['zayav_vendor']) : 0,
-                        'model' => isset($_COOKIE['zayav_model']) ? intval($_COOKIE['zayav_model']) : 0,
-                        'place' => isset($_COOKIE['zayav_place']) ? $_COOKIE['zayav_place'] : 0,
-                        'dev_status' => isset($_COOKIE['zayav_dev_status']) ? $_COOKIE['zayav_dev_status'] : 0
+                        'find' => isset($values['find']) ? unescape($values['find']) : '',
+                        'sort' => isset($values['sort']) ? intval($values['sort']) : 1,
+                        'desc' => isset($values['desc']) && intval($values['desc']) == 1 ? 1 : 0,
+                        'status' => isset($values['status']) ? intval($values['status']) : 0,
+                        'device' => isset($values['device']) ? intval($values['device']) : 0,
+                        'vendor' => isset($values['vendor']) ? intval($values['vendor']) : 0,
+                        'model' => isset($values['model']) ? intval($values['model']) : 0,
+                        'place' => isset($values['place']) ? $values['place'] : 0,
+                        'devstatus' => isset($values['devstatus']) ? $values['devstatus'] : 0
                     );
                     $html .= show_zayav_list(get_zayav_list(1, zayavfilter($values)), $values);
             }
@@ -206,6 +220,3 @@ if(isset($_GET['p'])) {
     mysql_close();
     echo $html;
 }
-
-if(empty($_GET['my_page']) && empty($_GET['p']))
-    include('remont/zayavki/spisok/zayavki_tpl.php');

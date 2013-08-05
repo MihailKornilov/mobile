@@ -1,4 +1,35 @@
 <?php
+function hashRead($h) {
+    if(empty($h)) {
+        define('HASH_VALUES', false);
+        return;
+    }
+    $ex = explode('.', $h);
+    $r = explode('_', $ex[0]);
+    unset($ex[0]);
+    define('HASH_VALUES', empty($ex) ? false : implode('.', $ex));
+    $_GET['p'] = $r[0];
+    switch($_GET['p']) {
+        case 'zayav':
+            if(isset($r[1]))
+                if(preg_match(REGEXP_NUMERIC, $r[1])) {
+                    $_GET['d'] = 'info';
+                    $_GET['id'] = intval($r[1]);
+                } else {
+                    $_GET['d'] = $r[1];
+                    if(isset($r[2]))
+                        $_GET['id'] = intval($r[2]);
+                }
+            break;
+        default:
+            if(isset($r[1])) {
+                $_GET['d'] = $r[1];
+                if(isset($r[2]))
+                    $_GET['d1'] = $r[2];
+            }
+    }
+}//end of hashRead()
+
 function _header() {
     global $html, $vku, $WS;
     $html =
@@ -47,7 +78,7 @@ function _footer() {
     global $html, $sqlQuery;
     if(ADMIN)
         $html .= '<DIV id="admin">'.
-                '<A href="'.URL.'&my_page=superAdmin&pre_page='.$_GET['my_page'].'&pre_id='.$_GET['id'].'">Admin</A> :: '.
+                '<A href="'.URL.'&my_page=superAdmin&pre_page='.@$_GET['my_page'].'&pre_id='.@$_GET['id'].'">Admin</A> :: '.
                 '<A href="https://github.com/MihailKornilov/vkmobile/issues" target="_blank">Issues</A> :: '.
                 '<A id=script_style>Стили и скрипты ('.VERSION.')</A> :: '.
                 'sql '.$sqlQuery.' :: '.
@@ -58,7 +89,36 @@ function _footer() {
                 '$("#script_style").click(function(){$.getJSON("/superadmin/AjaxScriptStyleUp.php?"+G.values,function(){location.reload()})});'.
                 '$("#admin EM:first").html(((new Date().getTime())-G.T)/1000);'.
             '</SCRIPT>';
-    $html .= '</DIV></BODY></HTML>';
+    $getArr = array(
+        'start' => 1,
+        'api_url' => 1,
+        'api_id' => 1,
+        'api_settings' => 1,
+        'viewer_id' => 1,
+        'viewer_type' => 1,
+        'sid' => 1,
+        'secret' => 1,
+        'access_token' => 1,
+        'user_id' => 1,
+        'group_id' => 1,
+        'is_app_user' => 1,
+        'auth_key' => 1,
+        'language' => 1,
+        'parent_language' => 1,
+        'ad_info' => 1,
+        'is_secure' => 1,
+        'referrer' => 1,
+        'lc_name' => 1,
+        'hash' => 1,
+        'my_page' => 1
+    );
+    $gValues = array();
+    foreach($_GET as $k => $val) {
+        if(isset($getArr[$k]) || empty($_GET[$k])) continue;
+        $gValues[] = '"'.$k.'":"'.$val.'"';
+    }
+    $html .='<SCRIPT type="text/javascript">hashSet({'.implode(',', $gValues).'})</SCRIPT>'.
+        '</DIV></BODY></HTML>';
 }//end of _footer()
 
 function _mainLinks() {
@@ -421,7 +481,6 @@ function zayav_add() {
         $fault .= (++$k%2 ? '<tr>' : '').'<td>'._checkbox('f_'.$r['id'], $r['name']);
     $fault .= '</table>';
     switch(@$_GET['back']) {
-        case 'remZayavki': $back = 'remZayavki'; break;
         case 'remClientInfo': $back = 'remClientInfo'; break;
         default: $back = 'zayav';
 
@@ -452,6 +511,7 @@ function zayav_add() {
         '<DIV class="vkCancel" val="'.$back.$id.'"><BUTTON>Отмена</BUTTON></DIV>'.
     '</DIV>';
 }//end of zayav_add()
+
 function zayavFilter($v) {
     if(empty($v['status']) || !preg_match(REGEXP_NUMERIC, $v['status']))
         $v['status'] = 0;
@@ -461,8 +521,8 @@ function zayavFilter($v) {
         $v['vendor'] = 0;
     if($v['device'] == 0 || !preg_match(REGEXP_NUMERIC, $v['model']))
         $v['model'] = 0;
-    if(empty($v['dev_status']) || !preg_match(REGEXP_NUMERIC, $v['dev_status']) && $v['dev_status'] != -1)
-        $v['dev_status'] = 0;
+    if(empty($v['devstatus']) || !preg_match(REGEXP_NUMERIC, $v['devstatus']) && $v['devstatus'] != -1)
+        $v['devstatus'] = 0;
 
     $filter = array();
     $filter['find'] = htmlspecialchars(trim(@$v['find']));
@@ -476,48 +536,69 @@ function zayavFilter($v) {
     $filter['vendor'] = intval($v['vendor']);
     $filter['model'] = intval($v['model']);
     $filter['place'] = win1251(urldecode(htmlspecialchars(trim(@$v['place']))));
-    $filter['dev_status'] = $v['dev_status'];
+    $filter['devstatus'] = $v['devstatus'];
     return $filter;
 }
 function get_zayav_list($page=1, $filter=array()) {
+    $limit = 20;
     $cond = "`ws_id`=".WS_ID." AND `zayav_status`>0";
-    if(!empty($filter['find'])) {
-        $cond .= " AND `find` LIKE '%".$filter['find']."%'";
-        if(preg_match(REGEXP_NUMERIC, $filter['find'])) {
-            $nomer = intval($filter['find']);
-            $cond .= " OR `nomer`=".$nomer." AND `zayav_status`>0";
-        }
-    }
+
     if(empty($filter['sort']))
         $filter['sort'] = 'dtime_add';
     if(empty($filter['desc']))
         $filter['desc'] = 'DESC';
-    if(isset($filter['status']) && $filter['status'] > 0)
-        $cond .= " AND `zayav_status`=".$filter['status'];
-    if(isset($filter['device']) && $filter['device'] > 0)
-        $cond .= " AND `base_device_id`=".$filter['device'];
-    if(isset($filter['vendor']) && $filter['vendor'] > 0)
-        $cond .= " AND `base_vendor_id`=".$filter['vendor'];
-    if(isset($filter['model']) && $filter['model'] > 0)
-        $cond .= " AND `base_model_id`=".$filter['model'];
-    if(isset($filter['place']) && $filter['place'] != '0') {
-        if(preg_match(REGEXP_NUMERIC, $filter['place']))
-            $cond .= " AND `device_place`=".$filter['place'];
-        elseif($filter['place'] == -1)
-            $cond .= " AND `device_place`=0 AND LENGTH(`device_place_other`)=0";
-        else
-            $cond .= " AND `device_place`=0 AND `device_place_other`='".$filter['place']."'";
+    if(!empty($filter['find'])) {
+        $cond .= " AND `find` LIKE '%".$filter['find']."%'";
+        if($page ==1 && preg_match(REGEXP_NUMERIC, $filter['find']))
+            $nomer = intval($filter['find']);
+    } else {
+        if(isset($filter['status']) && $filter['status'] > 0)
+            $cond .= " AND `zayav_status`=".$filter['status'];
+        if(isset($filter['device']) && $filter['device'] > 0)
+            $cond .= " AND `base_device_id`=".$filter['device'];
+        if(isset($filter['vendor']) && $filter['vendor'] > 0)
+            $cond .= " AND `base_vendor_id`=".$filter['vendor'];
+        if(isset($filter['model']) && $filter['model'] > 0)
+            $cond .= " AND `base_model_id`=".$filter['model'];
+        if(isset($filter['place']) && $filter['place'] != '0') {
+            if(preg_match(REGEXP_NUMERIC, $filter['place']))
+                $cond .= " AND `device_place`=".$filter['place'];
+            elseif($filter['place'] == -1)
+                $cond .= " AND `device_place`=0 AND LENGTH(`device_place_other`)=0";
+            else
+                $cond .= " AND `device_place`=0 AND `device_place_other`='".$filter['place']."'";
+        }
+        if(isset($filter['devstatus']) && $filter['devstatus'] != 0)
+            $cond .= " AND `device_status`=".($filter['devstatus'] > 0 ? $filter['devstatus'] : 0);
     }
-    if(isset($filter['dev_status']) && $filter['dev_status'] != 0)
-        $cond .= " AND `device_status`=".($filter['dev_status'] > 0 ? $filter['dev_status'] : 0);
+    $zayav = array();
+    $client = array();
+    $device = array();
+    $vendor = array();
+    $model = array();
+    $images = array();
 
     $sql = "SELECT COUNT(`id`) AS `all` FROM `zayavki` WHERE ".$cond." LIMIT 1";
     $r = mysql_fetch_assoc(query($sql));
     $send['all'] = $r['all'];
+    if(isset($nomer)) {
+        $sql = "SELECT * FROM `zayavki` WHERE `nomer`=".$nomer." AND `zayav_status`>0 LIMIT 1";
+        if($r = mysql_fetch_assoc(query($sql))) {
+            $send['all']++;
+            $limit--;
+            $r['nomer_find'] = 1;
+            $zayav[$r['id']] = $r;
+            $client[$r['client_id']] = $r['client_id'];
+            $device[$r['base_device_id']] = $r['base_device_id'];
+            $vendor[$r['base_vendor_id']] = $r['base_vendor_id'];
+            $model[$r['base_model_id']] = $r['base_model_id'];
+            $images['zayav'.$r['id']] = '"zayav'.$r['id'].'"';
+            $images['dev'.$r['base_model_id']] = '"dev'.$r['base_model_id'].'"';
+        }
+    }
     if($send['all'] == 0)
         return $send;
 
-    $limit = 20;
     $start = ($page - 1) * $limit;
     $sql = "SELECT *
             FROM `zayavki`
@@ -525,29 +606,16 @@ function get_zayav_list($page=1, $filter=array()) {
             ORDER BY `".$filter['sort']."` ".$filter['desc']."
             LIMIT ".$start.",".$limit;
     $q = query($sql);
-    $zayav = array();
-    $client = array();
-    $device = array();
-    $vendor = array();
-    $model = array();
-    $images = array();
     while($r = mysql_fetch_assoc($q)) {
+        if(isset($nomer) && $nomer == $r['nomer'])
+            continue;
         $zayav[$r['id']] = $r;
-        if(isset($nomer) && $r['nomer'] == $nomer)
-            $nomer_id = $r['id'];
         $client[$r['client_id']] = $r['client_id'];
         $device[$r['base_device_id']] = $r['base_device_id'];
         $vendor[$r['base_vendor_id']] = $r['base_vendor_id'];
         $model[$r['base_model_id']] = $r['base_model_id'];
         $images['zayav'.$r['id']] = '"zayav'.$r['id'].'"';
         $images['dev'.$r['base_model_id']] = '"dev'.$r['base_model_id'].'"';
-    }
-    if(isset($nomer_id)) {
-        $z = $zayav[$nomer_id];
-        unset($zayav[$nomer_id]);
-        $z['nomer_find'] = 1;
-        array_unshift($zayav, $z);
-        unset($z);
     }
     $client = get_clients_info($client);
     $status = zayav_status();
@@ -673,15 +741,17 @@ function show_zayav_list($data, $values) {
         '<TABLE cellspacing=0 class="tabLR">'.
             '<TR><TD id="spisok">'.show_zayav_spisok($data).
                 '<TD class="right">'.
-                    '<DIV id="buttonCreate"><A HREF="'.URL.'&p=zayav&d=add&back=remZayavki">Новая заявка</A></DIV>'. //todo заменить back
+                    '<DIV id="buttonCreate"><A HREF="'.URL.'&p=zayav&d=add&back=zayav">Новая заявка</A></DIV>'.
                     '<DIV id="find"></DIV>'.
                     '<DIV class="findHead">Порядок</DIV>'.
                     '<INPUT TYPE="hidden" id="sort" value="'.$values['sort'].'">'.
                     _checkbox('desc', 'Обратный порядок', $values['desc']).
-                    '<DIV class="findHead">Статус заявки</DIV><DIV id="status"></DIV>'.
-                    '<DIV class="findHead">Устройство</DIV><DIV id="dev"></DIV>'.
-                    '<DIV class="findHead">Нахождение устройства</DIV><INPUT TYPE="hidden" id="device_place" value="'.$values['place'].'">'.
-                    '<DIV class="findHead">Состояние устройства</DIV><INPUT TYPE="hidden" id="dev_status" value="'.$values['dev_status'].'">'.
+                    '<div class="condLost'.(!empty($values['find']) ? ' hide' : '').'">'.
+                        '<DIV class="findHead">Статус заявки</DIV><DIV id="status"></DIV>'.
+                        '<DIV class="findHead">Устройство</DIV><DIV id="dev"></DIV>'.
+                        '<DIV class="findHead">Нахождение устройства</DIV><INPUT TYPE="hidden" id="device_place" value="'.$values['place'].'">'.
+                        '<DIV class="findHead">Состояние устройства</DIV><INPUT TYPE="hidden" id="devstatus" value="'.$values['devstatus'].'">'.
+                    '</div>'.
         '</TABLE>'.
         '<script type="text/javascript">'.
             'G.device_ids = ['.implode(',', $device_ids).'];'.
@@ -1003,7 +1073,7 @@ function report_remind_spisok($page=1, $status=1, $private=0) {
             '<div class="txt">'.
                 ($r['private'] ? '<u>Личное.</u> ' : '').
                 ($r['client_id'] ? 'Клиент '.$client[$r['client_id']].': ' : '').
-                ($r['zayav_id'] ? 'Заявка '.$zayav[$r['zayav_id']].': ' : '').
+                (isset($zayav[$r['zayav_id']]) ? 'Заявка '.$zayav[$r['zayav_id']].': ' : '').
                 '<b>'.$r['txt'].'</b>'.
             '</div>'.
             '<div class="day">'.
