@@ -113,6 +113,13 @@ if(isset($_GET['p'])) {
         case 'zayav':
             switch(@$_GET['d']) {
                 case 'add': $html .= zayav_add(); break;
+                case 'info':
+                    if(!preg_match(REGEXP_NUMERIC, $_GET['id'])) {
+                        $html .= 'Страницы не существует';
+                        break;
+                    }
+                    $html .= zayav_info(intval($_GET['id']));
+                    break;
                 default:
                     $values = array();
                     if(HASH_VALUES) {

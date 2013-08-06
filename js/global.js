@@ -212,21 +212,28 @@ $(document).ajaxError(function(event, request, settings) {
     alert('Ошибка:\n\n' + request.responseText);
 });
 
-$(document).on('mouseenter', '.zayav_link', function(e) {
-    var t = $(this),
-        tooltip = t.find('.tooltip');
-    if(!tooltip.hasClass('empty'))
-        return;
-    var send = {
-        op:'tooltip_zayav_info_get',
-        id:t.attr('val')
-    };
-    $.post(AJAX_MAIN, send, function(res) {
-        tooltip
-            .html(res.html)
-            .removeClass('empty');
-    }, 'json');
-});
+$(document)
+    .on('click', '#cache_clear', function() {
+        $.post(AJAX_MAIN, {'op':'cache_clear'}, function(res) {
+            if(res.success)
+                vkMsgOk("Кэш очищен.");
+        }, 'json');
+    })
+    .on('mouseenter', '.zayav_link', function(e) {
+        var t = $(this),
+            tooltip = t.find('.tooltip');
+        if(!tooltip.hasClass('empty'))
+            return;
+        var send = {
+            op:'tooltip_zayav_info_get',
+            id:t.attr('val')
+        };
+        $.post(AJAX_MAIN, send, function(res) {
+            tooltip
+                .html(res.html)
+                .removeClass('empty');
+        }, 'json');
+    });
 
 $(document)
     .on('click', '#zayav_next', function() {
@@ -245,7 +252,7 @@ $(document)
         }, 'json');
     })
     .on('click', '#zayav .unit', function() {
-        location.href = URL + '&my_page=remZayavkiInfo&id=' + $(this).attr('val'); // todo поправить ссылку
+        location.href = URL + '&p=zayav&d=info&id=' + $(this).attr('val');
     })
     .on('mouseenter', '#zayav .unit', function() {
         var t = $(this),

@@ -24,30 +24,58 @@ if(ADMIN) {
     error_reporting(E_ALL);
 }
 
-$dbConnect = mysql_connect($mysql['host'], $mysql['user'], $mysql['pass'], 1) or die("Can't connect to database");
-mysql_select_db($mysql['database'], $dbConnect) or die("Can't select database");
-$sqlQuery = 0;
-query('SET NAMES `'.NAMES.'`', $dbConnect);
-
-//Получение глобальных данных
-$sql = "SELECT * FROM `setup_global` LIMIT 1";
-$G = mysql_fetch_assoc(query($sql));
-define('VERSION', $G['script_style']);
-define('G_VALUES', $G['g_values']);
-
-//Получение данных о пользователе
-$sql = "SELECT * FROM `vk_user` WHERE `viewer_id`='".VIEWER_ID."' LIMIT 1";
-$r = mysql_fetch_assoc(query($sql));
-define('WS_ID', $r['ws_id']);
-
-$sql = "SELECT `kassa_start` FROM `workshop` WHERE `id`=".WS_ID." LIMIT 1";
-$r = mysql_fetch_assoc(query($sql));
-define('KASSA_START', $r['kassa_start']);
+_dbConnect();
+_getSetupGlobal();
+_getVkUser();
+_getWorkshop();
 
 
+
+
+function _dbConnect() {
+    global $mysql, $sqlQuery;
+    $dbConnect = mysql_connect($mysql['host'], $mysql['user'], $mysql['pass'], 1) or die("Can't connect to database");
+    mysql_select_db($mysql['database'], $dbConnect) or die("Can't select database");
+    $sqlQuery = 0;
+    query('SET NAMES `'.NAMES.'`', $dbConnect);
+}//end of _dbConnect()
 function query($sql) {
-    global $sqlQuery;
+    global $sqlQuery, $sqls;
+    $sqls .= $sql.'<br /><br />';
     $res = mysql_query($sql) or die($sql);
     $sqlQuery++;
     return $res;
 }
+
+//Получение глобальных данных
+function _getSetupGlobal() {
+    $g = xcache_get('vkmobile_setup_global');
+    if(empty($g)) {
+        $sql = "SELECT * FROM `setup_global` LIMIT 1";
+        $g = mysql_fetch_assoc(query($sql));
+        xcache_set('vkmobile_setup_global', $g, 86400);
+    }
+    define('VERSION', $g['script_style']);
+    define('G_VALUES', $g['g_values']);
+}//end of _getSetupGlobal()
+//Получение данных о пользователе
+function _getVkUser() {
+    $u = xcache_get('vkmobile_viewer_'.VIEWER_ID);
+    if(empty($u)) {
+        $sql = "SELECT * FROM `vk_user` WHERE `viewer_id`='".VIEWER_ID."' LIMIT 1";
+        $u = mysql_fetch_assoc(query($sql));
+        xcache_set('vkmobile_viewer_'.VIEWER_ID, $u, 86400);
+    }
+    define('WS_ID', $u['ws_id']);
+    define('VIEWER_ADMIN', ($u['admin'] == 1));
+}
+//Получение данных о мастерской
+function _getWorkshop() {
+    $ws = xcache_get('vkmobile_workshop_'.WS_ID);
+    if(empty($ws)) {
+        $sql = "SELECT * FROM `workshop` WHERE `id`=".WS_ID." LIMIT 1";
+        $ws = mysql_fetch_assoc(query($sql));
+        xcache_set('vkmobile_workshop_'.WS_ID, $ws, 86400);
+    }
+    define('KASSA_START', $ws['kassa_start']);
+}//end of _getWorkshop()

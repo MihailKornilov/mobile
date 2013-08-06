@@ -1736,16 +1736,15 @@ TABLE{border:0}
 
 
 
-#zayavInfo #left {
-  vertical-align:top;
-  width:397px;
-}
-#zayavInfo .headName {
-  margin:0;
-  padding:4px 3px;
-}
-#zayavInfo .tab { margin:2px 10px 15px 10px; }
-#zayavInfo .tdAbout { width:85px; }
+#zayavInfo #left{vertical-align:top}
+#zayavInfo .headName{margin:0;padding:4px 3px}
+#zayavInfo .tabInfo{margin:2px 10px 15px 10px; }
+#zayavInfo .label{width:85px}
+#zayavInfo .dtime_add{cursor:help}
+
+
+#zayavInfo #right{vertical-align:top;width:200px}
+/*
 #zayavInfo #money { margin-top:10px; }
 #zayavInfo #money .headBlue EM {
   color:#999;
@@ -1777,7 +1776,7 @@ TABLE{border:0}
 
 #zayavInfo #zayavEdit .tdAbout { width:90px; text-align:right; padding-top:4px; }
 
-/* внесение начисления */
+/* внесение начисления
 #zayavInfo .accrual_dialog .tdAbout { width:140px; text-align:right; padding-top:3px; }
 #zayavInfo .accrual_dialog .tdSum { padding-top:7px; }
 #zayavInfo .accrual_dialog #prim { width:200px; }
@@ -1801,9 +1800,7 @@ TABLE{border:0}
   left:3px;
 }
 
-
-
-/* список напоминаний */
+/* список напоминаний
 #zayavInfo #zayav_reminder { margin-bottom:15px; }
 #zayavInfo #zayav_reminder .unit { margin-top:5px; font-size:12px; }
 #zayavInfo #zayav_reminder .unit B { color:#555; font-size:12px; }
@@ -1834,7 +1831,7 @@ TABLE{border:0}
   padding:2px 3px;
 }
 
-/* Новое действие для напоминания */
+/* Новое действие для напоминания
 #zayavInfo .remind_action_tab .tdAbout {
   width:80px;
   text-align:right;
@@ -1955,7 +1952,7 @@ TABLE{border:0}
   cursor:pointer;
 }
 #zayavInfo #zayav_zp .nal TT:hover { text-decoration:underline; }
-
+*/
 
 
 

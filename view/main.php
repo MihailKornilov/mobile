@@ -75,16 +75,19 @@ function _header() {
 }//end of _header()
 
 function _footer() {
-    global $html, $sqlQuery;
+    global $html, $sqlQuery, $sqls; //todo временная переменная для отображения списка запросов
     if(ADMIN)
         $html .= '<DIV id="admin">'.
                 '<A href="'.URL.'&my_page=superAdmin&pre_page='.@$_GET['my_page'].'&pre_id='.@$_GET['id'].'">Admin</A> :: '.
                 '<A href="https://github.com/MihailKornilov/vkmobile/issues" target="_blank">Issues</A> :: '.
-                '<A id=script_style>Стили и скрипты ('.VERSION.')</A> :: '.
+                '<A href="http://vkmobile.reformal.ru" target="_blank">Reformal</A> :: '.
+                '<A id="script_style">Стили и скрипты ('.VERSION.')</A> :: '.
+                '<A id="cache_clear">Очисить кэш</A> :: '.
                 'sql '.$sqlQuery.' :: '.
                 'php '.round(microtime(true) - TIME, 3).' :: '.
                 'js <EM></EM>'.
             '</DIV>'.
+            $sqls.
             '<SCRIPT type="text/javascript">'.
                 '$("#script_style").click(function(){$.getJSON("/superadmin/AjaxScriptStyleUp.php?"+G.values,function(){location.reload()})});'.
                 '$("#admin EM:first").html(((new Date().getTime())-G.T)/1000);'.
@@ -121,17 +124,27 @@ function _footer() {
         '</DIV></BODY></HTML>';
 }//end of _footer()
 
-function _mainLinks() {
-    global $html, $sel, $vku;
-    $sql = "SELECT COUNT(`id`) AS `count`
-            FROM `reminder`
-            WHERE `ws_id`=".$vku->ws_id."
-              AND `day`<=DATE_FORMAT(CURRENT_TIMESTAMP, '%Y-%m-%d')
-              AND `status`=1
-              AND (`private`=0 OR `private`=1 AND `viewer_id_add`=".VIEWER_ID.")";
-    $r = mysql_fetch_assoc(query($sql));
-    define('REMIND_ACTIVE', $r['count'] > 0 ? ' (<B>'.$r['count'].'</B>)' : '');
+//Получение количества активных напоминаний
+function _remindActiveSet() {
+    $key = 'vkmobile_remind_active';
+    $count = xcache_get($key);
+    if(empty($count) && $count != 0) {
+        $sql = "SELECT COUNT(`id`) AS `count`
+                FROM `reminder`
+                WHERE `ws_id`=".WS_ID."
+                  AND `day`<=DATE_FORMAT(CURRENT_TIMESTAMP, '%Y-%m-%d')
+                  AND `status`=1
+                  AND (`private`=0 OR `private`=1 AND `viewer_id_add`=".VIEWER_ID.")";
+        $r = mysql_fetch_assoc(query($sql));
+        $count = $r['count'];
+        xcache_set($key, $count, 7200);
+    }
+    define('REMIND_ACTIVE', $count > 0 ? ' (<B>'.$count.'</B>)' : '');
+}//end of _remindActiveSet()
 
+function _mainLinks() {
+    global $html, $sel;
+    _remindActiveSet();
     $links = array(
         array(
             'name' => 'Клиенты',
@@ -156,12 +169,12 @@ function _mainLinks() {
         array(
             'name' => 'Отчёты'.REMIND_ACTIVE,
             'page' => 'no&p=report',
-            'show' => $vku->admin
+            'show' => VIEWER_ADMIN
         ),
         array(
             'name' => 'Установки',
             'page' => 'remSetup',
-            'show' => $vku->admin
+            'show' => VIEWER_ADMIN
         )
     );
 
@@ -336,16 +349,23 @@ function get_viewers_info($arr) {
     return $send;
 }//end of get_viewers_info()
 
-function get_clients_info($arr) {
+function getClientsLink($arr) {
     if(empty($arr))
         return array();
-    $sql = "SELECT id,fio FROM `client` WHERE `id` IN (".implode(',', $arr).")";
+    $id = false;
+    if(!is_array($arr)) {
+        $id = $arr;
+        $arr = array($arr);
+    }
+    $sql = "SELECT `id`,`fio` FROM `client` WHERE `id` IN (".implode(',', $arr).")";
     $q = query($sql);
     $send = array();
     while($r = mysql_fetch_assoc($q))
         $send[$r['id']] = '<A href="'.URL.'&my_page=remClientInfo&id='.$r['id'].'">'.$r['fio'].'</a>';
+    if($id)
+        return $send[$id];
     return $send;
-}//end of get_clients_info()
+}//end of getClientsLink()
 
 //Вывод номеров заявок с возможностью отображения дополнительной информации при наведении
 function get_zayav_info($arr) {
@@ -366,59 +386,27 @@ function get_zayav_info($arr) {
 function get_zp_info($arr) {
     if(empty($arr))
         return array();
-
-    $sql = "SELECT * FROM `setup_zp_name`";
-    $q = query($sql);
-    $zpName = array();
-    while($r = mysql_fetch_assoc($q))
-        $zpName[$r['id']] = $r['name'];
-
-    $sql = "SELECT * FROM `base_device`";
-    $q = query($sql);
-    $device = array();
-    while($r = mysql_fetch_assoc($q))
-        $device[$r['id']] = $r['name_rod'];
-
-    $sql = "SELECT * FROM `base_vendor`";
-    $q = query($sql);
-    $vendor = array();
-    while($r = mysql_fetch_assoc($q))
-        $vendor[$r['id']] = $r['name'];
-
     $sql = "SELECT * FROM `zp_catalog` WHERE `id` IN (".implode(',', $arr).")";
     $q = query($sql);
-    $zpModel = array();
-    $zpSpisok = array();
-    while($r = mysql_fetch_assoc($q)) {
-        $zpModel[] = $r['base_model_id'];
-        $zpSpisok[$r['id']] = $r;
-    }
-
-    $sql = "SELECT * FROM `base_model` WHERE `id` IN (".implode(',', $zpModel).")";
-    $q = query($sql);
-    $model = array();
-    while($r = mysql_fetch_assoc($q))
-        $model[$r['id']] = $r['name'];
-
     $send = array();
-    foreach($zpSpisok as $r)
+    while($r = mysql_fetch_assoc($q))
         $send[$r['id']] = '<A href="'.URL.'&my_page=remZp&id='.$r['id'].'">'.
-            '<b>'.$zpName[$r['name_id']].'</b> для '.
-            $device[$r['base_device_id']].' '.
-            $vendor[$r['base_vendor_id']].' '.
-            $model[$r['base_model_id']].
+            '<b>'._zpName($r['name_id']).'</b> для '.
+            _deviceName($r['base_device_id'], 1).
+            _vendorName($r['base_vendor_id']).
+            _modelName($r['base_model_id']).
         '</a>';
     return $send;
 }//end of get_zp_info()
 
-function zayav_category($id=false) {
+function zayavCategory($id=false) {
     $arr = array(
         '1' => 'Приём в ремонт',
         '2' => 'Заказ запчастей',
         '3' => 'Консультация'
     );
     return $id ? $arr[$id] : $arr;
-}//end of zayav_category()
+}//end of zayavCategory()
 
 function zayav_status($id=false) {
     $arr = array(
@@ -468,6 +456,92 @@ function unescape($str){
     $new_word = str_replace("%20"," ",$new_word);
     return implode("",$new_word);
 }
+
+function _deviceName($device_id, $rod=false) {
+    if(!defined('DEVICE_LOADED')) {
+        $device = xcache_get('vkmobile_device_name');
+        if(empty($device)) {
+            $sql = "SELECT `id`,`name`,`name_rod` FROM `base_device` ORDER BY `id`";
+            $q = query($sql);
+            while($r = mysql_fetch_assoc($q))
+                $device[$r['id']] = array($r['name'], $r['name_rod']);
+            xcache_set('vkmobile_device_name', $device, 86400);
+        }
+        foreach($device as $id => $r) {
+            define('DEVICE_NAME_'.$id, $r[0]);
+            define('DEVICE_NAME_ROD_'.$id, $r[1]);
+        }
+        define('DEVICE_LOADED', true);
+    }
+    return constant('DEVICE_NAME_'.($rod ? 'ROD_' : '').$device_id).' ';
+}//end of _deviceName()
+function _vendorName($vendor_id) {
+    if(!defined('VENDOR_LOADED')) {
+        $vendor = xcache_get('vkmobile_vendor_name');
+        if(empty($vendor)) {
+            $sql = "SELECT `id`,`name` FROM `base_vendor`";
+            $q = query($sql);
+            while($r = mysql_fetch_assoc($q))
+                $vendor[$r['id']] = $r['name'];
+            xcache_set('vkmobile_vendor_name', $vendor, 86400);
+        }
+        foreach($vendor as $id => $name)
+            define('VENDOR_NAME_'.$id, $name);
+        define('VENDOR_LOADED', true);
+    }
+    return defined('VENDOR_NAME_'.$vendor_id) ? constant('VENDOR_NAME_'.$vendor_id).' ' : '';
+}//end of _vendorName()
+function _modelName($model_id) {
+    if(!defined('MODEL_LOADED')) {
+        $count = xcache_get('vkmobile_model_name_count');
+        if(empty($count)) {
+            $sql = "SELECT `id`,`name` FROM `base_model` ORDER BY `id`";
+            $q = query($sql);
+            $count = 0;
+            $rows = 0;
+            $model = array();
+            while($r = mysql_fetch_assoc($q)) {
+                $model[$r['id']] = $r['name'];
+                $rows++;
+                if($rows == 1000) {
+                    xcache_set('vkmobile_model_name'.$count, $model);
+                    $rows = 0;
+                    $count++;
+                    $model = array();
+                }
+            }
+            if(!empty($model))
+                xcache_set('vkmobile_model_name'.$count, $model, 86400);
+            xcache_set('vkmobile_model_name_count', $count, 86400);
+        }
+        for($n = 0; $n <= $count; $n++) {
+            $model = xcache_get('vkmobile_model_name'.$n);
+            foreach($model as $id => $name)
+                define('MODEL_NAME_'.$id, $name);
+        }
+        define('MODEL_LOADED', true);
+    }
+    return defined('MODEL_NAME_'.$model_id) ? constant('MODEL_NAME_'.$model_id) : '';
+}//end of _modelName()
+function _zpName($zp_id) {
+    if(!defined('ZP_NAME_LOADED')) {
+        $key = 'vkmobile_zp_name';
+        $zp = xcache_get($key);
+        if(empty($zp)) {
+            $sql = "SELECT `id`,`name` FROM `setup_zp_name` ORDER BY `id`";
+            $q = query($sql);
+            while($r = mysql_fetch_assoc($q))
+                $zp[$r['id']] = $r['name'];
+            xcache_set($key, $zp, 86400);
+        }
+        foreach($zp as $id => $name)
+            define('ZP_NAME_'.$id, $name);
+        define('ZP_NAME_LOADED', true);
+    }
+    return constant('ZP_NAME_'.$zp_id);
+}//end of _zpName()
+
+
 
 
 // ---===! zayav !===--- Секция заявок
@@ -573,9 +647,6 @@ function get_zayav_list($page=1, $filter=array()) {
     }
     $zayav = array();
     $client = array();
-    $device = array();
-    $vendor = array();
-    $model = array();
     $images = array();
 
     $sql = "SELECT COUNT(`id`) AS `all` FROM `zayavki` WHERE ".$cond." LIMIT 1";
@@ -589,9 +660,6 @@ function get_zayav_list($page=1, $filter=array()) {
             $r['nomer_find'] = 1;
             $zayav[$r['id']] = $r;
             $client[$r['client_id']] = $r['client_id'];
-            $device[$r['base_device_id']] = $r['base_device_id'];
-            $vendor[$r['base_vendor_id']] = $r['base_vendor_id'];
-            $model[$r['base_model_id']] = $r['base_model_id'];
             $images['zayav'.$r['id']] = '"zayav'.$r['id'].'"';
             $images['dev'.$r['base_model_id']] = '"dev'.$r['base_model_id'].'"';
         }
@@ -611,13 +679,10 @@ function get_zayav_list($page=1, $filter=array()) {
             continue;
         $zayav[$r['id']] = $r;
         $client[$r['client_id']] = $r['client_id'];
-        $device[$r['base_device_id']] = $r['base_device_id'];
-        $vendor[$r['base_vendor_id']] = $r['base_vendor_id'];
-        $model[$r['base_model_id']] = $r['base_model_id'];
         $images['zayav'.$r['id']] = '"zayav'.$r['id'].'"';
         $images['dev'.$r['base_model_id']] = '"dev'.$r['base_model_id'].'"';
     }
-    $client = get_clients_info($client);
+    $client = getClientsLink($client);
     $status = zayav_status();
 
     $sql = "SELECT `owner`,`link` FROM `images` WHERE `status`=1 AND `sort`=0 AND `owner` IN (".implode(',', $images).")";
@@ -626,21 +691,6 @@ function get_zayav_list($page=1, $filter=array()) {
     while($r = mysql_fetch_assoc($q))
         $imgLinks[$r['owner']] = $r['link'].'-small.jpg';
     unset($images);
-
-    $sql = "SELECT `id`,`name` FROM `base_device` WHERE `id` IN (".implode(',', $device).")";
-    $q = query($sql);
-    while($r = mysql_fetch_assoc($q))
-        $device[$r['id']] = $r['name'];
-
-    $sql = "SELECT `id`,`name` FROM `base_vendor` WHERE `id` IN (".implode(',', $vendor).")";
-    $q = query($sql);
-    while($r = mysql_fetch_assoc($q))
-        $vendor[$r['id']] = $r['name'];
-
-    $sql = "SELECT `id`,`name` FROM `base_model` WHERE `id` IN (".implode(',', $model).")";
-    $q = query($sql);
-    while($r = mysql_fetch_assoc($q))
-        $model[$r['id']] = $r['name'];
 
     $sql = "SELECT
                 `table_id`,
@@ -665,10 +715,10 @@ function get_zayav_list($page=1, $filter=array()) {
             'status_color' => $status[$r['zayav_status']]['color'],
             'nomer' => $r['nomer'],
             'nomer_find' => isset($r['nomer_find']),
-            'category' => zayav_category($r['category']),
-            'device' => $device[$r['base_device_id']],
-            'vendor' => $vendor[$r['base_vendor_id']] ? $vendor[$r['base_vendor_id']] : '',
-            'model' => $model[$r['base_model_id']] ? $model[$r['base_model_id']] : '',
+            'category' => zayavCategory($r['category']),
+            'device' => _deviceName($r['base_device_id']),
+            'vendor' => _vendorName($r['base_vendor_id']),
+            'model' => _modelName($r['base_model_id']),
             'client' => $client[$r['client_id']],
             'dtime' => FullData($r['dtime_add'], 1),
             'img' => $img,
@@ -792,6 +842,52 @@ function show_zayav_spisok($data) {
     return $send;
 }//end of show_zayav_spisok()
 
+function zayav_info($id) {
+    $sql = "SELECT * FROM `zayavki` WHERE `zayav_status`>0 AND `id`=".$id." LIMIT 1";
+    if(!$zayav = mysql_fetch_assoc(query($sql)))
+        return 'Заявки не существует.';
+    return '<DIV id="zayavInfo">'.
+        '<div id="dopLinks">'.
+            '<a class="link sel">Информация</a>'.
+            '<a class="link">Редактирование</a>'.
+            '<a class="link">Начислить</a>'.
+            '<a class="link">Принять платёж</a>'.
+        '</div>'.
+        '<TABLE cellspacing="10" width="100%">'.
+            '<TR><TD id="left">'.
+                '<DIV class="headName">Заявка №'.$zayav['nomer'].'</DIV>'.
+                '<TABLE cellspacing="4" class="tabInfo">'.
+                    '<TR><TD class="label">Категория:  <TD>'.zayavCategory($zayav['category']).
+                    '<TR><TD class="label">Устройство: <TD>'._deviceName($zayav['base_device_id']).
+                        '<a><b>'._vendorName($zayav['base_vendor_id'])._modelName($zayav['base_model_id']).'</b></a>'.
+                    '<TR><TD class="label">Клиент:     <TD>'.getClientsLink($zayav['client_id']).
+                    '<TR><TD class="label">Дата приёма:<TD class="dtime_add" title="Заявку внёс Виталий Корнилов">'.FullDataTime($zayav['dtime_add']).
+                    '<TR><TD class="label">Статус:     <TD><DIV id=zayav_status></DIV><DIV id=zayav_status_dtime></DIV>'.
+                '</TABLE>'.
+                '<DIV class="headBlue">Задачи</DIV><DIV id=zayav_reminder></DIV>'.
+                //'<DIV id=comm></DIV>'.
+                //'<DIV id=money><DIV id=accrual></DIV><DIV id=oplata></DIV></DIV>'.
+
+            '<TD id="right">'.
+                //'<DIV id=foto></DIV>'.
+                '<DIV id=foto_upload></DIV>'.
+                '<DIV class="headBlue">Информация об устройстве</DIV>'.
+                '<DIV class="contentInfo">'.
+                    '<DIV id="info_device"></DIV>'.
+                    '<TABLE cellspacing="1" class="devInfo">'.
+                        '<TR id=tr_imei class=none><TD>imei:  <TH id=info_imei>'.
+                        '<TR id=tr_serial class=none><TD>serial:<TH id=info_serial>'.
+                        '<TR id=tr_color class=none><TD>Цвет:<TH id=info_color>'.
+                        '<TR><TD>Нахождение:  <TH><A id=info_place val=zayavStatus></A>'.
+                        '<TR><TD>Состояние:    <TH><A id=info_status val=zayavStatus></A>'.
+                    '</TABLE>'.
+                '</DIV>'.
+
+                //'<DIV class=headBlue><A id=zayav_zp_spisok>Список запчастей</A><A id=zayav_zp_add>добавить</A></DIV>'.
+                //'<DIV class=contentInfo id=zayav_zp></DIV>'.
+        '</TABLE>'.
+    '</div>';
+}//end of zayav_info()
 
 
 
@@ -944,7 +1040,7 @@ function report_history_spisok($worker=0, $action=0, $page=1) {
         $history[] = $r;
     }
     $viewer = get_viewers_info($viewer);
-    $client = get_clients_info($client);
+    $client = getClientsLink($client);
     $zayav = get_zayav_info($zayav);
     $zp = get_zp_info($zp);
     $send = '';
@@ -1035,7 +1131,7 @@ function report_remind_spisok($page=1, $status=1, $private=0) {
         $remind[] = $r;
     }
     //$viewer = get_viewers_info($viewer);
-    $client = get_clients_info($client);
+    $client = getClientsLink($client);
     $zayav = get_zayav_info($zayav);
 
     $send = '';

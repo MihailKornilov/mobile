@@ -20,6 +20,18 @@ function jsonSuccess($send=array()) {
 }//end of jsonSuccess()
 
 switch(@$_POST['op']) {
+    case 'cache_clear':
+        xcache_unset('vkmobile_setup_global');
+        xcache_unset('vkmobile_viewer_'.VIEWER_ID);
+        xcache_unset('vkmobile_workshop_'.WS_ID);
+        xcache_unset('vkmobile_remind_active');
+        xcache_unset('vkmobile_device_name');
+        xcache_unset('vkmobile_vendor_name');
+        xcache_unset('vkmobile_model_name_count');
+        xcache_unset('vkmobile_zp_name');
+        jsonSuccess();
+        break;
+
     case 'zayav_add':
         if(!preg_match(REGEXP_NUMERIC, $_POST['client']) || $_POST['client'] == 0)
             jsonError();
@@ -239,6 +251,7 @@ switch(@$_POST['op']) {
             'zayav_id' => $zayav_id
         ));
         $send['html'] = utf8(report_remind_spisok());
+        xcache_unset('vkmobile_remind_active');
         jsonSuccess($send);
         break;
     case 'report_remind_next':
@@ -262,7 +275,7 @@ switch(@$_POST['op']) {
             jsonError();
         $r['viewer'] = utf8(viewerName(true, $r['viewer_id_add']));
         if($r['client_id'] > 0) {
-            $c = get_clients_info(array($r['client_id']));
+            $c = getClientsLink(array($r['client_id']));
             $r['client'] = utf8($c[$r['client_id']]);
         }
         if($r['zayav_id'] > 0) {
@@ -300,6 +313,7 @@ switch(@$_POST['op']) {
                 WHERE `id`=".intval($_POST['id']);
         query($sql);
         $send['html'] = utf8(report_remind_spisok());
+        xcache_unset('vkmobile_remind_active');
         jsonSuccess($send);
         break;
     case 'report_prihod_load':
@@ -532,6 +546,7 @@ switch(@$_POST['op']) {
             'type' => 24,
             'value' => $set_sum
         ));
+        xcache_unset('vkmobile_workshop_'.WS_ID);
         jsonSuccess();
         break;
     case 'report_kassa_load':
@@ -625,24 +640,12 @@ switch(@$_POST['op']) {
         $r = mysql_fetch_assoc(query($sql));
         $client = $r['fio'];
 
-        $sql = "SELECT `name` FROM `base_device` WHERE `id`=".$zayav['base_device_id'];
-        $r = mysql_fetch_assoc(query($sql));
-        $device = $r['name'];
-
-        $sql = "SELECT `name` FROM `base_vendor` WHERE `id`=".$zayav['base_vendor_id'];
-        $r = mysql_fetch_assoc(query($sql));
-        $vendor = $r['name'];
-
-        $sql = "SELECT `name` FROM `base_model` WHERE `id`=".$zayav['base_model_id'];
-        $r = mysql_fetch_assoc(query($sql));
-        $model = $r['name'];
-
         $html = '<table><tr>'.
                     '<td><div class="img"><img src="'.zayav_image_link($id).'"></div></td>'.
                     '<td class="inf">'.
-                        zayav_category($zayav['category']).'<br />'.
-                        $device.'<br />'.
-                        '<b>'.$vendor.' '.$model.'</b><br /><br />'.
+                        zayavCategory($zayav['category']).'<br />'.
+                        _deviceName($zayav['base_device_id']).'<br />'.
+                        '<b>'._vendorName($zayav['base_vendor_id'])._modelName($zayav['base_model_id']).'</b><br /><br />'.
                         '<span style="color:#000">Клиент:</span> '.$client.
                         //'<br />time: '.round(microtime(true) - TIME, 3).
                     '</td>'.
