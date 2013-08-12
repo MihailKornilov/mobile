@@ -104,7 +104,7 @@ var REGEXP_NUMERIC = /^\d+$/,
             .find('img').remove().end()
             .append('<img src="/img/upload.gif">');
         $.post(AJAX_MAIN, send, function (res) {
-            $('#report_remind #spisok').html(res.html);
+            $('#remind_spisok').html(res.html);
             $('#mainLinks img').remove();
         }, 'json');
     },
@@ -213,6 +213,12 @@ $(document).ajaxError(function(event, request, settings) {
 });
 
 $(document)
+    .on('click', '#script_style', function() {
+        $.post(AJAX_MAIN, {'op':'script_style'}, function(res) {
+            if(res.success)
+                location.reload();
+        }, 'json');
+    })
     .on('click', '#cache_clear', function() {
         $.post(AJAX_MAIN, {'op':'cache_clear'}, function(res) {
             if(res.success)
@@ -289,6 +295,70 @@ $(document)
     });
 
 $(document)
+    .on('click', '#zayavInfo .remind_add', function() {
+        var html = '<TABLE class="remind_add_tab" cellspacing="6">' +
+            '<TR><TD class="label">Заявка:<TD>№<b>' + G.zayavInfo.nomer + '</b>' +
+            '<TR><TD class="label top">Описание задания:<TD><TEXTAREA id="txt"></TEXTAREA>' +
+            '<TR><TD class="label">Крайний день выполнения:<TD><INPUT type="hidden" id="data">' +
+            '<TR><TD class="label">Личное:<TD><INPUT type="hidden" id="private">' +
+        '</TABLE>';
+        var dialog = vkDialog({
+                top:60,
+                width:480,
+                head:'Добавление нового задания',
+                content:html,
+                submit:submit
+            }),
+            txt = $('.remind_add_tab #txt'),
+            day = $('.remind_add_tab #data'),
+            priv = $('.remind_add_tab #private');
+        txt.autosize().focus();
+        day.vkCalendar();
+        priv.vkCheck();
+        $('.remind_add_tab #private_check').vkHint({
+            msg:'Задание сможете<BR>видеть только Вы.',
+            top:-71,
+            left:-11,
+            indent:'left',
+            delayShow:1000
+        });
+
+        function submit() {
+            var send = {
+                    op:'report_remind_add',
+                    from_zayav:1,
+                    client_id:0,
+                    zayav_id:G.zayavInfo.id,
+                    txt:txt.val(),
+                    day:day.val(),
+                    private:priv.val()
+                };
+            if(!send.txt) {
+                dialog.bottom.vkHint({
+                    msg:'<SPAN class=red>Не указано содержание напоминания.</SPAN>',
+                    remove:1,
+                    indent:40,
+                    show:1,
+                    top:-48,
+                    left:150
+                });
+                txt.focus();
+            } else {
+                dialog.process();
+                $.post(AJAX_MAIN, send, function(res) {
+                    if(res.success) {
+                        dialog.close();
+                        vkMsgOk('Новое задание успешно добавлено.');
+                        $('#remind_spisok').html(res.html);
+                    } else {
+                        dialog.abort();
+                    }
+                }, 'json');
+            }
+        }//submit()
+    });
+
+$(document)
     .on('click', '#report_history_next', function() {
         if($(this).hasClass('busy'))
             return;
@@ -315,25 +385,25 @@ $(document)
             show = info.hasClass('show');
         info[(show ? 'remove' : 'add') + 'Class']('show');
     })
-    .on('mouseenter', '#report_remind .unit', function() {
+    .on('mouseenter', '.remind_unit', function() {
         $(this).find('.action').show();
     })
-    .on('mouseleave', '#report_remind .unit', function() {
+    .on('mouseleave', '.remind_unit', function() {
         $(this).find('.action').hide();
     })
-    .on('click', '#report_remind .hist_a', function() {
+    .on('click', '.remind_unit .hist_a', function() {
         $(this).parent().parent().find('.hist').slideToggle();
     })
     .on('click', '.report_remind_add', function() {
         var html = '<TABLE class="remind_add_tab" cellspacing="6">' +
-            '<TR><TD class="label r">Назначение:<TD><INPUT type=hidden id=destination>' +
-            '<TR><TD class="label r" id=target_name><TD id=target>' +
+            '<TR><TD class="label">Назначение:<TD><INPUT type=hidden id=destination>' +
+            '<TR><TD class="label" id=target_name><TD id=target>' +
             '</TABLE>' +
 
             '<TABLE class="remind_add_tab" id="tab_content" cellspacing="6">' +
-            '<TR><TD class="label r top">Задание:<TD><TEXTAREA id=txt></TEXTAREA>' +
-            '<TR><TD class="label r">Крайний день выполнения:<TD><INPUT type=hidden id=data>' +
-            '<TR><TD class="label r">Личное:<TD><INPUT type=hidden id=private>' +
+            '<TR><TD class="label top">Задание:<TD><TEXTAREA id=txt></TEXTAREA>' +
+            '<TR><TD class="label">Крайний день выполнения:<TD><INPUT type=hidden id=data>' +
+            '<TR><TD class="label">Личное:<TD><INPUT type=hidden id=private>' +
             '</TABLE>';
         var dialog = vkDialog({
             top:30,
@@ -357,8 +427,8 @@ $(document)
 
         $('#tab_content #txt').autosize();
         $('#tab_content #data').vkCalendar();
-        $('#tab_content #private').myCheck();
-        $('#tab_content #check_private').vkHint({
+        $('#tab_content #private').vkCheck();
+        $('#tab_content #private_check').vkHint({
             msg:'Задание сможете<BR>видеть только Вы.',
             top:-71,
             left:-11,
@@ -433,7 +503,7 @@ $(document)
                     if(res.success) {
                         dialog.close();
                         vkMsgOk('Новое задание успешно добавлено.');
-                        $('#report_remind #spisok').html(res.html);
+                        $('#remind_spisok').html(res.html);
                     }
                 }, 'json');
             }
@@ -461,12 +531,12 @@ $(document)
         $.post(AJAX_MAIN, send, function (res) {
             if(res.success) {
                 next.remove();
-                $('#report_remind #spisok').append(res.html);
+                $('#remind_spisok').append(res.html);
             } else
                 next.removeClass('busy');
         }, 'json');
     })
-    .on('click', '#report_remind .edit', function() {
+    .on('click', '.remind_unit .edit', function() {
         var dialog = vkDialog({
                 top:30,
                 width:400,
@@ -483,22 +553,22 @@ $(document)
             };
         $.post(AJAX_MAIN, send, function(res) {
             curDay = res.day;
-            var html = "<TABLE class=remind_action_tab>" +
-                "<TR><TD class=tdAbout>" + (res.client ? "Клиент:" : '') + (res.zayav ? "Заявка:" : '') +
-                    "<TD>" + (res.client ? res.client : '') + (res.zayav ? res.zayav : '') +
-                "<TR><TD class=tdAbout>Задание:<TD><B>" + res.txt + "</B>" +
-                "<TR><TD class=tdAbout>Внёс:<TD>" + res.viewer + ", " + res.dtime +
-                '<TR><TD class=tdAbout>Действие:<TD><INPUT type=hidden id=action value="0">' +
-                "</TABLE>" +
+            var html = '<TABLE cellspacing="6" class="remind_action_tab">' +
+                '<TR><TD class="label">' + (res.client ? "Клиент:" : '') + (res.zayav ? "Заявка:" : '') +
+                    '<TD>' + (res.client ? res.client : '') + (res.zayav ? res.zayav : '') +
+                '<TR><TD class="label">Задание:<TD><B>' + res.txt + '</B>' +
+                '<TR><TD class="label">Внёс:<TD>' + res.viewer + ', ' + res.dtime +
+                '<TR><TD class="label top">Действие:<TD><INPUT type=hidden id=action value="0">' +
+                '</TABLE>' +
 
-                "<TABLE class=remind_action_tab id=new_action>" +
-                "<TR><TD class=tdAbout id=new_about><TD id=new_title>" +
-                "<TR><TD class=tdAbout id=new_comm><TD><TEXTAREA id=comment></TEXTAREA>" +
-                "</TABLE>";
+                '<TABLE cellspacing="6" class=remind_action_tab id=new_action>' +
+                '<TR><TD class="label" id=new_about><TD id=new_title>' +
+                '<TR><TD class="label top" id=new_comm><TD><TEXTAREA id=comment></TEXTAREA>' +
+                '</TABLE>';
             dialog.content.html(html);
 
             $("#action").vkRadio({
-                top:6,
+                top:5,
                 spisok:[
                     {uid:1, title:'Перенести на другую дату'},
                     {uid:2, title:'Выполнено'},
@@ -511,7 +581,7 @@ $(document)
                     $("#new_title").html('');
                     if (id == 1) {
                         $("#new_about").html("Дата:");
-                        $("#new_title").html("<INPUT type=hidden id=data>");
+                        $("#new_title").html('<INPUT type=hidden id=data>');
                         $("#new_comm").html("Причина:");
                         $("#new_action #data").vkCalendar();
                     }
@@ -530,7 +600,8 @@ $(document)
                 action:parseInt($("#action").val()),
                 day:curDay,
                 status:1,
-                history:$("#comment").val()
+                history:$("#comment").val(),
+                from_zayav:G.zayavInfo ? G.zayavInfo.id : 0
             };
             switch(send.action) {
                 case 1: send.day = $("#data").val(); break;
@@ -548,7 +619,7 @@ $(document)
                     if(res.success) {
                         dialog.close();
                         vkMsgOk("Задание отредактировано.");
-                        $('#report_remind #spisok').html(res.html);
+                        $('#remind_spisok').html(res.html);
                     }
                 }, 'json');
             }

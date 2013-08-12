@@ -20,6 +20,13 @@ function jsonSuccess($send=array()) {
 }//end of jsonSuccess()
 
 switch(@$_POST['op']) {
+    case 'script_style':
+        if(!ADMIN)
+            jsonError();
+        query("UPDATE `setup_global` SET `script_style`=`script_style`+1");
+        xcache_unset('vkmobile_setup_global');
+        jsonSuccess();
+        break;
     case 'cache_clear':
         xcache_unset('vkmobile_setup_global');
         xcache_unset('vkmobile_viewer_'.VIEWER_ID);
@@ -204,23 +211,27 @@ switch(@$_POST['op']) {
         break;
     case 'report_remind_load':
         if(!preg_match(REGEXP_NUMERIC, $_POST['status']))
-            $_POST['status'] = 1;
+            jsonError();
         if(!preg_match(REGEXP_BOOL, $_POST['private']))
-            $_POST['private'] = 0;
-        $send['html'] = utf8(report_remind_spisok(1, intval($_POST['status']), intval($_POST['private'])));
+            jsonError();
+        $filter = array(
+            'status' => intval($_POST['status']),
+            'private' => intval($_POST['private'])
+        );
+        $send['html'] = utf8(report_remind_spisok(1, $filter));
         jsonSuccess($send);
         break;
     case 'report_remind_add':
         if(!preg_match(REGEXP_NUMERIC, $_POST['client_id']))
-            jsonError();
+            jsonError('client');
         if(!preg_match(REGEXP_NUMERIC, $_POST['zayav_id']))
-            jsonError();
+            jsonError('zayav');
         if(!preg_match(REGEXP_DATE, $_POST['day']))
-            jsonError();
+            jsonError('day');
         if(!preg_match(REGEXP_BOOL, $_POST['private']))
-            jsonError();
+            jsonError('private');
         if(empty($_POST['txt']))
-            jsonError();
+            jsonError('txt');
         $client_id = intval($_POST['client_id']);
         $zayav_id = intval($_POST['zayav_id']);
         $txt = win1251(htmlspecialchars(trim($_POST['txt'])));
@@ -250,7 +261,10 @@ switch(@$_POST['op']) {
             'client_id' => $client_id,
             'zayav_id' => $zayav_id
         ));
-        $send['html'] = utf8(report_remind_spisok());
+        $filter = array();
+        if(isset($_POST['from_zayav']) && $zayav_id > 0)
+            $filter['zayav'] = $zayav_id;
+        $send['html'] = utf8(report_remind_spisok(1, $filter));
         xcache_unset('vkmobile_remind_active');
         jsonSuccess($send);
         break;
@@ -278,16 +292,13 @@ switch(@$_POST['op']) {
             $c = getClientsLink(array($r['client_id']));
             $r['client'] = utf8($c[$r['client_id']]);
         }
-        if($r['zayav_id'] > 0) {
-            $z = get_zayav_info(array($r['zayav_id']));
-            $r['zayav'] = utf8($z[$r['zayav_id']]);
-        }
+        if($r['zayav_id'] > 0)
+            $r['zayav'] = utf8(getZayavNomerLink($r['zayav_id'], 1));
         $r['txt'] = utf8($r['txt']);
         $r['dtime'] = utf8(FullDataTime($r['dtime']));
         unset($r['client_id']);
         unset($r['zayav_id']);
         unset($r['viewer_id_add']);
-        //echo 1;
         jsonSuccess($r);
         break;
     case 'report_remind_edit':
@@ -298,6 +309,8 @@ switch(@$_POST['op']) {
         if(!preg_match(REGEXP_NUMERIC, $_POST['action']))
             jsonError();
         if(!preg_match(REGEXP_DATE, $_POST['day']))
+            jsonError();
+        if(!preg_match(REGEXP_NUMERIC, $_POST['from_zayav']))
             jsonError();
         $history = win1251(htmlspecialchars(trim($_POST['history'])));
         $action = '';
@@ -312,7 +325,10 @@ switch(@$_POST['op']) {
                     `history`=CONCAT(`history`,'<BR>".FullDataTime(strftime("%Y-%m-%d %H:%M:%S", time()))." ".viewerName().$action."')
                 WHERE `id`=".intval($_POST['id']);
         query($sql);
-        $send['html'] = utf8(report_remind_spisok());
+        $filter = array();
+        if($_POST['from_zayav'] > 0)
+            $filter['zayav'] = $_POST['from_zayav'];
+        $send['html'] = utf8(report_remind_spisok(1, $filter));
         xcache_unset('vkmobile_remind_active');
         jsonSuccess($send);
         break;

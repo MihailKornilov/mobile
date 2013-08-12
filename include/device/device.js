@@ -48,8 +48,8 @@ $.fn.device = function(obj) {
       }).o;
       $("#device_name")
         .css('width','170px')
-        .keydown(function () {
-          if (event.keyCode == 13) { deviceAddSubmit(); }
+        .keydown(function(e) {
+          if(e.keyCode == 13) { deviceAddSubmit(); }
         });
     };
     function deviceAddSubmit() {
@@ -87,8 +87,8 @@ $.fn.device = function(obj) {
       }).o;
       $("#vendor_name")
         .css('width','170px')
-        .keydown(function () {
-          if (event.keyCode == 13) { vendorAddSubmit(); }
+        .keydown(function(e) {
+          if(e.keyCode == 13) { vendorAddSubmit(); }
         });
     };
     function vendorAddSubmit() {
@@ -133,8 +133,8 @@ $.fn.device = function(obj) {
       }).o;
       $("#model_name")
         .css('width','170px')
-        .keydown(function () {
-          if (event.keyCode == 13) { modelAddSubmit(); }
+        .keydown(function(e) {
+          if (e.keyCode == 13) { modelAddSubmit(); }
         });
     };
     function modelAddSubmit() {

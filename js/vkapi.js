@@ -1,3 +1,42 @@
+$(document).ready(function() {
+    if($('.vkComment').length > 0) {
+        $(document)
+            .on('click focus', '.vkComment .add TEXTAREA,.vkComment .cadd TEXTAREA', function() {
+                var t = $(this),
+                    but = t.next(),
+                    val = t.val();
+                if(but.is(':hidden')) {
+                    t.val('')
+                     .attr('val', val)
+                     .css('color','#000')
+                     .height(26)
+                     .autosize();
+                    but.show()
+                        .css('display','inline-block');
+                }
+            })
+            .on('blur', '.vkComment .add TEXTAREA,.vkComment .cadd TEXTAREA', function() {
+                var t = $(this);
+                if(!t.val()) {
+                    var val = t.attr('val');
+                    t.val(val)
+                     .css('color','#777')
+                     .height(13)
+                     .next().hide();
+                }
+            })
+            .on('click', '.vkComment span a', function() {
+                var t = $(this),
+                    cdop = t.parent().parent().next();
+                t.parent().hide();
+                cdop.show();
+                if(cdop.hasClass('empty'))
+                    cdop.find('textarea').focus()
+            });
+    }
+});
+
+
 // диалог 2013-07-23 14:46
 function vkDialog(obj) {
     var t = $(this);
@@ -49,6 +88,9 @@ function vkDialog(obj) {
         process:function() {
             butSubmit.addClass('busy');
         },
+        abort:function() {
+            butSubmit.removeClass('busy');
+        },
         bottom:(function() {
             return dialog.find('.bottom');
         })(),
@@ -59,10 +101,11 @@ function vkDialog(obj) {
 }
 
 $(document).on('click', '.check0,.check1', function() {
-    var cl = Math.abs($(this).attr('class').split('check')[1] - 1);
-    $(this)
-        .attr('class', 'check' + cl)
-        .prev().val(cl);
+    var t = $(this),
+        cl = Math.abs(t.attr('class').split('check')[1] - 1),
+        inp = $('#' + t.attr('id').split('_check')[0]);
+    t.attr('class', 'check' + cl);
+    inp.val(cl);
 });
 
 // перелистывание годов

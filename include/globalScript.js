@@ -979,7 +979,13 @@ $.fn.topSearchSet = function (VAL) {
 
 
 
-
+$.fn.vkCheck = function (obj) {
+    var t = $(this),
+        id = t.attr('id'),
+        val = t.val() ? 1 : 0;
+    t.val(val);
+    t.after('<div class="check' + val + '" id="' + id + '_check"></div>');
+};
 
 // чекбокс
 $.fn.myCheck = function (obj) {
@@ -1502,9 +1508,18 @@ $.fn.alertShow = function(OBJ) {
 
 
 
-
-
-
+/*
+$.fn.vkComment1 = function(obj) {
+    var obj = $.extend({
+        width:400,
+        title:'Добавить заметку...',
+        viewer_id:0,
+        first_name:'',
+        last_name:'',
+        photo:''
+    },obj);
+};
+*/
 
 
 
