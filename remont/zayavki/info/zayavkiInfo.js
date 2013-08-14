@@ -716,7 +716,7 @@ function oplataAdd() {
   $("#kassa").vkRadio({
     display:'inline-block',
     right:15,
-    spisok:[{uid:1, title:'да'},{uid:0, title:'нет'}],
+    spisok:[{uid:1, title:'да'},{uid:0, title:'нет'}]
   });
   $("#kassa_radio").vkHint({msg:"Если это наличный платёж<BR>и деньги остаются в мастерской,<BR>укажите 'да'.", top:-83, left:-60});
   

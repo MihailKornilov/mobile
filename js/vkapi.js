@@ -18,11 +18,16 @@ $(document).ready(function() {
             .on('blur', '.vkComment .add TEXTAREA,.vkComment .cadd TEXTAREA', function() {
                 var t = $(this);
                 if(!t.val()) {
+                    if(t.parent().parent().hasClass('empty')) {
+                        t.parent().parent().hide()
+                            .parent().find('span').show();
+                        return;
+                    }
                     var val = t.attr('val');
                     t.val(val)
-                     .css('color','#777')
-                     .height(13)
-                     .next().hide();
+                        .css('color','#777')
+                        .height(13)
+                        .next().hide();
                 }
             })
             .on('click', '.vkComment span a', function() {
@@ -32,6 +37,129 @@ $(document).ready(function() {
                 cdop.show();
                 if(cdop.hasClass('empty'))
                     cdop.find('textarea').focus()
+            })
+            .on('click', '.vkComment .add .vkButton', function() {
+                var t = $(this);
+                if(t.hasClass('busy'))
+                    return;
+                var val = t.parent().parent().attr('val').split('_'),
+                    send = {
+                        op:'vkcomment_add',
+                        table:val[0],
+                        id:val[1],
+                        txt:$.trim(t.prev().val())
+                    };
+                if(!send.txt)
+                    return;
+                t.addClass('busy');
+                $.post(AJAX_MAIN, send, function(res) {
+                    t.removeClass('busy').hide();
+                    var val = t.prev().attr('val');
+                    t.prev()
+                        .val(val)
+                        .css('color', '#777')
+                        .height(13);
+                    t.parent().after(res.html);
+                }, 'json');
+            })
+            .on('click', '.vkComment .cadd .vkButton', function() {
+                var t = $(this);
+                if(t.hasClass('busy'))
+                    return;
+                var p = t.parent(),
+                    pid,
+                    val;
+                for(var n = 0; n < 10; n++) {
+                    p = p.parent();
+                    if(p.hasClass('unit'))
+                        pid = p.attr('val');
+                    if(p.hasClass('vkComment')) {
+                        val = p.attr('val').split('_');
+                        break;
+                    }
+                }
+                var send = {
+                        op:'vkcomment_add_child',
+                        table:val[0],
+                        id:val[1],
+                        txt:$.trim(t.prev().val()),
+                        parent:pid
+                    };
+                if(!send.txt)
+                    return;
+                t.addClass('busy');
+                $.post(AJAX_MAIN, send, function(res) {
+                    t.removeClass('busy').hide();
+                    var val = t.prev().attr('val');
+                    t.prev()
+                        .val(val)
+                        .css('color', '#777')
+                        .height(13);
+                    t.parent().before(res.html)
+                     .parent().removeClass('empty');
+                }, 'json');
+            })
+            .on('click', '.vkComment .unit_del', function() {
+                var t = $(this);
+                var p = t.parent(),
+                    id;
+                for(var n = 0; n < 10; n++) {
+                    p = p.parent();
+                    if(p.hasClass('unit')) {
+                        id = p.attr('val');
+                        break;
+                    }
+                }
+                if(p.hasClass('busy'))
+                    return;
+                var send = {
+                    op:'vkcomment_del',
+                    id:id
+                };
+                p.addClass('busy');
+                $.post(AJAX_MAIN, send, function(res) {
+                    p.removeClass('busy');
+                    p.find('table:first').hide()
+                     .before('<div class="deleted">Заметка удалена. <a class="unit_rest" val="' + id + '">Восстановить</a></div>');
+                }, 'json');
+            })
+            .on('click', '.vkComment .unit_rest,.vkComment .child_rest', function() {
+                var t = $(this);
+                if(t.hasClass('busy'))
+                    return;
+                var send = {
+                    op:'vkcomment_rest',
+                    id: t.attr('val')
+                };
+                t.addClass('busy');
+                $.post(AJAX_MAIN, send, function(res) {
+                    t.parent().next().show();
+                    t.parent().remove()
+                }, 'json');
+            })
+            .on('click', '.vkComment .child_del', function() {
+                var t = $(this);
+                var p = t.parent(),
+                    id;
+                for(var n = 0; n < 10; n++) {
+                    p = p.parent();
+                    if(p.hasClass('child')) {
+                        id = p.attr('val');
+                        break;
+                    }
+                }
+                if(p.hasClass('busy'))
+                    return;
+                var send = {
+                    op:'vkcomment_del',
+                    id:id
+                };
+                p.addClass('busy');
+                $.post(AJAX_MAIN, send, function(res) {
+                    p.removeClass('busy')
+                     .find('table:first').hide()
+                     .before('<div class="deleted">Комментарий удалён. <a class="child_rest" val="' + id + '">Восстановить</a></div>');
+                }, 'json');
             });
     }
 });

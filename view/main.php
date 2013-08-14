@@ -275,7 +275,7 @@ function _monthFull($n) {
     return $mon[intval($n)];
 }//end of _monthFull
 
-function _vkComment($table, $id) {
+function _vkComment($table, $id=0) {
     $sql = "SELECT *
             FROM `vk_comment`
             WHERE `status`=1
@@ -291,7 +291,7 @@ function _vkComment($table, $id) {
         while($r = mysql_fetch_assoc($q)) {
             if(!$r['parent_id'])
                 $comm[$r['id']] = $r;
-            else
+            elseif(isset($comm[$r['parent_id']]))
                 $comm[$r['parent_id']]['childs'][] = $r;
             $v[$r['viewer_id_add']] = $r['viewer_id_add'];
         }
@@ -299,45 +299,54 @@ function _vkComment($table, $id) {
         $count = 'Всего '.$count.' замет'._end($count, 'ка', 'ки','ок');
         $v = _viewersInfo($v);
         $comm = array_reverse($comm);
-        foreach($comm as $r) {
-            $childs = '';
-            if(!empty($r['childs'])) {
+        foreach($comm as $n => $r) {
+            $childs = array();
+            if(!empty($r['childs']))
                 foreach($r['childs'] as $c)
-                    $childs .= '<DIV class="dunit">'.
-                        '<TABLE cellspacing="0" class="tab">'.
-                            '<TR><TD class="dava">'.$v[$r['viewer_id_add']]['photo'].
-                                '<TD class="dinf">'.$v[$r['viewer_id_add']]['link'].
-                                    '<DIV class="dtxt">'.$c['txt'].'</DIV>'.
-                                    '<DIV class="ddat">'.FullDataTime($c['dtime_add'], 1).'</DIV>'.
-                        '</TABLE></DIV>';
-            }
-            $childs .= '<DIV class="cadd">'.
-                '<TEXTAREA>Комментировать...</TEXTAREA>'.
-                '<DIV class=vkButton><BUTTON>Добавить</BUTTON></DIV>'.
-            '</DIV>';
-
-            $units .= '<DIV class="unit">'.
-                '<TABLE cellspacing="0" class="tab">'.
-                    '<TR><TD class="ava">'.$v[$r['viewer_id_add']]['photo'].
-                        '<TD class="inf">'.$v[$r['viewer_id_add']]['link'].
-                            '<DIV class="ctxt">'.$r['txt'].'</DIV>'.
-                            '<DIV class="cdat">'.FullDataTime($r['dtime_add'], 1).
-                                '<SPAN> | <a>'.($r['child_count'] ? 'Комментарии ('.$r['child_count'].')' : 'Комментировать').'</a></SPAN>'.
-                            '</DIV>'.
-                            '<DIV class="cdop'.(empty($r['childs']) ? ' empty' : '').'">'.$childs.'</DIV>'.
-                            //'<INPUT type=hidden value="+RES.child+">'.
-                '</TABLE></DIV>';
+                    $childs[] = _vkCommentChild($c['id'], $v[$c['viewer_id_add']], $c['txt'], $c['dtime_add']);
+            $units .= _vkCommentUnit($r['id'], $v[$r['viewer_id_add']], $r['txt'], $r['dtime_add'], $childs, ($n+1));
         }
     }
-    return '<DIV class="vkComment">'.
+    return '<DIV class="vkComment" val="'.$table.'_'.$id.'">'.
         '<DIV class=headBlue><div class="count">'.$count.'</div>Заметки</DIV>'.
         '<DIV class="add">'.
             '<TEXTAREA>Добавить заметку...</TEXTAREA>'.
-            '<DIV class=vkButton><BUTTON>Добавить</BUTTON></DIV>'.
+            '<DIV class="vkButton"><BUTTON>Добавить</BUTTON></DIV>'.
         '</DIV>'.
         $units.
     '</DIV>';
 }//end of _vkComment
+function _vkCommentUnit($id, $viewer, $txt, $dtime, $childs=array(), $n=0) {
+    return '<DIV class="unit" val="'.$id.'">'.
+        '<TABLE cellspacing="0" class="tab">'.
+            '<TR><TD class="ava">'.$viewer['photo'].
+                '<TD class="inf">'.$viewer['link'].
+                    '<div class="img_del unit_del" title="Удалить заметку"></div>'.
+                    '<DIV class="ctxt">'.$txt.'</DIV>'.
+                    '<DIV class="cdat">'.FullDataTime($dtime, 1).
+                        '<SPAN'.($n == 1  && !empty($childs) ? ' class="hide"' : '').'> | '.
+                            '<a>'.(empty($childs) ? 'Комментировать' : 'Комментарии ('.count($childs).')').'</a>'.
+                        '</SPAN>'.
+                    '</DIV>'.
+                    '<DIV class="cdop'.(empty($childs) ? ' empty' : '').($n == 1 && !empty($childs) ? '' : ' hide').'">'.
+                        implode('', $childs).
+                        '<DIV class="cadd">'.
+                            '<TEXTAREA>Комментировать...</TEXTAREA>'.
+                            '<DIV class="vkButton"><BUTTON>Добавить</BUTTON></DIV>'.
+                        '</DIV>'.
+                    '</DIV>'.
+        '</TABLE></DIV>';
+}//end of _vkCommentUnit()
+function _vkCommentChild($id, $viewer, $txt, $dtime) {
+    return '<DIV class="child" val="'.$id.'">'.
+        '<TABLE cellspacing="0" class="tab">'.
+            '<TR><TD class="dava">'.$viewer['photo'].
+                '<TD class="dinf">'.$viewer['link'].
+                    '<div class="img_del child_del" title="Удалить комментарий"></div>'.
+                    '<DIV class="dtxt">'.$txt.'</DIV>'.
+                    '<DIV class="ddat">'.FullDataTime($dtime, 1).'</DIV>'.
+        '</TABLE></DIV>';
+}//end of _vkCommentChild()
 
 function statistic() {
     $sql = "SELECT
@@ -400,7 +409,14 @@ function viewerName($link=false, $id=VIEWER_ID) {
     return $link ? '<A href="http://vk.com/id'.$id.'" target="_blank">'.$r['name'].'</a>' : $r['name'];
 }
 
-function _viewersInfo($arr) {
+function _viewersInfo($arr=VIEWER_ID) {
+    if(empty($arr))
+        return array();
+    $id = false;
+    if(!is_array($arr)) {
+        $id = $arr;
+        $arr = array($arr);
+    }
     $sql = "SELECT * FROM `vk_user` WHERE `viewer_id` IN (".implode(',', $arr).")";
     $q = query($sql);
     $send = array();
@@ -410,7 +426,7 @@ function _viewersInfo($arr) {
             'link' => '<a href="http://vk.com/id'.$r['viewer_id'].'" target="_blank" class="vlink">'.$r['first_name'].' '.$r['last_name'].'</a>',
             'photo' => '<img src="'.$r['photo'].'">'
         );
-    return $send;
+    return $id ? $send[$id] : $send;
 }//end of _viewersInfo()
 
 function getClientsLink($arr) {

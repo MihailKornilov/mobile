@@ -20,26 +20,6 @@ viewer_id_add
 
 $VK->Query("insert into history (ws_id,type,zayav_id,value,viewer_id_add) values (".$vku->ws_id.",6,".$_POST['zayav_id'].",".$_POST['summa'].",".$_GET['viewer_id'].")");
 
-// Внесение в кассу
-if ($_POST['kassa'] == 1) {
-  $VK->Query("insert into kassa (
-type,
-ws_id,
-sum,
-zayav_id,
-money_id,
-viewer_id_add
-) values (
-1,
-".$vku->ws_id.",
-".$_POST['summa'].",
-".$_POST['zayav_id'].",
-".$money_id.",
-".$_GET['viewer_id']."
-)");
-}
-
-
 setClientBalans($_POST['client_id']);
 
 $VK->Query("update zayavki set device_place=".$_POST['device_place'].",device_place_other='' where ws_id=".$vku->ws_id." and id=".$_POST['zayav_id']);
