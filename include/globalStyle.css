@@ -66,8 +66,8 @@ TABLE{border:0}
   border-bottom:#dae2e8 solid 1px;
   padding-bottom:5px;
   }
-.dn { display:none; }
-.db { display:block; }
+.dn{display:none}
+.db{display:block}
 .color_white { color:#FFF; }
 
 .link9 { font:9px Tahoma; }
@@ -1700,51 +1700,36 @@ TABLE{border:0}
 }
 #zayavInfo #status:hover{border-color:#BBD; color:#444}
 #zayavInfo #status_dtime{display:inline-block;color:#AAA;font-size:10px;margin-left:10px}
+#zayavInfo .dopl{margin-left:10px;color:#888;cursor:help}
 #zayavInfo #remind_spisok{margin:8px 0}
 
+#zayavInfo .headBlue.mon{margin-top:10px}
+#zayavInfo .headBlue.mon em{float:right;margin:0 5px;}
+#zayavInfo .tabSpisok.mon{width:100%}
+#zayavInfo .mon .sum{width:45px;text-align:right;font-weight:bold}
+#zayavInfo .op{color:#090}
+#zayavInfo .acc{color:#07a}
+#zayavInfo .mon .dtime{width:70px;white-space:nowrap;text-align:right;font-size:10px;color:#777}
+#zayavInfo .mon .del{width:20px;padding:0}
+#zayavInfo .mon .img_del{margin:0 0 -2px 4px}
+
 #zayavInfo #right{vertical-align:top;width:200px}
+
+
+.zayav_accrual_add .label{width:140px;text-align:right}
+.zayav_accrual_add #prim,.zayav_accrual_add #reminder_txt { width:200px; }
+.zayav_accrual_add.remind{display:none;margin-top:-8px;}
+.zayav_oplata_add .label{width:165px;text-align:right}
+.zayav_oplata_add #prim{width:200px}
+
 /*
-#zayavInfo #money { margin-top:10px; }
-#zayavInfo #money .headBlue EM {
-  color:#999;
-  margin-left:7px;
-  font-size:10px;
-}
-#zayavInfo #money .headBlue A { float:right; color:#88C; }
-#zayavInfo #money .tabSpisok { width:100%; }
-#zayavInfo #money .dtime {
-  width:95px;
-  text-align:right;
-  font-size:10px;
-  color:#666;
-}
-#zayavInfo #money .sum {
-  width:45px;
-  text-align:right;
-  font-weight:bold;
-}
-#zayavInfo #money .del {
-  width:19px;
-  padding-left:2px;
-  padding-right:0;
-}
-#zayavInfo #money .img_del { position:relative; top:1px; }
 #zayavInfo #money .deleted { color:#666; text-align:center; }
 #zayavInfo #money .deleted IMG { margin:3px 0 2px 0; }
 #zayavInfo #accrual { margin-bottom:10px; }
 
-#zayavInfo #zayavEdit .tdAbout { width:90px; text-align:right; padding-top:4px; }
 
-/* внесение начисления
-#zayavInfo .accrual_dialog .tdAbout { width:140px; text-align:right; padding-top:3px; }
-#zayavInfo .accrual_dialog .tdSum { padding-top:7px; }
-#zayavInfo .accrual_dialog #prim { width:200px; }
-#zayavInfo  #reminder_tab { display:none; position:relative; top:-8px; }
-#zayavInfo  #reminder_txt { width:200px; }
 
-#zayavInfo #oplata_dialog .tdAbout { width:165px; text-align:right; }
-#zayavInfo #oplata_dialog .tdSum { padding-top:7px; }
-#zayavInfo #oplata_dialog #prim { width:200px; }
+
 
 #zayavInfo #zayavStatus .tdAbout { width:165px; text-align:right;  color:#444;}
 #zayavInfo #edit_zayav_status_radio { margin-bottom:15px; }
@@ -1814,11 +1799,6 @@ TABLE{border:0}
 
 
 
-#zayavInfo #right {
-  vertical-align:top;
-  width:200px;
-  height:500px;
-}
 #zayavInfo #right #foto {
   text-align:center;
   width:200px;

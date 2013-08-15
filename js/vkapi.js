@@ -119,8 +119,9 @@ $(document).ready(function() {
                 p.addClass('busy');
                 $.post(AJAX_MAIN, send, function(res) {
                     p.removeClass('busy');
-                    p.find('table:first').hide()
-                     .before('<div class="deleted">Заметка удалена. <a class="unit_rest" val="' + id + '">Восстановить</a></div>');
+                    if(res.success)
+                        p.find('table:first').hide()
+                         .before('<div class="deleted">Заметка удалена. <a class="unit_rest" val="' + id + '">Восстановить</a></div>');
                 }, 'json');
             })
             .on('click', '.vkComment .unit_rest,.vkComment .child_rest', function() {
@@ -156,9 +157,10 @@ $(document).ready(function() {
                 };
                 p.addClass('busy');
                 $.post(AJAX_MAIN, send, function(res) {
-                    p.removeClass('busy')
-                     .find('table:first').hide()
-                     .before('<div class="deleted">Комментарий удалён. <a class="child_rest" val="' + id + '">Восстановить</a></div>');
+                    p.removeClass('busy');
+                    if(res.success)
+                        p.find('table:first').hide()
+                         .before('<div class="deleted">Комментарий удалён. <a class="child_rest" val="' + id + '">Восстановить</a></div>');
                 }, 'json');
             });
     }
@@ -297,4 +299,11 @@ $.fn.years = function(obj) {
 
     $("#years_" + id + " .but:first").mousedown(function () { allmon = 1; years.next(-1); });
     $("#years_" + id + " .but:eq(1)").mousedown(function () { allmon = 1; years.next(1); });
-}; // end of years
+};//end of years
+
+$.fn.keyEnter = function(func) {
+    $(this).keydown(function(e) {
+        if(e.keyCode == 13)
+            func();
+    });
+};

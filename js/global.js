@@ -356,6 +356,152 @@ $(document)
                 }, 'json');
             }
         }//submit()
+    })
+    .on('click', '#zayavInfo .acc_add', function() {
+        var html = '<TABLE cellspacing="8" class="zayav_accrual_add">' +
+                '<tr><td class="label">Сумма: <TD><input type="text" id="sum" class="money" maxlength="5" /> руб.' +
+                '<tr><td class="label">Примечание:<em>(не обязательно)</em><TD><input type="text" id="prim" maxlength="100" />' +
+                '<tr><td class="label">Статус заявки: <TD><INPUT type="hidden" id="acc_status" value="2" />' +
+                '<tr><td class="label">Состояние устройства:<TD><INPUT type="hidden" id="acc_dev_status" value="5" />' +
+                '<tr><td class="label">Добавить напоминание:<TD><INPUT type="hidden" id="acc_remind" />' +
+            '</TABLE>' +
+
+            '<TABLE cellspacing="8" class="zayav_accrual_add remind">' +
+                '<tr><td class="label">Содержание:<TD><input type="text" id="reminder_txt" value="Позвонить и сообщить о готовности.">' +
+                '<tr><td class="label">Дата:<TD><INPUT type="hidden" id="reminder_day">' +
+            '</TABLE>';
+        var dialog = vkDialog({
+            top:60,
+            width:420,
+            head:'Заявка №' + G.zayavInfo.nomer + ' - Начисление за выполненную работу',
+            content:html,
+            submit:submit
+        });
+        $('#sum').focus();
+        $('#sum,#prim,#reminder_txt').keyEnter(submit);
+        $('#acc_status').linkMenu({spisok:G.status_spisok});
+        $('#acc_dev_status').linkMenu({spisok:G.device_status_spisok});
+        $('#acc_remind').vkCheck();
+        $('#acc_remind_check').click(function(id) {
+            $('.zayav_accrual_add.remind').toggle();
+        });
+        $("#reminder_day").vkCalendar();
+
+        function submit() {
+            var msg,
+                send = {
+                    op:'zayav_accrual_add',
+                    zayav_id:G.zayavInfo.id,
+                    client_id:G.zayavInfo.client_id,
+                    sum:$("#sum").val(),
+                    prim:$("#prim").val(),
+                    status:$("#acc_status").val(),
+                    dev_status:$("#acc_dev_status").val(),
+                    remind:$("#acc_remind").val(),
+                    remind_txt:$("#reminder_txt").val(),
+                    remind_day:$("#reminder_day").val()
+                };
+            if(!REGEXP_NUMERIC.test(send.sum)) { msg = 'Некорректно указана сумма.'; $('#summa').focus(); }
+            else if(send.remind == 1 && !send.remind_txt) { msg = 'Не указан текст напоминания'; $('#reminder_txt').focus(); }
+            else {
+                dialog.process();
+                $.post(AJAX_MAIN, send, function(res) {
+                    dialog.abort();
+                    if(res.success) {
+                        dialog.close();
+                        vkMsgOk("Начисление успешно произведено!");
+                        $('b.acc').html(res.summa);
+                        $('.acc_tr').removeClass('dn');
+                        $('.dopl')
+                            [(res.dopl == 0 ? 'add' : 'remove') + 'Class']('dn')
+                            .html((res.dopl > 0 ? '+' : '') + res.dopl);
+                        $('.tabSpisok.mon').append(res.html);
+                    }
+                }, 'json');
+            }
+
+            if(msg)
+                dialog.bottom.vkHint({
+                    msg:'<SPAN class="red">' + msg + '</SPAN>',
+                    top:-48,
+                    left:123,
+                    indent:40,
+                    remove:1,
+                    show:1,
+                    correct:0
+                });
+        }
+    })
+    .on('click', '#zayavInfo .op_add', function() {
+        var html = '<TABLE cellspacing="8" class="zayav_oplata_add">' +
+            '<TR><TD class="label">Сумма:<TD><input type="text" id="sum" class="money" maxlength="5"> руб.' +
+            '<TR><TD class="label">Деньги поступили в кассу?:<TD><input type="hidden" id="kassa" value="-1">' +
+            '<TR><TD class="label">Местонахождение устройства:<TD><input type="hidden" id="dev_place" value="2">' +
+            '<TR><TD class="label">Примечание:<em>(не обязательно)</em><TD><input type="text" id="prim">' +
+        '</TABLE>';
+        var dialog = vkDialog({
+            top:60,
+            width:440,
+            head:'Заявка №' + G.zayavInfo.nomer + ' - Внесение платежа',
+            content:html,
+            submit:submit
+        });
+        $('#sum').focus();
+        $('#sum,#prim').keyEnter(submit);
+        $('#kassa').vkRadio({
+            display:'inline-block',
+            right:15,
+            spisok:[
+                {uid:1, title:'да'},
+                {uid:0, title:'нет'}
+            ]
+        });
+        $('#kassa_radio').vkHint({
+            msg:"Если это наличный платёж<BR>и деньги остаются в мастерской,<BR>укажите 'да'.",
+            top:-83,
+            left:-60
+        });
+        $("#dev_place").linkMenu({spisok:G.device_place_spisok});
+        function submit() {
+            var msg,
+                send = {
+                    op:'zayav_oplata_add',
+                    zayav_id:G.zayavInfo.id,
+                    client_id:G.zayavInfo.client_id,
+                    sum:$("#sum").val(),
+                    kassa:$("#kassa").val(),
+                    prim:$.trim($("#prim").val()),
+                    dev_place:$("#dev_place").val()
+                };
+            if(!REGEXP_NUMERIC.test(send.sum)) { msg = "Некорректно указана сумма."; $("#sum").focus(); }
+            else if(send.kassa == -1) msg = "Укажите, деньги поступили в кассу или нет.";
+            else {
+                dialog.process();
+                $.post(AJAX_MAIN, send, function (res) {
+                    dialog.abort();
+                    if(res.success) {
+                        dialog.close();
+                        vkMsgOk('Платёж успешно внесён!');
+                        $('b.op').html(res.summa);
+                        $('.op_tr').removeClass('dn');
+                        $('.dopl')
+                            [(res.dopl == 0 ? 'add' : 'remove') + 'Class']('dn')
+                            .html((res.dopl > 0 ? '+' : '') + res.dopl);
+                        $('.tabSpisok.mon').append(res.html);
+                    }
+                }, 'json');
+            }
+
+            if(msg)
+                dialog.bottom.vkHint({
+                    msg:"<SPAN class=red>" + msg + "</SPAN>",
+                    remove:1,
+                    indent:40,
+                    show:1,
+                    top:-48,
+                    left:135
+                });
+        }
     });
 
 $(document)
@@ -625,7 +771,7 @@ $(document)
             }
             if(msg)
                 dialog.bottom.vkHint({
-                    msg:"<SPAN class=red>" + msg + "</SPAN>",
+                    msg:'<SPAN class="red">' + msg + '</SPAN>',
                     remove:1,
                     indent:40,
                     show:1,
@@ -1351,13 +1497,13 @@ $(document).ready(function() {
                 if(send.place > 0) send.place_other = '';
                 $(this).addClass('busy');
                 $.post(AJAX_MAIN, send, function (res) {
-                    location.href = URL + "&my_page=remZayavkiInfo&id=" + res.id;
+                    location.href = URL + '&my_page=remZayavkiInfo&id=' + res.id; //todo
                 }, 'json');
             }
 
             if(msg)
                 $(this).vkHint({
-                    msg:"<SPAN class=red>" + msg + "</SPAN>",
+                    msg:'<SPAN class="red">' + msg + '</SPAN>',
                     top:-48,
                     left:201,
                     indent:30,

@@ -95,9 +95,17 @@ switch(@$_POST['op']) {
         if(!preg_match(REGEXP_NUMERIC, $_POST['id']))
             jsonError();
         $id = intval($_POST['id']);
+        if(!ADMIN) {
+            $sql = "SELECT `viewer_id_add` FROM `vk_comment` WHERE `status`=1 AND `id`=".$id;
+            if(!$r = mysql_fetch_assoc(query($sql)))
+                jsonError();
+            if($r['viewer_id_add'] != VIEWER_ID)
+                jsonError();
+        }
+
         $childs = array();
 
-        $sql = "SELECT `id` FROM `vk_comment` WHERE `parent_id`=".$id;
+        $sql = "SELECT `id` FROM `vk_comment` WHERE `status`=1 AND `parent_id`=".$id;
         $q = query($sql);
         if(mysql_num_rows($q)) {
             while($r = mysql_fetch_assoc($q))
@@ -114,7 +122,7 @@ switch(@$_POST['op']) {
                     `status`=0,
                     `viewer_id_del`=".VIEWER_ID.",
                     `dtime_del`=CURRENT_TIMESTAMP,
-                    `child_del`='".implode(',', $childs)."'
+                    `child_del`=".(!empty($childs) ? "'".implode(',', $childs)."'" : 'NULL')."
                WHERE `id`=".$id;
         query($sql);
         jsonSuccess();
@@ -296,6 +304,113 @@ switch(@$_POST['op']) {
         $send['html'] = utf8(show_zayav_spisok(get_zayav_list(intval($_POST['page']), zayavfilter($_POST))));
         jsonSuccess($send);
         break;
+    case 'zayav_accrual_add':
+        if(!preg_match(REGEXP_NUMERIC, $_POST['zayav_id']) || $_POST['zayav_id'] == 0)
+            jsonError();
+        if(!preg_match(REGEXP_NUMERIC, $_POST['client_id']) || $_POST['client_id'] == 0)
+            jsonError();
+        if(!preg_match(REGEXP_NUMERIC, $_POST['sum']) || $_POST['sum'] == 0)
+            jsonError();
+        $zayav_id = intval($_POST['zayav_id']);
+        $client_id = intval($_POST['client_id']);
+        $sum = intval($_POST['sum']);
+        $prim = win1251(htmlspecialchars(trim($_POST['prim'])));
+        $sql = "INSERT INTO `accrual` (
+                    `ws_id`,
+                    `zayav_id`,
+                    `client_id`,
+                    `summa`,
+                    `prim`,
+                    `viewer_id_add`
+                ) VALUES (
+                    ".WS_ID.",
+                    ".$zayav_id.",
+                    ".$client_id.",
+                    ".$sum.",
+                    '".addslashes($prim)."',
+                    ".VIEWER_ID."
+                )";
+        query($sql);
+
+        $sql = "SELECT SUM(`summa`) AS `summa`
+                FROM `accrual`
+                WHERE `ws_id`=".WS_ID."
+                  AND `status`=1
+                  AND `zayav_id`=".$zayav_id;
+        $send = mysql_fetch_assoc(query($sql));
+
+        $sql = "SELECT SUM(`summa`) AS `summa`
+                FROM `money`
+                WHERE `ws_id`=".WS_ID."
+                  AND `status`=1
+                  AND `summa`>0
+                  AND `zayav_id`=".$zayav_id;
+        $r = mysql_fetch_assoc(query($sql));
+        $send['dopl'] = $send['summa'] - $r['summa'];
+
+        $send['html'] = utf8(zayav_accrual_unit(array(
+            'summa' => $sum,
+            'prim' => $prim,
+            'dtime_add' => curTime()
+        )));
+        jsonSuccess($send);
+        break;
+    case 'zayav_oplata_add':
+        if(!preg_match(REGEXP_NUMERIC, $_POST['zayav_id']) || $_POST['zayav_id'] == 0)
+            jsonError();
+        if(!preg_match(REGEXP_NUMERIC, $_POST['client_id']) || $_POST['client_id'] == 0)
+            jsonError();
+        if(!preg_match(REGEXP_NUMERIC, $_POST['sum']) || $_POST['sum'] == 0)
+            jsonError();
+        if(!preg_match(REGEXP_BOOL, $_POST['kassa']))
+            jsonError();
+        $zayav_id = intval($_POST['zayav_id']);
+        $client_id = intval($_POST['client_id']);
+        $sum = intval($_POST['sum']);
+        $kassa = intval($_POST['kassa']);
+        $prim = win1251(htmlspecialchars(trim($_POST['prim'])));
+        $sql = "INSERT INTO `money` (
+                    `ws_id`,
+                    `zayav_id`,
+                    `client_id`,
+                    `summa`,
+                    `kassa`,
+                    `prim`,
+                    `viewer_id_add`
+                ) VALUES (
+                    ".WS_ID.",
+                    ".$zayav_id.",
+                    ".$client_id.",
+                    ".$sum.",
+                    ".$kassa.",
+                    '".addslashes($prim)."',
+                    ".VIEWER_ID."
+                )";
+        query($sql);
+
+        $sql = "SELECT SUM(`summa`) AS `summa`
+                FROM `money`
+                WHERE `ws_id`=".WS_ID."
+                  AND `status`=1
+                  AND `summa`>0
+                  AND `zayav_id`=".$zayav_id;
+        $send = mysql_fetch_assoc(query($sql));
+
+        $sql = "SELECT SUM(`summa`) AS `summa`
+                FROM `accrual`
+                WHERE `ws_id`=".WS_ID."
+                  AND `status`=1
+                  AND `zayav_id`=".$zayav_id;
+        $r = mysql_fetch_assoc(query($sql));
+        $send['dopl'] = $r['summa'] - $send['summa'];
+        $send['html'] = utf8(zayav_oplata_unit(array(
+            'summa' => $sum,
+            'prim' => $prim,
+            'dtime_add' => curTime()
+        )));
+        jsonSuccess($send);
+        break;
+
 
     case 'report_history_load':
         if(!preg_match(REGEXP_NUMERIC, $_POST['worker']))

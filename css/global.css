@@ -20,6 +20,8 @@
 
 
 td.label{line-height:16px;color:#888}
+td.label EM{font-size:10px;color:#bbb;display:block}
+
 td.top{vertical-align:top;padding-top:3px}
 td.r{text-align:right}
 

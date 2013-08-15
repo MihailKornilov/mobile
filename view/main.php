@@ -321,7 +321,7 @@ function _vkCommentUnit($id, $viewer, $txt, $dtime, $childs=array(), $n=0) {
         '<TABLE cellspacing="0" class="tab">'.
             '<TR><TD class="ava">'.$viewer['photo'].
                 '<TD class="inf">'.$viewer['link'].
-                    '<div class="img_del unit_del" title="Удалить заметку"></div>'.
+                    ($viewer['id'] == VIEWER_ID || ADMIN ? '<div class="img_del unit_del" title="Удалить заметку"></div>' : '').
                     '<DIV class="ctxt">'.$txt.'</DIV>'.
                     '<DIV class="cdat">'.FullDataTime($dtime, 1).
                         '<SPAN'.($n == 1  && !empty($childs) ? ' class="hide"' : '').'> | '.
@@ -342,7 +342,7 @@ function _vkCommentChild($id, $viewer, $txt, $dtime) {
         '<TABLE cellspacing="0" class="tab">'.
             '<TR><TD class="dava">'.$viewer['photo'].
                 '<TD class="dinf">'.$viewer['link'].
-                    '<div class="img_del child_del" title="Удалить комментарий"></div>'.
+                    ($viewer['id'] == VIEWER_ID || ADMIN ? '<div class="img_del child_del" title="Удалить комментарий"></div>' : '').
                     '<DIV class="dtxt">'.$txt.'</DIV>'.
                     '<DIV class="ddat">'.FullDataTime($dtime, 1).'</DIV>'.
         '</TABLE></DIV>';
@@ -403,11 +403,18 @@ function currentSunday() {
 
 }//end of currentMonday()
 
+//todo не сделано очищение кеша
 function viewerName($link=false, $id=VIEWER_ID) {
-    $sql = "SELECT CONCAT(`first_name`,' ',`last_name`) AS `name` FROM `vk_user` WHERE `viewer_id`=".$id." LIMIT 1";
-    $r = mysql_fetch_assoc(query($sql));
-    return $link ? '<A href="http://vk.com/id'.$id.'" target="_blank">'.$r['name'].'</a>' : $r['name'];
-}
+    $key = 'vkmobile_viewer_name_'.$id;
+    $name = xcache_get($key);
+    if(empty($name)) {
+        $sql = "SELECT CONCAT(`first_name`,' ',`last_name`) AS `name` FROM `vk_user` WHERE `viewer_id`=".$id." LIMIT 1";
+        $r = mysql_fetch_assoc(query($sql));
+        $name = $r['name'];
+        xcache_set($key, $name, 86400);
+    }
+    return $link ? '<A href="http://vk.com/id'.$id.'" target="_blank">'.$name.'</a>' : $name;
+}//end of viewerName()
 
 function _viewersInfo($arr=VIEWER_ID) {
     if(empty($arr))
@@ -422,6 +429,7 @@ function _viewersInfo($arr=VIEWER_ID) {
     $send = array();
     while($r = mysql_fetch_assoc($q))
         $send[$r['viewer_id']] = array(
+            'id' => $r['viewer_id'],
             'name' => $r['first_name'].' '.$r['last_name'],
             'link' => '<a href="http://vk.com/id'.$r['viewer_id'].'" target="_blank" class="vlink">'.$r['first_name'].' '.$r['last_name'].'</a>',
             'photo' => '<img src="'.$r['photo'].'">'
@@ -931,18 +939,49 @@ function zayav_info($id) {
     if(!$zayav = mysql_fetch_assoc(query($sql)))
         return 'Заявки не существует.';
     $status = zayav_status($zayav['zayav_status']);
+    $sql = "SELECT *
+        FROM `accrual`
+            WHERE `ws_id`=".WS_ID."
+        AND `status`=1
+              AND `zayav_id`=".$zayav['id']."
+            ORDER BY `dtime_add` ASC";
+    $q = query($sql);
+    $money = array();
+    $accSum = 0;
+    while($acc = mysql_fetch_assoc($q)) {
+        $money[strtotime($acc['dtime_add'])] = zayav_accrual_unit($acc);
+        $accSum += $acc['summa'];
+    }
+
+    $sql = "SELECT *
+        FROM `money`
+        WHERE `ws_id`=".WS_ID."
+          AND `status`=1
+          AND `summa`>0
+          AND `zayav_id`=".$zayav['id']."
+        ORDER BY `dtime_add` ASC";
+    $q = query($sql);
+    $opSum = 0;
+    while($op = mysql_fetch_assoc($q)) {
+        $money[strtotime($op['dtime_add'])] = zayav_oplata_unit($op);
+        $opSum += $op['summa'];
+    }
+    $dopl = $accSum - $opSum;
+    ksort($money);
+
     return '<script type="text/javascript">'.
         'G.zayavInfo = {'.
             'id:'.$zayav['id'].','.
-            'nomer:'.$zayav['nomer'].
+            'nomer:'.$zayav['nomer'].','.
+            'client_id:'.$zayav['client_id'].
         '};'.
     '</script>'.
     '<DIV id="zayavInfo">'.
         '<div id="dopLinks">'.
             '<a class="link sel">Информация</a>'.
             '<a class="link">Редактирование</a>'.
-            '<a class="link">Начислить</a>'.
-            '<a class="link">Принять платёж</a>'.
+            '<a class="link acc_add">Начислить</a>'.
+            '<a class="link op_add">Принять платёж</a>'.
         '</div>'.
         '<TABLE cellspacing="10" width="100%">'.
             '<TR><TD id="left">'.
@@ -952,15 +991,23 @@ function zayav_info($id) {
                     '<TR><TD class="label">Устройство: <TD>'._deviceName($zayav['base_device_id']).
                         '<a><b>'._vendorName($zayav['base_vendor_id'])._modelName($zayav['base_model_id']).'</b></a>'.
                     '<TR><TD class="label">Клиент:     <TD>'.getClientsLink($zayav['client_id']).
-                    '<TR><TD class="label">Дата приёма:<TD class="dtime_add" title="Заявку внёс Виталий Корнилов">'.FullDataTime($zayav['dtime_add']).
+                    '<TR><TD class="label">Дата приёма:<TD class="dtime_add" title="Заявку внёс '.viewerName(false, $zayav['viewer_id_add']).'">'.FullDataTime($zayav['dtime_add']).
                     '<TR><TD class="label">Статус:'.
                         '<TD><DIV id="status" style="background-color:#'.$status['color'].'">'.$status['name'].'</DIV>'.
                             '<DIV id="status_dtime">от '.FullDataTime($zayav['zayav_status_dtime'], 1).'</DIV>'.
+                    '<TR class="acc_tr'.($accSum > 0 ? '' : ' dn').'"><TD class="label">Начислено: <TD><b class="acc">'.$accSum.'</b> руб.'.
+                    '<TR class="op_tr'.($opSum > 0 ? '' : ' dn').'"><TD class="label">Оплачено:    <TD><b class="op">'.$opSum.'</b> руб.'.
+                        '<span class="dopl'.($dopl == 0 ? ' dn' : '').'" title="Необходимая доплата'."\n".'Если значение отрицательное, то это переплата">'.($dopl > 0 ? '+' : '').$dopl.'</span>'.
                 '</TABLE>'.
                 '<DIV class="headBlue">Задания<a class="add remind_add">Добавить задание</a></DIV>'.
                 '<DIV id="remind_spisok">'.report_remind_spisok(1, array('zayav'=>$zayav['id'])).'</DIV>'.
                 _vkComment('zayav', $zayav['id']).
-                //'<DIV id=money><DIV id=accrual></DIV><DIV id=oplata></DIV></DIV>'.
+                '<div class="headBlue mon">Начисления и платежи'.
+                    '<a class="add op_add">Принять платёж</a>'.
+                    '<em>::</em>'.
+                    '<a class="add acc_add">Начислить</a>'.
+                '</div>'.
+                '<table cellspacing="0" class="tabSpisok mon">'.implode($money).'</table>'.
 
             '<TD id="right">'.
                 //'<DIV id=foto></DIV>'.
@@ -982,8 +1029,20 @@ function zayav_info($id) {
         '</TABLE>'.
     '</div>';
 }//end of zayav_info()
-
-
+function zayav_accrual_unit($acc) {
+    return '<tr><td class="sum acc">'.$acc['summa'].'</td>'.
+        '<td>'.$acc['prim'].'</td>'.
+        '<td class="dtime">'.FullDataTime($acc['dtime_add']).'</td>'.
+        '<td class="del"><div class="img_del" title="Удалить начисление"></div></td>'.
+    '</tr>';
+}//end of zayav_accrual_unit()
+function zayav_oplata_unit($op) {
+    return '<tr><td class="sum op">'.$op['summa'].'</td>'.
+        '<td>'.$op['prim'].'</td>'.
+        '<td class="dtime">'.FullDataTime($op['dtime_add']).'</td>'.
+        '<td class="del"><div class="img_del" title="Удалить платёж"></div></td>'.
+    '</tr>';
+}//end of zayav_oplata_unit()
 
 // ---===! report !===--- Секция отчётов
 
