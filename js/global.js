@@ -392,7 +392,6 @@ $(document)
                 send = {
                     op:'zayav_accrual_add',
                     zayav_id:G.zayavInfo.id,
-                    client_id:G.zayavInfo.client_id,
                     sum:$("#sum").val(),
                     prim:$("#prim").val(),
                     status:$("#acc_status").val(),
@@ -416,6 +415,14 @@ $(document)
                             [(res.dopl == 0 ? 'add' : 'remove') + 'Class']('dn')
                             .html((res.dopl > 0 ? '+' : '') + res.dopl);
                         $('.tabSpisok.mon').append(res.html);
+                        if(res.status) {
+                            $('#status')
+                                .html(res.status.name)
+                                .css('background-color', '#' + res.status.color);
+                            $('#status_dtime').html(res.status.dtime);
+                        }
+                        if(res.remind)
+                            $('#remind_spisok').html(res.remind);
                     }
                 }, 'json');
             }
@@ -467,7 +474,6 @@ $(document)
                 send = {
                     op:'zayav_oplata_add',
                     zayav_id:G.zayavInfo.id,
-                    client_id:G.zayavInfo.client_id,
                     sum:$("#sum").val(),
                     kassa:$("#kassa").val(),
                     prim:$.trim($("#prim").val()),

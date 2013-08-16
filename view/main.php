@@ -972,8 +972,7 @@ function zayav_info($id) {
     return '<script type="text/javascript">'.
         'G.zayavInfo = {'.
             'id:'.$zayav['id'].','.
-            'nomer:'.$zayav['nomer'].','.
-            'client_id:'.$zayav['client_id'].
+            'nomer:'.$zayav['nomer'].
         '};'.
     '</script>'.
     '<DIV id="zayavInfo">'.
@@ -1030,14 +1029,14 @@ function zayav_info($id) {
     '</div>';
 }//end of zayav_info()
 function zayav_accrual_unit($acc) {
-    return '<tr><td class="sum acc">'.$acc['summa'].'</td>'.
+    return '<tr><td class="sum acc" title="Начисление">'.$acc['summa'].'</td>'.
         '<td>'.$acc['prim'].'</td>'.
         '<td class="dtime">'.FullDataTime($acc['dtime_add']).'</td>'.
         '<td class="del"><div class="img_del" title="Удалить начисление"></div></td>'.
     '</tr>';
 }//end of zayav_accrual_unit()
 function zayav_oplata_unit($op) {
-    return '<tr><td class="sum op">'.$op['summa'].'</td>'.
+    return '<tr><td class="sum op" title="Платёж">'.$op['summa'].'</td>'.
         '<td>'.$op['prim'].'</td>'.
         '<td class="dtime">'.FullDataTime($op['dtime_add']).'</td>'.
         '<td class="del"><div class="img_del" title="Удалить платёж"></div></td>'.

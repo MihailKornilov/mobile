@@ -1706,7 +1706,7 @@ TABLE{border:0}
 #zayavInfo .headBlue.mon{margin-top:10px}
 #zayavInfo .headBlue.mon em{float:right;margin:0 5px;}
 #zayavInfo .tabSpisok.mon{width:100%}
-#zayavInfo .mon .sum{width:45px;text-align:right;font-weight:bold}
+#zayavInfo .mon .sum{width:45px;text-align:right;font-weight:bold;cursor:help}
 #zayavInfo .op{color:#090}
 #zayavInfo .acc{color:#07a}
 #zayavInfo .mon .dtime{width:70px;white-space:nowrap;text-align:right;font-size:10px;color:#777}

@@ -307,14 +307,38 @@ switch(@$_POST['op']) {
     case 'zayav_accrual_add':
         if(!preg_match(REGEXP_NUMERIC, $_POST['zayav_id']) || $_POST['zayav_id'] == 0)
             jsonError();
-        if(!preg_match(REGEXP_NUMERIC, $_POST['client_id']) || $_POST['client_id'] == 0)
-            jsonError();
         if(!preg_match(REGEXP_NUMERIC, $_POST['sum']) || $_POST['sum'] == 0)
             jsonError();
+        if(!preg_match(REGEXP_NUMERIC, $_POST['status']) || $_POST['status'] == 0)
+            jsonError();
+        if(!preg_match(REGEXP_NUMERIC, $_POST['dev_status']))
+            jsonError();
+        if(!preg_match(REGEXP_BOOL, $_POST['remind']))
+            jsonError();
+        $remind = intval($_POST['remind']);
+        $remind_txt = win1251(htmlspecialchars(trim($_POST['remind_txt'])));
+        $remind_day = htmlspecialchars(trim($_POST['remind_day']));
+        if($remind) {
+            if(!$remind_txt)
+                jsonError();
+            if(!preg_match(REGEXP_DATE, $remind_day))
+                jsonError();
+        }
+
         $zayav_id = intval($_POST['zayav_id']);
-        $client_id = intval($_POST['client_id']);
         $sum = intval($_POST['sum']);
         $prim = win1251(htmlspecialchars(trim($_POST['prim'])));
+        $status = intval($_POST['status']);
+        $dev_status = intval($_POST['dev_status']);
+
+        $sql = "SELECT *
+                FROM `zayavki`
+                WHERE `ws_id`=".WS_ID."
+                  AND `zayav_status`>0
+                  AND `id`=".$zayav_id;
+        if(!$zayav = mysql_fetch_assoc(query($sql)))
+            jsonError();
+
         $sql = "INSERT INTO `accrual` (
                     `ws_id`,
                     `zayav_id`,
@@ -325,20 +349,66 @@ switch(@$_POST['op']) {
                 ) VALUES (
                     ".WS_ID.",
                     ".$zayav_id.",
-                    ".$client_id.",
+                    ".$zayav['client_id'].",
                     ".$sum.",
                     '".addslashes($prim)."',
                     ".VIEWER_ID."
                 )";
         query($sql);
+        setClientBalans($zayav['client_id']);
+        history_insert(array(
+            'type' => 5,
+            'zayav_id' => $zayav_id,
+            'value' => $sum
+        ));
 
+        //Обновление статуса заявки, если изменялся
+        $sql = "UPDATE `zayavki`
+                SET `device_status`=".$dev_status."
+                    ".($zayav['zayav_status'] != $status ? ",`zayav_status`=".$status.",`zayav_status_dtime`=CURRENT_TIMESTAMP" : "")."
+                WHERE `ws_id`=".WS_ID."
+                  AND `id`=".$zayav_id;
+        query($sql);
+        if($zayav['zayav_status'] != $status) {
+            history_insert(array(
+                'type' => 4,
+                'zayav_id' => $zayav_id,
+                'value' => $status
+            ));
+            $send['status'] = zayav_status($status);
+            $send['status']['name'] = utf8($send['status']['name']);
+            $send['status']['dtime'] = utf8(FullDataTime(curTime()));
+        }
+
+        //Внесение напоминания, если есть
+        if($remind) {
+            $sql = "INSERT INTO `reminder` (
+                `ws_id`,
+                `zayav_id`,
+                `txt`,
+                `day`,
+                `history`,
+                `viewer_id_add`
+             ) VALUES (
+                ".WS_ID.",
+                ".$zayav_id.",
+                '".$remind_txt."',
+                '".$remind_day."',
+                '".FullDataTime(curTime())." ".viewerName()." добавил напоминание при внесении начисления.',
+                ".VIEWER_ID."
+            )";
+            query($sql);
+            $send['remind'] = utf8(report_remind_spisok(1, array('zayav'=>$zayav_id)));
+        }
+
+        //Получение разницы между начислениями и платежами
         $sql = "SELECT SUM(`summa`) AS `summa`
                 FROM `accrual`
                 WHERE `ws_id`=".WS_ID."
                   AND `status`=1
                   AND `zayav_id`=".$zayav_id;
-        $send = mysql_fetch_assoc(query($sql));
-
+        $r = mysql_fetch_assoc(query($sql));
+        $send['summa'] = $r['summa'];
         $sql = "SELECT SUM(`summa`) AS `summa`
                 FROM `money`
                 WHERE `ws_id`=".WS_ID."
@@ -358,17 +428,26 @@ switch(@$_POST['op']) {
     case 'zayav_oplata_add':
         if(!preg_match(REGEXP_NUMERIC, $_POST['zayav_id']) || $_POST['zayav_id'] == 0)
             jsonError();
-        if(!preg_match(REGEXP_NUMERIC, $_POST['client_id']) || $_POST['client_id'] == 0)
-            jsonError();
         if(!preg_match(REGEXP_NUMERIC, $_POST['sum']) || $_POST['sum'] == 0)
             jsonError();
         if(!preg_match(REGEXP_BOOL, $_POST['kassa']))
             jsonError();
+        if(!preg_match(REGEXP_NUMERIC, $_POST['dev_place']))
+            jsonError();
         $zayav_id = intval($_POST['zayav_id']);
-        $client_id = intval($_POST['client_id']);
         $sum = intval($_POST['sum']);
         $kassa = intval($_POST['kassa']);
+        $dev_place = intval($_POST['dev_place']);
         $prim = win1251(htmlspecialchars(trim($_POST['prim'])));
+
+        $sql = "SELECT *
+                FROM `zayavki`
+                WHERE `ws_id`=".WS_ID."
+                  AND `zayav_status`>0
+                  AND `id`=".$zayav_id;
+        if(!$zayav = mysql_fetch_assoc(query($sql)))
+            jsonError();
+
         $sql = "INSERT INTO `money` (
                     `ws_id`,
                     `zayav_id`,
@@ -380,12 +459,26 @@ switch(@$_POST['op']) {
                 ) VALUES (
                     ".WS_ID.",
                     ".$zayav_id.",
-                    ".$client_id.",
+                    ".$zayav['client_id'].",
                     ".$sum.",
                     ".$kassa.",
                     '".addslashes($prim)."',
                     ".VIEWER_ID."
                 )";
+        query($sql);
+        setClientBalans($zayav['client_id']);
+        history_insert(array(
+            'type' => 6,
+            'zayav_id' => $zayav_id,
+            'value' => $sum
+        ));
+
+        //Обновление местонахождения устройства
+        $sql = "UPDATE `zayavki`
+                SET `device_place`=".$dev_place.",
+                    `device_place_other`=''
+                WHERE `ws_id`=".WS_ID."
+                  AND `id`=".$zayav_id;
         query($sql);
 
         $sql = "SELECT SUM(`summa`) AS `summa`
@@ -410,7 +503,6 @@ switch(@$_POST['op']) {
         )));
         jsonSuccess($send);
         break;
-
 
     case 'report_history_load':
         if(!preg_match(REGEXP_NUMERIC, $_POST['worker']))
