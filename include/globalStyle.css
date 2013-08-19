@@ -1715,13 +1715,12 @@ TABLE{border:0}
 
 #zayavInfo #right{vertical-align:top;width:200px}
 
-
 .zayav_accrual_add .label{width:140px;text-align:right}
 .zayav_accrual_add #prim,.zayav_accrual_add #reminder_txt { width:200px; }
 .zayav_accrual_add.remind{display:none;margin-top:-8px;}
 .zayav_oplata_add .label{width:165px;text-align:right}
 .zayav_oplata_add #prim{width:200px}
-
+#zayavInfo .deleting{text-align:center;color:#555}
 /*
 #zayavInfo #money .deleted { color:#666; text-align:center; }
 #zayavInfo #money .deleted IMG { margin:3px 0 2px 0; }

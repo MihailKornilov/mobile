@@ -304,6 +304,28 @@ switch(@$_POST['op']) {
         $send['html'] = utf8(show_zayav_spisok(get_zayav_list(intval($_POST['page']), zayavfilter($_POST))));
         jsonSuccess($send);
         break;
+    case 'zayav_money_update':
+        //Получение разницы между начислениями и платежами и их обновление
+        if(!preg_match(REGEXP_NUMERIC, $_POST['id']))
+            jsonError();
+        $id = intval($_POST['id']);
+        $sql = "SELECT IFNULL(SUM(`summa`),0) AS `acc`
+                FROM `accrual`
+                WHERE `ws_id`=".WS_ID."
+                  AND `status`=1
+                  AND `zayav_id`=".$id;
+        $send = mysql_fetch_assoc(query($sql));
+        $sql = "SELECT IFNULL(SUM(`summa`),0) AS `opl`
+                FROM `money`
+                WHERE `ws_id`=".WS_ID."
+                  AND `status`=1
+                  AND `summa`>0
+                  AND `zayav_id`=".$id;
+        $r = mysql_fetch_assoc(query($sql));
+        $send['opl'] = $r['opl'];
+        $send['dopl'] = $send['acc'] - $r['opl'];
+        jsonSuccess($send);
+        break;
     case 'zayav_accrual_add':
         if(!preg_match(REGEXP_NUMERIC, $_POST['zayav_id']) || $_POST['zayav_id'] == 0)
             jsonError();
@@ -355,6 +377,12 @@ switch(@$_POST['op']) {
                     ".VIEWER_ID."
                 )";
         query($sql);
+        $send['html'] = utf8(zayav_accrual_unit(array(
+            'id' => mysql_insert_id(),
+            'summa' => $sum,
+            'prim' => $prim,
+            'dtime_add' => curTime()
+        )));
         setClientBalans($zayav['client_id']);
         history_insert(array(
             'type' => 5,
@@ -400,29 +428,6 @@ switch(@$_POST['op']) {
             query($sql);
             $send['remind'] = utf8(report_remind_spisok(1, array('zayav'=>$zayav_id)));
         }
-
-        //Получение разницы между начислениями и платежами
-        $sql = "SELECT SUM(`summa`) AS `summa`
-                FROM `accrual`
-                WHERE `ws_id`=".WS_ID."
-                  AND `status`=1
-                  AND `zayav_id`=".$zayav_id;
-        $r = mysql_fetch_assoc(query($sql));
-        $send['summa'] = $r['summa'];
-        $sql = "SELECT SUM(`summa`) AS `summa`
-                FROM `money`
-                WHERE `ws_id`=".WS_ID."
-                  AND `status`=1
-                  AND `summa`>0
-                  AND `zayav_id`=".$zayav_id;
-        $r = mysql_fetch_assoc(query($sql));
-        $send['dopl'] = $send['summa'] - $r['summa'];
-
-        $send['html'] = utf8(zayav_accrual_unit(array(
-            'summa' => $sum,
-            'prim' => $prim,
-            'dtime_add' => curTime()
-        )));
         jsonSuccess($send);
         break;
     case 'zayav_oplata_add':
@@ -466,6 +471,12 @@ switch(@$_POST['op']) {
                     ".VIEWER_ID."
                 )";
         query($sql);
+        $send['html'] = utf8(zayav_oplata_unit(array(
+            'id' => mysql_insert_id(),
+            'summa' => $sum,
+            'prim' => $prim,
+            'dtime_add' => curTime()
+        )));
         setClientBalans($zayav['client_id']);
         history_insert(array(
             'type' => 6,
@@ -480,27 +491,98 @@ switch(@$_POST['op']) {
                 WHERE `ws_id`=".WS_ID."
                   AND `id`=".$zayav_id;
         query($sql);
-
-        $sql = "SELECT SUM(`summa`) AS `summa`
-                FROM `money`
-                WHERE `ws_id`=".WS_ID."
-                  AND `status`=1
-                  AND `summa`>0
-                  AND `zayav_id`=".$zayav_id;
-        $send = mysql_fetch_assoc(query($sql));
-
-        $sql = "SELECT SUM(`summa`) AS `summa`
+        jsonSuccess($send);
+        break;
+    case 'zayav_accrual_del':
+        if(!preg_match(REGEXP_NUMERIC, $_POST['id']))
+            jsonError();
+        $id = intval($_POST['id']);
+        $sql = "UPDATE `accrual` SET
+                    `status`=0,
+                    `viewer_id_del`=".VIEWER_ID.",
+                    `dtime_del`=CURRENT_TIMESTAMP
+                WHERE `id`=".$id;
+        query($sql);
+        $sql = "SELECT * FROM `accrual` WHERE `id`=".$id;
+        $r = mysql_fetch_assoc(query($sql));
+        history_insert(array(
+            'type' => 8,
+            'value' => $r['summa'],
+            'value1' => $r['prim'],
+            'zayav_id' => $r['zayav_id']
+        ));
+        jsonSuccess();
+        break;
+    case 'zayav_oplata_del':
+        if(!preg_match(REGEXP_NUMERIC, $_POST['id']))
+            jsonError();
+        $id = intval($_POST['id']);
+        $sql = "UPDATE `money` SET
+                    `status`=0,
+                    `viewer_id_del`=".VIEWER_ID.",
+                    `dtime_del`=CURRENT_TIMESTAMP
+                WHERE `id`=".$id;
+        query($sql);
+        $sql = "SELECT * FROM `money` WHERE `id`=".$id;
+        $r = mysql_fetch_assoc(query($sql));
+        history_insert(array(
+            'type' => 9,
+            'value' => $r['summa'],
+            'value1' => $r['prim'],
+            'zayav_id' => $r['zayav_id']
+        ));
+        jsonSuccess();
+        break;
+    case 'zayav_accrual_rest':
+        if(!preg_match(REGEXP_NUMERIC, $_POST['id']))
+            jsonError();
+        $id = intval($_POST['id']);
+        $sql = "SELECT *
                 FROM `accrual`
                 WHERE `ws_id`=".WS_ID."
-                  AND `status`=1
-                  AND `zayav_id`=".$zayav_id;
-        $r = mysql_fetch_assoc(query($sql));
-        $send['dopl'] = $r['summa'] - $send['summa'];
-        $send['html'] = utf8(zayav_oplata_unit(array(
-            'summa' => $sum,
-            'prim' => $prim,
-            'dtime_add' => curTime()
-        )));
+                  AND `status`=0
+                  AND `id`=".$id;
+        if(!$acc = mysql_fetch_assoc(query($sql)))
+            jsonError();
+        $sql = "UPDATE `accrual` SET
+                    `status`=1,
+                    `viewer_id_del`=0,
+                    `dtime_del`='0000-00-00 00:00:00'
+                WHERE `id`=".$id;
+        query($sql);
+        history_insert(array(
+            'type' => 27,
+            'value' => $acc['summa'],
+            'value1' => $acc['prim'],
+            'zayav_id' => $acc['zayav_id']
+        ));
+        $send['html'] = utf8(zayav_accrual_unit($acc));
+        jsonSuccess($send);
+        break;
+    case 'zayav_oplata_rest':
+        if(!preg_match(REGEXP_NUMERIC, $_POST['id']))
+            jsonError();
+        $id = intval($_POST['id']);
+        $sql = "SELECT *
+                FROM `money`
+                WHERE `ws_id`=".WS_ID."
+                  AND `status`=0
+                  AND `id`=".$id;
+        if(!$acc = mysql_fetch_assoc(query($sql)))
+            jsonError();
+        $sql = "UPDATE `money` SET
+                    `status`=1,
+                    `viewer_id_del`=0,
+                    `dtime_del`='0000-00-00 00:00:00'
+                WHERE `id`=".$id;
+        query($sql);
+        history_insert(array(
+            'type' => 19,
+            'value' => $acc['summa'],
+            'value1' => $acc['prim'],
+            'zayav_id' => $acc['zayav_id']
+        ));
+        $send['html'] = utf8(zayav_oplata_unit($acc));
         jsonSuccess($send);
         break;
 

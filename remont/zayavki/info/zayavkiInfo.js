@@ -521,8 +521,6 @@ $("#zayav_zp").click(function (e) {
 
 
 
-// вывод комментариев
-$("#comm").vkComment({table_name:'zayav', table_id:G.zayav.id});
 
 
 

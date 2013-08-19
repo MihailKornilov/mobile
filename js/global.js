@@ -80,6 +80,23 @@ var REGEXP_NUMERIC = /^\d+$/,
             $('#mainLinks img').remove();
         }, 'json');
     },
+    zayavInfoMoneyUpdate = function() {
+        var send = {
+            op:'zayav_money_update',
+            id:G.zayavInfo.id
+        };
+        $.post(AJAX_MAIN, send, function (res) {
+            if(res.success) {
+                $('b.acc').html(res.acc);
+                $('.acc_tr')[(res.acc == 0 ? 'add' : 'remove') + 'Class']('dn');
+                $('b.op').html(res.opl);
+                $('.op_tr')[(res.opl == 0 ? 'add' : 'remove') + 'Class']('dn');
+                $('.dopl')
+                    [(res.dopl == 0 ? 'add' : 'remove') + 'Class']('dn')
+                    .html((res.dopl > 0 ? '+' : '') + res.dopl);
+            }
+        }, 'json');
+    },
     reportHistoryLoad = function() {
         var send = {
             op:'report_history_load',
@@ -409,12 +426,8 @@ $(document)
                     if(res.success) {
                         dialog.close();
                         vkMsgOk("Начисление успешно произведено!");
-                        $('b.acc').html(res.summa);
-                        $('.acc_tr').removeClass('dn');
-                        $('.dopl')
-                            [(res.dopl == 0 ? 'add' : 'remove') + 'Class']('dn')
-                            .html((res.dopl > 0 ? '+' : '') + res.dopl);
                         $('.tabSpisok.mon').append(res.html);
+                        zayavInfoMoneyUpdate();
                         if(res.status) {
                             $('#status')
                                 .html(res.status.name)
@@ -488,12 +501,8 @@ $(document)
                     if(res.success) {
                         dialog.close();
                         vkMsgOk('Платёж успешно внесён!');
-                        $('b.op').html(res.summa);
-                        $('.op_tr').removeClass('dn');
-                        $('.dopl')
-                            [(res.dopl == 0 ? 'add' : 'remove') + 'Class']('dn')
-                            .html((res.dopl > 0 ? '+' : '') + res.dopl);
                         $('.tabSpisok.mon').append(res.html);
+                        zayavInfoMoneyUpdate();
                     }
                 }, 'json');
             }
@@ -508,6 +517,64 @@ $(document)
                     left:135
                 });
         }
+    })
+    .on('click', '#zayavInfo .acc_del', function() {
+        var send = {
+            op:'zayav_accrual_del',
+            id:$(this).attr('val')
+        };
+        var tr = $(this).parent().parent();
+        tr.html('<td colspan="4" class="deleting">Удаление... <img src=/img/upload.gif></td>');
+        $.post(AJAX_MAIN, send, function (res) {
+            if(res.success) {
+                tr.find('.deleting').html('Начисление удалено. <a class="acc_rest" val="' + send.id + '">Восстановить</a>');
+                zayavInfoMoneyUpdate();
+            }
+        }, 'json');
+    })
+    .on('click', '#zayavInfo .op_del', function() {
+        var send = {
+            op:'zayav_oplata_del',
+            id:$(this).attr('val')
+        };
+        var tr = $(this).parent().parent();
+        tr.html('<td colspan="4" class="deleting">Удаление... <img src=/img/upload.gif></td>');
+        $.post(AJAX_MAIN, send, function (res) {
+            if(res.success) {
+                tr.find('.deleting').html('Платёж удалён. <a class="op_rest" val="' + send.id + '">Восстановить</a>');
+                zayavInfoMoneyUpdate();
+            }
+        }, 'json');
+    })
+    .on('click', '#zayavInfo .acc_rest', function() {
+        var send = {
+                op:'zayav_accrual_rest',
+                id:$(this).attr('val')
+            },
+            t = $(this),
+            tr = t.parent().parent();
+        t.after('<img src=/img/upload.gif>').remove();
+        $.post(AJAX_MAIN, send, function(res) {
+            if(res.success) {
+                tr.after(res.html).remove();
+                zayavInfoMoneyUpdate();
+            }
+        }, 'json');
+    })
+    .on('click', '#zayavInfo .op_rest', function() {
+        var send = {
+                op:'zayav_oplata_rest',
+                id:$(this).attr('val')
+            },
+            t = $(this),
+            tr = t.parent().parent();
+        t.after('<img src=/img/upload.gif>').remove();
+        $.post(AJAX_MAIN, send, function(res) {
+            if(res.success) {
+                tr.after(res.html).remove();
+                zayavInfoMoneyUpdate();
+            }
+        }, 'json');
     });
 
 $(document)

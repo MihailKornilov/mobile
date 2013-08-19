@@ -941,10 +941,10 @@ function zayav_info($id) {
     $status = zayav_status($zayav['zayav_status']);
     $sql = "SELECT *
         FROM `accrual`
-            WHERE `ws_id`=".WS_ID."
-        AND `status`=1
-              AND `zayav_id`=".$zayav['id']."
-            ORDER BY `dtime_add` ASC";
+        WHERE `ws_id`=".WS_ID."
+          AND `status`=1
+          AND `zayav_id`=".$zayav['id']."
+        ORDER BY `dtime_add` ASC";
     $q = query($sql);
     $money = array();
     $accSum = 0;
@@ -1032,14 +1032,14 @@ function zayav_accrual_unit($acc) {
     return '<tr><td class="sum acc" title="Начисление">'.$acc['summa'].'</td>'.
         '<td>'.$acc['prim'].'</td>'.
         '<td class="dtime">'.FullDataTime($acc['dtime_add']).'</td>'.
-        '<td class="del"><div class="img_del" title="Удалить начисление"></div></td>'.
+        '<td class="del"><div class="img_del acc_del" title="Удалить начисление" val="'.$acc['id'].'"></div></td>'.
     '</tr>';
 }//end of zayav_accrual_unit()
 function zayav_oplata_unit($op) {
     return '<tr><td class="sum op" title="Платёж">'.$op['summa'].'</td>'.
         '<td>'.$op['prim'].'</td>'.
         '<td class="dtime">'.FullDataTime($op['dtime_add']).'</td>'.
-        '<td class="del"><div class="img_del" title="Удалить платёж"></div></td>'.
+        '<td class="del"><div class="img_del op_del" title="Удалить платёж" val="'.$op['id'].'"></div></td>'.
     '</tr>';
 }//end of zayav_oplata_unit()
 
@@ -1087,7 +1087,10 @@ function history_types($arr) {
             ($arr['value1'] ? '('.$arr['value1'].')' : '').
             ($arr['zayav_id'] ? ' по заявке '.$arr['zayav_link'] : '');
         case 7: return 'Отредактировал данные заявки '.$arr['zayav_link'].'.';
-        case 8: return 'Удалил начисление на сумму '.$arr['zayav_id'].' руб. у заявки '.$arr['zayav_link'].'.';
+        case 8:
+            return 'Удалил начисление на сумму <b>'.$arr['value'].'</b> руб. '.
+                ($arr['value1'] ? '('.$arr['value1'].')' : '').
+                ' у заявки '.$arr['zayav_link'].'.';
         case 9:
             return 'Удалил платёж на сумму <b>'.$arr['value'].'</b> руб. '.
                 ($arr['value1'] ? '('.$arr['value1'].')' : '').
@@ -1120,6 +1123,11 @@ function history_types($arr) {
         case 24: return 'Установил начальное значение в кассе = <b>'.$arr['value'].'</b> руб.';
         case 25: return 'Удалил запись в кассе на сумму <b>'.$arr['value'].'</b> руб. ('.$arr['value1'].')';
         case 26: return 'Восстановил запись в кассе на сумму <b>'.$arr['value'].'</b> руб. ('.$arr['value1'].')';
+        case 27:
+            return 'Восстановил начисление на сумму <b>'.$arr['value'].'</b> руб. '.
+                ($arr['value1'] ? '('.$arr['value1'].')' : '').
+                ' у заявки '.$arr['zayav_link'].'.';
+
         default: return $arr['type'];
     }
 }//end of history_types()
