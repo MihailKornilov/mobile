@@ -36,6 +36,9 @@ switch(@$_POST['op']) {
         xcache_unset('vkmobile_vendor_name');
         xcache_unset('vkmobile_model_name_count');
         xcache_unset('vkmobile_zp_name');
+        xcache_unset('vkmobile_color_name');
+        xcache_unset('vkmobile_device_place');
+        xcache_unset('vkmobile_device_status');
         jsonSuccess();
         break;
 
@@ -381,7 +384,6 @@ switch(@$_POST['op']) {
             'id' => mysql_insert_id(),
             'summa' => $sum,
             'prim' => $prim,
-            'dtime_add' => curTime()
         )));
         setClientBalans($zayav['client_id']);
         history_insert(array(
@@ -474,8 +476,7 @@ switch(@$_POST['op']) {
         $send['html'] = utf8(zayav_oplata_unit(array(
             'id' => mysql_insert_id(),
             'summa' => $sum,
-            'prim' => $prim,
-            'dtime_add' => curTime()
+            'prim' => $prim
         )));
         setClientBalans($zayav['client_id']);
         history_insert(array(
@@ -583,6 +584,150 @@ switch(@$_POST['op']) {
             'zayav_id' => $acc['zayav_id']
         ));
         $send['html'] = utf8(zayav_oplata_unit($acc));
+        jsonSuccess($send);
+        break;
+    case 'zayav_zp_add':
+        if(!preg_match(REGEXP_NUMERIC, $_POST['zayav_id']) || $_POST['zayav_id'] == 0)
+            jsonError();
+        if(!preg_match(REGEXP_NUMERIC, $_POST['name_id']) || $_POST['name_id'] == 0)
+            jsonError();
+        if(!preg_match(REGEXP_NUMERIC, $_POST['color_id']))
+            jsonError();
+        $sql = "SELECT *
+                FROM `zayavki`
+                WHERE `ws_id`=".WS_ID."
+                  AND `id`=".intval($_POST['zayav_id']);
+        if(!$zayav = mysql_fetch_assoc(query($sql)))
+            jsonError();
+        $name_id = intval($_POST['name_id']);
+        $name_dop = win1251(htmlspecialchars(trim($_POST['name_dop'])));
+        $color_id = intval($_POST['color_id']);
+        $sql = "INSERT INTO `zp_catalog` (
+                    `name_id`,
+                    `name_dop`,
+                    `color_id`,
+                    `base_device_id`,
+                    `base_vendor_id`,
+                    `base_model_id`,
+                    `viewer_id_add`,
+                    `find`
+                ) VALUES (
+                    ".$name_id.",
+                    '".$name_dop."',
+                    ".$color_id.",
+                    ".$zayav['base_device_id'].",
+                    ".$zayav['base_vendor_id'].",
+                    ".$zayav['base_model_id'].",
+                    ".VIEWER_ID.",
+                    '"._modelName($zayav['base_model_id'])." ".$name_dop."'
+                )";
+        query($sql);
+        $zp = array(
+            'id' => mysql_insert_id(),
+            'name_id' => $name_id,
+            'name_dop' => $name_dop,
+            'color_id' => $color_id
+        );
+        $send['html'] = utf8(zayav_zp_unit($zp, _vendorName($zayav['base_vendor_id'])._modelName($zayav['base_model_id'])));
+        jsonSuccess($send);
+        break;
+    case 'zayav_zp_zakaz':
+        if(!preg_match(REGEXP_NUMERIC, $_POST['zayav_id']) || $_POST['zayav_id'] == 0)
+            jsonError();
+        if(!preg_match(REGEXP_NUMERIC, $_POST['zp_id']) || $_POST['zp_id'] == 0)
+            jsonError();
+
+        $sql = "SELECT * FROM `zp_catalog` WHERE `id`=".intval($_POST['zp_id']);
+        $zp = mysql_fetch_assoc(query($sql));
+        $compat_id = $zp['compat_id'] ? $zp['compat_id'] : $zp['id'];
+
+        $sql = "INSERT INTO `zp_zakaz` (
+                    `ws_id`,
+                    `zp_catalog_id`,
+                    `zayav_id`,
+                    `viewer_id_add`
+                ) VALUES (
+                    ".WS_ID.",
+                    ".$compat_id.",
+                    ".intval($_POST['zayav_id']).",
+                    ".VIEWER_ID."
+                )";
+        query($sql);
+        $send['msg'] = utf8('Запчасть <b>'._zpName($zp['name_id']).'</b> для '._vendorName($zp['base_vendor_id'])._modelName($zp['base_model_id']).' добавлена к заказу.');
+        jsonSuccess($send);
+        break;
+    case 'zayav_zp_set':
+        if(!preg_match(REGEXP_NUMERIC, $_POST['zayav_id']) || $_POST['zayav_id'] == 0)
+            jsonError();
+        if(!preg_match(REGEXP_NUMERIC, $_POST['zp_id']) || $_POST['zp_id'] == 0)
+            jsonError();
+
+        $zayav_id = intval($_POST['zayav_id']);
+        $zp_id = intval($_POST['zp_id']);
+        $compat_id = _zpCompatId($_POST['zp_id']);
+        $sql = "INSERT INTO `zp_move` (
+                    `ws_id`,
+                    `zp_catalog_id`,
+                    `prihod`,
+                    `count`,
+                    `type`,
+                    `zayav_id`,
+                    `viewer_id_add`
+                ) VALUES (
+                    ".WS_ID.",
+                    ".$compat_id.",
+                    0,
+                    1,
+                    'set',
+                    ".intval($_POST['zayav_id']).",
+                    ".VIEWER_ID."
+                )";
+        query($sql);
+
+        $prihod = query_value("SELECT SUM(`count`) FROM `zp_move` WHERE `ws_id`=".WS_ID." AND `zp_catalog_id`=".$compat_id." AND `prihod`=1 LIMIT 1");
+        $rashod = query_value("SELECT SUM(`count`) FROM `zp_move` WHERE `ws_id`=".WS_ID." AND `zp_catalog_id`=".$compat_id." AND `prihod`=0 LIMIT 1");
+        $count =  $prihod - $rashod;
+        $sql = "DELETE FROM `zp_available` WHERE `ws_id`=".WS_ID." AND `zp_catalog_id`=".$compat_id;
+        query($sql);
+        if($count > 0) {
+            $sql = "INSERT INTO `zp_available` (`ws_id`,`zp_catalog_id`,`count`) VALUES (".WS_ID.",".$compat_id.",".$count.")";
+            query($sql);
+        }
+
+        //Удаление из заказа запчасти, привязанной к заявке
+        $sql = "DELETE FROM `zp_zakaz` WHERE `ws_id`=".WS_ID." AND `zayav_id`=".$zayav_id." AND `zp_catalog_id`=".$zp_id;
+        query($sql);
+
+        $parent_id = 0;
+        $sql = "SELECT `id`,`parent_id`
+                FROM `vk_comment`
+                WHERE `table_name`='zayav'
+                  AND `table_id`=".$zayav_id."
+                  AND `status`=1
+                ORDER BY `id` DESC
+                LIMIT 1";
+        if($r = mysql_fetch_assoc(query($sql)))
+            $parent_id = $r['parent_id'] ? $r['parent_id'] : $r['id'];
+        $sql = "SELECT * FROM `zp_catalog` WHERE id=".$zp_id." LIMIT 1";
+        $zp = mysql_fetch_assoc(query($sql));
+        $model = _vendorName($zp['base_vendor_id'])._modelName($zp['base_model_id']);
+        $sql = "INSERT INTO `vk_comment` (
+                    `table_name`,
+                    `table_id`,
+                    `txt`,
+                    `parent_id`,
+                    `viewer_id_add`
+                ) VALUES (
+                    'zayav',
+                    ".$zayav_id.",
+                    '".addslashes('Установка запчасти: <a href="'.URL.'&my_page=remZp&id='.$zp_id.'">'._zpName($zp['name_id']).' '.$model.'</a>')."',
+                    ".$parent_id.",
+                    ".VIEWER_ID."
+                )";
+        query($sql);
+        $zp['avai'] = $count;
+        $send['zp_unit'] = utf8(zayav_zp_unit($zp, $model));
+        $send['comment'] = utf8(_vkComment('zayav', $zayav_id));
         jsonSuccess($send);
         break;
 

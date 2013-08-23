@@ -53,37 +53,8 @@ $zayav = $VK->QueryObjectOne("select * from zayavki where ws_id=".$vku->ws_id." 
 if(!$zayav->id)  header("Location: ". $URL."&my_page=nopage&parent=remZayavki");
 
 $zayavDel = 0;  // выводить ссылку об удалении заявки либо нет
-/******* НАЧИСЛЕНИЯ ********/
-$accrual = array();
-$spisok = $VK->QueryObjectArray("select * from accrual where ws_id=".$vku->ws_id." and zayavki_id=".$zayav->id." and status=1 order by id");
-$zayavDel += count($spisok);
-if(count($spisok) > 0) {
-  foreach($spisok as $sp) {
-    array_push($accrual, array(
-      'id' => $sp->id,
-      'summa' => $sp->summa,
-      'prim' => utf8($sp->prim),
-      'dtime' => utf8(FullDataTime($sp->dtime_add,1))
-    ));
-  }
-}
 
 
-
-/******* ПЛАТЕЖИ ********/
-$oplata = array();
-$spisok=$VK->QueryObjectArray("select * from money where ws_id=".$vku->ws_id." and zayav_id=".$zayav->id." and status=1 order by id");
-$zayavDel += count($spisok);
-if(count($spisok) > 0) {
-  foreach($spisok as $sp) {
-    array_push($oplata, array(
-      'id' => $sp->id,
-      'summa' => $sp->summa,
-      'prim' => utf8($sp->prim),
-      'dtime' => utf8(FullDataTime($sp->dtime_add,1))
-    ));
-  }
-}
 
 
 // Запчасти
@@ -133,29 +104,9 @@ if (count($spisok) > 0) {
   }
 }
 
-// задачи
-$reminder = array();
-$spisok = $VK->QueryObjectArray("select * from reminder where ws_id=".$vku->ws_id." and zayav_id=".$zayav->id." and status=1 and (private=0 or private=1 and viewer_id_add=".$vku->viewer_id.")");
-if (count($spisok) > 0) {
-  $today = strtotime(strftime("%Y-%m-%d", time()));
-  foreach($spisok as $sp) {
-    array_push($reminder, array(
-      'id' => $sp->id,
-      'txt' => utf8($sp->txt),
-      'day' => utf8(FullData($sp->day, 1)),
-      'day_real' => $sp->day,
-      'day_leave' => (strtotime($sp->day) - $today) / 3600 / 24,
-      'history' => utf8($sp->history),
-      'private' => $sp->private,
-      'dtime' => utf8(FullDataTime($sp->dtime_add, 1)),
-      'viewer_id' => $sp->viewer_id_add
-    ));
-  }
-}
 
 
-include('incHeader.php');
-$sel = 'remZayavki'; include('remont/mainLinks.php');
+
 ?>
 
 

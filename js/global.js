@@ -479,7 +479,8 @@ $(document)
         $('#kassa_radio').vkHint({
             msg:"Если это наличный платёж<BR>и деньги остаются в мастерской,<BR>укажите 'да'.",
             top:-83,
-            left:-60
+            left:-60,
+            delayShow:1000
         });
         $("#dev_place").linkMenu({spisok:G.device_place_spisok});
         function submit() {
@@ -575,6 +576,116 @@ $(document)
                 zayavInfoMoneyUpdate();
             }
         }, 'json');
+    })
+    .on('click', '#zayavInfo .zakaz', function() {
+        var t = $(this),
+            send = {
+                op:'zayav_zp_zakaz',
+                zayav_id:G.zayavInfo.id,
+                zp_id:t.parent().parent().attr('val')
+            };
+        $.post(AJAX_MAIN, send, function(res) {
+            if(res.success) {
+                t.html('Заказано!').attr('class', 'zakaz_ok');
+                vkMsgOk(res.msg);
+            }
+        }, 'json');
+    })
+    .on('click', '#zayavInfo .zakaz_ok', function() {
+        location.href = URL + '&my_page=remZp&id=[4]';//todo change link
+    })
+    .on('click', '#zayavInfo .zpAdd', function() {
+        var html = '<div class="zayav_zp_add">' +
+                '<CENTER>Добавление запчасти к устройству<br />' +
+                    '<b>' +
+                        G.device_ass[G.zayavInfo.device] + ' ' +
+                        G.vendor_ass[G.zayavInfo.vendor] + ' ' +
+                        G.model_ass[G.zayavInfo.model] +
+                    '</b>.'+
+                '</CENTER>' +
+                '<TABLE cellspacing="5">' +
+                    '<TR><TD class="label r">Наименование запчасти:<TD><INPUT TYPE="hidden" id="name_id">' +
+                    '<TR><TD class="label r">Дополнительная информация:<TD><INPUT TYPE="text" id="name_dop" maxlength="30">' +
+                    '<TR><TD class="label r">Цвет:<TD><INPUT TYPE="hidden" id="color_id">' +
+                '</TABLE>' +
+            '</div>',
+            dialog = vkDialog({
+                top:40,
+                width:400,
+                head:"Внесение новой запчасти",
+                content:html,
+                submit:submit
+            });
+
+        $('#name_id').vkSel({
+            width:200,
+            title0:'Наименование не выбрано',
+            spisok:G.zp_name_spisok
+        });
+        $('#color_id').vkSel({
+            width:130,
+            title0:'Цвет не указан',
+            spisok:G.color_spisok
+        });
+        function submit() {
+            var send = {
+                op:'zayav_zp_add',
+                zayav_id: G.zayavInfo.id,
+                name_id:$("#name_id").val(),
+                name_dop:$("#name_dop").val(),
+                color_id:$("#color_id").val()
+            };
+            if(send.name_id == 0)
+                dialog.bottom.vkHint({msg:'<SPAN class="red">Не указано наименование запчасти.</SPAN>',
+                    top:-47,
+                    left:56,
+                    show:1,
+                    remove:1,
+                    correct:0
+                });
+            else {
+                dialog.process();
+                $.post(AJAX_MAIN, send, function(res) {
+                    if(res.success) {
+                        vkMsgOk("Внесение запчасти произведено.");
+                        dialog.close();
+                        $('#zpSpisok').append(res.html);
+                    }
+                }, 'json');
+            }
+        }
+    })
+    .on('click', '#zayavInfo .set', function() {
+        var unit = $(this).parent().parent();
+        var html = '<CENTER class="zayav_zp_set">' +
+            'Установка запчасти<br />' + unit.find('a:first').html() + '.<br />' +
+            (unit.find('.color').length > 0 ? unit.find('.color').html() + '.<br />' : '') +
+            '<br />Информация об установке также<br />будет добавлена в заметки к заявке.' +
+        '</CENTER>',
+        dialog = vkDialog({
+            top:150,
+            width:400,
+            head:"Установка запчасти",
+            content:html,
+            butSubmit:'Установить',
+            submit:submit
+        });
+        function submit() {
+            var send = {
+                op:'zayav_zp_set',
+                zp_id:unit.attr('val'),
+                zayav_id:G.zayavInfo.id
+            };
+            dialog.process();
+            $.post(AJAX_MAIN, send, function(res) {
+                if(res.success) {
+                    dialog.close();
+                    vkMsgOk('Установка запчасти произведена.');
+                    unit.after(res.zp_unit).remove();
+                    $('.vkComment').after(res.comment).remove();
+                }
+            },'json');
+        }
     });
 
 $(document)
@@ -1584,6 +1695,14 @@ $(document).ready(function() {
                     show:1,
                     correct:0
                 });
+        });
+    }
+    if($('#zayavInfo').length > 0) {
+        $("#foto_upload").fotoUpload({
+            owner:'zayav' + G.zayavInfo.id,
+            max_x:200,
+            max_y:320,
+            func:function (obj) { G.zayav.foto.push(obj); G.zayav.update(); }
         });
     }
 

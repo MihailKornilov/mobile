@@ -46,7 +46,11 @@ function query($sql) {
     $sqlQuery++;
     return $res;
 }
-
+function query_value($sql) {
+    if(!$r = mysql_fetch_row(query($sql)))
+        return false;
+    return $r[0];
+}
 //Получение глобальных данных
 function _getSetupGlobal() {
     $g = xcache_get('vkmobile_setup_global');
