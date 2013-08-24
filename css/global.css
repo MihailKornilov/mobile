@@ -95,12 +95,12 @@ td.r{text-align:right}
 
 
 
-/* внесение новой заявки */
+/* Внесение новой заявки */
 #zayavAdd{padding:20px 10px 140px 10px;background-color:#F7F7F7}
 #zayavAdd .headName{margin-bottom:15px}
 #zayavAdd .label{width:190px;text-align:right}
-#zayavAdd #device_image{padding-left:5px;vertical-align:top;min-width:50px}
-#zayavAdd #device_image img{height:72px;display:none}
+#device_image{padding-left:5px;vertical-align:top;min-width:50px}
+#device_image img{height:72px;display:none}
 #zayavAdd #place_radio{margin-bottom:10px}
 #zayavAdd #place_other_div{position:absolute;display:none}
 #zayavAdd #place_other{width:100px;position:relative;top:-3px;left:3px}
@@ -111,6 +111,75 @@ td.r{text-align:right}
 #zayavAdd #reminder_tab{display:none;position:relative;top:-8px}
 #zayavAdd #reminder_txt{width:260px}
 #zayavAdd .vkButton{margin:10px 7px 0 206px}
+
+
+
+/* Информация о заявке */
+#zayavInfo #left{vertical-align:top}
+#zayavInfo .headName{margin:0;padding:4px 3px}
+#zayavInfo .tabInfo{margin:2px 10px 15px 10px; }
+#zayavInfo .label{width:85px}
+#zayavInfo .dtime_add{cursor:help}
+#zayavInfo #status {
+    display:inline-block;
+    border:#DDD solid 1px;
+    width:140px;
+    text-align:center;
+    padding:2px 0 3px 0;
+    color:#666;
+    cursor:pointer;
+}
+#zayavInfo #status:hover{border-color:#BBD; color:#444}
+#zayavInfo #status_dtime{display:inline-block;color:#AAA;font-size:10px;margin-left:10px}
+#zayavInfo .dopl{margin-left:10px;color:#888;cursor:help}
+#zayavInfo #remind_spisok{margin:8px 0}
+#zayavInfo .headBlue.mon{margin-top:10px}
+#zayavInfo .headBlue.mon em{float:right;margin:0 5px;}
+#zayavInfo .tabSpisok.mon{width:100%}
+#zayavInfo .mon .sum{width:45px;text-align:right;font-weight:bold;cursor:help}
+#zayavInfo .op{color:#090}
+#zayavInfo .acc{color:#07a}
+#zayavInfo .mon .dtime{
+    width:70px;
+    white-space:nowrap;
+    text-align:right;
+    font-size:10px;
+    color:#777;
+    cursor:help
+}
+#zayavInfo .mon .del{width:20px;padding:0}
+#zayavInfo .mon .img_del{margin:0 0 -2px 4px}
+.zayav_accrual_add .label{width:140px;text-align:right}
+.zayav_accrual_add #prim,.zayav_accrual_add #reminder_txt { width:200px; }
+.zayav_accrual_add.remind{display:none;margin-top:-8px;}
+.zayav_oplata_add .label{width:165px;text-align:right}
+.zayav_oplata_add #prim{width:200px}
+#zayavInfo .deleting{text-align:center;color:#555}
+#zayavInfo #right{vertical-align:top;width:200px}
+#zayavInfo #foto{text-align:center}
+#zayavInfo .devContent{border-left:#e9edf1 solid 1px}
+#zayavInfo .devName{padding:7px 0 0 7px}
+#zayavInfo .devName a{font-weight:bold}
+#zayavInfo .devInfo{margin:7px 0 10px 7px}
+#zayavInfo .devInfo *{font-size:10px}
+#zayavInfo .devInfo th{width:70px;color:#777;text-align:left;font-size:10px}
+#zayavInfo .goZp{font-weight:bold}
+.zayav_zp_add center{margin-bottom:15px}
+.zayav_zp_add center,.zayav_zp_add center b{font-size:12px}
+.zayav_zp_add #name_dop{width:188px}
+.zayav_zp_set,.zayav_zp_set b{font-size:12px}
+#zayavInfo #zpSpisok{margin:7px}
+#zayavInfo #zpSpisok *{font-size:10px}
+#zayavInfo #zpSpisok .unit{border-bottom:#DEE3EF solid 1px;padding-bottom:4px;margin-bottom:7px}
+#zayavInfo #zpSpisok .unit:not(:hover) .zakaz,#zayavInfo #zpSpisok .unit:not(:hover) .set{visibility:hidden}
+#zayavInfo #zpSpisok .zakaz{color:#567f9e}
+#zayavInfo #zpSpisok .set{color:#567f9e;float:right}
+#zayavInfo #zpSpisok .dop{color:#333}
+#zayavInfo #zpSpisok .color{color:#777}
+#zayavInfo #zpSpisok .zakaz_ok{color:#933}
+#zayavInfo #zpSpisok .avai{float:right;color:#393;margin-left:4px}
+#zayavInfo #zpSpisok .findEmpty{margin:5px 0;padding:20px 10px;font-size:12px}
+
 
 
 

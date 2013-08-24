@@ -307,6 +307,72 @@ switch(@$_POST['op']) {
         $send['html'] = utf8(show_zayav_spisok(get_zayav_list(intval($_POST['page']), zayavfilter($_POST))));
         jsonSuccess($send);
         break;
+    case 'zayav_edit':
+        if(!preg_match(REGEXP_NUMERIC, $_POST['zayav_id']) && $_POST['zayav_id'] == 0)
+            jsonError();
+        if(!preg_match(REGEXP_NUMERIC, $_POST['client_id']) && $_POST['client_id'] == 0)
+            jsonError();
+        if(!preg_match(REGEXP_NUMERIC, $_POST['category']) && $_POST['category'] == 0)
+            jsonError();
+        if(!preg_match(REGEXP_NUMERIC, $_POST['device']) && $_POST['device'] == 0)
+            jsonError();
+        if(!preg_match(REGEXP_NUMERIC, $_POST['vendor']))
+            jsonError();
+        if(!preg_match(REGEXP_NUMERIC, $_POST['model']))
+            jsonError();
+        if(!preg_match(REGEXP_NUMERIC, $_POST['color_id']))
+            jsonError();
+        $zayav_id = intval($_POST['zayav_id']);
+        $client_id = intval($_POST['client_id']);
+        $category = intval($_POST['category']);
+        $device = intval($_POST['device']);
+        $vendor = intval($_POST['vendor']);
+        $model = intval($_POST['model']);
+        $imei = win1251(htmlspecialchars(trim($_POST['imei'])));
+        $serial = win1251(htmlspecialchars(trim($_POST['serial'])));
+        $color_id = intval($_POST['color_id']);
+
+        $sql = "SELECT * FROM `zayavki` WHERE `ws_id`=".WS_ID." AND `id`=".$zayav_id." LIMIT 1";
+        if(!$zayav = mysql_fetch_assoc(query($sql)))
+            jsonError();
+
+        $sql = "UPDATE `zayavki` SET
+                    `client_id`=".$client_id.",
+                    `category`=".$category.",
+                    `base_device_id`=".$device.",
+                    `base_vendor_id`=".$vendor.",
+                    `base_model_id`=".$model.",
+                    `imei`='".$imei."',
+                    `serial`='".$serial."',
+                    `color_id`=".$color_id.",
+                    `find`='"._modelName($model)." ".$imei." ".$serial."'
+                WHERE `id`=".$zayav_id;
+        query($sql);
+
+        if($zayav['client_id'] != $client_id) {
+            $sql = "UPDATE `accrual`
+                    SET `client_id`=".$client_id."
+                    WHERE `ws_id`=".WS_ID."
+                      AND `zayav_id`=".$zayav_id."
+                      AND `client_id`=".$zayav['client_id'];
+            query($sql);
+            $sql = "UPDATE `money`
+                    SET `client_id`=".$client_id."
+                    WHERE `ws_id`=".WS_ID."
+                      AND `zayav_id`=".$zayav_id."
+                      AND `client_id`=".$zayav['client_id'];
+            query($sql);
+            setClientBalans($zayav['client_id']);
+            setClientBalans($client_id);
+        }
+
+        history_insert(array(
+            'type' => 7,
+            'zayav_id' => $zayav_id
+        ));
+
+        jsonSuccess();
+        break;
     case 'zayav_money_update':
         //Получение разницы между начислениями и платежами и их обновление
         if(!preg_match(REGEXP_NUMERIC, $_POST['id']))

@@ -550,8 +550,9 @@ function _imageResize($x_cur, $y_cur, $x_new, $y_new) {
 function zayav_image_link($zayav_id, $size='small', $x_new=10000, $y_new=10000) {
     $sql = "SELECT * FROM `images` WHERE `status`=1 AND `sort`=0 AND `owner`='zayav".$zayav_id."' LIMIT 1";
     if($r = mysql_fetch_assoc(query($sql))) {
-        $s = _imageResize($r[$size.'_x'], $r[$size.'_y'], $x_new, $y_new);
-        $send = $r['link'].'-'.$size.'.jpg width="'.$s['x'].'" height="'.$s['y'].'"';
+        //$s = _imageResize($r[$size.'_x'], $r[$size.'_y'], $x_new, $y_new);
+        //$send = $r['link'].'-'.$size.'.jpg width="'.$s['x'].'" height="'.$s['y'].'"';
+        $send = $r['link'].'-'.$size.'.jpg';
     } else {
         $sql = "SELECT `base_model_id` FROM `zayavki` WHERE `id`=".$zayav_id." LIMIT 1";
         $r = mysql_fetch_assoc(query($sql));
@@ -563,8 +564,9 @@ function model_image_link($model_id, $size='small', $x_new=10000, $y_new=10000) 
     $send = '/img/nofoto.gif';
     $sql = "SELECT * FROM `images` WHERE `status`=1 AND `sort`=0 AND `owner`='dev".$model_id."' LIMIT 1";
     if($r = mysql_fetch_assoc(query($sql))) {
-        $s = _imageResize($r[$size.'_x'], $r[$size.'_y'], $x_new, $y_new);
-        $send = $r['link'].'-'.$size.'.jpg width="'.$s['x'].'" height="'.$s['y'].'"';
+        //$s = _imageResize($r[$size.'_x'], $r[$size.'_y'], $x_new, $y_new);
+        //$send = $r['link'].'-'.$size.'.jpg width="'.$s['x'].'" height="'.$s['y'].'"';
+        $send = $r['link'].'-'.$size.'.jpg';
     }
     return $send;
 }//end of model_image_link()
@@ -1097,15 +1099,20 @@ function zayav_info($zayav_id) {
         'G.zayavInfo = {'.
             'id:'.$zayav['id'].','.
             'nomer:'.$zayav['nomer'].','.
+            'client_id:'.$zayav['client_id'].','.
+            'category:'.$zayav['category'].','.
             'device:'.$zayav['base_device_id'].','.
             'vendor:'.$zayav['base_vendor_id'].','.
-            'model:'.$zayav['base_model_id'].
+            'model:'.$zayav['base_model_id'].','.
+            'imei:"'.$zayav['imei'].'",'.
+            'serial:"'.$zayav['serial'].'",'.
+            'color_id:'.$zayav['color_id'].
         '};'.
     '</script>'.
     '<DIV id="zayavInfo">'.
         '<div id="dopLinks">'.
             '<a class="link sel">Информация</a>'.
-            '<a class="link">Редактирование</a>'.
+            '<a class="link edit">Редактирование</a>'.
             '<a class="link acc_add">Начислить</a>'.
             '<a class="link op_add">Принять платёж</a>'.
         '</div>'.
@@ -1136,7 +1143,7 @@ function zayav_info($zayav_id) {
                 '<table cellspacing="0" class="tabSpisok mon">'.implode($money).'</table>'.
 
             '<TD id="right">'.
-                '<DIV id="foto"><img src='.zayav_image_link($zayav_id, 'big', 200, 320).'></DIV>'.
+                '<DIV id="foto"><img src='.zayav_image_link($zayav_id, 'big', 200, 320).' style="max-width:200px"></DIV>'.
                 '<DIV id="foto_upload"></DIV>'.
                 '<DIV class="headBlue">Информация об устройстве</DIV>'.
                 '<DIV class="devContent">'.
@@ -1146,7 +1153,7 @@ function zayav_info($zayav_id) {
                         '<tr><th>imei:      <td id="info_imei">'.$zayav['imei'].
                         '<tr><th>serial:    <td id="info_serial">'.$zayav['serial'].
                         '<tr><th>Цвет:      <td id="info_color">'._colorName($zayav['color_id']).
-                        '<tr><th>Нахождение:<td><A id="info_place">'.($zayav['device_place'] ? _devPlace($zayav['device_place']) : $zayav['device_place_other']).'</A>'.
+                        '<tr><th>Нахождение:<td><A id="info_place">'.($zayav['device_place'] ? @_devPlace($zayav['device_place']) : $zayav['device_place_other']).'</A>'.
                         '<tr><th>Состояние: <td><A id="info_status">'._devStatus($zayav['device_status']).'</A>'.
                     '</TABLE>'.
                 '</dev>'.

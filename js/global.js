@@ -26,6 +26,24 @@ var REGEXP_NUMERIC = /^\d+$/,
         if(s)
             VK.callMethod('setLocation', hashLoc);
     },
+    modelImageGet = function() {
+        var send = {
+                op:'model_img_get',
+                model_id:$("#dev_model").val()
+            },
+            dev = $("#device_image");
+        dev.html('');
+        if(send.model_id > 0) {
+            dev.addClass('busy');
+            $.post(AJAX_MAIN, send, function(res) {
+                if(res.success)
+                    dev.html('<img src="' + res.img + '">')
+                       .find('img').on('load', function() {
+                           $(this).show().parent().removeClass('busy');
+                       });
+            }, 'json');
+        }
+    },
     zayavFilterValues,
     zayavFilterValuesGet = function () {
         var v = {
@@ -312,6 +330,80 @@ $(document)
     });
 
 $(document)
+    .on('click', '#zayavInfo .edit', function() {
+        var html = '<TABLE cellspacing=8 class="zayavEdit">' +
+            '<TR><TD class="label">Клиент:        <TD><INPUT type="hidden" id="client_id" value=' + G.zayavInfo.client_id + '>' +
+            '<TR><TD class="label">Категория:     <TD><INPUT type="hidden" id="category" value=' + G.zayavInfo.category + '>' +
+            '<TR><TD class="label">Устройство:    <TD><TABLE cellspacing="0"><TD id="dev"><TD id="device_image"></TABLE>' +
+            '<TR><TD class="label">IMEI:          <TD><INPUT type=text id="imei" maxlength="20" value="' + G.zayavInfo.imei + '">' +
+            '<TR><TD class="label">Серийный номер:<TD><INPUT type=text id="serial" maxlength="30" value="' + G.zayavInfo.serial + '">' +
+            '<TR><TD class="label">Цвет:          <TD><INPUT type="hidden" id=color_id value=' + G.zayavInfo.color_id + '>' +
+        '</TABLE>',
+            dialog = vkDialog({
+                width:410,
+                top:30,
+                head:"Заявка №" + G.zayavInfo.nomer + " - Редактирование",
+                content:html,
+                butSubmit:'Сохранить',
+                submit:submit
+            });
+        $('#client_id').clientSel();
+        $('#vkSel_client_id').vkHint({
+            msg:'Если изменяется клиент, то начисления и платежи заявки применяются на нового клиента',
+            width:200,
+            top:-83,
+            left:-2,
+            delayShow:1500,
+            correct:0
+        });
+        $('#category').vkSel({width:150, spisok:G.category_spisok});
+        $("#dev").device({
+            width:190,
+            device_id:G.zayavInfo.device,
+            vendor_id:G.zayavInfo.vendor,
+            model_id:G.zayavInfo.model,
+            device_ids:G.device_ids,
+            add:1,
+            func:modelImageGet
+        });
+        modelImageGet();
+        $("#color_id").vkSel({width:170, title0:'Цвет не указан', spisok:G.color_spisok});
+
+        function submit() {
+            var msg = '',
+                send = {
+                    op:'zayav_edit',
+                    zayav_id:G.zayavInfo.id,
+                    client_id:$("#client_id").val(),
+                    category:$("#category").val(),
+                    device:$("#dev_device").val(),
+                    vendor:$("#dev_vendor").val(),
+                    model:$("#dev_model").val(),
+                    imei: $.trim($("#imei").val()),
+                    serial:$.trim($("#serial").val()),
+                    color_id:$("#color_id").val()
+                };
+            if(send.deivce == 0) msg = 'Не выбрано устройство';
+            else if(send.client_id == 0) msg = 'Не выбран клиент';
+            else {
+                dialog.process();
+                $.post(AJAX_MAIN, send, function (res) {
+                    dialog.close();
+                    vkMsgOk("Данные изменены!");
+                    document.location.reload();
+                }, 'json');
+            }
+            if(msg)
+                dialog.bottom.vkHint({
+                    msg:'<SPAN class="red">' + msg + '</SPAN>',
+                    top:-47,
+                    left:107,
+                    show:1,
+                    remove:1,
+                    correct:0
+                });
+        }
+    })
     .on('click', '#zayavInfo .remind_add', function() {
         var html = '<TABLE class="remind_add_tab" cellspacing="6">' +
             '<TR><TD class="label">Заявка:<TD>№<b>' + G.zayavInfo.nomer + '</b>' +
@@ -726,14 +818,14 @@ $(document)
     })
     .on('click', '.report_remind_add', function() {
         var html = '<TABLE class="remind_add_tab" cellspacing="6">' +
-            '<TR><TD class="label">Назначение:<TD><INPUT type=hidden id=destination>' +
+            '<TR><TD class="label">Назначение:<TD><INPUT type="hidden" id=destination>' +
             '<TR><TD class="label" id=target_name><TD id=target>' +
             '</TABLE>' +
 
             '<TABLE class="remind_add_tab" id="tab_content" cellspacing="6">' +
             '<TR><TD class="label top">Задание:<TD><TEXTAREA id=txt></TEXTAREA>' +
-            '<TR><TD class="label">Крайний день выполнения:<TD><INPUT type=hidden id=data>' +
-            '<TR><TD class="label">Личное:<TD><INPUT type=hidden id=private>' +
+            '<TR><TD class="label">Крайний день выполнения:<TD><INPUT type="hidden" id=data>' +
+            '<TR><TD class="label">Личное:<TD><INPUT type="hidden" id=private>' +
             '</TABLE>';
         var dialog = vkDialog({
             top:30,
@@ -780,7 +872,7 @@ $(document)
             // если выбрана заявка
             if (id == 2) {
                 $('#target_name').html('Номер заявки:');
-                $('#target').html('<INPUT type=text id=zayav_nomer><INPUT type=hidden id=zayav_id value=0><SPAN id=img></SPAN><DIV id=zayav_find></DIV>');
+                $('#target').html('<INPUT type=text id=zayav_nomer><INPUT type="hidden" id=zayav_id value=0><SPAN id=img></SPAN><DIV id=zayav_find></DIV>');
                 $('#zayav_nomer').focus().on('keyup', function () {
                     $('#zayav_id').val(0);
                     $('#zayav_find').html('');
@@ -888,7 +980,7 @@ $(document)
                     '<TD>' + (res.client ? res.client : '') + (res.zayav ? res.zayav : '') +
                 '<TR><TD class="label">Задание:<TD><B>' + res.txt + '</B>' +
                 '<TR><TD class="label">Внёс:<TD>' + res.viewer + ', ' + res.dtime +
-                '<TR><TD class="label top">Действие:<TD><INPUT type=hidden id=action value="0">' +
+                '<TR><TD class="label top">Действие:<TD><INPUT type="hidden" id=action value="0">' +
                 '</TABLE>' +
 
                 '<TABLE cellspacing="6" class=remind_action_tab id=new_action>' +
@@ -911,7 +1003,7 @@ $(document)
                     $("#new_title").html('');
                     if (id == 1) {
                         $("#new_about").html("Дата:");
-                        $("#new_title").html('<INPUT type=hidden id=data>');
+                        $("#new_title").html('<INPUT type="hidden" id=data>');
                         $("#new_comm").html("Причина:");
                         $("#new_action #data").vkCalendar();
                     }
@@ -1603,24 +1695,7 @@ $(document).ready(function() {
         $('#dev').device({
             width:190,
             add:1,
-            func:function() {
-                var send = {
-                        op:'model_img_get',
-                        model_id:$("#dev_model").val()
-                    },
-                    dev = $("#device_image");
-                dev.html('');
-                if(send.model_id > 0) {
-                    dev.addClass('busy');
-                    $.post(AJAX_MAIN, send, function(res) {
-                        if(res.success)
-                            dev.html('<img src="' + res.img + '">')
-                               .find('img').on('load', function() {
-                                    $(this).show().parent().removeClass('busy');
-                                });
-                    }, 'json');
-                }
-            }
+            func:modelImageGet
         });
         G.device_place_spisok.push({uid:0, title:'другое: <DIV id="place_other_div"><INPUT type="text" id="place_other" maxlength="20"></DIV>'});
         $('#place').vkRadio({

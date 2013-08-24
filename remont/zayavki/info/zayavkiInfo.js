@@ -71,67 +71,6 @@ $("#zayavInfo").click(function (e) {
     }
   }
 
-  // редактирование заявки
-  function zayavEdit() {
-    var HTML = "<TABLE cellpadding=0 cellspacing=8 id=zayavEdit>";
-    HTML += "<TR><TD class=tdAbout>Клиент:             <TD colspan=2><INPUT TYPE=hidden id=client_id value=" + G.zayav.client_id + ">";
-    HTML += "<TR><TD class=tdAbout>Категория:       <TD colspan=2><INPUT TYPE=hidden id=category value=" + G.zayav.category + ">";
-    HTML += "<TR><TD class=tdAbout>Устройство:     <TD id=dev><TD id=devView>";
-    HTML += "<TR><TD class=tdAbout>IMEI:                  <TD colspan=2><INPUT type=text id=imei maxlength=20 value='" + G.zayav.imei + "'>";
-    HTML += "<TR><TD class=tdAbout>Серийный номер: <TD colspan=2><INPUT type=text id=serial maxlength=30 value='" + G.zayav.serial + "'>";
-    HTML += "<TR><TD class=tdAbout>Цвет:                  <TD colspan=2><INPUT TYPE=hidden id=color_id value=" + G.zayav.color + ">";
-    HTML += "<TR><TD colspan=3 id=ms>";
-    HTML += "</TABLE>";
-    var dialog = $("#zayav_dialog").vkDialog({
-      width:400,
-      top:30,
-      head:"Заявка №" + G.zayav.nomer + " - Редактирование",
-      content:HTML,
-      focus:'',
-      butSubmit:'Сохранить',
-      submit:save
-    }).o;
-
-    $("#client_id").clientSel();
-    $("#category").vkSel({width:150, spisok:G.category_spisok});
-
-    $("#dev").device({
-      width:190,
-      device_id:G.zayav.device,
-      vendor_id:G.zayav.vendor,
-      model_id:G.zayav.model,
-      device_ids:G.device_ids,
-      add:1
-   //   func:modelView
-    });
-    $("#color_id").vkSel({width:170, title0:'Цвет не указан', spisok:G.color_spisok});
-
-    function save() {
-      var msg = '';
-      if ($("#dev_device").val() ==0) { msg = 'Не выбрано устройство'; }
-      if ($("#client_id").val() == 0) { msg = 'Не выбран клиент'; }
-      if (msg) {
-        $("#ms").alertShow({txt:"<SPAN class=red>" + msg + "</SPAN>", top:5, left:110, delayHide:3000});
-      } else {
-        G.zayav.client_id = $("#client_id").val();
-        G.zayav.category = $("#category").val();
-        G.zayav.device = $("#dev_device").val();
-        G.zayav.vendor = $("#dev_vendor").val();
-        G.zayav.model = $("#dev_model").val();
-        G.zayav.imei = $("#imei").val();
-        G.zayav.serial = $("#serial").val();
-        G.zayav.color = $("#color_id").val();
-        dialog.process();
-        $.post("/remont/zayavki/info/AjaxZayavEdit.php?" + G.values, G.zayav, function (res) {
-          dialog.close();
-          vkMsgOk("Данные изменены!");
-          G.zayav.update();
-        }, 'json');
-      }
-    }
-  } // end zayavEdit
-
-
   // Изменение статуса заявки, статуса и нахождения устройства
   function zayavStatus() {
     var HTML = "<TABLE cellpadding=0 cellspacing=6 id=zayavStatus>";
