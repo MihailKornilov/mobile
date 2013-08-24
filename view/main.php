@@ -1104,6 +1104,10 @@ function zayav_info($zayav_id) {
             'device:'.$zayav['base_device_id'].','.
             'vendor:'.$zayav['base_vendor_id'].','.
             'model:'.$zayav['base_model_id'].','.
+            'z_status:'.$zayav['zayav_status'].','.
+            'dev_status:'.$zayav['device_status'].','.
+            'dev_place:'.$zayav['device_place'].','.
+            'place_other:"'.$zayav['device_place_other'].'",'.
             'imei:"'.$zayav['imei'].'",'.
             'serial:"'.$zayav['serial'].'",'.
             'color_id:'.$zayav['color_id'].
@@ -1126,7 +1130,7 @@ function zayav_info($zayav_id) {
                     '<TR><TD class="label">Дата приёма:'.
                         '<TD class="dtime_add" title="Заявку внёс '.viewerName(false, $zayav['viewer_id_add']).'">'.FullDataTime($zayav['dtime_add']).
                     '<TR><TD class="label">Статус:'.
-                        '<TD><DIV id="status" style="background-color:#'.$status['color'].'">'.$status['name'].'</DIV>'.
+                        '<TD><DIV id="status" style="background-color:#'.$status['color'].'" class="status_place">'.$status['name'].'</DIV>'.
                             '<DIV id="status_dtime">от '.FullDataTime($zayav['zayav_status_dtime'], 1).'</DIV>'.
                     '<TR class="acc_tr'.($accSum > 0 ? '' : ' dn').'"><TD class="label">Начислено: <TD><b class="acc">'.$accSum.'</b> руб.'.
                     '<TR class="op_tr'.($opSum > 0 ? '' : ' dn').'"><TD class="label">Оплачено:    <TD><b class="op">'.$opSum.'</b> руб.'.
@@ -1150,11 +1154,11 @@ function zayav_info($zayav_id) {
                     '<DIV class="devName">'._deviceName($zayav['base_device_id']).'<br />'.'<a>'.$model.'</a>'.
                     '</DIV>'.
                     '<TABLE cellspacing="1" class="devInfo">'.
-                        '<tr><th>imei:      <td id="info_imei">'.$zayav['imei'].
-                        '<tr><th>serial:    <td id="info_serial">'.$zayav['serial'].
-                        '<tr><th>Цвет:      <td id="info_color">'._colorName($zayav['color_id']).
-                        '<tr><th>Нахождение:<td><A id="info_place">'.($zayav['device_place'] ? @_devPlace($zayav['device_place']) : $zayav['device_place_other']).'</A>'.
-                        '<tr><th>Состояние: <td><A id="info_status">'._devStatus($zayav['device_status']).'</A>'.
+                        '<tr><th>imei:      <td>'.$zayav['imei'].
+                        '<tr><th>serial:    <td>'.$zayav['serial'].
+                        '<tr><th>Цвет:      <td>'._colorName($zayav['color_id']).
+                        '<tr><th>Нахождение:<td><A class="dev_place status_place">'.($zayav['device_place'] ? @_devPlace($zayav['device_place']) : $zayav['device_place_other']).'</A>'.
+                        '<tr><th>Состояние: <td><A class="dev_status status_place">'._devStatus($zayav['device_status']).'</A>'.
                     '</TABLE>'.
                 '</dev>'.
 

@@ -71,6 +71,7 @@ $("#zayavInfo").click(function (e) {
     }
   }
 
+
   // »зменение статуса за€вки, статуса и нахождени€ устройства
   function zayavStatus() {
     var HTML = "<TABLE cellpadding=0 cellspacing=6 id=zayavStatus>";
@@ -127,7 +128,7 @@ $("#zayavInfo").click(function (e) {
         $.post("/remont/zayavki/info/AjaxZayavStatus.php?" + G.values, obj, function (res) {
           vkMsgOk("»зменени€ сохранены.");
           G.zayav.status = obj.zayav_status;
-          if (res.status_dtime) { G.zayav.status_dtime = res.status_dtime; } 
+          if (res.status_dtime) { G.zayav.status_dtime = res.status_dtime; }
           G.zayav.device_status = obj.device_status;
           G.zayav.place = obj.device_place;
           G.zayav.place_other = obj.device_place_other;
@@ -135,7 +136,7 @@ $("#zayavInfo").click(function (e) {
           dialog.close();
         }, 'json');
       }
-    } // end submit  
+    } // end submit
   } // end zayavStatus
 
   // удаление за€вки

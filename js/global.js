@@ -332,12 +332,12 @@ $(document)
 $(document)
     .on('click', '#zayavInfo .edit', function() {
         var html = '<TABLE cellspacing=8 class="zayavEdit">' +
-            '<TR><TD class="label">Клиент:        <TD><INPUT type="hidden" id="client_id" value=' + G.zayavInfo.client_id + '>' +
-            '<TR><TD class="label">Категория:     <TD><INPUT type="hidden" id="category" value=' + G.zayavInfo.category + '>' +
-            '<TR><TD class="label">Устройство:    <TD><TABLE cellspacing="0"><TD id="dev"><TD id="device_image"></TABLE>' +
-            '<TR><TD class="label">IMEI:          <TD><INPUT type=text id="imei" maxlength="20" value="' + G.zayavInfo.imei + '">' +
-            '<TR><TD class="label">Серийный номер:<TD><INPUT type=text id="serial" maxlength="30" value="' + G.zayavInfo.serial + '">' +
-            '<TR><TD class="label">Цвет:          <TD><INPUT type="hidden" id=color_id value=' + G.zayavInfo.color_id + '>' +
+            '<TR><TD class="label r">Клиент:        <TD><INPUT type="hidden" id="client_id" value=' + G.zayavInfo.client_id + '>' +
+            '<TR><TD class="label r">Категория:     <TD><INPUT type="hidden" id="category" value=' + G.zayavInfo.category + '>' +
+            '<TR><TD class="label r top">Устройство:    <TD><TABLE cellspacing="0"><TD id="dev"><TD id="device_image"></TABLE>' +
+            '<TR><TD class="label r">IMEI:          <TD><INPUT type=text id="imei" maxlength="20" value="' + G.zayavInfo.imei + '">' +
+            '<TR><TD class="label r">Серийный номер:<TD><INPUT type=text id="serial" maxlength="30" value="' + G.zayavInfo.serial + '">' +
+            '<TR><TD class="label r">Цвет:          <TD><INPUT type="hidden" id=color_id value=' + G.zayavInfo.color_id + '>' +
         '</TABLE>',
             dialog = vkDialog({
                 width:410,
@@ -349,7 +349,7 @@ $(document)
             });
         $('#client_id').clientSel();
         $('#vkSel_client_id').vkHint({
-            msg:'Если изменяется клиент, то начисления и платежи заявки применяются на нового клиента',
+            msg:'Если изменяется клиент, то начисления и платежи заявки применяются на нового клиента.',
             width:200,
             top:-83,
             left:-2,
@@ -370,7 +370,7 @@ $(document)
         $("#color_id").vkSel({width:170, title0:'Цвет не указан', spisok:G.color_spisok});
 
         function submit() {
-            var msg = '',
+            var msg,
                 send = {
                     op:'zayav_edit',
                     zayav_id:G.zayavInfo.id,
@@ -668,6 +668,97 @@ $(document)
                 zayavInfoMoneyUpdate();
             }
         }, 'json');
+    })
+    .on('click', '#zayavInfo .status_place', function() {
+        var html = '<TABLE cellspacing="8">' +
+            '<TR><TD class="label r top">Статус заявки:<TD><input type="hidden" id="z_status" value="' + G.zayavInfo.z_status + '">' +
+            '<TR><TD class="label r top">Местонахождение устройства:<TD><input type="hidden" id="dev_place" value="' + G.zayavInfo.dev_place + '">' +
+            '<TR><TD class="label r top">Состояние устройства:<TD><input type="hidden" id="dev_status" value="' + G.zayavInfo.dev_status + '">' +
+            '</TABLE>',
+            dialog = vkDialog({
+                width:400,
+                top:30,
+                head:"Изменение статуса заявки и состояния устройства",
+                content:html,
+                butSubmit:'Сохранить',
+                submit:submit
+            });
+        $("#z_status").vkRadio({
+            spisok:G.status_spisok,
+            top:5,
+            light:1
+        });
+
+        var spisok = [];
+        for(var n = 0; n < G.device_place_spisok.length; spisok.push(G.device_place_spisok[n]), n++);
+        spisok.push({uid:0, title:'другое: <DIV id="place_other_div"><INPUT type="text" id="place_other" maxlength="20" value="' + G.zayavInfo.place_other + '"></DIV>'});
+        $('#dev_place').vkRadio({
+            spisok:spisok,
+            top:5,
+            light:1,
+            func:function(val) {
+                $('#place_other_div').css('display', val == 0 ? 'inline' : 'none');
+                if(val == 0)
+                    $('#place_other').val('').focus();
+            }
+        });
+        if(G.zayavInfo.dev_place == 0)
+            $("#place_other_div").css('display', 'inline');
+
+        G.device_status_spisok.splice(0, 1);
+        $("#dev_status").vkRadio({
+            spisok:G.device_status_spisok,
+            top:5,
+            light:1
+        });
+
+        function submit() {
+            var msg,
+                send = {
+                op:'zayav_status_place',
+                zayav_id:G.zayavInfo.id,
+                zayav_status:$("#z_status").val(),
+                dev_status:$("#dev_status").val(),
+                dev_place:$("#dev_place").val(),
+                place_other:$("#place_other").val()
+            };
+            if(send.dev_place > 0)
+                send.place_other = '';
+            if(send.dev_place == 0 && send.place_other == '') {
+                msg = 'Не указано местонахождение устройства';
+                $("#place_other").focus();
+            } else if(send.dev_status == 0)
+                msg = 'Не указано состояние устройства';
+            else {
+                dialog.process();
+                $.post(AJAX_MAIN, send, function(res) {
+                    if(res.success) {
+                        dialog.close();
+                        vkMsgOk("Изменения сохранены.");
+                        $('#status')
+                            .html(res.z_status.name)
+                            .css('background-color', '#' + res.z_status.color);
+                        $('#status_dtime').html(res.z_status.dtime)
+                        $('.dev_status').html(res.dev_status);
+                        $('.dev_place').html(res.dev_place);
+                        G.zayavInfo.z_status = send.zayav_status;
+                        G.zayavInfo.dev_status = send.dev_status;
+                        G.zayavInfo.dev_place = send.dev_place;
+                        G.zayavInfo.place_other = send.place_other;
+                    }
+                }, 'json');
+            }
+            if(msg)
+                dialog.bottom.vkHint({
+                    msg:'<SPAN class=red>' + msg + '</SPAN>',
+                    top:-47,
+                    left:103,
+                    indent:50,
+                    show:1,
+                    remove:1,
+                    correct:0
+                });
+        }
     })
     .on('click', '#zayavInfo .zakaz', function() {
         var t = $(this),
@@ -1702,7 +1793,7 @@ $(document).ready(function() {
             spisok:G.device_place_spisok,
             top:4,
             bottom:6,
-            func:function (val) {
+            func:function(val) {
                 $('#place_other_div').css('display', val == 0 ? 'inline-block' : 'none');
                 if(val == 0) $('#place_other').val('').focus();
             }
@@ -1777,7 +1868,7 @@ $(document).ready(function() {
             owner:'zayav' + G.zayavInfo.id,
             max_x:200,
             max_y:320,
-            func:function (obj) { G.zayav.foto.push(obj); G.zayav.update(); }
+            func:function(obj) { G.zayav.foto.push(obj); G.zayav.update(); }
         });
     }
 

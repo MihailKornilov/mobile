@@ -373,6 +373,51 @@ switch(@$_POST['op']) {
 
         jsonSuccess();
         break;
+    case 'zayav_status_place':
+        if(!preg_match(REGEXP_NUMERIC, $_POST['zayav_id']) && $_POST['zayav_id'] == 0)
+            jsonError();
+        if(!preg_match(REGEXP_NUMERIC, $_POST['zayav_status']) && $_POST['zayav_status'] == 0)
+            jsonError();
+        if(!preg_match(REGEXP_NUMERIC, $_POST['dev_status']))
+            jsonError();
+        if(!preg_match(REGEXP_NUMERIC, $_POST['dev_place']))
+            jsonError();
+        $zayav_id = intval($_POST['zayav_id']);
+        $zayav_status = intval($_POST['zayav_status']);
+        $dev_status = intval($_POST['dev_status']);
+        $dev_place = intval($_POST['dev_place']);
+        $place_other = $dev_place == 0 ? win1251(htmlspecialchars(trim($_POST['place_other']))) : '';
+        if($dev_place == 0 && !$place_other)
+            jsonError();
+
+        $sql = "SELECT * FROM `zayavki` WHERE `ws_id`=".WS_ID." AND `id`=".$zayav_id." LIMIT 1";
+        if(!$zayav = mysql_fetch_assoc(query($sql)))
+            jsonError();
+
+        $sql = "UPDATE `zayavki`
+                SET `device_status`=".$dev_status.",
+                    `device_place`=".$dev_place.",
+                    `device_place_other`='".$place_other."'
+                    ".($zayav['zayav_status'] != $zayav_status ? ",`zayav_status`=".$zayav_status.",`zayav_status_dtime`=CURRENT_TIMESTAMP" : '')."
+                WHERE `id`=".$zayav_id;
+        query($sql);
+
+        $send['z_status'] = zayav_status($zayav_status);
+        $send['z_status']['name'] = utf8($send['z_status']['name']);
+        $send['z_status']['dtime'] = utf8(FullDataTime($zayav['zayav_status_dtime'], 1));
+        $send['dev_place'] = utf8($dev_place > 0 ? _devPlace($dev_place) : $place_other);
+        $send['dev_status'] = utf8(_devStatus($dev_status));
+
+        if($zayav['zayav_status'] != $zayav_status) {
+            history_insert(array(
+                'type' => 4,
+                'zayav_id' => $zayav_id,
+                'value' => $zayav_status
+            ));
+            $send['z_status']['dtime'] = utf8(FullDataTime(curTime(), 1));
+        }
+        jsonSuccess($send);
+        break;
     case 'zayav_money_update':
         //Получение разницы между начислениями и платежами и их обновление
         if(!preg_match(REGEXP_NUMERIC, $_POST['id']))
