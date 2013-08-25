@@ -1115,6 +1115,7 @@ function zayav_info($zayav_id) {
     '</script>'.
     '<DIV id="zayavInfo">'.
         '<div id="dopLinks">'.
+            '<a class="delete'.(!empty($money) ?  ' dn': '').'">Удалить заявку</a>'.
             '<a class="link sel">Информация</a>'.
             '<a class="link edit">Редактирование</a>'.
             '<a class="link acc_add">Начислить</a>'.

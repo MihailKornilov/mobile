@@ -112,6 +112,8 @@ var REGEXP_NUMERIC = /^\d+$/,
                 $('.dopl')
                     [(res.dopl == 0 ? 'add' : 'remove') + 'Class']('dn')
                     .html((res.dopl > 0 ? '+' : '') + res.dopl);
+                var del = res.acc == 0 && res.opl == 0;
+                $('.delete')[(del ? 'remove' : 'add') + 'Class']('dn');
             }
         }, 'json');
     },
@@ -403,6 +405,26 @@ $(document)
                     correct:0
                 });
         }
+    })
+    .on('click', '#zayavInfo .delete', function() {
+        var dialog = vkDialog({
+            top:110,
+            width:250,
+            head:'Удаление заявки',
+            content:"<CENTER>Подтвердите удаление заявки.</CENTER>",
+            butSubmit:'Удалить',
+            submit:function() {
+                var send = {
+                    op:'zayav_delete',
+                    zayav_id:G.zayavInfo.id
+                };
+                dialog.process();
+                $.post(AJAX_MAIN, send, function(res) {
+                    if(res.success)
+                        location.href = URL + '&my_page=remClientInfo&id=' + res.client_id; // todo изменить ссылку
+                }, 'json');
+            }
+        });
     })
     .on('click', '#zayavInfo .remind_add', function() {
         var html = '<TABLE class="remind_add_tab" cellspacing="6">' +
@@ -1869,6 +1891,15 @@ $(document).ready(function() {
             max_x:200,
             max_y:320,
             func:function(obj) { G.zayav.foto.push(obj); G.zayav.update(); }
+        });
+        $('.delete').vkHint({
+            msg:'Заявку можно удалить при отсутствии платежей и начислений. Также удаляются все задачи к этой заявке.',
+            width:150,
+            ugol:'top',
+            top:40,
+            left:456,
+            indent:90,
+            correct:0
         });
     }
 

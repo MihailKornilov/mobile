@@ -115,6 +115,7 @@ td.r{text-align:right}
 
 
 /* Информация о заявке */
+#zayavInfo .delete{float:right;margin-top:4px;color:#933}
 #zayavInfo #left{vertical-align:top}
 #zayavInfo .headName{margin:0;padding:4px 3px}
 #zayavInfo .tabInfo{margin:2px 10px 15px 10px; }

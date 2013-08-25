@@ -373,6 +373,53 @@ switch(@$_POST['op']) {
 
         jsonSuccess();
         break;
+    case 'zayav_delete':
+        if(!preg_match(REGEXP_NUMERIC, $_POST['zayav_id']) && $_POST['zayav_id'] == 0)
+            jsonError();
+        $zayav_id = intval($_POST['zayav_id']);
+        $sql = "SELECT * FROM `zayavki` WHERE `ws_id`=".WS_ID." AND `id`=".$zayav_id." LIMIT 1";
+        if(!$zayav = mysql_fetch_assoc(query($sql)))
+            jsonError();
+
+        $sql = "SELECT IFNULL(SUM(`summa`),0) AS `acc`
+                FROM `accrual`
+                WHERE `ws_id`=".WS_ID."
+                  AND `status`=1
+                  AND `zayav_id`=".$zayav_id."
+                LIMIT 1";
+        if(query_value($sql) != 0)
+            jsonError();
+
+        $sql = "SELECT IFNULL(SUM(`summa`),0) AS `opl`
+                FROM `money`
+                WHERE `ws_id`=".WS_ID."
+                  AND `status`=1
+                  AND `summa`>0
+                  AND `zayav_id`=".$zayav_id."
+                LIMIT 1";
+        if(query_value($sql) != 0)
+            jsonError();
+
+        $sql = "DELETE FROM `zayavki` WHERE `ws_id`=".WS_ID." AND `id`=".$zayav_id;
+        query($sql);
+
+        $sql = "DELETE FROM `reminder` WHERE `ws_id`=".WS_ID." AND `zayav_id`=".$zayav_id;
+        query($sql);
+
+        $sql = "DELETE FROM `vk_comment` WHERE `table_name`='zayav' AND `table_id`=".$zayav_id;
+        query($sql);
+
+        $sql = "UPDATE `client` SET `zayav_count`=`zayav_count`-1 WHERE `ws_id`=".WS_ID." AND `id`=".$zayav['client_id'];
+        query($sql);
+
+        history_insert(array(
+            'type' => 2,
+            'value' => $zayav['nomer']
+        ));
+
+        $send['client_id'] = $zayav['client_id'];
+        jsonSuccess($send);
+        break;
     case 'zayav_status_place':
         if(!preg_match(REGEXP_NUMERIC, $_POST['zayav_id']) && $_POST['zayav_id'] == 0)
             jsonError();
