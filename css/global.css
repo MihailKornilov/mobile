@@ -83,7 +83,7 @@ td.r{text-align:right}
 }
 .zayav_link:not(:hover) .tooltip{display:none}
 .zayav_link td{border:0;padding:0}
-.zayav_link .img{max-width:100px;overflow:hidden}
+.zayav_link .image{max-width:100px;overflow:hidden}
 .zayav_link img{height:70px}
 .zayav_link .inf{white-space:nowrap;padding-left:5px}
 
@@ -180,7 +180,19 @@ td.r{text-align:right}
 #zayavInfo #zpSpisok .zakaz_ok{color:#933}
 #zayavInfo #zpSpisok .avai{float:right;color:#393;margin-left:4px}
 #zayavInfo #zpSpisok .findEmpty{margin:5px 0;padding:20px 10px;font-size:12px}
-
+#zayavInfo #zpSpisok .unit:not(:hover) .image{display:none}
+#zayavInfo #zpSpisok .image{position:relative}
+#zayavInfo #zpSpisok .image div{
+    position:absolute;
+    top:0;
+    left:-94px;
+    background-color:#fff;
+    border:#ccc solid 1px;
+    min-width:80px;
+    min-height:60px;
+    padding:5px;
+    text-align:center;
+}
 
 
 

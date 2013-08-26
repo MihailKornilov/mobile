@@ -546,30 +546,69 @@ function _imageResize($x_cur, $y_cur, $x_new, $y_new) {
     $send['x'] = $x;
     $send['y'] = $y;
     return $send;
-}
-function zayav_image_link($zayav_id, $size='small', $x_new=10000, $y_new=10000) {
-    $sql = "SELECT * FROM `images` WHERE `status`=1 AND `sort`=0 AND `owner`='zayav".$zayav_id."' LIMIT 1";
-    if($r = mysql_fetch_assoc(query($sql))) {
-        //$s = _imageResize($r[$size.'_x'], $r[$size.'_y'], $x_new, $y_new);
-        //$send = $r['link'].'-'.$size.'.jpg width="'.$s['x'].'" height="'.$s['y'].'"';
-        $send = $r['link'].'-'.$size.'.jpg';
-    } else {
-        $sql = "SELECT `base_model_id` FROM `zayavki` WHERE `id`=".$zayav_id." LIMIT 1";
-        $r = mysql_fetch_assoc(query($sql));
-        $send = model_image_link($r['base_model_id'], $size, $x_new, $y_new);
+}//end of _imageResize()
+function _getImg($type, $arr, $size='small', $x_new=10000, $y_new=10000, $class=false) {
+    $id = false;
+    if(!is_array($arr)) {
+        $id = 'IMG_'.strtoupper($type).$arr;
+        $arr = array($arr);
     }
-    return $send;
-}//end of zayav_image_link()
-function model_image_link($model_id, $size='small', $x_new=10000, $y_new=10000) {
-    $send = '/img/nofoto.gif';
-    $sql = "SELECT * FROM `images` WHERE `status`=1 AND `sort`=0 AND `owner`='dev".$model_id."' LIMIT 1";
-    if($r = mysql_fetch_assoc(query($sql))) {
-        //$s = _imageResize($r[$size.'_x'], $r[$size.'_y'], $x_new, $y_new);
-        //$send = $r['link'].'-'.$size.'.jpg width="'.$s['x'].'" height="'.$s['y'].'"';
-        $send = $r['link'].'-'.$size.'.jpg';
+    if($id && defined($id))
+        return array(
+            'success' => constant($id.'_RES'),
+            'img' => constant($id)
+        );
+    $send = array(
+        'success' => false,
+        'img' => '<img src="/img/nofoto.gif">'
+    );
+    $owners = array();
+    foreach($arr as $k => $r) {
+        $arr[$k] = "'".$type.$r."'";
+        $owners[$type.$r] = false;
     }
+    $sql = "SELECT *
+            FROM `images`
+            WHERE `status`=1
+              AND `sort`=0
+              AND `owner` IN (".implode(',', $arr).")";
+    $q = query($sql);
+    while($r = mysql_fetch_assoc($q)) {
+        $s = _imageResize($r[$size.'_x'], $r[$size.'_y'], $x_new, $y_new);
+        $c = 'IMG_'.strtoupper($r['owner']);
+        define($c, '<img src="'.$r['link'].'-'.$size.'.jpg" width="'.$s['x'].'" height="'.$s['y'].'" '.($class ? 'class="'.$class.'"' : '').'>');
+        define($c.'_RES', true);
+        $owners[$r['owner']] = constant($c);
+    }
+    foreach($owners as $k => $ow)
+        if(!$ow) {
+            $c = 'IMG_'.strtoupper($k);
+            define($c, $send['img']);
+            define($c.'_RES', false);
+        }
+    if($id)
+        return array(
+            'success' => constant($id.'_RES'),
+            'img' => constant($id)
+        );
     return $send;
-}//end of model_image_link()
+}//end of _getImg()
+function _zayavImg($zayav_id, $size='small', $x_new=10000, $y_new=10000, $class=false) {
+    $res = _getImg('zayav', $zayav_id, $size, $x_new, $y_new, $class);
+    if($res['success'])
+        return $res['img'];
+    $sql = "SELECT `base_model_id` FROM `zayavki` WHERE `id`=".$zayav_id." LIMIT 1";
+    $r = mysql_fetch_assoc(query($sql));
+    return _modelImg($r['base_model_id'], $size, $x_new, $y_new, $class);
+}//end of _zayavImg()
+function _modelImg($model_id, $size='small', $x_new=10000, $y_new=10000, $class=false) {
+    $res = _getImg('dev', $model_id, $size, $x_new, $y_new, $class);
+    return $res['img'];
+}//end of _modelImg()
+function _zpImg($zp_id, $size='small', $x_new=10000, $y_new=10000, $class=false) {
+    $res = _getImg('zp', $zp_id, $size, $x_new, $y_new, $class);
+    return $res['img'];
+}//end of _modelImg()
 
 function unescape($str){
     $escape_chars = "0410 0430 0411 0431 0412 0432 0413 0433 0490 0491 0414 0434 0415 0435 0401 0451 0404 0454 0416 0436 0417 0437 0418 0438 0406 0456 0419 0439 041A 043A 041B 043B 041C 043C 041D 043D 041E 043E 041F 043F 0420 0440 0421 0441 0422 0442 0423 0443 0424 0444 0425 0445 0426 0446 0427 0447 0428 0448 0429 0449 042A 044A 042B 044B 042C 044C 042D 044D 042E 044E 042F 044F";
@@ -1079,6 +1118,7 @@ function zayav_info($zayav_id) {
             $ids[$r['compat_id']] = $r['compat_id'];
         }
         unset($ids[0]);
+        _zpImg($ids);
         $ids = implode(',', $ids);
         $sql = "SELECT `zp_catalog_id` AS `id`,`count` FROM `zp_available` WHERE `zp_catalog_id` IN (".$ids.")";
         $q = query($sql);
@@ -1148,16 +1188,16 @@ function zayav_info($zayav_id) {
                 '<table cellspacing="0" class="tabSpisok mon">'.implode($money).'</table>'.
 
             '<TD id="right">'.
-                '<DIV id="foto"><img src='.zayav_image_link($zayav_id, 'big', 200, 320).' style="max-width:200px"></DIV>'.
+                '<DIV id="foto">'._zayavImg($zayav_id, 'big', 200, 320).'</DIV>'.
                 '<DIV id="foto_upload"></DIV>'.
                 '<DIV class="headBlue">Информация об устройстве</DIV>'.
                 '<DIV class="devContent">'.
                     '<DIV class="devName">'._deviceName($zayav['base_device_id']).'<br />'.'<a>'.$model.'</a>'.
                     '</DIV>'.
                     '<TABLE cellspacing="1" class="devInfo">'.
-                        '<tr><th>imei:      <td>'.$zayav['imei'].
-                        '<tr><th>serial:    <td>'.$zayav['serial'].
-                        '<tr><th>Цвет:      <td>'._colorName($zayav['color_id']).
+                        ($zayav['imei'] ? '<tr><th>imei:      <td>'.$zayav['imei'] : '').
+                        ($zayav['serial'] ? '<tr><th>serial:    <td>'.$zayav['serial'] : '').
+                        ($zayav['color_id'] ? '<tr><th>Цвет:      <td>'._colorName($zayav['color_id']) : '').
                         '<tr><th>Нахождение:<td><A class="dev_place status_place">'.($zayav['device_place'] ? @_devPlace($zayav['device_place']) : $zayav['device_place_other']).'</A>'.
                         '<tr><th>Состояние: <td><A class="dev_status status_place">'._devStatus($zayav['device_status']).'</A>'.
                     '</TABLE>'.
@@ -1191,6 +1231,7 @@ function zayav_oplata_unit($op) {
 }//end of zayav_oplata_unit()
 function zayav_zp_unit($r, $model) {
     return '<div class="unit" val="'.$r['id'].'">'.
+        '<div class="image"><div>'._zpImg($r['id']).'</div></div>'.
         '<a href="'.URL.'&my_page=remZp&id='.$r['id'].'"><b>'._zpName($r['name_id']).'</b> '.$model.'</a>'.
         ($r['name_dop'] ? '<div class="dop">'.$r['name_dop'].'</div>' : '').
         ($r['color_id'] ? '<div class="color">Цвет: '._colorName($r['color_id']).'</div>' : '').
@@ -1377,7 +1418,6 @@ function report_history_spisok($worker=0, $action=0, $page=1) {
     return $send;
 }//end of report_history_spisok()
 
-
 function report_remind() {
     $send = '<div id="report_remind">'.
         '<div class="info">'.
@@ -1503,7 +1543,6 @@ function report_remind_spisok($page=1, $filter=array()) {
     return $send;
 }//end of report_remind_spisok()
 
-
 //Условия поиска справа для отчётов
 function report_prihod_right() {
     return '<div class="report_prihod_rl">'.
@@ -1591,7 +1630,6 @@ function report_prihod_spisok($day_begin, $day_end, $del_show=0, $page=1) {
     if($page == 1) $send .= '</TABLE>';
     return $send;
 }//end of report_prihod_spisok()
-
 
 function report_rashod_right() {
     return '<div class="findHead">Категория</div>'.
@@ -1729,7 +1767,6 @@ function report_rashod_spisok($page=1, $month=false, $category=0, $worker=0) {
     if($page == 1) $send .= '</TABLE>';
     return $send;
 }//end of report_rashod_spisok()
-
 
 function kassa_sum() {
     $sql = "SELECT SUM(`sum`) AS `sum` FROM `kassa` WHERE `ws_id`=".WS_ID." AND `status`=1 LIMIT 1";

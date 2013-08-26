@@ -290,7 +290,7 @@ switch(@$_POST['op']) {
     case 'model_img_get':
         if(!preg_match(REGEXP_NUMERIC, $_POST['model_id']))
             jsonError();
-        $send['img'] = model_image_link(intval($_POST['model_id']));
+        $send['img'] = _modelImg(intval($_POST['model_id']));
         jsonSuccess($send);
         break;
     case 'zayav_spisok_load':
@@ -1355,13 +1355,12 @@ switch(@$_POST['op']) {
         $client = $r['fio'];
 
         $html = '<table><tr>'.
-                    '<td><div class="img"><img src="'.zayav_image_link($id).'"></div></td>'.
+                    '<td><div class="image">'._zayavImg($id).'</div></td>'.
                     '<td class="inf">'.
                         zayavCategory($zayav['category']).'<br />'.
                         _deviceName($zayav['base_device_id']).'<br />'.
                         '<b>'._vendorName($zayav['base_vendor_id'])._modelName($zayav['base_model_id']).'</b><br /><br />'.
                         '<span style="color:#000">Клиент:</span> '.$client.
-                        //'<br />time: '.round(microtime(true) - TIME, 3).
                     '</td>'.
                 '</tr></table>';
 
