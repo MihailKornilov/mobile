@@ -37,7 +37,7 @@ var REGEXP_NUMERIC = /^\d+$/,
             dev.addClass('busy');
             $.post(AJAX_MAIN, send, function(res) {
                 if(res.success)
-                    dev.html('<img src="' + res.img + '">')
+                    dev.html(res.img)
                        .find('img').on('load', function() {
                            $(this).show().parent().removeClass('busy');
                        });
@@ -332,7 +332,7 @@ $(document)
     });
 
 $(document)
-    .on('click', '#zayavInfo .edit', function() {
+    .on('click', '#zayavInfo .zedit', function() {
         var html = '<TABLE cellspacing=8 class="zayavEdit">' +
             '<TR><TD class="label r">Клиент:        <TD><INPUT type="hidden" id="client_id" value=' + G.zayavInfo.client_id + '>' +
             '<TR><TD class="label r">Категория:     <TD><INPUT type="hidden" id="category" value=' + G.zayavInfo.category + '>' +

@@ -156,6 +156,26 @@ switch(@$_POST['op']) {
         jsonSuccess();
         break;
 
+    case 'foto_load':
+        if(!preg_match(REGEXP_WORD, $_POST['owner']))
+            jsonError();
+        $sql = "SELECT *
+                FROM `images`
+                WHERE `owner`='".$_POST['owner']."'
+                  AND `status`=1
+                ORDER BY `sort`";
+        $q = query($sql);
+        $send = array();
+        while($r = mysql_fetch_assoc($q))
+            $send['img'][] = array(
+                'link' => $r['link'].'-big.jpg',
+                'x' => $r['big_x'],
+                'y' => $r['big_y'],
+                'dtime' => utf8(FullData($r['dtime_add'], 1))
+            );
+        jsonSuccess($send);
+        break;
+
     case 'zayav_add':
         if(!preg_match(REGEXP_NUMERIC, $_POST['client']) || $_POST['client'] == 0)
             jsonError();
@@ -290,7 +310,7 @@ switch(@$_POST['op']) {
     case 'model_img_get':
         if(!preg_match(REGEXP_NUMERIC, $_POST['model_id']))
             jsonError();
-        $send['img'] = _modelImg(intval($_POST['model_id']));
+        $send['img'] = _modelImg(intval($_POST['model_id']), 'small', 100, 100, 'fotoView');
         jsonSuccess($send);
         break;
     case 'zayav_spisok_load':

@@ -1217,40 +1217,33 @@ TABLE{border:0}
 
 
 /* диалог */
-.vk_dialog {
-  position:absolute;
-  left:-1000px;
-}
-.vk_dialog .head { border:#45688e solid 1px; }
+.vk_dialog {position:absolute;left:-1000px}
+.vk_dialog .head{border:#45688e solid 1px}
 .vk_dialog .head DIV {
-  border-top:#648cb7 solid 1px;
-  color:#FFF;
-  background-color:#597da3;
-  padding:7px 7px 7px 10px;
-  font:bold 12px Tahoma;
+    border-top:#648cb7 solid 1px;
+    color:#FFF;
+    background-color:#597da3;
+    padding:7px 7px 7px 10px;
+    font:bold 12px Tahoma;
 }
-.vk_dialog .img_del {
-  float:right;
-  background-position: 0 -15px;
-  margin:2px 0;
-}
-.vk_dialog .head A:hover { background-position:0 0; }
+.vk_dialog .img_del{float:right;background-position: 0 -15px;margin:2px 0}
+.vk_dialog .head A:hover{background-position:0 0}
 .vk_dialog .content {
-  background-color:#FFF;
-  padding:10px;
-  border-left:#999 solid 1px;
-  border-right:#999 solid 1px;
-  border-bottom:#dae1e8 solid 1px;
+    background-color:#FFF;
+    padding:10px;
+    border-left:#999 solid 1px;
+    border-right:#999 solid 1px;
+    border-bottom:#dae1e8 solid 1px;
 }
 .vk_dialog .bottom {
-  background-color:#f2f2f2;
-  border-left:#999 solid 1px;
-  border-right:#999 solid 1px;
-  border-bottom:#999 solid 1px;
-  padding:10px;
-  text-align:center;
+    background-color:#f2f2f2;
+    border-left:#999 solid 1px;
+    border-right:#999 solid 1px;
+    border-bottom:#999 solid 1px;
+    padding:10px;
+    text-align:center;
 }
-.vk_dialog .vkButton { margin-right:8px; }
+.vk_dialog .vkButton{margin-right:8px}
 
 
 
@@ -1263,43 +1256,7 @@ TABLE{border:0}
 
 
 
-/* Просмотр изображений */
-#foto_view #foto_content {
-  position:absolute;
-  top:0;
-  left:0;
-  width:625px;
-  background:#FFF;
-}
-#foto_view #foto_head EM {
-  display:inline-block;
-  margin:11px 20px;
-  color:#45688e;
-  font-weight:bold;
-}
-#foto_view #foto_head A {
-  float:right;
-  display:inline-block;
-  line-height:33px;
-  width:80px;
-  text-align:center;
-}
-#foto_view #foto_image {
-  display:table-cell;
-  width:625px;
-  height:400px;
-  text-align:center;
-  vertical-align:middle;
-  cursor:pointer;
-}
-#foto_view #foto_hide { display:none; }
-#foto_view #foto_about {
-  padding:20px 0;
-}
-#foto_view #foto_about .dtime {
-  color:#777;
-  margin-left:20px;
-}
+
 
 
 
@@ -2314,181 +2271,6 @@ TABLE{border:0}
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/* Отчёты */
-#report #content { vertical-align:top; width:465px; }
-#report #right {
-  vertical-align:top;
-  width:141px;
-  height:500px;
-  padding:9px;
-  background-color:#F7F7F7;
-  border-left:#DDD solid 1px;
-}
-#report #podmenu { margin-top:20px; }
-#report #podmenu .radio { margin-left:5px; }
-#report #podmenu #check_remind_private { margin:20px 0 0 5px; }
-#report #podmenu .period_em { display:inline-block; width:20px; }
-#report #podmenu .vk_calendar { margin-top:5px; }
-#report .history { margin:15px 5px; }
-#report .history .dtime {
-  width:80px;
-  color:#777;
-  vertical-align:top;
-  text-align:right;
-  padding-right:4px;
-}
-
-/* плюсик добавления напоминания */
-#report #remind_add_but {
-  float:right;
-  width:11px;
-  height:11px;
-  background:transparent no-repeat 0 0 url("data:image/gif;base64,R0lGODlhCwAeAKIAAAAAAP///9Pd6GuNsf///wAAAAAAAAAAACH5BAEAAAQALAAAAAALAB4AAAMxSErS+8xB1cSkEtfNu+9PdUXWJZrZqK5s674wEczjHNT0ZT927//AIC832emIEKMiAQA7");
-  margin-top:1px;
-}
-#report #remind_add_but:hover { background-position:0 -19px; }
-
-/* таблица внесения нового напоминания */
-#report .remind_add_tab .tdAbout {
-  width:160px;
-  text-align:right;
-  padding-right:5px;
-  line-height:32px;
-}
-#report .remind_add_tab#tab_content { display:none; }
-#report .remind_add_tab #txt { width:240px; height:40px; }
-#report .remind_add_tab #data { cursor:pointer; width:90px; text-align:right; }
-#report .remind_add_tab #zayav_nomer { width:60px; }
-#report .remind_add_tab #img { color:#666; margin-left:5px; }
-
-/* список напоминаний */
-#report #remind_spisok { margin-bottom:10px; }
-#report .remind_info { margin:8px; border:#DDD solid 1px; padding:6px 8px; }
-#report .remind_info I { font-style:italic; }
-#report #remind_spisok .unit { margin:15px 8px 0 8px; font-size:12px; }
-#report #remind_spisok .unit B { color:#555; font-size:12px; }
-#report #remind_spisok .txt { font-size:12px; padding:4px 6px 5px 6px; }
-#report #remind_spisok .txt I { color:#888; font-size:12px; margin-right:4px; }
-#report #remind_spisok .client, #report #remind_spisok .zayav { font-size:12px; }
-#report #remind_spisok .day {
-  padding-top:3px;
-  padding-bottom:3px;
-  font-weight:bold;
-  color:#884;
-}
-#report #remind_spisok .day EM { color:#884; margin-left:4px; }
-#report #remind_spisok .day SPAN { color:#888; }
-#report #remind_spisok .action {
-  float:right;
-  display:none;
-  margin-right:4px;
-}
-#report #remind_spisok .action A { font-size:10px; }
-#report #remind_spisok .hist {
-  display:none;
-  background-color:#FFF;
-  font-size:10px;
-  color:#888;
-  border-top:#F8F8F8 solid 1px;
-  border-bottom:#F8F8F8 solid 1px;
-  margin-top:3px;
-  padding:2px 3px;
-}
-
-/* Новое действие для напоминания */
-#report .remind_action_tab { margin:0 10px; }
-#report .remind_action_tab .tdAbout {
-  width:80px;
-  text-align:right;
-  padding-right:5px;
-  line-height:28px;
-}
-#report .remind_action_tab B {
-  display:block;
-  border:#DDD solid 1px;
-  padding:2px 4px;
-  font-weight:bold;
-  font-size:12px;
-  color:#444;
-  background-color:#FAFAFA;
-}
-#report #new_action { display:none; margin-top:6px; }
-#report #new_action .tdAbout { line-height:32px; }
-#report #comment { width:240px; height:40px; }
-
-
-/* отчёты - деньги - приход */
-#report #money #prihod {padding:20px 10px 20px 15px;}
-#report #money #prihod #summa { display:inline-block;  margin:0 10px 10px 0; }
-#report #money #prihod .sum { width:45px; text-align:right; }
-#report #money #prihod .about { width:230px; }
-#report #money #prihod .about EM { color:#AAA; margin-right:2px; }
-#report #money #prihod .data { width:100px; }
-#report #money #prihod TD.data A { font-size:10px; }
-#report #money #prihod TD.data { color:#666; font-size:10px; text-align:right; }
-#report #money #prihod .findEmpty { margin:0; width:413px; padding:50px 0; }
-#report #money #prihod #ajaxNext { margin:0; width:401px; }
-#report #prihod_add_tab .tdAbout { line-height:30px; padding-right:8px; text-align:right; width:150px; }
-#report #prihod_sum { width:50px; }
-#report #prihod_txt { width:180px; }
-
-
-/* отчёты - деньги - расходы */
-#report #money #rashod { padding-top:10px; }
-#report #money #rashod .headName A { float:right; color:#9fb7c9; }
-#report #money #rashod .headName A:hover { color:#2B587A; }
-#report #rashod #spisok { margin-left:20px; }
-#report #rashod_add_tab .tdAbout { line-height:30px; padding-right:8px; text-align:right; width:130px; }
-#report #rashod_sum { width:50px; }
-#report #rashod_txt { width:180px; }
-#report #rashod .tabSpisok .sum { width:45px; text-align:right; font-weight:bold; }
-#report #rashod .tabSpisok .txt { width:240px; }
-#report #rashod .tabSpisok .dtime { width:100px; font-size:10px; color:#888; }
-
-
-
-/* отчёты - деньги - касса */
-#report #kassa_set .info {
-  margin:15px;
-  background-color:#FFE;
-  border:#EED solid 1px;
-  padding:6px 8px;
-  text-align:justify;
-}
-#report #kassa_set INPUT {
-  padding:0 3px;
-  width:70px;
-  height:24px;
-  font-size:13px;
-  font-weight:bold;
-}
-#report #kassa_set #kassa_set_tab { margin-left:100px; }
-#report #kassa #in { margin:15px 0 0 20px; }
-#report #kassa #about_tab { margin:20px 0 8px 15px; font-weight:bold; color:#446; }
-#report #kassa #spisok { margin-left:15px; }
-#report #kassa .tabSpisok .sum { width:45px; text-align:right; font-weight:bold; }
-#report #kassa .tabSpisok .txt { width:240px; }
-#report #kassa .tabSpisok .dtime { width:100px; font-size:10px; color:#888; }
-#report .kassa_tab #sum { width:50px; }
-#report .kassa_tab #txt { width:230px; }
 
 
 

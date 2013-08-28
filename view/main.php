@@ -576,7 +576,11 @@ function _getImg($type, $arr, $size='small', $x_new=10000, $y_new=10000, $class=
     while($r = mysql_fetch_assoc($q)) {
         $s = _imageResize($r[$size.'_x'], $r[$size.'_y'], $x_new, $y_new);
         $c = 'IMG_'.strtoupper($r['owner']);
-        define($c, '<img src="'.$r['link'].'-'.$size.'.jpg" width="'.$s['x'].'" height="'.$s['y'].'" '.($class ? 'class="'.$class.'"' : '').'>');
+        define($c, '<img src="'.$r['link'].'-'.$size.'.jpg"'.
+                        'width="'.$s['x'].'"'.
+                        'height="'.$s['y'].'" '.
+              ($class ? 'class="'.$class.'"' : '').
+                        'val="'.$r['owner'].'">');
         define($c.'_RES', true);
         $owners[$r['owner']] = constant($c);
     }
@@ -1157,7 +1161,7 @@ function zayav_info($zayav_id) {
         '<div id="dopLinks">'.
             '<a class="delete'.(!empty($money) ?  ' dn': '').'">Удалить заявку</a>'.
             '<a class="link sel">Информация</a>'.
-            '<a class="link edit">Редактирование</a>'.
+            '<a class="link zedit">Редактирование</a>'.
             '<a class="link acc_add">Начислить</a>'.
             '<a class="link op_add">Принять платёж</a>'.
         '</div>'.
@@ -1188,7 +1192,7 @@ function zayav_info($zayav_id) {
                 '<table cellspacing="0" class="tabSpisok mon">'.implode($money).'</table>'.
 
             '<TD id="right">'.
-                '<DIV id="foto">'._zayavImg($zayav_id, 'big', 200, 320).'</DIV>'.
+                '<DIV id="foto">'._zayavImg($zayav_id, 'big', 200, 320, 'fotoView').'</DIV>'.
                 '<DIV id="foto_upload"></DIV>'.
                 '<DIV class="headBlue">Информация об устройстве</DIV>'.
                 '<DIV class="devContent">'.

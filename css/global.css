@@ -49,6 +49,21 @@ td.r{text-align:right}
 
 
 
+
+/* Просмотр изображений */
+.fotoView{cursor:pointer}
+#foto_view{position:absolute;top:0;left:0;width:625px;background:#fff;z-index:1000}
+#foto_view .head em{display:inline-block;margin:11px 20px;color:#45688e;font-weight:bold}
+#foto_view .head a {float:right;display:block;padding:12px 25px}
+#foto_view .image{width:100%;min-height:400px;cursor:pointer}
+#foto_view .image td{text-align:center;vertical-align:middle}
+#foto_view .about{padding:20px 0}
+#foto_view .dtime{color:#777;margin-left:20px}
+#foto_view .hide{display:none}
+
+
+
+
 .ajaxNext{text-align:center;height:31px;color:#2B587A;cursor:pointer}
 .ajaxNext span{line-height:30px}
 .ajaxNext td{border:0;padding:0}
@@ -169,7 +184,7 @@ td.r{text-align:right}
 .zayav_zp_add center,.zayav_zp_add center b{font-size:12px}
 .zayav_zp_add #name_dop{width:188px}
 .zayav_zp_set,.zayav_zp_set b{font-size:12px}
-#zayavInfo #zpSpisok{margin:7px}
+#zayavInfo #zpSpisok{margin:7px 7px 60px 7px}
 #zayavInfo #zpSpisok *{font-size:10px}
 #zayavInfo #zpSpisok .unit{border-bottom:#DEE3EF solid 1px;padding-bottom:4px;margin-bottom:7px}
 #zayavInfo #zpSpisok .unit:not(:hover) .zakaz,#zayavInfo #zpSpisok .unit:not(:hover) .set{visibility:hidden}

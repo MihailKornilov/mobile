@@ -130,7 +130,7 @@ $(document).ready(function() {
                     return;
                 var send = {
                     op:'vkcomment_rest',
-                    id: t.attr('val')
+                    id:t.attr('val')
                 };
                 t.addClass('busy');
                 $.post(AJAX_MAIN, send, function(res) {
@@ -236,6 +236,79 @@ $(document).on('click', '.check0,.check1', function() {
         inp = $('#' + t.attr('id').split('_check')[0]);
     t.attr('class', 'check' + cl);
     inp.val(cl);
+});
+
+$(document).on('click', '.fotoView', function() {
+    $('#foto_view').remove();
+    var t = $(this),
+        html ='<DIV id="foto_view">' +
+            '<DIV class="head"><EM><img src="/img/upload.gif"></EM><A>Закрыть</A></DIV>' +
+            '<table cellspacing="0" class="image"><tr><td><img src="' + t.attr('src').replace('small', 'big') + '"></table>' +
+            '<DIV class="about"><DIV class="dtime"></DIV></DIV>' +
+            '<DIV class="hide"></DIV>' +
+        '</DIV>';
+    $("#frameBody").append(html);
+
+    var f = $('#foto_view');
+    fotoHeightSet();
+    f.find('.head a').on('click', fotoClose);
+
+    var owner = t.attr('val'),
+        send = {
+        op:'foto_load',
+        owner:owner
+    };
+    if(!window.fotoViewImages || window.fotoViewOwner != owner) {
+        $.post(AJAX_MAIN, send, function(res) {
+            window.fotoViewImages = res.img;
+            window.fotoViewNum = 0;
+            window.fotoViewOwner = owner;
+            fotoShow();
+            fotoClick();
+        }, 'json');
+    } else {
+        fotoShow();
+        fotoClick();
+    }
+
+
+    function fotoShow() {
+        var len = window.fotoViewImages.length,
+            num = window.fotoViewNum,
+            nextNum = num + 1 >= len ? 0 : num + 1,
+            img = window.fotoViewImages[num];
+        f.find('.head em').html(len > 1 ? 'Фотография ' + (num + 1) + ' из ' + len : 'Просмотр фотографии');
+        f.find('.dtime').html('Добавлена ' + img.dtime);
+        f.find('.image img')
+            .attr('src', img.link)
+            .attr('width', img.x)
+            .attr('height', img.y)
+            .on('load', fotoHeightSet);
+        f.find('.hide').html('<img src="' + window.fotoViewImages[nextNum].link + '">');
+    }
+    function fotoClick() {
+        f.find('.image').on('click', function() {
+            var len = window.fotoViewImages.length;
+            if(len == 1)
+                fotoClose();
+            else {
+                window.fotoViewNum++;
+                if(window.fotoViewNum >= len)
+                    window.fotoViewNum = 0;
+                fotoShow();
+            }
+        });
+    }
+    function fotoClose() {
+        window.fotoViewNum = 0;
+        f.remove();
+        frameBodyHeightSet();
+    }
+    function fotoHeightSet() {
+        var h = f.height();
+        $("#frameBody").height(h);
+        frameBodyHeightSet(h);
+    }
 });
 
 // перелистывание годов
