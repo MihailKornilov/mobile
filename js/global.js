@@ -98,6 +98,17 @@ var REGEXP_NUMERIC = /^\d+$/,
             $('#mainLinks img').remove();
         }, 'json');
     },
+    zayavImgUpdate = function() {
+        var send = {
+            op:'zayav_img_update',
+            zayav_id:G.zayavInfo.id
+        };
+        $.post(AJAX_MAIN, send, function (res) {
+            if(res.success) {
+                $('#foto').html(res.html);
+            }
+        }, 'json');
+    },
     zayavInfoMoneyUpdate = function() {
         var send = {
             op:'zayav_money_update',
@@ -1886,12 +1897,6 @@ $(document).ready(function() {
         });
     }
     if($('#zayavInfo').length > 0) {
-        $("#foto_upload").fotoUpload({
-            owner:'zayav' + G.zayavInfo.id,
-            max_x:200,
-            max_y:320,
-            func:function(obj) { G.zayav.foto.push(obj); G.zayav.update(); }
-        });
         $('.delete').vkHint({
             msg:'Заявку можно удалить при отсутствии платежей и начислений. Также удаляются все задачи к этой заявке.',
             width:150,
@@ -1900,6 +1905,10 @@ $(document).ready(function() {
             left:456,
             indent:90,
             correct:0
+        });
+        $('.fotoUpload').fotoUpload({
+            owner:'zayav' + G.zayavInfo.id,
+            func:zayavImgUpdate
         });
     }
 

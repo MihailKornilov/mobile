@@ -68,7 +68,7 @@ function _header() {
         '<SCRIPT type="text/javascript" src="/include/clients/G_clients_'.WS_ID.'.js?'.VERSION.'"></SCRIPT>'.//todo для удаления
         '<SCRIPT type="text/javascript" src="/include/clients/clients.js?'.VERSION.'"></SCRIPT>'.//todo для удаления
         '<SCRIPT type="text/javascript" src="/include/device/device.js?'.VERSION.'"></SCRIPT>'.//todo для удаления
-        '<SCRIPT type="text/javascript" src="/include/foto/foto.js?'.VERSION.'"></SCRIPT>'.//todo для удаления
+        //'<SCRIPT type="text/javascript" src="/include/foto/foto.js?'.VERSION.'"></SCRIPT>'.//todo для удаления
         '</HEAD>'.
         '<BODY>'.
         '<div id="frameBody">'.
@@ -1122,7 +1122,7 @@ function zayav_info($zayav_id) {
             $ids[$r['compat_id']] = $r['compat_id'];
         }
         unset($ids[0]);
-        _zpImg($ids);
+        _zpImg($ids, 'small', 80, 80, 'fotoView');
         $ids = implode(',', $ids);
         $sql = "SELECT `zp_catalog_id` AS `id`,`count` FROM `zp_available` WHERE `zp_catalog_id` IN (".$ids.")";
         $q = query($sql);
@@ -1193,7 +1193,7 @@ function zayav_info($zayav_id) {
 
             '<TD id="right">'.
                 '<DIV id="foto">'._zayavImg($zayav_id, 'big', 200, 320, 'fotoView').'</DIV>'.
-                '<DIV id="foto_upload"></DIV>'.
+                '<DIV class="fotoUpload">Добавить изображение</DIV>'.
                 '<DIV class="headBlue">Информация об устройстве</DIV>'.
                 '<DIV class="devContent">'.
                     '<DIV class="devName">'._deviceName($zayav['base_device_id']).'<br />'.'<a>'.$model.'</a>'.

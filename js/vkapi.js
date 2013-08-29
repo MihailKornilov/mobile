@@ -246,7 +246,7 @@ $(document).on('click', '.fotoView', function() {
             '<table cellspacing="0" class="image"><tr><td><img src="' + t.attr('src').replace('small', 'big') + '"></table>' +
             '<DIV class="about"><DIV class="dtime"></DIV></DIV>' +
             '<DIV class="hide"></DIV>' +
-        '</DIV>';
+            '</DIV>';
     $("#frameBody").append(html);
 
     var f = $('#foto_view');
@@ -255,9 +255,9 @@ $(document).on('click', '.fotoView', function() {
 
     var owner = t.attr('val'),
         send = {
-        op:'foto_load',
-        owner:owner
-    };
+            op:'foto_load',
+            owner:owner
+        };
     if(!window.fotoViewImages || window.fotoViewOwner != owner) {
         $.post(AJAX_MAIN, send, function(res) {
             window.fotoViewImages = res.img;
@@ -310,6 +310,222 @@ $(document).on('click', '.fotoView', function() {
         frameBodyHeightSet(h);
     }
 });
+$.fn.fotoUpload = function(obj) {
+    obj = $.extend({
+        owner:false,
+        func:function() {}
+    }, obj);
+
+    if(!obj.owner)
+        throw new Error('Не указан владелец изображения - <b>owner</b>');
+
+    var t = $(this),
+        IMAGE_UPLOAD = 'http://' + G.domain + '/include/imageUpload.php?' + G.values + "&owner=" + obj.owner,
+        dialog,
+        webDialog,
+        timer,
+        choose,
+        direct,
+        direct_a,
+        webcam = {
+            screen:null, // тег, в который помещается изображение с камеры
+            show:function(width, height) { // вывод изображения на экран
+                var flashvars = 'shutter_enabled=0&width=' + width + '&height=' + height + '&server_width=' + width + '&server_height=' + height;
+                var html = '<embed ' +
+                    'id="webcam_movie" ' +
+                    'width="' + width + '" ' +
+                    'height="' + height + '" ' +
+                    'src="http://' + G.domain + '/include/webcam.swf" ' +
+                    'loop="false" ' +
+                    'menu="false" ' +
+                    'quality="best" ' +
+                    'bgcolor="#ffffff" ' +
+                    'name="webcam_movie" ' +
+                    'align="middle" ' +
+                    'allowScriptAccess="always" ' +
+                    'allowFullScreen="false" ' +
+                    'type="application/x-shockwave-flash" ' +
+                    'pluginspage="http://www.macromedia.com/go/getflashplayer" ' +
+                    'flashvars="' + flashvars + '" />';
+                this.screen.html(html);
+            },
+            reset:function() { this.screen.html(''); }
+        };
+
+    t.on('click', function() {
+        var html = '<DIV id="fotoUpload">' +
+            '<DIV class="info">Поддерживаются форматы JPG, PNG и GIF.</DIV>' +
+            '<FORM method="post" action="' + IMAGE_UPLOAD + '" enctype="multipart/form-data" target="upload_frame">' +
+                '<INPUT type="file" id="file_name" name="file_name" />' +
+                '<INPUT type="hidden" name="op" value="file" />' +
+            '</FORM>' +
+
+            '<DIV id="choose_file">Выберите файл</DIV>' +
+            '<IFRAME name="upload_frame"></IFRAME>' +
+            '<DIV id="direct"><INPUT type="text" id="direct_input" placeholder="или укажите прямую ссылку на изображение.."><a><span>oтправить</span></a></DIV>' +
+            '<DIV class="webcam">Вы также можете <A>сделать фотографию с вебкамеры »</A></DIV>' +
+        '</DIV>';
+        dialog = vkDialog({
+            top:80,
+            head:"Загрузка изображения",
+            content:html,
+            butSubmit:null,
+            butCancel:'Закрыть'
+        });
+        var form = $("#fotoUpload form"),
+            name = $("#file_name");
+        choose = $("#choose_file");
+        direct = $('#direct_input');
+        direct_a = direct.next();
+
+        if(/MSIE/.test(window.navigator.userAgent)) {
+            name.on({
+                mouseenter:function () { choose.css('background-color','#e9edf1'); },
+                mouseleave:function () { choose.css('background-color','#eff1f3'); }
+            });
+        } else {
+            choose
+                .addClass('no_msie')
+                .on('click', function() { name.click(); });
+            form.hide();
+        }
+
+        name.change(function () {
+            choose.html('&nbsp;<IMG src=/img/upload.gif>');
+            setCookie('fotoUpload', 'process');
+            timer = setInterval(uploadStart, 500);
+            form.submit();
+        });
+
+        // действие при загрузке изображения по прямой ссылке
+        direct.keyEnter(fotoLinkSend);
+        direct_a.click(fotoLinkSend);
+
+        $('#fotoUpload .webcam a').click(camera);
+    });
+
+    function uploadStart() {
+        var cookie = getCookie('fotoUpload');
+        if(cookie != 'process') {
+            if(webDialog)
+                webDialog.close();
+            choose.html("Выберите файл");
+            clearInterval(timer);
+            var arr = cookie.split('_');
+            switch(arr[0]) {
+                case 'uploaded':
+                    var param = getCookie('fotoParam').split('_');
+                    uploaded(param[0].replace(/%3A/, ':').replace(/%2F/g, '/'), param[1], param[2]);
+                    break;
+                case 'error': error_print(arr[1]); break;
+            }
+        }
+    }
+    // действие при успешном сохранении изображения на сервер
+    function uploaded(link, x, y) {
+        dialog.close();
+        vkMsgOk("Изображение успешно загружено!");
+        window.fotoViewImages = false;
+        var send = {
+            link:link,
+            x:x,
+            y:y,
+            dtime:'сегодня'
+        };
+        if(obj.max_x && x > obj.max_x) {
+            x = obj.max_x;
+            y = Math.round(send.y / send.x * obj.max_x);
+        }
+        if(obj.max_y && y > obj.max_y) {
+            y = obj.max_y;
+            x = Math.round(send.x / send.y * obj.max_y);
+        }
+        send.img = '<IMG src="' + send.link + '-big.jpg" width="' + x + '" height="' + y + '">';
+        obj.func(send);
+    }
+    // вывод информации об ошибке в диалоговом окне
+    function error_print(num) {
+        $("#error_msg").remove();
+        var cause = "не известна";
+        if(num == 1) cause = 'неверный формат файла';
+        if(num == 2) cause = 'слишком маленький размер изображения.<BR>Допустимый размер не менее 100x100 px';
+        $('#fotoUpload .webcam').after('<DIV id="error_msg">Не удалось загрузить изображение.<BR>Причина: ' + cause + '.</DIV>');
+    }
+
+    function fotoLinkSend() {
+        if(direct_a.hasClass('busy'))
+            return;
+        var link = direct.val();
+        if(!link)
+            return;
+        var send = {
+            op:'link',
+            link:link
+        };
+        direct_a.addClass('busy');
+        $.post(IMAGE_UPLOAD, send, function (res) {
+            direct_a.removeClass('busy');
+            if(res.error)
+                error_print(res.error);
+            else
+                uploaded(res.link, res.x, res.y);
+        }, 'json');
+    }
+    // диалог с вебкамерой
+    function camera() {
+        webDialog = vkDialog({
+            top:20,
+            width:610,
+            head:"Создание снимка с вебкамеры",
+            content:'<DIV id="screen"></DIV>',
+            butSubmit:'Сделать снимок',
+            butCancel:'Закрыть',
+            submit:submit
+        });
+        webDialog.content.css({
+            padding:0,
+            height:457 + 'px'
+        });
+        webcam.screen = $('#screen');
+        webcam.show(608, 457);
+        webDialog.content.resizable({
+            minWidth: 322,
+            maxWidth: 608,
+            minHeight: 240,
+            maxHeight: 457,
+            resize:function(b, a) {
+                var w = a.size.width;
+                var diff = a.originalSize.width - w;
+                if(diff != 0) {
+                    w -= diff;
+                    if(w < 322) w = 322;
+                    if(w > 608) w = 608;
+                    a.size.width = w;
+                    webDialog.content.parent().css({
+                        left:(313 - Math.round(a.size.width / 2)) + 'px',
+                        width:w + 'px'
+                    });
+                    $(this).width('auto');
+                }
+            },
+            start:function() { webcam.reset(); },
+            stop:function() {
+                var h = webDialog.content.height();
+                var w = webDialog.content.width();
+                webcam.screen.height(h);
+                webcam.show(w, h);
+            }
+        });
+
+        function submit() {
+            webDialog.process();
+            setCookie('fotoUpload', 'process');
+            timer = setInterval(uploadStart, 500);
+            document.getElementById('webcam_movie')._snap(IMAGE_UPLOAD, 100, 0, 0);
+        }
+    }
+};
+
 
 // перелистывание годов
 $.fn.years = function(obj) {
@@ -379,4 +595,5 @@ $.fn.keyEnter = function(func) {
         if(e.keyCode == 13)
             func();
     });
+    return $(this);
 };

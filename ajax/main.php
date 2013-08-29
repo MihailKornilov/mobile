@@ -485,6 +485,13 @@ switch(@$_POST['op']) {
         }
         jsonSuccess($send);
         break;
+    case 'zayav_img_update':
+        //Обновление картинки заявки после загрузки новой
+        if(!preg_match(REGEXP_NUMERIC, $_POST['zayav_id']))
+            jsonError();
+        $send['html'] = _zayavImg(intval($_POST['zayav_id']), 'big', 200, 320, 'fotoView');
+        jsonSuccess($send);
+        break;
     case 'zayav_money_update':
         //Получение разницы между начислениями и платежами и их обновление
         if(!preg_match(REGEXP_NUMERIC, $_POST['id']))

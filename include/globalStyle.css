@@ -196,80 +196,55 @@ TABLE{border:0}
 
 
 /* кнопка из контакта */
-.vkButton {
+.vkButton{border:#45688E solid 1px;background-color:#5D81A7}
+.vkButton,.vkCancel{
     display:inline-block;
-    border:#45688E solid 1px;
-    background-color:#5D81A7;
     border-radius:2px;
-    -moz-border-radius:2px;
-    -khtml-border-radius:2px;
-    -webkit-border-radius:2px;
+    -moz-border-radius: 2px;
+    -khtml-border-radius: 2px;
+    -webkit-border-radius: 2px;
 }
-.vkButton button {
-    color:#FFF;
+.vkButton button,.vkCancel button {
+    background-image:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAABUCAIAAADMNMqaAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAABXSURBVHjapI7BDYAwDANNxmYVZmGxPOKmkKgNqvj0YflaWcrJed0CQEh482nSe+ZPLNkwOP/N6qazJdd9DeImi0t38xyqGp7vZubVe+kdbrubn9tNgAEAaD7UiMhv1xkAAAAASUVORK5CYII=");
+    background-repeat:repeat-x;
     border:1px solid;
     font-size:11px;
     cursor:pointer;
     white-space:nowrap;
     outline:none;
-    height:24px;
-    padding:0 14px;
-    font-family: tahoma, verdana, arial, sans-serif, Lucida Sans;
-    border-top-color: #789ABF;
-    border-bottom-color: #5980A9;
-    border-left-color: #5980A9;
-    border-right-color: #5980A9;
+    padding:4px 14px;
+    font-family:tahoma,verdana,arial,sans-serif,Lucida Sans;
+}
+.vkButton button {
+    color:#FFF;
+    border-color:#789ABF #5980A9 #5980A9 #5980A9;
     text-shadow:0 1px 0 #45688E;
-    background:#6181a6 repeat-x top;
-    background-position: 0 -16px;
+    background-color:#6181a6;
+    background-position:0 -16px;
 }
 .vkButton button:hover{background-position:0 -8px}
 .vkButton button:active{background:#5e80a5;border:1px solid #5e80a5}
-
-
-
-
-
-
-/* кнопка отмена */
-.vkCancel {
-    display: inline-block;
-    border:#B3B3B3 solid 1px;
-    background: #E0E0E0;
-    border-radius: 2px;
-    -moz-border-radius: 2px;
-    -khtml-border-radius: 2px;
-    -webkit-border-radius: 2px;
-}
-.vkCancel button {
-    color: #444;
-    border:1px solid;
-    font-size:11px;
-    cursor:pointer;
-    white-space: nowrap;
-    outline:none;
-    height:24px;
-    padding:0 14px;
-    font-family:tahoma,verdana,arial,sans-serif,Lucida Sans;
-    border-top-color:#FFF;
-    border-bottom-color:#E5E5E5;
-    border-left-color:#E7E7E7;
-    border-right-color:#E7E7E7;
-    text-shadow:0 1px 0 #FFF;
-    background:#DDD repeat-x top ;
-    background-position:0 -54px;
-}
-.vkCancel button:hover{background-position:0 -46px}
-.vkCancel button:active{background:#DCDCDC;border:1px solid #DCDCDC}
-.vkButton button,.vkCancel button {
-    background-image:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAABUCAIAAADMNMqaAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAABXSURBVHjapI7BDYAwDANNxmYVZmGxPOKmkKgNqvj0YflaWcrJed0CQEh482nSe+ZPLNkwOP/N6qazJdd9DeImi0t38xyqGp7vZubVe+kdbrubn9tNgAEAaD7UiMhv1xkAAAAASUVORK5CYII=");
-}
 .vkButton.busy button{visibility:hidden}
-.vkButton.busy,.ajaxNext.busy,.tooltip.empty,#device_image.busy{
+.vkButton.busy,
+.ajaxNext.busy,
+.tooltip.empty,
+#device_image.busy,
+#fotoUpload #direct a.busy{
     background-image:url("data:image/gif;base64,R0lGODlhIAAIAKECAEVojoSctMHN2QAAACH/C05FVFNDQVBFMi4wAwEAAAAh+QQFCgADACwAAAAAIAAIAAACFZyPqcvtD6KMr445LcRUN9554kiSBQAh+QQFCgADACwCAAIAEgAEAAACD4xvM8DNiJRz8Mj5ari4AAAh+QQFCgADACwCAAIAHAAEAAACGJRvM8HNCqKMCCnn4JT1XPwMG9cJH6iNBQAh+QQFCgADACwMAAIAEgAEAAACD5RvM8HNiJRz8Mj5qri4AAAh+QQFCgADACwWAAIACAAEAAACBZSPqYsFACH5BAUUAAMALAAAAAAgAAgAAAIOnI+py+0Po5y02ouzPgUAOw==");
     background-repeat:no-repeat;
     background-position:center center;
 }
+/* кнопка отмена */
+.vkCancel{border:#B3B3B3 solid 1px;background:#E0E0E0}
+.vkCancel button {
+    color: #444;
+    border-color:#FFF #E7E7E7 #E5E5E5 #E7E7E7;
+    text-shadow:0 1px 0 #FFF;
+    background-color:#DDD;
+    background-position:0 -54px;
+}
+.vkCancel button:hover{background-position:0 -46px}
+.vkCancel button:active{background:#DCDCDC;border:1px solid #DCDCDC}
 
 
 
@@ -1477,82 +1452,6 @@ TABLE{border:0}
 
 
 
-/* Загрузка и просмотр изображений */
-.foto_create_button {
-  color:#2B587A;
-  padding:10px;
-  text-align:center;
-  cursor:pointer;
-}
-.foto_create_button:hover { background-color:#e9edf1; }
-
-
-
-#foto_upload_dialog .info {
-  background-color:#f6f7f9;
-  border:#dbe0ea 1px solid;
-  padding:10px;
-  margin-bottom:15px;
-}
-#foto_upload_dialog .about {
-  color:#31618C;
-  font-size:12px;
-  font-weight:bold;
-  margin:25px 0 2px 0;
-}
-#foto_upload_dialog #choose_file {
-  background:#eff1f3 url("data:image/gif;base64,R0lGODlhGgAWALMAAAAAAP///6OzxqKyxaGxxKCww6CxxKOzxaW1x6S0xqO0xqKzxaGyxKCxw////wAAACH5BAEAAA4ALAAAAAAaABYAAAQ+0Mkpkb2Y6o373ZwnWuBodtOpfmurhu5XxkgqO7Gd4W4l+isgihckDnvGXS5ZY550TedzRiNBq9gsSruTIiMAOw==") no-repeat 110px center;
-  padding-left:145px;
-  margin-bottom:30px;
-  line-height:44px;
-  color:#738392;
-  font-size:12px;
-}
-#foto_upload_dialog #choose_file.no_msie:hover {
-  background-color:#e9edf1;
-  cursor:pointer;
-}
-#foto_upload_dialog #dialog_form {
-  position:absolute;
-  margin:11px 0 0 110px;
-  height:22px;
-  width:63px;
-  overflow:hidden;
-  z-index:2;
-  opacity:0;
-}
-#foto_upload_dialog #file_name {
-  position:relative;
-  width:178px;
-  left:-115px;
-  cursor:pointer;
-}
-#foto_upload_dialog IFRAME { display:none; }
-#foto_upload_dialog #error_msg {
-  border:#e6a393 solid 1px;
-  background-color:#fdefea;
-  padding:10px;
-  text-align:center;
-  color:#533;
-}
-
-#foto_upload_dialog #direct INPUT {
-  width:251px;
-  color:#777;  
-}
-#foto_upload_dialog #direct A {
-  margin-left:5px;
-  display:inline-block;
-  width:70px;
-  line-height:21px;
-  text-align:center;
-}
-#foto_upload_dialog #direct A:hover { background-color:#e9edf1; text-decoration:none;}
-#foto_upload_dialog .webcam { margin:30px 0 10px 0; }
-
-/* настройки камеры */
-#webcam .content { padding:0; background-color:#B3B3B3; }
-#webcam #screen { height:457px; }
 
 
 
