@@ -41,14 +41,14 @@ function _header() {
         '<TITLE> Приложение 2031819 Hi-tech Service </TITLE>'.
         '<LINK href="'.SITE.'/include/globalStyle.css?'.VERSION.'" rel="stylesheet" type="text/css" />'.
         '<LINK href="'.SITE.'/css/global.css?'.VERSION.'" rel="stylesheet" type="text/css" />'.
-        (ADMIN ? '<SCRIPT type="text/javascript" src="http://nyandoma'.(DOMAIN == 'vkmobile' ? '' : '.ru').'/js/errors.js?'.VERSION.'"></SCRIPT>' : '').
+        (ADMIN ? '<SCRIPT type="text/javascript" src="http://nyandoma'.(LOCAL ? '' : '.ru').'/js/errors.js?'.VERSION.'"></SCRIPT>' : '').
         '<SCRIPT type="text/javascript" src="'.SITE.'/include/jquery-1.9.1.min.js"></SCRIPT>'.
         '<SCRIPT type="text/javascript" src="'.SITE.'/include/xd_connection.js"></SCRIPT>'.
         '<SCRIPT type="text/javascript" src="'.SITE.'/js/highstock.js"></SCRIPT>'.
         '<SCRIPT type="text/javascript" src="'.SITE.'/js/vkapi.js?'.VERSION.'"></SCRIPT>'.
         '<SCRIPT type="text/javascript" src="'.SITE.'/include/globalScript.js?'.VERSION.'"></SCRIPT>'.
         '<SCRIPT type="text/javascript">'.
-            'if(document.domain=="vkmobile")for(var i in VK)if(typeof VK[i]=="function")VK[i]=function(){return false};'.
+            (LOCAL ? 'for(var i in VK)if(typeof VK[i]=="function")VK[i]=function(){return false};' : '').
             'G.domain = "'.DOMAIN.'";'.
             'G.values = "'.VALUES.'";'.
             'G.vku = {'.
@@ -60,15 +60,11 @@ function _header() {
                 'country_id:'.$vku->country_id.','.
                 'city_id:'.$vku->city_id.
             '};'.
-            'G.clients = [];'.
             'G.ws = {devs:['.($WS ? $WS->devs : '').']};'.
         '</SCRIPT>'.
         '<SCRIPT type="text/javascript" src="'.SITE.'/js/global.js?'.VERSION.'"></SCRIPT>'.
         '<SCRIPT type="text/javascript" src="'.SITE.'/include/G_values.js?'.G_VALUES.'"></SCRIPT>'.
-        '<SCRIPT type="text/javascript" src="/include/clients/G_clients_'.WS_ID.'.js?'.VERSION.'"></SCRIPT>'.//todo для удаления
-        '<SCRIPT type="text/javascript" src="/include/clients/clients.js?'.VERSION.'"></SCRIPT>'.//todo для удаления
         '<SCRIPT type="text/javascript" src="/include/device/device.js?'.VERSION.'"></SCRIPT>'.//todo для удаления
-        //'<SCRIPT type="text/javascript" src="/include/foto/foto.js?'.VERSION.'"></SCRIPT>'.//todo для удаления
         '</HEAD>'.
         '<BODY>'.
         '<div id="frameBody">'.
@@ -148,7 +144,7 @@ function _mainLinks() {
     $links = array(
         array(
             'name' => 'Клиенты',
-            'page' => 'remClient',
+            'page' => 'no&p=client',
             'show' => 1
         ),
         array(
@@ -403,6 +399,49 @@ function currentSunday() {
     return strftime('%Y-%m-%d', $time);
 
 }//end of currentMonday()
+
+//Перевод символов раскладки с английского на русский
+function _engRusChar($word) {
+    $char = array(
+        'q' => 'й',
+        'w' => 'ц',
+        'e' => 'у',
+        'r' => 'к',
+        't' => 'е',
+        'y' => 'н',
+        'u' => 'г',
+        'i' => 'ш',
+        'o' => 'щ',
+        'p' => 'з',
+        '[' => 'х',
+        ']' => 'ъ',
+        'a' => 'ф',
+        's' => 'ы',
+        'd' => 'в',
+        'f' => 'а',
+        'g' => 'п',
+        'h' => 'р',
+        'j' => 'о',
+        'k' => 'л',
+        'l' => 'д',
+        ';' => 'ж',
+        "'" => 'э',
+        'z' => 'я',
+        'x' => 'ч',
+        'c' => 'с',
+        'v' => 'м',
+        'b' => 'и',
+        'n' => 'т',
+        'm' => 'ь',
+        ',' => 'б',
+        '.' => 'ю'
+    );
+    $send = '';
+    for($n = 0; $n < strlen($word); $n++)
+        if(isset($char[$word[$n]]))
+            $send .= $char[$word[$n]];
+    return $send;
+}
 
 //todo не сделано очищение кеша
 function viewerName($link=false, $id=VIEWER_ID) {
@@ -769,6 +808,137 @@ function _devStatus($status_id) {
 }//end of _devStatus()
 
 
+// ---===! client !===--- Секция клиентов
+
+function clientFilter($v) {
+    if(!preg_match(REGEXP_WORDFIND, win1251($v['fast'])))
+        $v['fast'] = '';
+    if(!preg_match(REGEXP_BOOL, $v['dolg']))
+        $v['dolg'] = 0;
+    if(!preg_match(REGEXP_BOOL, $v['active']))
+        $v['active'] = 0;
+    $filter = array(
+        'fast' => htmlspecialchars(trim($v['fast'])),
+        'dolg' => intval($v['dolg']),
+        'active' => intval($v['active'])
+    );
+    return $filter;
+}//end of clientFilter()
+function get_client_list($page=1, $filter=array()) {
+    $cond = "`ws_id`=".WS_ID;
+    $reg = '';
+    $regEngRus = '';
+    if(!empty($filter['fast'])) {
+        $fast = win1251($filter['fast']);
+        $engRus = _engRusChar($fast);
+        $cond .= " AND (`fio` LIKE '%".$fast."%'
+                     OR `telefon` LIKE '%".$fast."%'
+                     ".($engRus ?
+                           "OR `fio` LIKE '%".$engRus."%'
+                            OR `telefon` LIKE '%".$engRus."%'"
+                        : '')."
+                     )";
+        $reg = '/('.$fast.')/i';
+        if($engRus)
+            $regEngRus = '/('.$engRus.')/i';
+    } else {
+        if(isset($filter['dolg']) && $filter['dolg'] == 1)
+            $cond .= " AND `balans`<0";
+        if(isset($filter['active']) && $filter['active'] == 1) {
+            $sql = "SELECT DISTINCT `client_id`
+                FROM `zayavki`
+                WHERE `ws_id`=".WS_ID."
+                  AND `zayav_status`=1";
+            $q = query($sql);
+            $ids = array();
+            while($r = mysql_fetch_assoc($q))
+                $ids[] = $r['client_id'];
+            $cond .= " AND `id` IN (0,".implode(',', $ids).")";
+        }
+    }
+    $send['all'] = query_value("SELECT COUNT(`id`) AS `all` FROM `client` WHERE ".$cond." LIMIT 1");
+    if($send['all'] == 0) {
+        $send['spisok'] = '<div class="findEmpty">Клиентов не найдено.</div>';
+        return $send;
+    }
+    $limit = 20;
+    $start = ($page - 1) * $limit;
+    $spisok = array();
+    $sql = "SELECT *
+            FROM `client`
+            WHERE ".$cond."
+            ORDER BY `id` DESC
+            LIMIT ".$start.",".$limit;
+    $q = query($sql);
+    while($r = mysql_fetch_assoc($q)) {
+        if(!empty($filter['fast'])) {
+            if(preg_match($reg, $r['fio']))
+                $r['fio'] = preg_replace($reg, '<em>\\1</em>', $r['fio'], 1);
+            if(preg_match($reg, $r['telefon']))
+                $r['telefon'] = preg_replace($reg, '<em>\\1</em>', $r['telefon'], 1);
+            if($regEngRus && preg_match($regEngRus, $r['fio']))
+                $r['fio'] = preg_replace($regEngRus, '<em>\\1</em>', $r['fio'], 1);
+            if($regEngRus && preg_match($regEngRus, $r['telefon']))
+                $r['telefon'] = preg_replace($regEngRus, '<em>\\1</em>', $r['telefon'], 1);
+        }
+        $spisok[$r['id']] = $r;
+    }
+
+    $sql = "SELECT
+                `client_id` AS `id`,
+                COUNT(`id`) AS `count`
+            FROM `zayavki`
+            WHERE `ws_id`=".WS_ID."
+              AND `client_id` IN (".implode(',', array_keys($spisok)).")
+            GROUP BY `client_id`";
+    $q = query($sql);
+    while($r = mysql_fetch_assoc($q))
+        $spisok[$r['id']]['zayav_count'] = $r['count'];
+    $send['spisok'] = '';
+    foreach($spisok as $r)
+        $send['spisok'] .= '<div class="unit">'.
+            ($r['balans'] ? '<DIV class="balans">Баланс: <B style=color:#'.($r['balans'] < 0 ? 'A00' : '090').'>'.$r['balans'].'</B></DIV>' : '').
+            '<TABLE cellspacing="1">'.
+               '<TR><TD class="label">Имя:<TD><a href="'.URL.'&my_page=remClientInfo&id='.$r['id'].'">'.$r['fio'].'</A>'.
+                ($r['telefon'] ? '<TR><TD class="label">Телефон:<TD>'.$r['telefon'] : '').
+                (isset($r['zayav_count']) ? '<TR><TD class="label">Заявки:<TD>'.$r['zayav_count'] : '').
+            '</TABLE>'.
+         '</div>';
+    if($start + $limit < $send['all']) {
+        $c = $send['all'] - $start - $limit;
+        $c = $c > $limit ? $limit : $c;
+        $send['spisok'] .= '<div class="ajaxNext" val="'.($page + 1).'"><span>Показать ещё '.$c.' клиент'._end($c, 'а', 'а', 'ов').'</span></div>';
+    }
+    return $send;
+}//end of get_client_list()
+function client_list($data) {
+    return '<DIV id="client">'.
+        '<DIV id="find"></DIV>'.
+        '<DIV class="result">'.client_count($data['all']).'</DIV>'.
+        '<TABLE cellspacing="0" class="tabLR">'.
+            '<TR><TD class="left">'.$data['spisok'].
+                '<TD class="right">'.
+                    '<DIV id="buttonCreate"><a>Новый клиент</a></DIV>'.
+                    '<div class="filter">'.
+                       _checkbox('dolg', 'Должники').
+                       _checkbox('active', 'С активными заявками').
+                    '</div>'.
+          '</TABLE>'.
+        '</DIV>';
+}//end of client_list()
+function client_count($count, $dolg=0) {
+    if($dolg)
+        $dolg = abs(query_value("SELECT SUM(`balans`) FROM `client` WHERE `balans`<0 LIMIT 1"));
+    return ($count > 0 ?
+            'Найден'._end($count, ' ', 'о ').$count.' клиент'._end($count, '', 'а', 'ов').
+            ($dolg ? '<em>(Общая сумма долга = '.$dolg.' руб.)</em>' : '')
+            :
+            'Клиентов не найдено');
+}//end of show_zayav_count()
+
+
+
+
 // ---===! zayav !===--- Секция заявок
 
 function zayav_add() {
@@ -780,6 +950,7 @@ function zayav_add() {
         $fault .= (++$k%2 ? '<tr>' : '').'<td>'._checkbox('f_'.$r['id'], $r['name']);
     $fault .= '</table>';
     switch(@$_GET['back']) {
+        case 'client': $back = 'client'; break;
         case 'remClientInfo': $back = 'remClientInfo'; break;
         default: $back = 'zayav';
 
@@ -1013,7 +1184,7 @@ function show_zayav_list($data, $values) {
 
     return '<DIV id="zayav">'.
         '<DIV class="result">'.show_zayav_count($data['all']).'</DIV>'.
-        '<TABLE cellspacing=0 class="tabLR">'.
+        '<TABLE cellspacing="0" class="tabLR">'.
             '<TR><TD id="spisok">'.show_zayav_spisok($data).
                 '<TD class="right">'.
                     '<DIV id="buttonCreate"><A HREF="'.URL.'&p=zayav&d=add&back=zayav">Новая заявка</A></DIV>'.

@@ -82,8 +82,6 @@ switch($_GET['my_page']) {
   case 'remClient':     include('remont/client/spisok/client_tpl.php');break;          // список клиентов
   case 'remClientInfo': include('remont/client/info/clientInfo_tpl.php');break;     // информация о клиенте
 
-  case 'remZayavkiInfo':include('remont/zayavki/info/zayavkiInfo_tpl.php');break;
-
   case 'remZp':         include('remont/zp/zp_tpl.php');break; // запчасти
     
   case 'remDevice':     include('remont/device/device_tpl.php');break;
@@ -110,6 +108,12 @@ if(isset($_GET['p'])) {
     _header();
     _mainLinks();
     switch(@$_GET['p']) {
+        case 'client':
+            switch(@$_GET['d']) {
+                default:
+                    $html .= client_list(get_client_list());
+            }
+            break;
         case 'zayav':
             switch(@$_GET['d']) {
                 case 'add': $html .= zayav_add(); break;

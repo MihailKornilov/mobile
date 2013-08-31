@@ -248,35 +248,3 @@ function GvaluesCreate() {
 
   $VK->Query("update setup_global set g_values=g_values+1");
 }
-
-
-
-
-
-
-
-
-//GclientsCreate();
-// составление списка с клиентами: файл G_clients.js
-function GclientsCreate() {
-  global $VK, $vku;
-
-  $spisok = $VK->QueryObjectArray("select id,fio,telefon,zayav_count,balans from client where ws_id=".$vku->ws_id." order by id desc");
-  $clients = array();
-  if (count($spisok) > 0) {
-    foreach ($spisok as $n =>$sp) {
-      $push = "id:".$sp->id;
-      $push .= ",fio:\"".$sp->fio."\"";
-      if ($sp->telefon) { $push .= ",telefon:\"".$sp->telefon."\""; }
-      if ($sp->zayav_count > 0) { $push .= ",count:".$sp->zayav_count; }
-      array_push($clients, "{".$push."}");
-    }
-  }
-  $save = "G.clients = [".implode(',',$clients)."];";
-
-  $fp = fopen(PATH_FILES."../include/clients/G_clients_".$vku->ws_id.".js","w+");
-  fwrite($fp, $save);
-  fclose($fp);
-
-  $VK->Query("update workshop set g_clients=g_clients+1 where id=".$vku->ws_id);
-}

@@ -44,10 +44,77 @@ var REGEXP_NUMERIC = /^\d+$/,
             }, 'json');
         }
     },
+    clientAdd = function(callback) {
+        var html = '<table cellspacing=10>' +
+                '<TR><TD class="label">Имя:<TD><INPUT TYPE="text" id="fio" style="width:220px;">' +
+                '<TR><TD class="label">Телефон:<TD><INPUT TYPE="text" id="telefon" style=width:220px;>' +
+            '</TABLE>',
+            dialog = vkDialog({
+                width:340,
+                head:"Добавление нoвого клиента",
+                content:html,
+                submit:submit
+            });
+        $('#fio').focus();
+        function submit() {
+            var send = {
+                op:'client_add',
+                fio:$("#fio").val(),
+                telefon:$("#telefon").val()
+            };
+            if(!send.fio) {
+                dialog.bottom.vkHint({
+                    msg:'<SPAN class="red">Не указано имя клиента.</SPAN>',
+                    top:-47,
+                    left:81,
+                    indent:40,
+                    show:1,
+                    remove:1,
+                    correct:0
+                });
+                $('#fio').focus();
+            } else {
+                dialog.process();
+                $.post(AJAX_MAIN, send, function(res) {
+                    dialog.close();
+                    vkMsgOk('Новый клиент внесён.');
+                    if(res.success)
+                        if(typeof callback == 'function')
+                            callback(res);
+                        else
+                            document.location.href = URL + '&p=client&d=info&id=' + res.uid;
+                }, 'json');
+            }
+        }
+    },
+    clientFilterValuesGet = function() {
+        var v = {
+            fast:$.trim($('#find input').val()),
+            dolg:$('#dolg').val(),
+            active:$('#active').val()
+        };
+        $('.filter')[v.fast ? 'hide' : 'show']();
+        return v;
+    },
+    clientSpisokLoad = function() {
+        var send = clientFilterValuesGet(),
+            result = $('.result');
+        send.op = 'client_spisok_load';
+        if(result.hasClass('busy'))
+            return;
+        result.addClass('busy');
+        $.post(AJAX_MAIN, send, function (res) {
+            result.removeClass('busy');
+            if(res.success) {
+                result.html(res.all);
+                $('.left').html(res.spisok);
+            }
+        }, 'json');
+    },
     zayavFilterValues,
     zayavFilterValuesGet = function () {
         var v = {
-                find:$.trim($('#find').find('input').val()),
+                find:$.trim($('#find input').val()),
                 sort:$('#sort').val(),
                 desc:$('#desc').val(),
                 status:$('#status .sel').attr('val'),
@@ -258,13 +325,15 @@ $(document).ajaxError(function(event, request, settings) {
     if(!request.responseText)
         return;
     alert('Ошибка:\n\n' + request.responseText);
+    //var txt = request.responseText;
+    //throw new Error('<br />AJAX:<br /><br />' + txt + '<br />');
 });
 
 $(document)
     .on('click', '#script_style', function() {
         $.post(AJAX_MAIN, {'op':'script_style'}, function(res) {
             if(res.success)
-                location.reload();
+                document.location.reload();
         }, 'json');
     })
     .on('click', '#cache_clear', function() {
@@ -289,6 +358,66 @@ $(document)
         }, 'json');
     });
 
+$.fn.clientSel = function(obj) {
+    obj = $.extend({
+        width:240,
+        add:null
+    }, obj);
+
+    if(obj.add)
+        obj.add = function() {
+            clientAdd(function(res) {
+                sel.add(res).val(res.uid)
+            });
+        }
+
+    var t = $(this),
+        sel = t.vkSel({
+            width:obj.width,
+            title0:'Начните вводить данные клиента...',
+            spisok:[],
+            ro:0,
+            nofind:'Клиентов не найдено',
+            funcAdd:obj.add,
+            funcKeyup:clientsGet
+        }).o;
+    sel.process();
+    clientsGet();
+
+    function clientsGet(val) {
+        var send = {
+            op:'client_sel',
+            val:val ? val : ''
+        };
+        $.post(AJAX_MAIN, send, function(res) {
+            if(res.success)
+                sel.spisok(res.spisok);
+        }, 'json');
+    }
+    return t;
+};
+
+$(document)
+    .on('click', '#client #buttonCreate', clientAdd)
+    .on('click', '#client #dolg_check', clientSpisokLoad)
+    .on('click', '#client #active_check', clientSpisokLoad)
+    .on('click', '#client .ajaxNext', function() {
+        if($(this).hasClass('busy'))
+            return;
+        var next = $(this),
+            send = clientFilterValuesGet();
+        send.op = 'client_next';
+        send.page = next.attr('val');
+        next.addClass('busy');
+        $.post(AJAX_MAIN, send, function (res) {
+            if(res.success) {
+                next.remove();
+                $('#client .left').append(res.spisok);
+            } else
+                next.removeClass('busy');
+        }, 'json');
+    });
+
 $(document)
     .on('click', '#zayav_next', function() {
         if($(this).hasClass('busy'))
@@ -306,7 +435,7 @@ $(document)
         }, 'json');
     })
     .on('click', '#zayav .unit', function() {
-        location.href = URL + '&p=zayav&d=info&id=' + $(this).attr('val');
+        document.location.href = URL + '&p=zayav&d=info&id=' + $(this).attr('val');
     })
     .on('mouseenter', '#zayav .unit', function() {
         var t = $(this),
@@ -402,7 +531,7 @@ $(document)
                 dialog.process();
                 $.post(AJAX_MAIN, send, function (res) {
                     dialog.close();
-                    vkMsgOk("Данные изменены!");
+                    vkMsgOk('Данные изменены!');
                     document.location.reload();
                 }, 'json');
             }
@@ -1690,56 +1819,36 @@ $(document)
 $(document).ready(function() {
     frameHidden.onresize = frameBodyHeightSet;
 
-    if($('#report_history').length > 0) {
-        $('#report_history_worker').vkSel({
-            width:140,
-            title0:'Не указан',
-            spisok:workers,
-            func:reportHistoryLoad
+    if($('#client').length > 0) {
+        $("#find").topSearch({
+            width:585,
+            focus:1,
+            txt:'Начните вводить данные клиента',
+            func:clientSpisokLoad
         });
-        $('#report_history_action').vkSel({
-            width:140,
-            title0:'Не выбрано',
-            spisok:[
-                {uid:1, title:'Клиенты'},
-                {uid:2, title:'Заявки'},
-                {uid:3, title:'Запчасти'},
-                {uid:4, title:'Платежи'}
-            ],
-            func:reportHistoryLoad
+        $('#buttonCreate').vkHint({
+            msg:'<B>Внесение нового клиента в базу.</B><BR><BR>' +
+                'После внесения Вы попадаете на страницу с информацией о клиенте для дальнейших действий.<BR><BR>' +
+                'Клиентов также можно добавлять при <A href="' + URL + '&p=zayav&d=add&back=client">создании новой заявки</A>.',
+            ugol:'right',
+            width:215,
+            top:-38,
+            left:-250,
+            indent:40,
+            delayShow:1000,
+            correct:0
         });
-    }
-    if($('#report_remind').length > 0) {
-        $('#remind_status').vkRadio({
-            top:6,
-            light:1,
-            spisok:[
-                {uid:1, title:'Активные'},
-                {uid:2, title:'Выполнены'},
-                {uid:0, title:'Отменены'}
-            ],
-            func:reportRemindLoad
+        $('#dolg_check').vkHint({
+            msg:'<b>Список должников.</b><br /><br />' +
+                'Выводятся клиенты, у которых баланс менее 0. Также в результате отображается общая сумма долга.',
+            ugol:'right',
+            width:150,
+            top:-6,
+            left:-185,
+            indent:20,
+            delayShow:1000,
+            correct:0
         });
-    }
-    if($('#report_prihod').length > 0) {
-        $('#report_prihod_day_begin').vkCalendar({lost:1, place:'left', func:reportPrihodLoad});
-        $('#report_prihod_day_end').vkCalendar({lost:1, place:'left', func:reportPrihodLoad});
-    }
-    if($('#report_rashod').length > 0) {
-        $('#rashod_category').vkSel({
-            width:140,
-            title0:'Любая категория',
-            spisok:rashodCaregory,
-            func:reportRashodLoad
-        });
-        $('#rashod_worker').vkSel({
-            width:140,
-            title0:'Все сотрудники',
-            spisok:rashodViewers,
-            func:reportRashodLoad
-        });
-        $('#rashod_year').years({func:reportRashodLoad});
-        reportRashodMonthPrint();
     }
 
     if($('#zayav').length > 0) {
@@ -1910,6 +2019,58 @@ $(document).ready(function() {
             owner:'zayav' + G.zayavInfo.id,
             func:zayavImgUpdate
         });
+    }
+
+    if($('#report_history').length > 0) {
+        $('#report_history_worker').vkSel({
+            width:140,
+            title0:'Не указан',
+            spisok:workers,
+            func:reportHistoryLoad
+        });
+        $('#report_history_action').vkSel({
+            width:140,
+            title0:'Не выбрано',
+            spisok:[
+                {uid:1, title:'Клиенты'},
+                {uid:2, title:'Заявки'},
+                {uid:3, title:'Запчасти'},
+                {uid:4, title:'Платежи'}
+            ],
+            func:reportHistoryLoad
+        });
+    }
+    if($('#report_remind').length > 0) {
+        $('#remind_status').vkRadio({
+            top:6,
+            light:1,
+            spisok:[
+                {uid:1, title:'Активные'},
+                {uid:2, title:'Выполнены'},
+                {uid:0, title:'Отменены'}
+            ],
+            func:reportRemindLoad
+        });
+    }
+    if($('#report_prihod').length > 0) {
+        $('#report_prihod_day_begin').vkCalendar({lost:1, place:'left', func:reportPrihodLoad});
+        $('#report_prihod_day_end').vkCalendar({lost:1, place:'left', func:reportPrihodLoad});
+    }
+    if($('#report_rashod').length > 0) {
+        $('#rashod_category').vkSel({
+            width:140,
+            title0:'Любая категория',
+            spisok:rashodCaregory,
+            func:reportRashodLoad
+        });
+        $('#rashod_worker').vkSel({
+            width:140,
+            title0:'Все сотрудники',
+            spisok:rashodViewers,
+            func:reportRashodLoad
+        });
+        $('#rashod_year').years({func:reportRashodLoad});
+        reportRashodMonthPrint();
     }
 
     frameBodyHeightSet();

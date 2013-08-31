@@ -3,6 +3,7 @@ define('TIME', microtime(true));
 define('DOCUMENT_ROOT', dirname(__FILE__));
 define('NAMES', 'cp1251');
 define('DOMAIN', $_SERVER["SERVER_NAME"]);
+define('LOCAL', DOMAIN == 'vkmobile');
 define('VIEWER_ID', $_GET['viewer_id']);
 define('VALUES', 'viewer_id='.VIEWER_ID.
     '&api_id='.@$_GET['api_id'].
@@ -18,6 +19,7 @@ define('REGEXP_BOOL', '/^[0-1]$/');
 define('REGEXP_DATE', '/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/');
 define('REGEXP_YEAR', '/^[0-9]{4}$/');
 define('REGEXP_WORD', '/^[a-z0-9]{1,10}$/i');
+define('REGEXP_WORDFIND', '/^[a-zà-ÿ0-9,.;]{1,}$/i');
 
 define('ADMIN', isset($SA[VIEWER_ID]));
 if(ADMIN) {

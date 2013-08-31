@@ -13,7 +13,6 @@ function jsonError($values=null) {
         $send['text'] = $values;
     die(json_encode($send));
 }//end of jsonError()
-
 function jsonSuccess($send=array()) {
     $send['success'] = 1;
     die(json_encode($send));
@@ -176,6 +175,71 @@ switch(@$_POST['op']) {
         jsonSuccess($send);
         break;
 
+    case 'client_sel':
+        if(!preg_match(REGEXP_WORDFIND, win1251($_POST['val'])))
+            $_POST['val'] = '';
+        $val = win1251($_POST['val']);
+        $sql = "SELECT *
+                FROM `client`
+                WHERE `ws_id`=".WS_ID.
+                    (!empty($val) ? " AND (`fio` LIKE '%".$val."%' OR `telefon` LIKE '%".$val."%')" : '')."
+                ORDER BY `id` DESC
+                LIMIT 50";
+        $q = query($sql);
+        $send['spisok'] = array();
+        while($r = mysql_fetch_assoc($q)) {
+            $unit = array(
+                'uid' => $r['id'],
+                'title' => utf8($r['fio'])
+            );
+            if($r['telefon'])
+                $unit['content'] = utf8($r['fio'].'<div class="pole2">'.$r['telefon'].'</div>');
+            $send['spisok'][] = $unit;
+        }
+        jsonSuccess($send);
+        break;
+    case 'client_add':
+        $fio = win1251(htmlspecialchars(trim($_POST['fio'])));
+        $telefon = win1251(htmlspecialchars(trim($_POST['telefon'])));
+        if(empty($fio))
+            jsonError();
+        $sql = "INSERT INTO `client` (
+                    `ws_id`,
+                    `fio`,
+                    `telefon`,
+                    `viewer_id_add`
+                ) VALUES (
+                    ".WS_ID.",
+                    '".addslashes($fio)."',
+                    '".addslashes($telefon)."',
+                    ".VIEWER_ID."
+                )";
+        query($sql);
+        $send = array(
+            'uid' => mysql_insert_id(),
+            'title' => utf8($fio)
+        );
+        history_insert(array(
+            'type' => 3,
+            'client_id' => $send['uid']
+        ));
+        jsonSuccess($send);
+        break;
+    case 'client_spisok_load':
+        $filter = clientFilter($_POST);
+        $send = get_client_list(1, $filter);
+        $send['all'] = utf8(client_count($send['all'], $filter['dolg']));
+        $send['spisok'] = utf8($send['spisok']);
+        jsonSuccess($send);
+        break;
+    case 'client_next':
+        if(!preg_match(REGEXP_NUMERIC, $_POST['page']))
+            jsonError();
+        $send = get_client_list(intval($_POST['page']), clientFilter($_POST));
+        $send['spisok'] = utf8($send['spisok']);
+        jsonSuccess($send);
+        break;
+
     case 'zayav_add':
         if(!preg_match(REGEXP_NUMERIC, $_POST['client']) || $_POST['client'] == 0)
             jsonError();
@@ -262,9 +326,6 @@ switch(@$_POST['op']) {
                 )";
         query($sql);
         $insert_id = mysql_insert_id();
-
-        query("UPDATE `client` SET `zayav_count`=`zayav_count`+1 WHERE `id`=".$client);
-        GclientsCreate();
 
         if($comm) {
             $sql = "INSERT INTO `vk_comment` (
@@ -427,9 +488,6 @@ switch(@$_POST['op']) {
         query($sql);
 
         $sql = "DELETE FROM `vk_comment` WHERE `table_name`='zayav' AND `table_id`=".$zayav_id;
-        query($sql);
-
-        $sql = "UPDATE `client` SET `zayav_count`=`zayav_count`-1 WHERE `ws_id`=".WS_ID." AND `id`=".$zayav['client_id'];
         query($sql);
 
         history_insert(array(
