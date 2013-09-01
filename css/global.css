@@ -37,9 +37,10 @@ td.r{text-align:right}
 #dopLinks{background-color:#F7F7F7;border-bottom:#dae1e8 solid 1px;padding:9px 12px}
 #dopLinks .link{
     text-decoration:none;
+    display:inline-block;
+    cursor:pointer;
     color:#45688e;
     margin-right:10px;
-    display:inline-block;
     font-weight:bold;
     padding:3px 8px 4px 8px;
     border-radius:2px;
@@ -167,6 +168,98 @@ td.r{text-align:right}
 #client .unit em{background-color:#FFC;border-bottom:#FE2 solid 1px}
 #client .ajaxNext{margin:0 10px}
 
+
+
+
+
+/* Информация о клиенте */
+#clientInfo .left{padding-bottom:10px}
+#clientInfo .fio{color:#31618C;font-size:12px;font-weight:bold;margin:15px 5px 5px 30px}
+#clientInfo .inf{margin:0 10px 0 28px;height:80px}
+#clientInfo .inf .label{width:60px}
+#clientInfo .dtime{font-size:10px;color:#999;text-align:right}
+.client_edit{margin-left:5px}
+.client_edit .label{width:80px;text-align:right}
+.client_edit #fio,.client_edit #telefon{width:228px}
+.client_edit .tr_join{display:none}
+#clientInfo #dopLinks{border-top:#dae1e8 solid 1px}
+#clientInfo .zayav_unit{margin-right:10px}
+#clientInfo .ajaxNext{margin:5px 10px 0 10px}
+/*
+#clientInfo #result {
+    float:right;
+    color:#666;
+    margin-top:4px;
+}
+#clientInfo #right {
+    background-color:#F7F7F7;
+    border-left:#DAE1E8 solid 1px;
+    width:148px;
+    height:500px;
+    vertical-align:top;
+    padding:8px 8px 150px 8px;
+}
+#clientInfo #cLinks { height:133px; }
+#clientInfo #zResult {
+    float:right;
+    color:#555;
+}
+#clientInfo #zResult IMG { margin-top:3px; }
+#clientInfo .tabSpisok { margin:8px; }
+#clientInfo .tabSpisok .dtime {
+    font-size:10px;
+    text-align:right;
+    color:#555;
+    width:95px;
+}
+#clientInfo #client_comment {
+    display:none;
+    padding:0 0 10px 8px;
+}
+#clientInfo #client_money {
+    display:none;
+    margin-top:15px;
+}
+#clientInfo #client_money .tabSpisok { width:440px; }
+
+
+
+#clientInfo #zayav .unit{margin-right:8px}/* todo удалить */
+
+
+
+
+/* список заявок */
+#zayav #filter_break{float:right}
+#zayav #spisok{padding-bottom:10px;background-color:#f7f7f7;vertical-align:top}
+#zayav .right{border:0;width:155px;padding-bottom:300px}
+#zayav .condLost.hide{display:none}
+.zayav_unit{
+    cursor:pointer;
+    margin:10px 5px 0 10px;
+    border:#ccc solid 1px;
+    border-radius:2px;
+    box-shadow: 0 0 5px rgba(0,0,0,0.2);
+}
+.zayav_unit:hover{border:#bbb solid 1px;box-shadow: 0 0 5px rgba(0,0,0,0.4);}
+.zayav_unit H1{margin:4px 0 2px 6px}
+.zayav_unit H2{float:right;font-size:10px;color:#777;margin:4px}
+.zayav_unit H2.finded{background:#FFC;color:#444;text-decoration:underline}
+.zayav_unit em{background:#FFC;border-bottom:1px solid #FE2}
+.zayav_unit b em{font-weight:bold}
+.zayav_unit .label{width:90px;padding-left:10px}
+.zayav_unit .image {
+    width:80px;
+    height:80px;
+    vertical-align:middle;
+    text-align:center;
+    border-left:#DDD solid 1px;
+    background-color:#FFF;
+}
+#zayav .ajaxNext{margin:6px 5px 0 8px}
+#zayav #find{margin-top:15px}
+#zayav #desc_check{margin-top:10px}
+#zayav .findEmpty{margin-right:6px;}
 
 
 
@@ -345,7 +438,7 @@ td.r{text-align:right}
 /* Новое действие для напоминания */
 .remind_action_tab{margin:0 10px}
 .remind_action_tab .label{width:80px;text-align:right}
-.remind_action_tab B{
+.remind_action_tab b{
     display:block;
     border:#DDD solid 1px;
     padding:2px 4px;
@@ -355,7 +448,6 @@ td.r{text-align:right}
     background-color:#FAFAFA;
 }
 .remind_action_tab#new_action{display:none;margin-top:6px}
-.remind_action_tab#new_action .tdAbout{line-height:32px}
 .remind_action_tab #comment{width:240px; height:40px}
 
 

@@ -38,6 +38,9 @@ switch(@$_POST['op']) {
         xcache_unset('vkmobile_color_name');
         xcache_unset('vkmobile_device_place');
         xcache_unset('vkmobile_device_status');
+        xcache_unset('vkmobile_zayav_base_device'.WS_ID);
+        xcache_unset('vkmobile_zayav_base_vendor'.WS_ID);
+        xcache_unset('vkmobile_zayav_base_model'.WS_ID);
         jsonSuccess();
         break;
 
@@ -178,11 +181,15 @@ switch(@$_POST['op']) {
     case 'client_sel':
         if(!preg_match(REGEXP_WORDFIND, win1251($_POST['val'])))
             $_POST['val'] = '';
+        if(!preg_match(REGEXP_NUMERIC, $_POST['client_id']))
+            $_POST['client_id'] = 0;
         $val = win1251($_POST['val']);
+        $client_id = intval($_POST['client_id']);
         $sql = "SELECT *
                 FROM `client`
                 WHERE `ws_id`=".WS_ID.
-                    (!empty($val) ? " AND (`fio` LIKE '%".$val."%' OR `telefon` LIKE '%".$val."%')" : '')."
+                    (!empty($val) ? " AND (`fio` LIKE '%".$val."%' OR `telefon` LIKE '%".$val."%')" : '').
+                    ($client_id > 0 ? " AND `id`<=".$client_id : '')."
                 ORDER BY `id` DESC
                 LIMIT 50";
         $q = query($sql);
@@ -237,6 +244,47 @@ switch(@$_POST['op']) {
             jsonError();
         $send = get_client_list(intval($_POST['page']), clientFilter($_POST));
         $send['spisok'] = utf8($send['spisok']);
+        jsonSuccess($send);
+        break;
+    case 'client_edit':
+        if(!preg_match(REGEXP_NUMERIC, $_POST['client_id']) || $_POST['client_id'] == 0)
+            jsonError();
+        if(!preg_match(REGEXP_BOOL, $_POST['join']))
+            jsonError();
+        if(!preg_match(REGEXP_NUMERIC, $_POST['client2']))
+            jsonError();
+        $client_id = intval($_POST['client_id']);
+        $fio = win1251(htmlspecialchars(trim($_POST['fio'])));
+        $telefon = win1251(htmlspecialchars(trim($_POST['telefon'])));
+        $join = intval($_POST['join']);
+        $client2 = intval($_POST['client2']);
+        if(empty($fio))
+            jsonError();
+        if($join && $client2 == 0)
+            jsonError();
+        if($join && $client_id == $client2)
+            jsonError();
+        query("UPDATE `client` SET `fio`='".$fio."',`telefon`='".$telefon."' WHERE `id`=".$client_id);
+        if($join) {
+            query("UPDATE `accrual`    SET `client_id`=".$client_id." WHERE `client_id`=".$client2);
+            query("UPDATE `money`      SET `client_id`=".$client_id." WHERE `client_id`=".$client2);
+            query("UPDATE `vk_comment` SET `table_id`=".$client_id."  WHERE `table_name`='client' AND `table_id`=".$client2);
+            query("UPDATE `zayavki`    SET `client_id`=".$client_id." WHERE `client_id`=".$client2);
+            query("UPDATE `zp_move`    SET `client_id`=".$client_id." WHERE `client_id`=".$client2);
+            query("UPDATE `zp_zakaz`   SET `client_id`=".$client_id." WHERE `client_id`=".$client2);
+            query("DELETE FROM `client` WHERE `id`=".$client2);
+            setClientBalans($client_id);
+        }
+        history_insert(array(
+            'type' => $join ? 11 : 10,
+            'client_id' => $client_id
+        ));
+        jsonSuccess();
+        break;
+    case 'client_zayav_next':
+        if(!preg_match(REGEXP_NUMERIC, $_POST['page']))
+            jsonError();
+        $send['html'] = utf8(show_zayav_spisok(get_zayav_list(intval($_POST['page']), zayavfilter($_POST))));
         jsonSuccess($send);
         break;
 
@@ -326,6 +374,9 @@ switch(@$_POST['op']) {
                 )";
         query($sql);
         $insert_id = mysql_insert_id();
+        xcache_unset('vkmobile_zayav_base_device'.WS_ID);
+        xcache_unset('vkmobile_zayav_base_vendor'.WS_ID);
+        xcache_unset('vkmobile_zayav_base_model'.WS_ID);
 
         if($comm) {
             $sql = "INSERT INTO `vk_comment` (
@@ -430,6 +481,10 @@ switch(@$_POST['op']) {
                 WHERE `id`=".$zayav_id;
         query($sql);
 
+        xcache_unset('vkmobile_zayav_base_device'.WS_ID);
+        xcache_unset('vkmobile_zayav_base_vendor'.WS_ID);
+        xcache_unset('vkmobile_zayav_base_model'.WS_ID);
+
         if($zayav['client_id'] != $client_id) {
             $sql = "UPDATE `accrual`
                     SET `client_id`=".$client_id."
@@ -489,6 +544,10 @@ switch(@$_POST['op']) {
 
         $sql = "DELETE FROM `vk_comment` WHERE `table_name`='zayav' AND `table_id`=".$zayav_id;
         query($sql);
+
+        xcache_unset('vkmobile_zayav_base_device'.WS_ID);
+        xcache_unset('vkmobile_zayav_base_vendor'.WS_ID);
+        xcache_unset('vkmobile_zayav_base_model'.WS_ID);
 
         history_insert(array(
             'type' => 2,

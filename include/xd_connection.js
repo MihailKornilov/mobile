@@ -75,7 +75,7 @@ function applyMethod(strData, self) {
 // XDM object
 w.fastXDM = {
   _id: 0,
-  helperUrl: 'http://userapi.com/js/api/xdmHelper.js',
+  helperUrl: ((location.protocol === 'https:') ? 'https:' : 'http:') + '//vk.com/js/api/xdmHelper.js',
 
   Server: function(methods, filter) {
     this.methods = methods || {};
@@ -268,11 +268,15 @@ if (w.postMessage) {
 if (typeof(VK) == 'undefined') VK = {};
 
 VK._Rpc = null;
+VK._v = false;
 VK._callbacks = {};
 VK._initQueue = [];
 VK._inited = false;
 
-VK.init = function(success, failure) {
+VK.init = function(success, failure, ver) {
+  if (ver) {
+    VK._v = ver;
+  }
   if (!VK._inited) {
   	VK._inited = true;
     if (!parent) failure();
@@ -306,7 +310,7 @@ VK.initXDConn = function() {
          ApiCall: {}
       },
       local: {
-        runCallback: function (args) {
+        runCallback: function(args) {
           var eventName;
           eventName = args.shift();
           if (VK.isFunc(VK._callbacks[eventName])) VK._callbacks[eventName].apply(VK,args);
@@ -318,15 +322,13 @@ VK.initXDConn = function() {
     VK.fxdm = true;
     VK._Rpc = new fastXDM.Client({
       onInit: function() {
-        //try {
           while (VK._initQueue.length > 0) {
             var func = VK._initQueue.pop();
             if (VK.isFunc(func)) func();
           }
-        //} catch(e) {}
         window.vk_onConnectionInit();
       },
-      runCallback: function (args) {
+      runCallback: function(args) {
         var eventName;
         eventName = args.shift();
         if (VK.isFunc(VK._callbacks[eventName])) VK._callbacks[eventName].apply(VK,args);
@@ -393,7 +395,7 @@ VK.removeCallback = function(eventName) {
   if (VK._callbacks[eventName]) delete VK._callbacks[eventName];
 };
 
-VK.isFunc = function (obj) {
+VK.isFunc = function(obj) {
   return Object.prototype.toString.call(obj) === "[object Function]";
 };
 
@@ -422,7 +424,15 @@ VK.api = function() {
   var args = Array.prototype.slice.call(arguments);
   var callback;
   if (VK._Rpc != null) {
-    if (VK.isFunc(args[args.length-1])) callback = args.pop();
+    if (VK.isFunc(args[args.length-1])) {
+      callback = args.pop();
+    }
+    if (!args[1]) {
+      args[1] = {};
+    }
+    if (!args[1]['v'] && VK._v) {
+      args[1]['v'] = VK._v;
+    }
     VK._Rpc.ApiCall(args,callback);
   } else {
     VK._initQueue.push(function() {VK.api.apply(VK, args);});
@@ -455,10 +465,28 @@ VK.showPortlet = function(opts) {
   VK.callMethod('showPortlet', opts)
 }
 
+if (VK._protocol !== 'https:') {
+  VK._protocol = ((location.protocol === 'https:') ? 'https:' : 'http:');
+}
+if (VK._protocol !== 'https:') {
+  VK.callMethod('getLocationProtocol', function(protocol) {
+    if (protocol === 'https:') {
+      VK._protocol = 'https:';
+    }
+  });
+}
+(function(){
+  try {
+    var scripts = document.getElementsByTagName('script');
+    var script = scripts[scripts.length - 1];
+    VK._base_domain = script.src.match(/^https?:\/\/((?:\w+\.)*vk.com)/)[1];
+  } catch (e) {}
+})();
+
 if (!VK.Widgets) {
   VK.Widgets = (function() {
     var obj = {};
-    var widgetlist = ['Comments', 'CommentsBrowse', 'Auth', 'Group', 'Donate', 'Like', 'Poll', 'Recommended'];
+    var widgetlist = ['Comments', 'CommentsBrowse', 'Auth', 'Group', 'Donate', 'Like', 'Poll', 'Recommended', 'Subscribe', 'Ads'];
     VK.xdConnectionCallbacks = [];
     var i = widgetlist.length;
     while (i--) (function(f) {
@@ -472,9 +500,10 @@ if (!VK.Widgets) {
 
         if (!VK._openApiAttached) {
           VK.callMethod('_getAppInfo', function(data) {
+            var baseDomain = ((VK._base_domain && VK._base_domain.match(/^(\w+\.)*vk.com$/)) ? VK._base_domain : 'vk.com');
             VK._apiId = data[0];
             VK._browserHash = data[1];
-            VK.addScript('http://userapi.com/js/api/openapi.js?47');
+            VK.addScript(VK._protocol + '//' + baseDomain + '/js/api/openapi.js?89');
           });
           VK._openApiAttached = true;
         }

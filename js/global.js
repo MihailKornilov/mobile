@@ -29,9 +29,9 @@ var REGEXP_NUMERIC = /^\d+$/,
     modelImageGet = function() {
         var send = {
                 op:'model_img_get',
-                model_id:$("#dev_model").val()
+                model_id:$('#dev_model').val()
             },
-            dev = $("#device_image");
+            dev = $('#device_image');
         dev.html('');
         if(send.model_id > 0) {
             dev.addClass('busy');
@@ -51,7 +51,7 @@ var REGEXP_NUMERIC = /^\d+$/,
             '</TABLE>',
             dialog = vkDialog({
                 width:340,
-                head:"Добавление нoвого клиента",
+                head:'Добавление нoвого клиента',
                 content:html,
                 submit:submit
             });
@@ -59,8 +59,8 @@ var REGEXP_NUMERIC = /^\d+$/,
         function submit() {
             var send = {
                 op:'client_add',
-                fio:$("#fio").val(),
-                telefon:$("#telefon").val()
+                fio:$('#fio').val(),
+                telefon:$('#telefon').val()
             };
             if(!send.fio) {
                 dialog.bottom.vkHint({
@@ -117,6 +117,7 @@ var REGEXP_NUMERIC = /^\d+$/,
                 find:$.trim($('#find input').val()),
                 sort:$('#sort').val(),
                 desc:$('#desc').val(),
+                category:$('#category').val(),
                 status:$('#status .sel').attr('val'),
                 device:$('#dev_device').val(),
                 vendor:$('#dev_vendor').val(),
@@ -129,6 +130,7 @@ var REGEXP_NUMERIC = /^\d+$/,
         if(v.desc != 0) loc += '.desc=' + v.desc;
         if(v.find) loc += '.find=' + escape(v.find);
         else {
+            if(v.category > 0) loc += '.category=' + v.category;
             if(v.status > 0) loc += '.status=' + v.status;
             if(v.device > 0) loc += '.device=' + v.device;
             if(v.vendor > 0) loc += '.vendor=' + v.vendor;
@@ -142,6 +144,7 @@ var REGEXP_NUMERIC = /^\d+$/,
         setCookie('zayav_find', escape(v.find));
         setCookie('zayav_sort', v.sort);
         setCookie('zayav_desc', v.desc);
+        setCookie('zayav_category', v.category);
         setCookie('zayav_status', v.status);
         setCookie('zayav_device', v.device);
         setCookie('zayav_vendor', v.vendor);
@@ -268,11 +271,11 @@ var REGEXP_NUMERIC = /^\d+$/,
     },
     rashodCategoryAdd = function(spisok, obj) {
         var html = '<TABLE>' +
-            '<TR><TD class="tdAbout">Наименование:<TD><INPUT type="text" id="rashod_category_name">' +
+            '<TR><TD class="label">Наименование:<TD><INPUT type="text" id="rashod_category_name">' +
             '</TABLE>',
             dialog = vkDialog({
                 width:320,
-                head:"Новая категория для расходов",
+                head:'Новая категория для расходов',
                 content:html,
                 submit:submit
             }),
@@ -300,7 +303,7 @@ var REGEXP_NUMERIC = /^\d+$/,
                 $.post(AJAX_MAIN, send, function (res) {
                     if(res.success) {
                         dialog.close();
-                        vkMsgOk("Новая категория внесена.");
+                        vkMsgOk('Новая категория внесена.');
                         obj.add({uid:res.id,title:send.name}).val(res.id);
                     }
                 }, 'json');
@@ -339,7 +342,7 @@ $(document)
     .on('click', '#cache_clear', function() {
         $.post(AJAX_MAIN, {'op':'cache_clear'}, function(res) {
             if(res.success)
-                vkMsgOk("Кэш очищен.");
+                vkMsgOk('Кэш очищен.');
         }, 'json');
     })
     .on('mouseenter', '.zayav_link', function(e) {
@@ -359,9 +362,11 @@ $(document)
     });
 
 $.fn.clientSel = function(obj) {
+    var t = $(this);
     obj = $.extend({
         width:240,
-        add:null
+        add:null,
+        client_id:t.val() || 0
     }, obj);
 
     if(obj.add)
@@ -369,10 +374,9 @@ $.fn.clientSel = function(obj) {
             clientAdd(function(res) {
                 sel.add(res).val(res.uid)
             });
-        }
+        };
 
-    var t = $(this),
-        sel = t.vkSel({
+    var sel = t.vkSel({
             width:obj.width,
             title0:'Начните вводить данные клиента...',
             spisok:[],
@@ -387,11 +391,17 @@ $.fn.clientSel = function(obj) {
     function clientsGet(val) {
         var send = {
             op:'client_sel',
-            val:val ? val : ''
+            val:val ? val : '',
+            client_id:obj.client_id
         };
         $.post(AJAX_MAIN, send, function(res) {
-            if(res.success)
+            if(res.success) {
                 sel.spisok(res.spisok);
+                if(obj.client_id > 0) {
+                    sel.val(obj.client_id)
+                    obj.client_id = 0;
+                }
+            }
         }, 'json');
     }
     return t;
@@ -419,7 +429,101 @@ $(document)
     });
 
 $(document)
-    .on('click', '#zayav_next', function() {
+    .on('click', '#clientInfo .cedit', function() {
+        var html = '<TABLE cellspacing="10" class="client_edit">' +
+            '<TR><TD class="label">Имя:<TD><INPUT TYPE="text" id="fio" value="' + $('.fio').html() + '">' +
+            '<TR><TD class="label">Телефон:<TD><INPUT TYPE="text" id="telefon" value="' + $('.telefon').html() + '">' +
+            '<TR><TD class="label">Объединить:<TD><INPUT TYPE="hidden" id="join">' +
+            '<TR class=tr_join><TD class="label">с клиентом:<TD><INPUT TYPE="hidden" id="client2">' +
+            '</TABLE>';
+        var dialog = vkDialog({
+            head:'Редактирование данных клиента',
+            top:60,
+            width:400,
+            content:html,
+            butSubmit:'Сохранить',
+            submit:submit
+        });
+        $('#fio,#telefon').keyEnter(submit);
+        $('#join').vkCheck();
+        $('#join_check')
+            .click(function() {
+                $('.tr_join').toggle();
+            })
+            .vkHint({
+                msg:'<B>Объединение клиентов.</B><br />' +
+                    'Необходимо, если один клиент был внесён в базу дважды.<br /><br />' +
+                    'Текущий клиент будет получателем.<br />Выберите второго клиента.<br />' +
+                    'Все заявки, начисления и платежи станут общими после<br />объединения.<br /><br />' +
+                    'Внимание, операция необратима!',
+                width:330,
+                top:-162,
+                left:-79,
+                indent:80
+            });
+        $('#client2').clientSel();
+        function submit() {
+            var msg,
+                send = {
+                    op:'client_edit',
+                    client_id:G.clientInfo.id,
+                    fio:$.trim($('#fio').val()),
+                    telefon:$.trim($('#telefon').val()),
+                    join:$('#join').val(),
+                    client2:$('#client2').val()
+                };
+            if(send.join == 0)
+                send.client2 = 0;
+            if(!send.fio) {
+                msg = 'Не указано имя клиента.';
+                $("#fio").focus();
+            } else if(send.join == 1 && send.client2 == 0)
+                msg = 'Укажите второго клиента.';
+            else {
+                dialog.process();
+                $.post(AJAX_MAIN, send, function(res) {
+                    dialog.abort();
+                    if(res.success) {
+                        $('.fio').html(send.fio);
+                        $('.telefon').html(send.telefon);
+                        if(send.client2 > 0)
+                            document.location.reload();
+                        dialog.close();
+                        vkMsgOk('Данные клиента изменены.');
+                    }
+                }, 'json');
+            }
+            if(msg)
+                dialog.bottom.vkHint({
+                    msg:'<SPAN class=red>' + msg + '</SPAN>',
+                    top:-47,
+                    left:100,
+                    indent:50,
+                    show:1,
+                    remove:1
+                });
+        }
+    })
+    .on('click', '#clientInfo .ajaxNext', function() {
+        if($(this).hasClass('busy'))
+            return;
+        var next = $(this),
+            send = {
+                op:'client_zayav_next',
+                client:G.clientInfo.id,
+                page:$(this).attr('val')
+            };
+        next.addClass('busy');
+        $.post(AJAX_MAIN, send, function (res) {
+            if(res.success)
+                next.after(res.html).remove();
+            else
+                next.removeClass('busy');
+        }, 'json');
+    });
+
+$(document)
+    .on('click', '#zayav .ajaxNext', function() {
         if($(this).hasClass('busy'))
             return;
         var next = $(this);
@@ -427,17 +531,16 @@ $(document)
         zayavFilterValues.page = $(this).attr('val');
         next.addClass('busy');
         $.post(AJAX_MAIN, zayavFilterValues, function (res) {
-            if(res.success) {
-                next.remove();
-                $('#zayav #spisok').append(res.html);
-            } else
+            if(res.success)
+                next.after(res.html).remove();
+            else
                 next.removeClass('busy');
         }, 'json');
     })
-    .on('click', '#zayav .unit', function() {
+    .on('click', '.zayav_unit', function() {
         document.location.href = URL + '&p=zayav&d=info&id=' + $(this).attr('val');
     })
-    .on('mouseenter', '#zayav .unit', function() {
+    .on('mouseenter', '.zayav_unit', function() {
         var t = $(this),
             msg = t.find('.msg').val();
         if(msg)
@@ -446,7 +549,7 @@ $(document)
                 msg:msg,
                 ugol:'left',
                 top:6,
-                left:484,
+                left:t.width() + 43,
                 show:1,
                 indent:5,
                 delayShow:500
@@ -457,8 +560,9 @@ $(document)
         $('#find').topSearchClear();
         $('#sort').myRadioSet(1);
         $('#desc').val(0).next().attr('class', 'check0');
+        G.vkSel_category.val(0);
         $('#status').infoLinkSet(0);
-        $("#dev").device({
+        $('#dev').device({
             width:155,
             type_no:1,
             device_ids:G.device_ids,
@@ -476,7 +580,7 @@ $(document)
         var html = '<TABLE cellspacing=8 class="zayavEdit">' +
             '<TR><TD class="label r">Клиент:        <TD><INPUT type="hidden" id="client_id" value=' + G.zayavInfo.client_id + '>' +
             '<TR><TD class="label r">Категория:     <TD><INPUT type="hidden" id="category" value=' + G.zayavInfo.category + '>' +
-            '<TR><TD class="label r top">Устройство:    <TD><TABLE cellspacing="0"><TD id="dev"><TD id="device_image"></TABLE>' +
+            '<TR><TD class="label r top">Устройство:<TD><TABLE cellspacing="0"><TD id="dev"><TD id="device_image"></TABLE>' +
             '<TR><TD class="label r">IMEI:          <TD><INPUT type=text id="imei" maxlength="20" value="' + G.zayavInfo.imei + '">' +
             '<TR><TD class="label r">Серийный номер:<TD><INPUT type=text id="serial" maxlength="30" value="' + G.zayavInfo.serial + '">' +
             '<TR><TD class="label r">Цвет:          <TD><INPUT type="hidden" id=color_id value=' + G.zayavInfo.color_id + '>' +
@@ -484,22 +588,22 @@ $(document)
             dialog = vkDialog({
                 width:410,
                 top:30,
-                head:"Заявка №" + G.zayavInfo.nomer + " - Редактирование",
+                head:'Заявка №' + G.zayavInfo.nomer + ' - Редактирование',
                 content:html,
                 butSubmit:'Сохранить',
                 submit:submit
             });
         $('#client_id').clientSel();
-        $('#vkSel_client_id').vkHint({
+        /*$('#vkSel_client_id').vkHint({
             msg:'Если изменяется клиент, то начисления и платежи заявки применяются на нового клиента.',
             width:200,
             top:-83,
             left:-2,
             delayShow:1500,
             correct:0
-        });
+        });*/
         $('#category').vkSel({width:150, spisok:G.category_spisok});
-        $("#dev").device({
+        $('#dev').device({
             width:190,
             device_id:G.zayavInfo.device,
             vendor_id:G.zayavInfo.vendor,
@@ -509,21 +613,21 @@ $(document)
             func:modelImageGet
         });
         modelImageGet();
-        $("#color_id").vkSel({width:170, title0:'Цвет не указан', spisok:G.color_spisok});
+        $('#color_id').vkSel({width:170, title0:'Цвет не указан', spisok:G.color_spisok});
 
         function submit() {
             var msg,
                 send = {
                     op:'zayav_edit',
                     zayav_id:G.zayavInfo.id,
-                    client_id:$("#client_id").val(),
-                    category:$("#category").val(),
-                    device:$("#dev_device").val(),
-                    vendor:$("#dev_vendor").val(),
-                    model:$("#dev_model").val(),
-                    imei: $.trim($("#imei").val()),
-                    serial:$.trim($("#serial").val()),
-                    color_id:$("#color_id").val()
+                    client_id:$('#client_id').val(),
+                    category:$('#category').val(),
+                    device:$('#dev_device').val(),
+                    vendor:$('#dev_vendor').val(),
+                    model:$('#dev_model').val(),
+                    imei: $.trim($('#imei').val()),
+                    serial:$.trim($('#serial').val()),
+                    color_id:$('#color_id').val()
                 };
             if(send.deivce == 0) msg = 'Не выбрано устройство';
             else if(send.client_id == 0) msg = 'Не выбран клиент';
@@ -551,7 +655,7 @@ $(document)
             top:110,
             width:250,
             head:'Удаление заявки',
-            content:"<CENTER>Подтвердите удаление заявки.</CENTER>",
+            content:'<CENTER>Подтвердите удаление заявки.</CENTER>',
             butSubmit:'Удалить',
             submit:function() {
                 var send = {
@@ -587,7 +691,7 @@ $(document)
         day.vkCalendar();
         priv.vkCheck();
         $('.remind_add_tab #private_check').vkHint({
-            msg:'Задание сможете<BR>видеть только Вы.',
+            msg:'Задание сможете<br />видеть только Вы.',
             top:-71,
             left:-11,
             indent:'left',
@@ -656,22 +760,22 @@ $(document)
         $('#acc_remind_check').click(function(id) {
             $('.zayav_accrual_add.remind').toggle();
         });
-        $("#reminder_day").vkCalendar();
+        $('#reminder_day').vkCalendar();
 
         function submit() {
             var msg,
                 send = {
                     op:'zayav_accrual_add',
                     zayav_id:G.zayavInfo.id,
-                    sum:$("#sum").val(),
-                    prim:$("#prim").val(),
-                    status:$("#acc_status").val(),
-                    dev_status:$("#acc_dev_status").val(),
-                    remind:$("#acc_remind").val(),
-                    remind_txt:$("#reminder_txt").val(),
-                    remind_day:$("#reminder_day").val()
+                    sum:$('#sum').val(),
+                    prim:$('#prim').val(),
+                    status:$('#acc_status').val(),
+                    dev_status:$('#acc_dev_status').val(),
+                    remind:$('#acc_remind').val(),
+                    remind_txt:$('#reminder_txt').val(),
+                    remind_day:$('#reminder_day').val()
                 };
-            if(!REGEXP_NUMERIC.test(send.sum)) { msg = 'Некорректно указана сумма.'; $('#summa').focus(); }
+            if(!REGEXP_NUMERIC.test(send.sum)) { msg = 'Некорректно указана сумма.'; $('#sum').focus(); }
             else if(send.remind == 1 && !send.remind_txt) { msg = 'Не указан текст напоминания'; $('#reminder_txt').focus(); }
             else {
                 dialog.process();
@@ -679,7 +783,7 @@ $(document)
                     dialog.abort();
                     if(res.success) {
                         dialog.close();
-                        vkMsgOk("Начисление успешно произведено!");
+                        vkMsgOk('Начисление успешно произведено!');
                         $('.tabSpisok.mon').append(res.html);
                         zayavInfoMoneyUpdate();
                         if(res.status) {
@@ -731,24 +835,24 @@ $(document)
             ]
         });
         $('#kassa_radio').vkHint({
-            msg:"Если это наличный платёж<BR>и деньги остаются в мастерской,<BR>укажите 'да'.",
+            msg:'Если это наличный платёж<br />и деньги остаются в мастерской,<br />укажите "да".',
             top:-83,
             left:-60,
             delayShow:1000
         });
-        $("#dev_place").linkMenu({spisok:G.device_place_spisok});
+        $('#dev_place').linkMenu({spisok:G.device_place_spisok});
         function submit() {
             var msg,
                 send = {
                     op:'zayav_oplata_add',
                     zayav_id:G.zayavInfo.id,
-                    sum:$("#sum").val(),
-                    kassa:$("#kassa").val(),
-                    prim:$.trim($("#prim").val()),
-                    dev_place:$("#dev_place").val()
+                    sum:$('#sum').val(),
+                    kassa:$('#kassa').val(),
+                    prim:$.trim($('#prim').val()),
+                    dev_place:$('#dev_place').val()
                 };
-            if(!REGEXP_NUMERIC.test(send.sum)) { msg = "Некорректно указана сумма."; $("#sum").focus(); }
-            else if(send.kassa == -1) msg = "Укажите, деньги поступили в кассу или нет.";
+            if(!REGEXP_NUMERIC.test(send.sum)) { msg = 'Некорректно указана сумма.'; $('#sum').focus(); }
+            else if(send.kassa == -1) msg = 'Укажите, деньги поступили в кассу или нет.';
             else {
                 dialog.process();
                 $.post(AJAX_MAIN, send, function (res) {
@@ -764,7 +868,7 @@ $(document)
 
             if(msg)
                 dialog.bottom.vkHint({
-                    msg:"<SPAN class=red>" + msg + "</SPAN>",
+                    msg:'<SPAN class="red">' + msg + '</SPAN>',
                     remove:1,
                     indent:40,
                     show:1,
@@ -780,7 +884,7 @@ $(document)
         };
         var tr = $(this).parent().parent();
         tr.html('<td colspan="4" class="deleting">Удаление... <img src=/img/upload.gif></td>');
-        $.post(AJAX_MAIN, send, function (res) {
+        $.post(AJAX_MAIN, send, function(res) {
             if(res.success) {
                 tr.find('.deleting').html('Начисление удалено. <a class="acc_rest" val="' + send.id + '">Восстановить</a>');
                 zayavInfoMoneyUpdate();
@@ -840,12 +944,12 @@ $(document)
             dialog = vkDialog({
                 width:400,
                 top:30,
-                head:"Изменение статуса заявки и состояния устройства",
+                head:'Изменение статуса заявки и состояния устройства',
                 content:html,
                 butSubmit:'Сохранить',
                 submit:submit
             });
-        $("#z_status").vkRadio({
+        $('#z_status').vkRadio({
             spisok:G.status_spisok,
             top:5,
             light:1
@@ -865,10 +969,10 @@ $(document)
             }
         });
         if(G.zayavInfo.dev_place == 0)
-            $("#place_other_div").css('display', 'inline');
+            $('#place_other_div').css('display', 'inline');
 
         G.device_status_spisok.splice(0, 1);
-        $("#dev_status").vkRadio({
+        $('#dev_status').vkRadio({
             spisok:G.device_status_spisok,
             top:5,
             light:1
@@ -879,16 +983,16 @@ $(document)
                 send = {
                 op:'zayav_status_place',
                 zayav_id:G.zayavInfo.id,
-                zayav_status:$("#z_status").val(),
-                dev_status:$("#dev_status").val(),
-                dev_place:$("#dev_place").val(),
-                place_other:$("#place_other").val()
+                zayav_status:$('#z_status').val(),
+                dev_status:$('#dev_status').val(),
+                dev_place:$('#dev_place').val(),
+                place_other:$('#place_other').val()
             };
             if(send.dev_place > 0)
                 send.place_other = '';
             if(send.dev_place == 0 && send.place_other == '') {
                 msg = 'Не указано местонахождение устройства';
-                $("#place_other").focus();
+                $('#place_other').focus();
             } else if(send.dev_status == 0)
                 msg = 'Не указано состояние устройства';
             else {
@@ -896,7 +1000,7 @@ $(document)
                 $.post(AJAX_MAIN, send, function(res) {
                     if(res.success) {
                         dialog.close();
-                        vkMsgOk("Изменения сохранены.");
+                        vkMsgOk('Изменения сохранены.');
                         $('#status')
                             .html(res.z_status.name)
                             .css('background-color', '#' + res.z_status.color);
@@ -957,7 +1061,7 @@ $(document)
             dialog = vkDialog({
                 top:40,
                 width:400,
-                head:"Внесение новой запчасти",
+                head:'Внесение новой запчасти',
                 content:html,
                 submit:submit
             });
@@ -976,9 +1080,9 @@ $(document)
             var send = {
                 op:'zayav_zp_add',
                 zayav_id: G.zayavInfo.id,
-                name_id:$("#name_id").val(),
-                name_dop:$("#name_dop").val(),
-                color_id:$("#color_id").val()
+                name_id:$('#name_id').val(),
+                name_dop:$('#name_dop').val(),
+                color_id:$('#color_id').val()
             };
             if(send.name_id == 0)
                 dialog.bottom.vkHint({msg:'<SPAN class="red">Не указано наименование запчасти.</SPAN>',
@@ -992,7 +1096,7 @@ $(document)
                 dialog.process();
                 $.post(AJAX_MAIN, send, function(res) {
                     if(res.success) {
-                        vkMsgOk("Внесение запчасти произведено.");
+                        vkMsgOk('Внесение запчасти произведено.');
                         dialog.close();
                         $('#zpSpisok').append(res.html);
                     }
@@ -1010,7 +1114,7 @@ $(document)
         dialog = vkDialog({
             top:150,
             width:400,
-            head:"Установка запчасти",
+            head:'Установка запчасти',
             content:html,
             butSubmit:'Установить',
             submit:submit
@@ -1104,7 +1208,7 @@ $(document)
         $('#tab_content #data').vkCalendar();
         $('#tab_content #private').vkCheck();
         $('#tab_content #private_check').vkHint({
-            msg:'Задание сможете<BR>видеть только Вы.',
+            msg:'Задание сможете<br />видеть только Вы.',
             top:-71,
             left:-11,
             indent:'left',
@@ -1137,8 +1241,8 @@ $(document)
                                 html = '<TABLE cellpadding=0 cellspacing=5><TR>' +
                                     '<TD><A href="index.php?' + G.values + '&my_page=remZayavkiInfo&id=' + res.id + '"><IMG src="' + res.img + '" height=40></A>' +
                                     '<TD><A href="index.php?' + G.values + '&my_page=remZayavkiInfo&id=' + res.id + '">' +
-                                        G.category_ass[res.category] + '<BR>' +
-                                        G.device_ass[res.device_id] + '<BR>' +
+                                        G.category_ass[res.category] + '<br />' +
+                                        G.device_ass[res.device_id] + '<br />' +
                                         G.vendor_ass[res.vendor_id] + ' ' +
                                         G.model_ass[res.model_id] + '</A>' +
                                     '</TABLE>';
@@ -1215,9 +1319,9 @@ $(document)
         var dialog = vkDialog({
                 top:30,
                 width:400,
-                head:"Новое действие для напоминания",
+                head:'Новое действие для напоминания',
                 content:'<center><img src="/img/upload.gif"></center>',
-                butSubmit:"Применить",
+                butSubmit:'Применить',
                 submit:submit
             }),
             curDay,
@@ -1229,7 +1333,7 @@ $(document)
         $.post(AJAX_MAIN, send, function(res) {
             curDay = res.day;
             var html = '<TABLE cellspacing="6" class="remind_action_tab">' +
-                '<TR><TD class="label">' + (res.client ? "Клиент:" : '') + (res.zayav ? "Заявка:" : '') +
+                '<TR><TD class="label">' + (res.client ? 'Клиент:' : '') + (res.zayav ? 'Заявка:' : '') +
                     '<TD>' + (res.client ? res.client : '') + (res.zayav ? res.zayav : '') +
                 '<TR><TD class="label">Задание:<TD><B>' + res.txt + '</B>' +
                 '<TR><TD class="label">Внёс:<TD>' + res.viewer + ', ' + res.dtime +
@@ -1242,7 +1346,7 @@ $(document)
                 '</TABLE>';
             dialog.content.html(html);
 
-            $("#action").vkRadio({
+            $('#action').vkRadio({
                 top:5,
                 spisok:[
                     {uid:1, title:'Перенести на другую дату'},
@@ -1250,50 +1354,50 @@ $(document)
                     {uid:3, title:'Отменить'}
                 ],
                 func:function (id) {
-                    $("#new_action").show();
-                    $("#comment").val('');
-                    $("#new_about").html('');
-                    $("#new_title").html('');
+                    $('#new_action').show();
+                    $('#comment').val('');
+                    $('#new_about').html('');
+                    $('#new_title').html('');
                     if (id == 1) {
-                        $("#new_about").html("Дата:");
-                        $("#new_title").html('<INPUT type="hidden" id=data>');
-                        $("#new_comm").html("Причина:");
-                        $("#new_action #data").vkCalendar();
+                        $('#new_about').html('Дата:');
+                        $('#new_title').html('<INPUT type="hidden" id="data">');
+                        $('#new_comm').html('Причина:');
+                        $('#new_action #data').vkCalendar();
                     }
-                    if(id == 2) $("#new_comm").html("Комментарий:");
-                    if(id == 3) $("#new_comm").html("Причина:");
+                    if(id == 2) $('#new_comm').html('Комментарий:');
+                    if(id == 3) $('#new_comm').html('Причина:');
                 }
             });
 
-            $("#comment").autosize();
+            $('#comment').autosize();
         }, 'json');
 
         function submit () {
             var send = {
                 op:'report_remind_edit',
                 id:id,
-                action:parseInt($("#action").val()),
+                action:parseInt($('#action').val()),
                 day:curDay,
                 status:1,
-                history:$("#comment").val(),
+                history:$('#comment').val(),
                 from_zayav:G.zayavInfo ? G.zayavInfo.id : 0
             };
             switch(send.action) {
-                case 1: send.day = $("#data").val(); break;
+                case 1: send.day = $('#data').val(); break;
                 case 2: send.status = 2; break; // выполнено
                 case 3: send.status = 0;        // отменено
             }
 
             var msg;
-            if(!send.action) msg = "Укажите новое действие.";
-            else if((send.action == 1 || send.action == 3) && !send.history) msg = "Не указана причина.";
-            else if(send.action == 1 && send.day == curDay) msg = "Выберите новую дату.";
+            if(!send.action) msg = 'Укажите новое действие.';
+            else if((send.action == 1 || send.action == 3) && !send.history) msg = 'Не указана причина.';
+            else if(send.action == 1 && send.day == curDay) msg = 'Выберите новую дату.';
             else {
                 dialog.process();
                 $.post(AJAX_MAIN, send, function(res) {
                     if(res.success) {
                         dialog.close();
-                        vkMsgOk("Задание отредактировано.");
+                        vkMsgOk('Задание отредактировано.');
                         $('#remind_spisok').html(res.html);
                     }
                 }, 'json');
@@ -1333,20 +1437,20 @@ $(document)
         }, 'json');
     })
     .on('click', '#report_prihod .summa_add', function() {
-        var html = '<TABLE cellpadding="0" cellspacing="8" id="report_prihod_add">' +
-            '<TR><TD class=tdAbout>Содержание:<TD><INPUT type="text" id="about" maxlength="100">' +
-            '<TR><TD class=tdAbout>Сумма:<TD><INPUT type="text" id="sum" class="money" maxlength="8"> руб.' +
-            '<TR><TD class=tdAbout>Деньги поступили в кассу?:<TD><INPUT type="hidden" id="kassa" value="-1">' +
+        var html = '<TABLE cellspacing="8" id="report_prihod_add">' +
+            '<TR><TD class="label">Содержание:<TD><INPUT type="text" id="about" maxlength="100">' +
+            '<TR><TD class="label">Сумма:<TD><INPUT type="text" id="sum" class="money" maxlength="8"> руб.' +
+            '<TR><TD class="label">Деньги поступили в кассу?:<TD><INPUT type="hidden" id="kassa" value="-1">' +
             '</TABLE>';
         var dialog = vkDialog({
                 width:380,
-                head:"Внесение поступления средств",
+                head:'Внесение поступления средств',
                 content:html,
                 submit:submit
             }),
             kassa = $('#report_prihod_add #kassa'),
-            sum = $("#report_prihod_add #sum"),
-            about = $("#report_prihod_add #about");
+            sum = $('#report_prihod_add #sum'),
+            about = $('#report_prihod_add #about');
 
         kassa.vkRadio({
             display:'inline-block',
@@ -1363,15 +1467,15 @@ $(document)
                 kassa:kassa.val()
             };
             var msg;
-            if(!send.about) { msg = "Не указано содержание."; about.focus(); }
-            else if(!REGEXP_NUMERIC.test(send.sum)) { msg = "Некорректно указана сумма."; sum.focus(); }
-            else if(send.kassa == -1) msg = "Укажите, деньги поступили в кассу?";
+            if(!send.about) { msg = 'Не указано содержание.'; about.focus(); }
+            else if(!REGEXP_NUMERIC.test(send.sum)) { msg = 'Некорректно указана сумма.'; sum.focus(); }
+            else if(send.kassa == -1) msg = 'Укажите, деньги поступили в кассу?';
             else {
                 dialog.process();
                 $.post(AJAX_MAIN, send, function (res) {
                     if(res.success) {
                         dialog.close();
-                        vkMsgOk("Новое поступление внесено.");
+                        vkMsgOk('Новое поступление внесено.');
                         reportPrihodLoad();
                     }
                 }, 'json');
@@ -1398,7 +1502,7 @@ $(document)
         tr.html('<td colspan="4" class="deleting">Удаление... <img src=/img/upload.gif></td>');
         $.post(AJAX_MAIN, send, function (res) {
             if(res.success) {
-                vkMsgOk("Удаление произведено.");
+                vkMsgOk('Удаление произведено.');
                 if($('#prihodShowDel').val() == 1)
                     tr.addClass('deleted')
                       .html(trSave)
@@ -1418,7 +1522,7 @@ $(document)
         tr.html('<td colspan="4" class="deleting">Восстановление... <img src=/img/upload.gif></td>');
         $.post(AJAX_MAIN, send, function (res) {
             if(res.success) {
-                vkMsgOk("Восстановление произведено.");
+                vkMsgOk('Восстановление произведено.');
                 tr.removeClass('deleted')
                   .html(trSave)
                   .find('.img_rest').attr('class', 'img_del').attr('title', 'Удалить платёж');
@@ -1447,24 +1551,24 @@ $(document)
     })
     .on('click', '#report_rashod #add', function() {
         var html = '<TABLE cellpadding="0" cellspacing="8" id="report_rashod_add">' +
-                '<TR><TD class=tdAbout>Категория:<TD><INPUT type="hidden" id="category" value="0">' +
-                '<TR><TD class=tdAbout>Описание:<TD><INPUT type="text" id="about" maxlength="100">' +
-                '<TR><TD class=tdAbout>Сотрудник:<TD><INPUT type="hidden" id="worker" value="0">' +
-                '<TR><TD class=tdAbout>Сумма:<TD><INPUT type="text" id="sum" class="money" maxlength="8"> руб.' +
-                '<TR><TD class=tdAbout>Деньги взяты из кассы?:<TD><INPUT type="hidden" id="kassa" value="-1">' +
+                '<TR><TD class="label">Категория:<TD><INPUT type="hidden" id="category" value="0">' +
+                '<TR><TD class="label">Описание:<TD><INPUT type="text" id="about" maxlength="100">' +
+                '<TR><TD class="label">Сотрудник:<TD><INPUT type="hidden" id="worker" value="0">' +
+                '<TR><TD class="label">Сумма:<TD><INPUT type="text" id="sum" class="money" maxlength="8"> руб.' +
+                '<TR><TD class="label">Деньги взяты из кассы?:<TD><INPUT type="hidden" id="kassa" value="-1">' +
             '</TABLE>',
             dialog = vkDialog({
                 top:60,
                 width:380,
-                head:"Внесение расхода",
+                head:'Внесение расхода',
                 content:html,
                 submit:submit
             }),
-            category = $("#report_rashod_add #category"),
-            worker = $("#report_rashod_add #worker"),
+            category = $('#report_rashod_add #category'),
+            worker = $('#report_rashod_add #worker'),
             kassa = $('#report_rashod_add #kassa'),
-            sum = $("#report_rashod_add #sum"),
-            about = $("#report_rashod_add #about");
+            sum = $('#report_rashod_add #sum'),
+            about = $('#report_rashod_add #about');
 
         category.vkSel({
             width:180,
@@ -1495,15 +1599,15 @@ $(document)
                 kassa:kassa.val()
             };
             var msg;
-            if(!send.about && send.category == 0) { msg = "Выберите категорию или укажите описание."; about.focus(); }
-            else if(!REGEXP_NUMERIC.test(send.sum)) { msg = "Некорректно указана сумма."; sum.focus(); }
-            else if(send.kassa == -1) msg = "Укажите, деньги взяты из кассы или нет.";
+            if(!send.about && send.category == 0) { msg = 'Выберите категорию или укажите описание.'; about.focus(); }
+            else if(!REGEXP_NUMERIC.test(send.sum)) { msg = 'Некорректно указана сумма.'; sum.focus(); }
+            else if(send.kassa == -1) msg = 'Укажите, деньги взяты из кассы или нет.';
             else {
                 dialog.process();
                 $.post(AJAX_MAIN, send, function (res) {
                     if(res.success) {
                         dialog.close();
-                        vkMsgOk("Новый расход внесён.");
+                        vkMsgOk('Новый расход внесён.');
                         reportRashodLoad();
                     }
                 }, 'json');
@@ -1529,7 +1633,7 @@ $(document)
         tr.html('<td colspan="4" class="deleting">Удаление... <img src=/img/upload.gif></td>');
         $.post(AJAX_MAIN, send, function (res) {
             if(res.success) {
-                vkMsgOk("Удаление произведено.");
+                vkMsgOk('Удаление произведено.');
                 tr.remove();
             }
         }, 'json');
@@ -1538,7 +1642,7 @@ $(document)
         var dialog = vkDialog({
                 top:60,
                 width:380,
-                head:"Редактирование расхода",
+                head:'Редактирование расхода',
                 content:'<center><img src="/img/upload.gif"></center>',
                 butSubmit:'Сохранить',
                 submit:submit
@@ -1555,18 +1659,18 @@ $(document)
             };
         $.post(AJAX_MAIN, send, function(res) {
             var html = '<TABLE cellpadding="0" cellspacing="8" id="report_rashod_add">' +
-                '<TR><TD class=tdAbout>Категория:<TD><INPUT type="hidden" id="category" value="' + res.category + '">' +
-                '<TR><TD class=tdAbout>Описание:<TD><INPUT type="text" id="about" maxlength="150" value="' + res.about + '">' +
-                '<TR><TD class=tdAbout>Сотрудник:<TD><INPUT type="hidden" id="worker" value="' + res.worker_id + '">' +
-                '<TR><TD class=tdAbout>Сумма:<TD><INPUT type="text" id="sum" class="money" maxlength="8" value="' + res.sum + '"> руб.' +
-                '<TR><TD class=tdAbout>Деньги взяты из кассы?:<TD><INPUT type="hidden" id="kassa" value="' + res.kassa + '">' +
+                '<TR><TD class="label">Категория:<TD><INPUT type="hidden" id="category" value="' + res.category + '">' +
+                '<TR><TD class="label">Описание:<TD><INPUT type="text" id="about" maxlength="150" value="' + res.about + '">' +
+                '<TR><TD class="label">Сотрудник:<TD><INPUT type="hidden" id="worker" value="' + res.worker_id + '">' +
+                '<TR><TD class="label">Сумма:<TD><INPUT type="text" id="sum" class="money" maxlength="8" value="' + res.sum + '"> руб.' +
+                '<TR><TD class="label">Деньги взяты из кассы?:<TD><INPUT type="hidden" id="kassa" value="' + res.kassa + '">' +
                 '</TABLE>';
             dialog.content.html(html);
-            category = $("#report_rashod_add #category");
-            worker = $("#report_rashod_add #worker");
+            category = $('#report_rashod_add #category');
+            worker = $('#report_rashod_add #worker');
             kassa = $('#report_rashod_add #kassa');
-            sum = $("#report_rashod_add #sum");
-            about = $("#report_rashod_add #about");
+            sum = $('#report_rashod_add #sum');
+            about = $('#report_rashod_add #about');
 
             category.vkSel({
                 width:180,
@@ -1599,15 +1703,15 @@ $(document)
                 kassa:kassa.val()
             };
             var msg;
-            if(!send.about && send.category == 0) { msg = "Выберите категорию или укажите описание."; about.focus(); }
-            else if(!REGEXP_NUMERIC.test(send.sum)) { msg = "Некорректно указана сумма."; sum.focus(); }
-            else if(send.kassa == -1) msg = "Укажите, деньги взяты из кассы или нет.";
+            if(!send.about && send.category == 0) { msg = 'Выберите категорию или укажите описание.'; about.focus(); }
+            else if(!REGEXP_NUMERIC.test(send.sum)) { msg = 'Некорректно указана сумма.'; sum.focus(); }
+            else if(send.kassa == -1) msg = 'Укажите, деньги взяты из кассы или нет.';
             else {
                 dialog.process();
                 $.post(AJAX_MAIN, send, function (res) {
                     if(res.success) {
                         dialog.close();
-                        vkMsgOk("Расход изменён.");
+                        vkMsgOk('Расход изменён.');
                         reportRashodLoad();
                     }
                 }, 'json');
@@ -1681,12 +1785,12 @@ $(document)
                 '<TR><TD class="label r">Комментарий:<TD><INPUT type="text" id="kassa_down_txt" />' +
                 '</TABLE>',
             dialog = vkDialog({
-                head:"Внесение денег в кассу",
+                head:'Внесение денег в кассу',
                 content:html,
                 submit:submit
             }),
-            sum = $("#kassa_down_sum"),
-            txt = $("#kassa_down_txt");
+            sum = $('#kassa_down_sum'),
+            txt = $('#kassa_down_txt');
 
         sum.focus();
 
@@ -1698,14 +1802,14 @@ $(document)
                 down:0
             };
             var msg;
-            if(!REGEXP_NUMERIC.test(send.sum)) { msg = "Некорректно указана сумма."; sum.focus(); }
-            else if(!send.txt) { msg = "Не указан комментарий."; txt.focus(); }
+            if(!REGEXP_NUMERIC.test(send.sum)) { msg = 'Некорректно указана сумма.'; sum.focus(); }
+            else if(!send.txt) { msg = 'Не указан комментарий.'; txt.focus(); }
             else {
                 dialog.process();
                 $.post(AJAX_MAIN, send, function (res) {
                     if(res.success) {
                         dialog.close();
-                        vkMsgOk("Новая запись внесёна.");
+                        vkMsgOk('Новая запись внесёна.');
                         kassa.html(kassa_sum += parseInt(send.sum));
                         reportKassaLoad();
                     }
@@ -1732,12 +1836,12 @@ $(document)
                 '<TR><TD class="label r">Комментарий:<TD><INPUT type="text" id="kassa_down_txt" />' +
                 '</TABLE>',
             dialog = vkDialog({
-                head:"Взятие денег из кассы",
+                head:'Взятие денег из кассы',
                 content:html,
                 submit:submit
             }),
-            sum = $("#kassa_down_sum"),
-            txt = $("#kassa_down_txt");
+            sum = $('#kassa_down_sum'),
+            txt = $('#kassa_down_txt');
 
         sum.focus();
 
@@ -1749,15 +1853,15 @@ $(document)
                 down:1
             };
             var msg;
-            if(!REGEXP_NUMERIC.test(send.sum)) { msg = "Некорректно указана сумма."; sum.focus(); }
-            else if(send.sum > kassa_sum) { msg = "Введённая сумма превышает сумму в кассе."; sum.focus(); }
-            else if(!send.txt) { msg = "Не указан комментарий."; txt.focus(); }
+            if(!REGEXP_NUMERIC.test(send.sum)) { msg = 'Некорректно указана сумма.'; sum.focus(); }
+            else if(send.sum > kassa_sum) { msg = 'Введённая сумма превышает сумму в кассе.'; sum.focus(); }
+            else if(!send.txt) { msg = 'Не указан комментарий.'; txt.focus(); }
             else {
                 dialog.process();
                 $.post(AJAX_MAIN, send, function (res) {
                     if(res.success) {
                         dialog.close();
-                        vkMsgOk("Новая запись внесёна.");
+                        vkMsgOk('Новая запись внесёна.');
                         kassa.html(kassa_sum -= send.sum);
                         reportKassaLoad();
                     }
@@ -1785,7 +1889,7 @@ $(document)
         tr.html('<td colspan="4" class="deleting">Удаление... <img src=/img/upload.gif></td>');
         $.post(AJAX_MAIN, send, function(res) {
             if(res.success) {
-                vkMsgOk("Удаление произведено.");
+                vkMsgOk('Удаление произведено.');
                 if($('#kassaShowDel').val() == 1)
                     tr.addClass('deleted')
                         .html(trSave)
@@ -1806,7 +1910,7 @@ $(document)
         tr.html('<td colspan="4" class="deleting">Восстановление... <img src=/img/upload.gif></td>');
         $.post(AJAX_MAIN, send, function(res) {
             if(res.success) {
-                vkMsgOk("Восстановление произведено.");
+                vkMsgOk('Восстановление произведено.');
                 tr.removeClass('deleted')
                     .html(trSave)
                     .find('.img_rest').attr('class', 'img_del').attr('title', 'Удалить платёж');
@@ -1820,15 +1924,15 @@ $(document).ready(function() {
     frameHidden.onresize = frameBodyHeightSet;
 
     if($('#client').length > 0) {
-        $("#find").topSearch({
+        $('#find').topSearch({
             width:585,
             focus:1,
             txt:'Начните вводить данные клиента',
             func:clientSpisokLoad
         });
         $('#buttonCreate').vkHint({
-            msg:'<B>Внесение нового клиента в базу.</B><BR><BR>' +
-                'После внесения Вы попадаете на страницу с информацией о клиенте для дальнейших действий.<BR><BR>' +
+            msg:'<B>Внесение нового клиента в базу.</B><br /><br />' +
+                'После внесения Вы попадаете на страницу с информацией о клиенте для дальнейших действий.<br /><br />' +
                 'Клиентов также можно добавлять при <A href="' + URL + '&p=zayav&d=add&back=client">создании новой заявки</A>.',
             ugol:'right',
             width:215,
@@ -1852,7 +1956,7 @@ $(document).ready(function() {
     }
 
     if($('#zayav').length > 0) {
-        $("#find")
+        $('#find')
             .topSearch({
                 width:134,
                 focus:1,
@@ -1869,7 +1973,7 @@ $(document).ready(function() {
                 delayShow:800,
                 correct:0
             });
-        $("#sort").myRadio({
+        $('#sort').myRadio({
             spisok:[
                 {uid:1,title:'По дате добавления'},
                 {uid:2,title:'По обновлению статуса'}
@@ -1877,12 +1981,18 @@ $(document).ready(function() {
             bottom:5,
             func:zayavSpisokLoad
         });
+        G.vkSel_category = $('#category').vkSel({
+            width:155,
+            title0:'Любая категория',
+            spisok:G.category_spisok,
+            func:zayavSpisokLoad
+        }).o;
         G.status_spisok.unshift({uid:0, title:'Любой статус'});
-        $("#status").infoLink({
+        $('#status').infoLink({
             spisok:G.status_spisok,
             func:zayavSpisokLoad
         }).infoLinkSet(G.zayav_status);
-        $("#dev").device({
+        $('#dev').device({
             width:155,
             type_no:1,
             device_id:G.zayav_device,
@@ -1899,7 +2009,7 @@ $(document).ready(function() {
             G.device_place_spisok.push({uid:encodeURI(sp), title:sp});
         }
         G.device_place_spisok.push({uid:-1, title:'не известно', content:'<B>не известно</B>'});
-        G.vkSel_device_place = $("#device_place").vkSel({
+        G.vkSel_device_place = $('#device_place').vkSel({
             width:155,
             title0:'Любое местонахождение',
             spisok:G.device_place_spisok,
@@ -1908,7 +2018,7 @@ $(document).ready(function() {
         // Состояние устройства
         G.device_status_spisok.splice(0, 1);
         G.device_status_spisok.push({uid:-1, title:'не известно', content:'<B>не известно</B>'});
-        G.vkSel_device_status = $("#devstatus").vkSel({
+        G.vkSel_device_status = $('#devstatus').vkSel({
             width:155,
             title0:'Любое состояние',
             spisok:G.device_status_spisok,
@@ -1917,8 +2027,8 @@ $(document).ready(function() {
         zayavFilterValuesGet();
     }
     if($('#zayavAdd').length > 0) {
-        $("#client_id").clientSel({add:1});
-        $("#category").vkSel({width:150, spisok:G.category_spisok});
+        $('#client_id').clientSel({add:1});
+        $('#category').vkSel({width:150, spisok:G.category_spisok});
         // создание нового списка устройств, которые выбраны для этой мастерской
         G.device_spisok = [];
         for(var n = 0; n < G.ws.devs.length; n++) {
@@ -1950,7 +2060,7 @@ $(document).ready(function() {
                     arr.push(G.fault_ass[uid]);
                 }
             }
-            $("#comm").val(arr.join(', '));
+            $('#comm').val(arr.join(', '));
         });
         $('#comm').autosize();
         $('#reminder_check').click(function(id) {
@@ -1961,24 +2071,24 @@ $(document).ready(function() {
         $('.vkCancel').click(function() {
             location.href = URL + '&p=' + $(this).attr('val');
         });
-        $(".vkButton").click(function () {
+        $('.vkButton').click(function () {
             var send = {
                 op:'zayav_add',
-                client:$("#client_id").val(),
-                category:$("#category").val(),
-                device:$("#dev_device").val(),
-                vendor:$("#dev_vendor").val(),
-                model:$("#dev_model").val(),
-                place:$("#place").val(),
-                place_other:$("#place_other").val(),
-                imei:$("#imei").val(),
-                serial:$("#serial").val(),
-                color:$("#color_id").val(),
-                comm:$("#comm").val(),
-                reminder:$("#reminder").val()
+                client:$('#client_id').val(),
+                category:$('#category').val(),
+                device:$('#dev_device').val(),
+                vendor:$('#dev_vendor').val(),
+                model:$('#dev_model').val(),
+                place:$('#place').val(),
+                place_other:$('#place_other').val(),
+                imei:$('#imei').val(),
+                serial:$('#serial').val(),
+                color:$('#color_id').val(),
+                comm:$('#comm').val(),
+                reminder:$('#reminder').val()
             };
-            send.reminder_txt = send.reminder == 1 ? $("#reminder_txt").val() : '';
-            send.reminder_day = send.reminder == 1 ? $("#reminder_day").val() : '';
+            send.reminder_txt = send.reminder == 1 ? $('#reminder_txt').val() : '';
+            send.reminder_day = send.reminder == 1 ? $('#reminder_day').val() : '';
 
             var msg = '';
             if(send.client == 0) msg = 'Не выбран клиент';

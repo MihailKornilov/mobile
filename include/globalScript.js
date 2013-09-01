@@ -979,7 +979,7 @@ $.fn.topSearchSet = function (VAL) {
 
 
 
-$.fn.vkCheck = function (obj) {
+$.fn.vkCheck = function() {
     var t = $(this),
         id = t.attr('id'),
         val = t.val() ? 1 : 0;

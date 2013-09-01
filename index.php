@@ -110,6 +110,13 @@ if(isset($_GET['p'])) {
     switch(@$_GET['p']) {
         case 'client':
             switch(@$_GET['d']) {
+                case 'info':
+                    if(!preg_match(REGEXP_NUMERIC, $_GET['id'])) {
+                        $html .= 'Страницы не существует';
+                        break;
+                    }
+                    $html .= client_info(intval($_GET['id']));
+                    break;
                 default:
                     $html .= client_list(get_client_list());
             }
@@ -143,6 +150,7 @@ if(isset($_GET['p'])) {
                         'find' => isset($values['find']) ? unescape($values['find']) : '',
                         'sort' => isset($values['sort']) ? intval($values['sort']) : 1,
                         'desc' => isset($values['desc']) && intval($values['desc']) == 1 ? 1 : 0,
+                        'category' => isset($values['category']) ? intval($values['category']) : 0,
                         'status' => isset($values['status']) ? intval($values['status']) : 0,
                         'device' => isset($values['device']) ? intval($values['device']) : 0,
                         'vendor' => isset($values['vendor']) ? intval($values['vendor']) : 0,
