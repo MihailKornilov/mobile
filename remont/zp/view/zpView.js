@@ -110,7 +110,7 @@ G.zp.view = function (sp) {
         compatPrint();
         movePrint();
     }
-
+/*
     $("#foto_upload").fotoUpload({
         owner:'zp' + sp.id,
         max_x:200,
@@ -121,9 +121,10 @@ G.zp.view = function (sp) {
             fotoPrint();
         }
     });
-
+*/
     // вывод фотографий запчасти
     function fotoPrint() {
+        return;
         if (sp.foto.length > 0) {
             $("#foto").fotoSet({foto:sp.foto[0], max_x:200, click:function () { G.fotoView({spisok:sp.foto}); }});
         }
@@ -523,7 +524,7 @@ G.zp.view = function (sp) {
                 summa:res.summa,
                 dtime:res.dtime,
                 zayav_id:0,
-                client_id:0,
+                client_id:0
             });
             movePrint();
         });
@@ -633,7 +634,7 @@ G.zp.view = function (sp) {
         $("#kassa").vkRadio({
             display:'inline-block',
             right:15,
-            spisok:[{uid:1, title:'да'},{uid:0, title:'нет'}],
+            spisok:[{uid:1, title:'да'},{uid:0, title:'нет'}]
         });
         $("#kassa_radio").vkHint({msg:"Если это наличный платёж<BR>и деньги остаются в мастерской,<BR>укажите 'да'.", top:-83, left:-60});
 

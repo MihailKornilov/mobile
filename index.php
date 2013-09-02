@@ -79,9 +79,6 @@ switch($_GET['my_page']) {
   case 'saZp':          include('superadmin/zp/setupZp_tpl.php');break;
   case 'saColor':       include('superadmin/color/setupColor_tpl.php');break;  // цвета для устройств и запчастей
 
-  case 'remClient':     include('remont/client/spisok/client_tpl.php');break;          // список клиентов
-  case 'remClientInfo': include('remont/client/info/clientInfo_tpl.php');break;     // информация о клиенте
-
   case 'remZp':         include('remont/zp/zp_tpl.php');break; // запчасти
     
   case 'remDevice':     include('remont/device/device_tpl.php');break;

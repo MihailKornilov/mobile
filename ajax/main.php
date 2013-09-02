@@ -281,10 +281,16 @@ switch(@$_POST['op']) {
         ));
         jsonSuccess();
         break;
+    case 'client_zayav_load':
+        $data = get_zayav_list(1, zayavfilter($_POST), 10);
+        $send['all'] = utf8(show_zayav_count($data['all'], 0));
+        $send['html'] = utf8(show_zayav_spisok($data));
+        jsonSuccess($send);
+        break;
     case 'client_zayav_next':
         if(!preg_match(REGEXP_NUMERIC, $_POST['page']))
             jsonError();
-        $send['html'] = utf8(show_zayav_spisok(get_zayav_list(intval($_POST['page']), zayavfilter($_POST))));
+        $send['html'] = utf8(show_zayav_spisok(get_zayav_list(intval($_POST['page']), zayavfilter($_POST), 10)));
         jsonSuccess($send);
         break;
 
@@ -406,7 +412,7 @@ switch(@$_POST['op']) {
                 ".$insert_id.",
                 '".$reminder_txt."',
                 '".$reminder_day."',
-                '".FullDataTime(curTime())." ".viewerName()." добавил напоминание для заявки.',
+                '".FullDataTime(curTime())." "._viewerName()." добавил напоминание для заявки.',
                 ".VIEWER_ID."
             )";
             query($sql);
@@ -586,7 +592,7 @@ switch(@$_POST['op']) {
                 WHERE `id`=".$zayav_id;
         query($sql);
 
-        $send['z_status'] = zayav_status($zayav_status);
+        $send['z_status'] = _zayavStatus($zayav_status);
         $send['z_status']['name'] = utf8($send['z_status']['name']);
         $send['z_status']['dtime'] = utf8(FullDataTime($zayav['zayav_status_dtime'], 1));
         $send['dev_place'] = utf8($dev_place > 0 ? _devPlace($dev_place) : $place_other);
@@ -707,7 +713,7 @@ switch(@$_POST['op']) {
                 'zayav_id' => $zayav_id,
                 'value' => $status
             ));
-            $send['status'] = zayav_status($status);
+            $send['status'] = _zayavStatus($status);
             $send['status']['name'] = utf8($send['status']['name']);
             $send['status']['dtime'] = utf8(FullDataTime(curTime()));
         }
@@ -726,11 +732,11 @@ switch(@$_POST['op']) {
                 ".$zayav_id.",
                 '".$remind_txt."',
                 '".$remind_day."',
-                '".FullDataTime(curTime())." ".viewerName()." добавил напоминание при внесении начисления.',
+                '".FullDataTime(curTime())." "._viewerName()." добавил напоминание при внесении начисления.',
                 ".VIEWER_ID."
             )";
             query($sql);
-            $send['remind'] = utf8(report_remind_spisok(1, array('zayav'=>$zayav_id)));
+            $send['remind'] = utf8(report_remind_spisok(remind_data(1, array('zayav'=>$zayav_id))));
         }
         jsonSuccess($send);
         break;
@@ -1060,7 +1066,8 @@ switch(@$_POST['op']) {
             'status' => intval($_POST['status']),
             'private' => intval($_POST['private'])
         );
-        $send['html'] = utf8(report_remind_spisok(1, $filter));
+        $data = remind_data(1, $filter);
+        $send['html'] = utf8(!empty($data) ? report_remind_spisok($data) : '<div class="_empty">Заданий не найдено.</div>');
         jsonSuccess($send);
         break;
     case 'report_remind_add':
@@ -1094,7 +1101,7 @@ switch(@$_POST['op']) {
                     '".$txt."',
                     '".$_POST['day']."',
                     ".$private.",
-                    '".FullDataTime(strftime("%Y-%m-%d %H:%M:%S", time()))." ".viewerName()." создал задание.',
+                    '".FullDataTime(curTime())." "._viewerName()." создал задание.',
                     ".VIEWER_ID."
                 )";
         query($sql);
@@ -1104,16 +1111,18 @@ switch(@$_POST['op']) {
             'zayav_id' => $zayav_id
         ));
         $filter = array();
-        if(isset($_POST['from_zayav']) && $zayav_id > 0)
+        if(isset($_POST['from_zayav']) && $zayav_id)
             $filter['zayav'] = $zayav_id;
-        $send['html'] = utf8(report_remind_spisok(1, $filter));
+        if(isset($_POST['from_client']) && $client_id)
+            $filter['client'] = $client_id;
+        $send['html'] = utf8(report_remind_spisok(remind_data(1, $filter)));
         xcache_unset('vkmobile_remind_active');
         jsonSuccess($send);
         break;
     case 'report_remind_next':
         if(!preg_match(REGEXP_NUMERIC, $_POST['page']))
             jsonError();
-        $send['html'] = utf8(report_remind_spisok(intval($_POST['page'])));
+        $send['html'] = utf8(report_remind_spisok(remind_data(intval($_POST['page']))));
         jsonSuccess($send);
         break;
     case 'report_remind_get':
@@ -1129,13 +1138,13 @@ switch(@$_POST['op']) {
                 FROM `reminder` WHERE `id`=".intval($_POST['id'])." AND `status`=1";
         if(!$r = mysql_fetch_assoc(query($sql)))
             jsonError();
-        $r['viewer'] = utf8(viewerName(true, $r['viewer_id_add']));
+        $r['viewer'] = utf8(_viewerName($r['viewer_id_add'], true));
         if($r['client_id'] > 0) {
-            $c = getClientsLink(array($r['client_id']));
+            $c = _clientsLink(array($r['client_id']));
             $r['client'] = utf8($c[$r['client_id']]);
         }
         if($r['zayav_id'] > 0)
-            $r['zayav'] = utf8(getZayavNomerLink($r['zayav_id'], 1));
+            $r['zayav'] = utf8(_zayavNomerLink($r['zayav_id'], 1));
         $r['txt'] = utf8($r['txt']);
         $r['dtime'] = utf8(FullDataTime($r['dtime']));
         unset($r['client_id']);
@@ -1154,6 +1163,8 @@ switch(@$_POST['op']) {
             jsonError();
         if(!preg_match(REGEXP_NUMERIC, $_POST['from_zayav']))
             jsonError();
+        if(!preg_match(REGEXP_NUMERIC, $_POST['from_client']))
+            jsonError();
         $history = win1251(htmlspecialchars(trim($_POST['history'])));
         $action = '';
         switch($_POST['action']) {
@@ -1164,21 +1175,27 @@ switch(@$_POST['op']) {
         $sql = "UPDATE `reminder`
                 SET `day`='".$_POST['day']."',
                     `status`=".$_POST['status'].",
-                    `history`=CONCAT(`history`,'<BR>".FullDataTime(strftime("%Y-%m-%d %H:%M:%S", time()))." ".viewerName().$action."')
+                    `history`=CONCAT(`history`,'<BR>".FullDataTime(curTime())." "._viewerName().$action."')
                 WHERE `id`=".intval($_POST['id']);
         query($sql);
         $filter = array();
-        if($_POST['from_zayav'] > 0)
+        if($_POST['from_zayav'])
             $filter['zayav'] = $_POST['from_zayav'];
-        $send['html'] = utf8(report_remind_spisok(1, $filter));
+        if($_POST['from_client'])
+            $filter['client'] = $_POST['from_client'];
+        $data = remind_data(1, $filter);
+        $html = report_remind_spisok($data);
+        if(empty($data) && !isset($filter['zayav']))
+            $html = '<div class="_empty">Заданий нет.</div>';
+        $send['html'] = utf8($html);
         xcache_unset('vkmobile_remind_active');
         jsonSuccess($send);
         break;
     case 'report_prihod_load':
         if(!preg_match(REGEXP_DATE, $_POST['day_begin']))
-            $_POST['day_begin'] = currentMonday();
+            $_POST['day_begin'] = _curMonday();
         if(!preg_match(REGEXP_DATE, $_POST['day_end']))
-            $_POST['day_end'] = currentSunday();
+            $_POST['day_end'] = _curSunday();
         if(!preg_match(REGEXP_BOOL, $_POST['del_show']) || !ADMIN)
             $_POST['del_show'] = 0;
         $send['html'] = utf8(report_prihod_spisok($_POST['day_begin'], $_POST['day_end'], intval($_POST['del_show'])));
@@ -1501,7 +1518,7 @@ switch(@$_POST['op']) {
         $html = '<table><tr>'.
                     '<td><div class="image">'._zayavImg($id).'</div></td>'.
                     '<td class="inf">'.
-                        zayavCategory($zayav['category']).'<br />'.
+                        _zayavCategory($zayav['category']).'<br />'.
                         _deviceName($zayav['base_device_id']).'<br />'.
                         '<b>'._vendorName($zayav['base_vendor_id'])._modelName($zayav['base_model_id']).'</b><br /><br />'.
                         '<span style="color:#000">Клиент:</span> '.$client.

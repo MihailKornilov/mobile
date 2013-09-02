@@ -50,6 +50,39 @@ td.r{text-align:right}
 
 
 
+/* таблица списком */
+._spisok{border-collapse:collapse}
+._spisok th{
+    border:#dee4e8 solid 1px;
+    background-color:#f5f7f8;
+    font-weight:bold;
+    text-align:center;
+    padding:6px;
+}
+._spisok td{border:#dee4e8 solid 1px;padding:4px 6px}
+._money{width:100%}
+._money .sum{width:45px;text-align:right;font-weight:bold}
+._money .dtime{
+    width:70px;
+    white-space:nowrap;
+    text-align:right;
+    font-size:10px;
+    color:#777;
+    cursor:help
+}
+
+
+/* Сообщение пустого запроса */
+._empty{
+    font:12px Tahoma;
+    color:#777;
+    background:#f7f7f7;
+    border:#ccc solid 1px;
+    text-align:center;
+    padding:130px 10px;
+    margin:10px;
+}
+
 
 /* Просмотр изображений */
 .fotoView{cursor:pointer}
@@ -175,57 +208,24 @@ td.r{text-align:right}
 /* Информация о клиенте */
 #clientInfo .left{padding-bottom:10px}
 #clientInfo .fio{color:#31618C;font-size:12px;font-weight:bold;margin:15px 5px 5px 30px}
-#clientInfo .inf{margin:0 10px 0 28px;height:80px}
-#clientInfo .inf .label{width:60px}
+#clientInfo .cinf{margin:0 10px 0 28px;height:90px}
+#clientInfo .cinf .label{width:60px}
 #clientInfo .dtime{font-size:10px;color:#999;text-align:right}
 .client_edit{margin-left:5px}
 .client_edit .label{width:80px;text-align:right}
 .client_edit #fio,.client_edit #telefon{width:228px}
 .client_edit .tr_join{display:none}
 #clientInfo #dopLinks{border-top:#dae1e8 solid 1px}
+#clientInfo #dopLinks.busy{background-position:right center}
+#clientInfo #zayav_result{color:#777;text-align:center}
 #clientInfo .zayav_unit{margin-right:10px}
 #clientInfo .ajaxNext{margin:5px 10px 0 10px}
-/*
-#clientInfo #result {
-    float:right;
-    color:#666;
-    margin-top:4px;
-}
-#clientInfo #right {
-    background-color:#F7F7F7;
-    border-left:#DAE1E8 solid 1px;
-    width:148px;
-    height:500px;
-    vertical-align:top;
-    padding:8px 8px 150px 8px;
-}
-#clientInfo #cLinks { height:133px; }
-#clientInfo #zResult {
-    float:right;
-    color:#555;
-}
-#clientInfo #zResult IMG { margin-top:3px; }
-#clientInfo .tabSpisok { margin:8px; }
-#clientInfo .tabSpisok .dtime {
-    font-size:10px;
-    text-align:right;
-    color:#555;
-    width:95px;
-}
-#clientInfo #client_comment {
-    display:none;
-    padding:0 0 10px 8px;
-}
-#clientInfo #client_money {
-    display:none;
-    margin-top:15px;
-}
-#clientInfo #client_money .tabSpisok { width:440px; }
-
-
-
-#clientInfo #zayav .unit{margin-right:8px}/* todo удалить */
-
+#clientInfo #money_spisok{margin:10px;display:none}
+#clientInfo #money_spisok ._empty{margin:0;padding:60px 10px}
+#clientInfo #comments,#clientInfo #remind_spisok{margin:0 10px;display:none}
+#clientInfo #remind_spisok ._empty{margin:10px 0;padding:60px 10px}
+#clientInfo .right{width:145px}
+#clientInfo .rightLinks{margin-bottom:30px}
 
 
 
@@ -259,7 +259,7 @@ td.r{text-align:right}
 #zayav .ajaxNext{margin:6px 5px 0 8px}
 #zayav #find{margin-top:15px}
 #zayav #desc_check{margin-top:10px}
-#zayav .findEmpty{margin-right:6px;}
+#zayav ._empty{margin-right:6px;}
 
 
 
@@ -306,20 +306,10 @@ td.r{text-align:right}
 #zayavInfo #remind_spisok{margin:8px 0}
 #zayavInfo .headBlue.mon{margin-top:10px}
 #zayavInfo .headBlue.mon em{float:right;margin:0 5px;}
-#zayavInfo .tabSpisok.mon{width:100%}
-#zayavInfo .mon .sum{width:45px;text-align:right;font-weight:bold;cursor:help}
-#zayavInfo .op{color:#090}
-#zayavInfo .acc{color:#07a}
-#zayavInfo .mon .dtime{
-    width:70px;
-    white-space:nowrap;
-    text-align:right;
-    font-size:10px;
-    color:#777;
-    cursor:help
-}
-#zayavInfo .mon .del{width:20px;padding:0}
-#zayavInfo .mon .img_del{margin:0 0 -2px 4px}
+#zayavInfo .op{color:#090;cursor:help}
+#zayavInfo .acc{color:#07a;cursor:help}
+#zayavInfo ._money .del{width:20px;padding:0}
+#zayavInfo ._money .img_del{margin:0 0 -2px 4px}
 .zayav_accrual_add .label{width:140px;text-align:right}
 .zayav_accrual_add #prim,.zayav_accrual_add #reminder_txt { width:200px; }
 .zayav_accrual_add.remind{display:none;margin-top:-8px;}
@@ -351,7 +341,7 @@ td.r{text-align:right}
 #zayavInfo #zpSpisok .color{color:#777}
 #zayavInfo #zpSpisok .zakaz_ok{color:#933}
 #zayavInfo #zpSpisok .avai{float:right;color:#393;margin-left:4px}
-#zayavInfo #zpSpisok .findEmpty{margin:5px 0;padding:20px 10px;font-size:12px}
+#zayavInfo #zpSpisok ._empty{margin:5px 0;padding:20px 10px;font-size:12px}
 #zayavInfo #zpSpisok .unit:not(:hover) .image{display:none}
 #zayavInfo #zpSpisok .image{position:relative}
 #zayavInfo #zpSpisok .image div{
@@ -424,6 +414,8 @@ td.r{text-align:right}
 .remind_unit.grey .txt{background-color:#DDD}
 .remind_unit.grey .day{background-color:#F7F7F7}
 .remind_unit.grey em{color:#444}
+#report_remind .ajaxNext{margin-bottom:10px}
+#report_remind ._empty{margin:0}
 /* плюсик добавления напоминания */
 .rightLinks a:not(.sel) .report_remind_add{display:none}
 .report_remind_add{float:right;margin:1px 0}
@@ -434,7 +426,6 @@ td.r{text-align:right}
 .remind_add_tab #data{cursor:pointer;width:90px;text-align:right}
 .remind_add_tab #zayav_nomer{width:60px}
 .remind_add_tab #img{color:#666;margin-left:5px}
-#report_remind_next{margin:0 8px 8px 8px}
 /* Новое действие для напоминания */
 .remind_action_tab{margin:0 10px}
 .remind_action_tab .label{width:80px;text-align:right}
@@ -453,7 +444,7 @@ td.r{text-align:right}
 
 
 #report_prihod{padding:10px 15px 20px 15px}
-#report_prihod .tabSpisok{width:100%}
+#report_prihod ._spisok{width:100%}
 #report_prihod .sum{width:30px;text-align:right;white-space:nowrap}
 #report_prihod .dtime{width:70px;color:#666;font-size:10px;text-align:right;white-space:nowrap;cursor:help}
 #report_prihod .edit{padding:0;text-align:center;width:19px}
@@ -473,7 +464,7 @@ td.r{text-align:right}
 #report_rashod .headName{margin:10px 0}
 #report_rashod .headName a{float:right;color:#9fb7c9}
 #report_rashod .headName a:hover{color:#2B587A}
-#report_rashod .tabSpisok{width:100%;margin-top:5px}
+#report_rashod ._spisok{width:100%;margin-top:5px}
 #report_rashod .sum{width:30px;text-align:right;white-space:nowrap}
 #report_rashod .dtime{width:70px;color:#666;font-size:10px;text-align:right;white-space:nowrap;cursor:help}
 #report_rashod .edit{padding:0 0 0 4px;text-align:center;width:11px;white-space:nowrap}
@@ -509,7 +500,7 @@ td.r{text-align:right}
 #report_kassa .actions{float:right}
 #report_kassa #spisok{margin:0 10px 20px 10px}
 #report_kassa .all{margin:15px 0 4px 0}
-#report_kassa .tabSpisok{width:100%}
+#report_kassa ._spisok{width:100%}
 #report_kassa .sum{width:30px;text-align:right;white-space:nowrap}
 #report_kassa .dtime{width:70px;color:#666;font-size:10px;text-align:right;white-space:nowrap;cursor:help}
 #report_kassa .edit{padding:0 0 0 3px;text-align:center;width:11px;white-space:nowrap}

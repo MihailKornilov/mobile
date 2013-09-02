@@ -87,7 +87,7 @@ var REGEXP_NUMERIC = /^\d+$/,
             }
         }
     },
-    clientFilterValuesGet = function() {
+    clientFilter = function() {
         var v = {
             fast:$.trim($('#find input').val()),
             dolg:$('#dolg').val(),
@@ -97,7 +97,7 @@ var REGEXP_NUMERIC = /^\d+$/,
         return v;
     },
     clientSpisokLoad = function() {
-        var send = clientFilterValuesGet(),
+        var send = clientFilter(),
             result = $('.result');
         send.op = 'client_spisok_load';
         if(result.hasClass('busy'))
@@ -111,8 +111,26 @@ var REGEXP_NUMERIC = /^\d+$/,
             }
         }, 'json');
     },
-    zayavFilterValues,
-    zayavFilterValuesGet = function () {
+    clientZayavFilter = function() {
+        return {
+            client:G.clientInfo.id,
+            status:$('#zayav_status .sel').attr('val'),
+            device:$('#dev_device').val(),
+            vendor:$('#dev_vendor').val(),
+            model:$('#dev_model').val()
+        };
+    },
+    clientZayavSpisokLoad = function() {
+        var send = clientZayavFilter();
+        send.op = 'client_zayav_load';
+        $('#dopLinks').addClass('busy');
+        $.post(AJAX_MAIN, send, function (res) {
+            $('#dopLinks').removeClass('busy');
+            $('#zayav_result').html(res.all);
+            $('#zayav_spisok').html(res.html);
+        }, 'json');
+    },
+    zayavFilter = function () {
         var v = {
                 find:$.trim($('#find input').val()),
                 sort:$('#sort').val(),
@@ -139,7 +157,6 @@ var REGEXP_NUMERIC = /^\d+$/,
             if(v.devstatus > 0) loc += '.devstatus=' + v.devstatus;
         }
         VK.callMethod('setLocation', hashLoc + loc);
-        zayavFilterValues = v;
 
         setCookie('zayav_find', escape(v.find));
         setCookie('zayav_sort', v.sort);
@@ -152,10 +169,10 @@ var REGEXP_NUMERIC = /^\d+$/,
         setCookie('zayav_place', encodeURI(v.place));
         setCookie('zayav_devstatus', v.devstatus);
 
-        return zayavFilterValues;
+        return v;
     },
     zayavSpisokLoad = function() {
-        var send = zayavFilterValuesGet();
+        var send = zayavFilter();
         $('.condLost')[(send.find ? 'add' : 'remove') + 'Class']('hide');
         send.op = 'zayav_spisok_load';
 
@@ -415,7 +432,7 @@ $(document)
         if($(this).hasClass('busy'))
             return;
         var next = $(this),
-            send = clientFilterValuesGet();
+            send = clientFilter();
         send.op = 'client_next';
         send.page = next.attr('val');
         next.addClass('busy');
@@ -486,6 +503,7 @@ $(document)
                     if(res.success) {
                         $('.fio').html(send.fio);
                         $('.telefon').html(send.telefon);
+                        G.clientInfo.fio = send.fio;
                         if(send.client2 > 0)
                             document.location.reload();
                         dialog.close();
@@ -508,11 +526,9 @@ $(document)
         if($(this).hasClass('busy'))
             return;
         var next = $(this),
-            send = {
-                op:'client_zayav_next',
-                client:G.clientInfo.id,
-                page:$(this).attr('val')
-            };
+            send = clientZayavFilter();
+        send.op = 'client_zayav_next';
+        send.page = $(this).attr('val');
         next.addClass('busy');
         $.post(AJAX_MAIN, send, function (res) {
             if(res.success)
@@ -520,17 +536,79 @@ $(document)
             else
                 next.removeClass('busy');
         }, 'json');
-    });
+    })
+    .on('click', '#clientInfo .remind_add', function() {
+        var html = '<TABLE class="remind_add_tab" cellspacing="6">' +
+            '<TR><TD class="label">Клиент:<TD><b>' + G.clientInfo.fio + '</b>' +
+            '<TR><TD class="label top">Описание задания:<TD><TEXTAREA id="txt"></TEXTAREA>' +
+            '<TR><TD class="label">Крайний день выполнения:<TD><INPUT type="hidden" id="data">' +
+            '<TR><TD class="label">Личное:<TD><INPUT type="hidden" id="private">' +
+            '</TABLE>';
+        var dialog = vkDialog({
+                top:60,
+                width:480,
+                head:'Добавление нового задания',
+                content:html,
+                submit:submit
+            }),
+            txt = $('.remind_add_tab #txt'),
+            day = $('.remind_add_tab #data'),
+            priv = $('.remind_add_tab #private');
+        txt.autosize().focus();
+        day.vkCalendar();
+        priv.vkCheck();
+        $('.remind_add_tab #private_check').vkHint({
+            msg:'Задание сможете<br />видеть только Вы.',
+            top:-71,
+            left:-11,
+            indent:'left',
+            delayShow:1000
+        });
+
+        function submit() {
+            var send = {
+                op:'report_remind_add',
+                from_client:1,
+                client_id:G.clientInfo.id,
+                zayav_id:0,
+                txt:txt.val(),
+                day:day.val(),
+                private:priv.val()
+            };
+            if(!send.txt) {
+                dialog.bottom.vkHint({
+                    msg:'<SPAN class=red>Не указано содержание напоминания.</SPAN>',
+                    remove:1,
+                    indent:40,
+                    show:1,
+                    top:-48,
+                    left:150
+                });
+                txt.focus();
+            } else {
+                dialog.process();
+                $.post(AJAX_MAIN, send, function(res) {
+                    dialog.abort();
+                    if(res.success) {
+                        dialog.close();
+                        vkMsgOk('Новое задание успешно добавлено.');
+                        $('#remind_spisok').html(res.html);
+                    }
+                }, 'json');
+            }
+        }//submit()
+    })
 
 $(document)
     .on('click', '#zayav .ajaxNext', function() {
         if($(this).hasClass('busy'))
             return;
-        var next = $(this);
-        zayavFilterValues.op = 'zayav_next';
-        zayavFilterValues.page = $(this).attr('val');
+        var next = $(this),
+            send = zayavFilter();
+        send.op = 'zayav_next';
+        send.page = $(this).attr('val');
         next.addClass('busy');
-        $.post(AJAX_MAIN, zayavFilterValues, function (res) {
+        $.post(AJAX_MAIN, send, function (res) {
             if(res.success)
                 next.after(res.html).remove();
             else
@@ -548,7 +626,7 @@ $(document)
                 width:150,
                 msg:msg,
                 ugol:'left',
-                top:6,
+                top:10,
                 left:t.width() + 43,
                 show:1,
                 indent:5,
@@ -665,7 +743,7 @@ $(document)
                 dialog.process();
                 $.post(AJAX_MAIN, send, function(res) {
                     if(res.success)
-                        location.href = URL + '&my_page=remClientInfo&id=' + res.client_id; // todo изменить ссылку
+                        location.href = URL + '&p=client&d=info&id=' + res.client_id;
                 }, 'json');
             }
         });
@@ -784,7 +862,7 @@ $(document)
                     if(res.success) {
                         dialog.close();
                         vkMsgOk('Начисление успешно произведено!');
-                        $('.tabSpisok.mon').append(res.html);
+                        $('._spisok._money').append(res.html);
                         zayavInfoMoneyUpdate();
                         if(res.status) {
                             $('#status')
@@ -860,7 +938,7 @@ $(document)
                     if(res.success) {
                         dialog.close();
                         vkMsgOk('Платёж успешно внесён!');
-                        $('.tabSpisok.mon').append(res.html);
+                        $('._spisok._money').append(res.html);
                         zayavInfoMoneyUpdate();
                     }
                 }, 'json');
@@ -1298,7 +1376,7 @@ $(document)
         }//submit()
         return false;
     })
-    .on('click', '#report_remind_next', function() {
+    .on('click', '#report_remind .ajaxNext', function() {
         if($(this).hasClass('busy'))
             return;
         var next = $(this),
@@ -1380,7 +1458,8 @@ $(document)
                 day:curDay,
                 status:1,
                 history:$('#comment').val(),
-                from_zayav:G.zayavInfo ? G.zayavInfo.id : 0
+                from_zayav:G.zayavInfo ? G.zayavInfo.id : 0,
+                from_client:G.clientInfo ? G.clientInfo.id : 0
             };
             switch(send.action) {
                 case 1: send.day = $('#data').val(); break;
@@ -1431,7 +1510,7 @@ $(document)
         $.post(AJAX_MAIN, send, function (res) {
             if(res.success) {
                 next.remove();
-                $('#report_prihod .tabSpisok').append(res.html);
+                $('#report_prihod ._spisok').append(res.html);
             } else
                 next.removeClass('busy');
         }, 'json');
@@ -1544,7 +1623,7 @@ $(document)
         $.post(AJAX_MAIN, send, function (res) {
             if(res.success) {
                 next.remove();
-                $('#report_rashod .tabSpisok').append(res.html);
+                $('#report_rashod ._spisok').append(res.html);
             } else
                 next.removeClass('busy');
         }, 'json');
@@ -1772,7 +1851,7 @@ $(document)
         $.post(AJAX_MAIN, send, function (res) {
             if(res.success) {
                 next.remove();
-                $('#report_kassa .tabSpisok').append(res.html);
+                $('#report_kassa ._spisok').append(res.html);
             } else
                 next.removeClass('busy');
         }, 'json');
@@ -1954,6 +2033,32 @@ $(document).ready(function() {
             correct:0
         });
     }
+    if($('#clientInfo').length > 0) {
+        $('#dopLinks .link').click(function() {
+            $('#dopLinks .link').removeClass('sel');
+            $(this).addClass('sel');
+            var val = $(this).attr('val');
+            $('.res').css('display', val == 'zayav' ? 'block' : 'none');
+            $('#zayav_filter').css('display', val == 'zayav' ? 'block' : 'none');
+            $('#zayav_spisok').css('display', val == 'zayav' ? 'block' : 'none');
+            $('#money_spisok').css('display', val == 'money' ? 'block' : 'none');
+            $('#remind_spisok').css('display', val == 'remind' ? 'block' : 'none');
+            $('#comments').css('display', val == 'comm' ? 'block' : 'none');
+        });
+        G.status_spisok.unshift({uid:0, title:'Любой статус'});
+        $('#zayav_status').infoLink({
+            spisok:G.status_spisok,
+            func:clientZayavSpisokLoad
+        });
+        $('#dev').device({
+            width:145,
+            type_no:1,
+            device_ids:G.device_ids,
+            vendor_ids:G.vendor_ids,
+            model_ids:G.model_ids,
+            func:clientZayavSpisokLoad
+        });
+    }
 
     if($('#zayav').length > 0) {
         $('#find')
@@ -2024,7 +2129,7 @@ $(document).ready(function() {
             spisok:G.device_status_spisok,
             func:zayavSpisokLoad
         }).o;
-        zayavFilterValuesGet();
+        //zayavFilter();
     }
     if($('#zayavAdd').length > 0) {
         $('#client_id').clientSel({add:1});
@@ -2098,8 +2203,8 @@ $(document).ready(function() {
             else {
                 if(send.place > 0) send.place_other = '';
                 $(this).addClass('busy');
-                $.post(AJAX_MAIN, send, function (res) {
-                    location.href = URL + '&my_page=remZayavkiInfo&id=' + res.id; //todo
+                $.post(AJAX_MAIN, send, function(res) {
+                    location.href = URL + '&p=zayav&d=info&id=' + res.id;
                 }, 'json');
             }
 

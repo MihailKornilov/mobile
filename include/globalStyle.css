@@ -170,16 +170,15 @@ TABLE{border:0}
 
 
 /* таблица списком */
-.tabSpisok { border-collapse:collapse; }
-.tabSpisok TH {
-  border:#dee4e8 solid 1px;
-  background-color:#f5f7f8;
-  font-weight:bold;
-  text-align:center;
-  padding:6px;
+.tabSpisok{border-collapse:collapse}
+.tabSpisok th{
+    border:#dee4e8 solid 1px;
+    background-color:#f5f7f8;
+    font-weight:bold;
+    text-align:center;
+    padding:6px;
 }
-.tabSpisok TD{border:#dee4e8 solid 1px;padding:4px 6px}
-
+.tabSpisok td{border:#dee4e8 solid 1px;padding:4px 6px}
 
 
 
@@ -230,7 +229,8 @@ TABLE{border:0}
 .tooltip.empty,
 #device_image.busy,
 #fotoUpload #direct a.busy,
-#client .result.busy{
+#client .result.busy,
+#clientInfo #dopLinks.busy{
     background-image:url("data:image/gif;base64,R0lGODlhIAAIAKECAEVojoSctMHN2QAAACH/C05FVFNDQVBFMi4wAwEAAAAh+QQFCgADACwAAAAAIAAIAAACFZyPqcvtD6KMr445LcRUN9554kiSBQAh+QQFCgADACwCAAIAEgAEAAACD4xvM8DNiJRz8Mj5ari4AAAh+QQFCgADACwCAAIAHAAEAAACGJRvM8HNCqKMCCnn4JT1XPwMG9cJH6iNBQAh+QQFCgADACwMAAIAEgAEAAACD5RvM8HNiJRz8Mj5qri4AAAh+QQFCgADACwWAAIACAAEAAACBZSPqYsFACH5BAUUAAMALAAAAAAgAAgAAAIOnI+py+0Po5y02ouzPgUAOw==");
     background-repeat:no-repeat;
     background-position:center center;
