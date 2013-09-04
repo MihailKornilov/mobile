@@ -1108,10 +1108,10 @@ function zayav_add() {
 }//end of zayav_add()
 
 function zayavFilter($v) {
-    if(empty($v['category']) || !preg_match(REGEXP_NUMERIC, $v['category']))
-        $v['category'] = 0;
     if(empty($v['status']) || !preg_match(REGEXP_NUMERIC, $v['status']))
         $v['status'] = 0;
+    if(empty($v['zpzakaz']) || !preg_match(REGEXP_NUMERIC, $v['zpzakaz']))
+        $v['zpzakaz'] = 0;
     if(empty($v['device']) || !preg_match(REGEXP_NUMERIC, $v['device']))
         $v['device'] = 0;
     if($v['device'] == 0 || !preg_match(REGEXP_NUMERIC, $v['vendor']))
@@ -1130,8 +1130,8 @@ function zayavFilter($v) {
         default: $filter['sort'] = 'dtime_add';
     }
     $filter['desc'] = intval(@$v['desc']) == 1 ? 'ASC' : 'DESC';
-    $filter['category'] = intval($v['category']);
     $filter['status'] = intval($v['status']);
+    $filter['zpzakaz'] = intval($v['zpzakaz']);
     $filter['device'] = intval($v['device']);
     $filter['vendor'] = intval($v['vendor']);
     $filter['model'] = intval($v['model']);
@@ -1154,10 +1154,16 @@ function get_zayav_list($page=1, $filter=array(), $limit=20) {
         if($page ==1 && preg_match(REGEXP_NUMERIC, $filter['find']))
             $nomer = intval($filter['find']);
     } else {
-        if(isset($filter['category']) && $filter['category'] > 0)
-            $cond .= " AND `category`=".$filter['category'];
         if(isset($filter['status']) && $filter['status'] > 0)
             $cond .= " AND `zayav_status`=".$filter['status'];
+        if(isset($filter['zpzakaz']) && $filter['zpzakaz'] > 0) {
+            $sql = "SELECT `zayav_id` FROM `zp_zakaz` WHERE `ws_id`=".WS_ID;
+            $q = query($sql);
+            $ids[0] = 0;
+            while($r = mysql_fetch_assoc($q))
+                $ids[$r['zayav_id']] = $r['zayav_id'];
+            $cond .= " AND `id` ".($filter['zpzakaz'] == 2 ? 'NOT' : '')." IN (".implode(',', $ids).")";
+        }
         if(isset($filter['device']) && $filter['device'] > 0)
             $cond .= " AND `base_device_id`=".$filter['device'];
         if(isset($filter['vendor']) && $filter['vendor'] > 0)
@@ -1305,8 +1311,8 @@ function show_zayav_list($data, $values) {
                     '<INPUT TYPE="hidden" id="sort" value="'.$values['sort'].'">'.
                     _checkbox('desc', 'Обратный порядок', $values['desc']).
                     '<div class="condLost'.(!empty($values['find']) ? ' hide' : '').'">'.
-                        '<div class="findHead">Категория</div><INPUT TYPE="hidden" id="category" value="'.$values['category'].'">'.
                         '<div class="findHead">Статус заявки</div><div id="status"></div>'.
+                        '<div class="findHead">Заказаны запчасти</div><INPUT type="hidden" id="zpzakaz" value="'.$values['zpzakaz'].'" />'.
                         '<div class="findHead">Устройство</div><div id="dev"></div>'.
                         '<div class="findHead">Нахождение устройства</div><INPUT TYPE="hidden" id="device_place" value="'.$values['place'].'">'.
                         '<div class="findHead">Состояние устройства</div><INPUT TYPE="hidden" id="devstatus" value="'.$values['devstatus'].'">'.

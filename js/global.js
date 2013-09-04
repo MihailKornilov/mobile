@@ -135,8 +135,8 @@ var REGEXP_NUMERIC = /^\d+$/,
                 find:$.trim($('#find input').val()),
                 sort:$('#sort').val(),
                 desc:$('#desc').val(),
-                category:$('#category').val(),
                 status:$('#status .sel').attr('val'),
+                zpzakaz:$('#zpzakaz').val(),
                 device:$('#dev_device').val(),
                 vendor:$('#dev_vendor').val(),
                 model:$('#dev_model').val(),
@@ -148,8 +148,8 @@ var REGEXP_NUMERIC = /^\d+$/,
         if(v.desc != 0) loc += '.desc=' + v.desc;
         if(v.find) loc += '.find=' + escape(v.find);
         else {
-            if(v.category > 0) loc += '.category=' + v.category;
             if(v.status > 0) loc += '.status=' + v.status;
+            if(v.zpzakaz > 0) loc += '.zpzakaz=' + v.status;
             if(v.device > 0) loc += '.device=' + v.device;
             if(v.vendor > 0) loc += '.vendor=' + v.vendor;
             if(v.model > 0) loc += '.model=' + v.model;
@@ -161,8 +161,8 @@ var REGEXP_NUMERIC = /^\d+$/,
         setCookie('zayav_find', escape(v.find));
         setCookie('zayav_sort', v.sort);
         setCookie('zayav_desc', v.desc);
-        setCookie('zayav_category', v.category);
         setCookie('zayav_status', v.status);
+        setCookie('zayav_zpzakaz', v.zpzakaz);
         setCookie('zayav_device', v.device);
         setCookie('zayav_vendor', v.vendor);
         setCookie('zayav_model', v.model);
@@ -638,8 +638,8 @@ $(document)
         $('#find').topSearchClear();
         $('#sort').myRadioSet(1);
         $('#desc').val(0).next().attr('class', 'check0');
-        G.vkSel_category.val(0);
         $('#status').infoLinkSet(0);
+        $('#zpzakaz').myRadioSet(0);
         $('#dev').device({
             width:155,
             type_no:1,
@@ -2097,6 +2097,16 @@ $(document).ready(function() {
             spisok:G.status_spisok,
             func:zayavSpisokLoad
         }).infoLinkSet(G.zayav_status);
+        $('#zpzakaz').vkRadio({
+            spisok:[
+                {uid:0, title:'Все заявки'},
+                {uid:1, title:'Да'},
+                {uid:2, title:'Нет'}
+            ],
+            top:6,
+            light:1,
+            func:zayavSpisokLoad
+        });
         $('#dev').device({
             width:155,
             type_no:1,
@@ -2109,7 +2119,7 @@ $(document).ready(function() {
             func:zayavSpisokLoad
         });
         // Нахождение устройства
-        for(var n = 0; n < G.place_other.length; n++) {
+        for(n = 0; n < G.place_other.length; n++) {
             var sp = G.place_other[n];
             G.device_place_spisok.push({uid:encodeURI(sp), title:sp});
         }
