@@ -4,15 +4,15 @@ function zpEnd($count)
 	$ost=$count%10;
 	$ost10=$count/10%10;
 
-	if($ost10==1) return 'ей';
+	if($ost10==1) return 'пїЅпїЅ';
 	else
 		switch($ost)
 			{
-			case '1': return 'ь';
-			case '2': return 'и';
-			case '3': return 'и';
-			case '4': return 'и';
-			default: return 'ей';
+			case '1': return 'пїЅ';
+			case '2': return 'пїЅ';
+			case '3': return 'пїЅ';
+			case '4': return 'пїЅ';
+			default: return 'пїЅпїЅ';
 			}
 	}
 
@@ -32,7 +32,7 @@ $send[0]->page=0;
 $send[0]->type=$_GET['type'];
 
 $send[0]->count=$VK->QRow("select count(id) from zp_catalog ".$find);
-if($msg) $msg="Найден".($send[0]->count%10==1?'а':'о')." "; else $msg="В каталоге ";
+if($msg) $msg="пїЅпїЅпїЅпїЅпїЅпїЅ".($send[0]->count%10==1?'пїЅ':'пїЅ')." "; else $msg="пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ ";
 if($send[0]->count>0)
 	{
 	$spisok=$VK->QueryRowArray("select 
@@ -51,7 +51,7 @@ from zp_catalog ".$find." order by id desc limit ".(($_GET['page']-1)*20).",20")
 			$send[0]->page=$_GET['page']+1;
 	}
 
-$send[0]->result=iconv("WINDOWS-1251","UTF-8",$msg.$send[0]->count." наименований запчаст".zpEnd($send[0]->count));
+$send[0]->result=iconv("WINDOWS-1251","UTF-8",$msg.$send[0]->count." пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ".zpEnd($send[0]->count));
 $send[0]->add='';
 
 $zpName=$VK->QueryPtPArray("select id,name from setup_zp_name");
@@ -64,7 +64,7 @@ if($send[0]->count>0)
 	foreach($spisok as $n=>$sp)
 		{
 		$n++;
-		if($sp[5]==0) $sp[5]=$VK->QRow("select count from zp_available where ws_id=".$vku->ws_id." and zp_catalog_id=".$sp[0]);
+		if($sp[5]==0) $sp[5]=$VK->QRow("select count from zp_avai where ws_id=".$vku->ws_id." and zp_catalog_id=".$sp[0]);
 		if($sp[6]==0) $sp[6]=$VK->QRow("select count from zp_zakaz where ws_id=".$vku->ws_id." and zp_catalog_id=".$sp[0]);
 		$send[$n]->id=$sp[0];
 		$send[$n]->img=$sp[7];

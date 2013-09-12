@@ -115,7 +115,7 @@ if(isset($_GET['p'])) {
                     $html .= client_info(intval($_GET['id']));
                     break;
                 default:
-                    $html .= client_list(get_client_list());
+                    $html .= client_list(client_data());
             }
             break;
         case 'zayav':
@@ -155,7 +155,32 @@ if(isset($_GET['p'])) {
                         'place' => isset($values['place']) ? $values['place'] : 0,
                         'devstatus' => isset($values['devstatus']) ? $values['devstatus'] : 0
                     );
-                    $html .= show_zayav_list(get_zayav_list(1, zayavfilter($values)), $values);
+                    $html .= zayav_list(zayav_data(1, zayavfilter($values)), $values);
+            }
+            break;
+        case 'zp':
+            switch(@$_GET['d']) {
+                case 'info':
+                    if(!preg_match(REGEXP_NUMERIC, $_GET['id'])) {
+                        $html .= 'Страницы не существует';
+                        break;
+                    }
+                    $html .= zp_info(intval($_GET['id']));
+                    break;
+                default:
+                    $values = array();
+                    if(HASH_VALUES) {
+                        $ex = explode('.', HASH_VALUES);
+                        foreach($ex as $r) {
+                            $arr = explode('=', $r);
+                            $values[$arr[0]] = $arr[1];
+                        }
+                    } else
+                        $values = $_GET;
+
+                    $values = zpfilter($values);
+                    $values['find'] = unescape($values['find']);
+                    $html .= zp_list(zp_data(1, $values));
             }
             break;
         case 'report':
@@ -222,12 +247,9 @@ if(isset($_GET['p'])) {
                     $report = report_history();
                     $rl .= report_history_right();
             }
-            if(@$_GET['d1'] != 'stat') {
-                $report = '<table cellspacing=0 class="tabLR"><tr>'.
-                    '<td class="left">'.$dl.$report.'</td>'.
-                    '<td class="right">'.$rl.'</td>'.
-                    '</tr></table>';
-            } else
+            if(@$_GET['d1'] != 'stat')
+                $report = '<table class="tabLR"><tr><td class="left">'.$dl.$report.'<td class="right">'.$rl.'</table>';
+            else
                 $report = $dl.$report;
             $html .= $report;
         break;

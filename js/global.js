@@ -1,4 +1,5 @@
 var REGEXP_NUMERIC = /^\d+$/,
+    REGEXP_CENA = /^[\d]+(.[\d]{1,2})?$/,
     URL = 'http://' + G.domain + '/index.php?' + G.values,
     AJAX_MAIN = 'http://' + G.domain + '/ajax/main.php?' + G.values,
     hashLoc,
@@ -15,6 +16,9 @@ var REGEXP_NUMERIC = /^\d+$/,
                     hashLoc += '_add' + (REGEXP_NUMERIC.test(hash.id) ? '_' + hash.id : '');
                 else if(!hash.d)
                     s = false;
+                break;
+            case 'zp':
+                s = false;
                 break;
             default:
                 if(hash.d) {
@@ -44,10 +48,11 @@ var REGEXP_NUMERIC = /^\d+$/,
             }, 'json');
         }
     },
+
     clientAdd = function(callback) {
-        var html = '<table cellspacing=10>' +
-                '<TR><TD class="label">Имя:<TD><INPUT TYPE="text" id="fio" style="width:220px;">' +
-                '<TR><TD class="label">Телефон:<TD><INPUT TYPE="text" id="telefon" style=width:220px;>' +
+        var html = '<table style="border-spacing:10px">' +
+                '<tr><td class="label">Имя:<TD><INPUT TYPE="text" id="fio" style="width:220px;">' +
+                '<tr><td class="label">Телефон:<TD><INPUT TYPE="text" id="telefon" style=width:220px;>' +
             '</TABLE>',
             dialog = vkDialog({
                 width:340,
@@ -130,6 +135,7 @@ var REGEXP_NUMERIC = /^\d+$/,
             $('#zayav_spisok').html(res.html);
         }, 'json');
     },
+
     zayavFilter = function () {
         var v = {
                 find:$.trim($('#find input').val()),
@@ -215,6 +221,39 @@ var REGEXP_NUMERIC = /^\d+$/,
             }
         }, 'json');
     },
+
+    zpFilter = function() {
+        var v = {
+                find:$.trim($('#find input').val()),
+                menu:$('#menu .sel').attr('val'),
+                name:$('#zp_name').val(),
+                device:$('#dev_device').val(),
+                vendor:$('#dev_vendor').val(),
+                model:$('#dev_model').val()
+            },
+            loc = '';
+        if(v.find) loc += '.find=' + escape(v.find);
+        if(v.menu > 0) loc += '.menu=' + v.menu;
+        if(v.name > 0) loc += '.name=' + v.name;
+        if(v.device > 0) loc += '.device=' + v.device;
+        if(v.vendor > 0) loc += '.vendor=' + v.vendor;
+        if(v.model > 0) loc += '.model=' + v.model;
+        VK.callMethod('setLocation', hashLoc + loc);
+        return v;
+    },
+    zpSpisokLoad = function() {
+        var send = zpFilter();
+        send.op = 'zp_spisok_load';
+        $('#mainLinks')
+            .find('img').remove().end()
+            .append('<img src="/img/upload.gif">');
+        $.post(AJAX_MAIN, send, function (res) {
+            $('#zp .result').html(res.all);
+            $('#zp .left').html(res.html);
+            $('#mainLinks img').remove();
+        }, 'json');
+    },
+
     reportHistoryLoad = function() {
         var send = {
             op:'report_history_load',
@@ -288,7 +327,7 @@ var REGEXP_NUMERIC = /^\d+$/,
     },
     rashodCategoryAdd = function(spisok, obj) {
         var html = '<TABLE>' +
-            '<TR><TD class="label">Наименование:<TD><INPUT type="text" id="rashod_category_name">' +
+            '<tr><td class="label">Наименование:<TD><INPUT type="text" id="rashod_category_name">' +
             '</TABLE>',
             dialog = vkDialog({
                 width:320,
@@ -447,10 +486,10 @@ $(document)
 
 $(document)
     .on('click', '#clientInfo .cedit', function() {
-        var html = '<TABLE cellspacing="10" class="client_edit">' +
-            '<TR><TD class="label">Имя:<TD><INPUT TYPE="text" id="fio" value="' + $('.fio').html() + '">' +
-            '<TR><TD class="label">Телефон:<TD><INPUT TYPE="text" id="telefon" value="' + $('.telefon').html() + '">' +
-            '<TR><TD class="label">Объединить:<TD><INPUT TYPE="hidden" id="join">' +
+        var html = '<TABLE class="client_edit">' +
+            '<tr><td class="label">Имя:<TD><INPUT TYPE="text" id="fio" value="' + $('.fio').html() + '">' +
+            '<tr><td class="label">Телефон:<TD><INPUT TYPE="text" id="telefon" value="' + $('.telefon').html() + '">' +
+            '<tr><td class="label">Объединить:<TD><INPUT TYPE="hidden" id="join">' +
             '<TR class=tr_join><TD class="label">с клиентом:<TD><INPUT TYPE="hidden" id="client2">' +
             '</TABLE>';
         var dialog = vkDialog({
@@ -538,11 +577,11 @@ $(document)
         }, 'json');
     })
     .on('click', '#clientInfo .remind_add', function() {
-        var html = '<TABLE class="remind_add_tab" cellspacing="6">' +
-            '<TR><TD class="label">Клиент:<TD><b>' + G.clientInfo.fio + '</b>' +
-            '<TR><TD class="label top">Описание задания:<TD><TEXTAREA id="txt"></TEXTAREA>' +
-            '<TR><TD class="label">Крайний день выполнения:<TD><INPUT type="hidden" id="data">' +
-            '<TR><TD class="label">Личное:<TD><INPUT type="hidden" id="private">' +
+        var html = '<TABLE class="remind_add_tab">' +
+            '<tr><td class="label">Клиент:<TD><b>' + G.clientInfo.fio + '</b>' +
+            '<tr><td class="label top">Описание задания:<TD><TEXTAREA id="txt"></TEXTAREA>' +
+            '<tr><td class="label">Крайний день выполнения:<TD><INPUT type="hidden" id="data">' +
+            '<tr><td class="label">Личное:<TD><INPUT type="hidden" id="private">' +
             '</TABLE>';
         var dialog = vkDialog({
                 top:60,
@@ -597,7 +636,7 @@ $(document)
                 }, 'json');
             }
         }//submit()
-    })
+    });
 
 $(document)
     .on('click', '#zayav .ajaxNext', function() {
@@ -655,13 +694,13 @@ $(document)
 
 $(document)
     .on('click', '#zayavInfo .zedit', function() {
-        var html = '<TABLE cellspacing=8 class="zayavEdit">' +
-            '<TR><TD class="label r">Клиент:        <TD><INPUT type="hidden" id="client_id" value=' + G.zayavInfo.client_id + '>' +
-            '<TR><TD class="label r">Категория:     <TD><INPUT type="hidden" id="category" value=' + G.zayavInfo.category + '>' +
-            '<TR><TD class="label r top">Устройство:<TD><TABLE cellspacing="0"><TD id="dev"><TD id="device_image"></TABLE>' +
-            '<TR><TD class="label r">IMEI:          <TD><INPUT type=text id="imei" maxlength="20" value="' + G.zayavInfo.imei + '">' +
-            '<TR><TD class="label r">Серийный номер:<TD><INPUT type=text id="serial" maxlength="30" value="' + G.zayavInfo.serial + '">' +
-            '<TR><TD class="label r">Цвет:          <TD><INPUT type="hidden" id=color_id value=' + G.zayavInfo.color_id + '>' +
+        var html = '<TABLE style="border-spacing:8px">' +
+            '<tr><td class="label r">Клиент:        <TD><INPUT type="hidden" id="client_id" value=' + G.zayavInfo.client_id + '>' +
+            '<tr><td class="label r">Категория:     <TD><INPUT type="hidden" id="category" value=' + G.zayavInfo.category + '>' +
+            '<tr><td class="label r top">Устройство:<TD><TABLE><TD id="dev"><TD id="device_image"></TABLE>' +
+            '<tr><td class="label r">IMEI:          <TD><INPUT type=text id="imei" maxlength="20" value="' + G.zayavInfo.imei + '">' +
+            '<tr><td class="label r">Серийный номер:<TD><INPUT type=text id="serial" maxlength="30" value="' + G.zayavInfo.serial + '">' +
+            '<tr><td class="label r">Цвет:          <TD><INPUT type="hidden" id=color_id value=' + G.zayavInfo.color_id + '>' +
         '</TABLE>',
             dialog = vkDialog({
                 width:410,
@@ -672,14 +711,14 @@ $(document)
                 submit:submit
             });
         $('#client_id').clientSel();
-        /*$('#vkSel_client_id').vkHint({
+        $('#vkSel_client_id').vkHint({
             msg:'Если изменяется клиент, то начисления и платежи заявки применяются на нового клиента.',
             width:200,
             top:-83,
             left:-2,
             delayShow:1500,
             correct:0
-        });*/
+        });
         $('#category').vkSel({width:150, spisok:G.category_spisok});
         $('#dev').device({
             width:190,
@@ -749,11 +788,11 @@ $(document)
         });
     })
     .on('click', '#zayavInfo .remind_add', function() {
-        var html = '<TABLE class="remind_add_tab" cellspacing="6">' +
-            '<TR><TD class="label">Заявка:<TD>№<b>' + G.zayavInfo.nomer + '</b>' +
-            '<TR><TD class="label top">Описание задания:<TD><TEXTAREA id="txt"></TEXTAREA>' +
-            '<TR><TD class="label">Крайний день выполнения:<TD><INPUT type="hidden" id="data">' +
-            '<TR><TD class="label">Личное:<TD><INPUT type="hidden" id="private">' +
+        var html = '<TABLE class="remind_add_tab">' +
+            '<tr><td class="label">Заявка:<TD>№<b>' + G.zayavInfo.nomer + '</b>' +
+            '<tr><td class="label top">Описание задания:<TD><TEXTAREA id="txt"></TEXTAREA>' +
+            '<tr><td class="label">Крайний день выполнения:<TD><INPUT type="hidden" id="data">' +
+            '<tr><td class="label">Личное:<TD><INPUT type="hidden" id="private">' +
         '</TABLE>';
         var dialog = vkDialog({
                 top:60,
@@ -811,7 +850,7 @@ $(document)
         }//submit()
     })
     .on('click', '#zayavInfo .acc_add', function() {
-        var html = '<TABLE cellspacing="8" class="zayav_accrual_add">' +
+        var html = '<TABLE class="zayav_accrual_add">' +
                 '<tr><td class="label">Сумма: <TD><input type="text" id="sum" class="money" maxlength="5" /> руб.' +
                 '<tr><td class="label">Примечание:<em>(не обязательно)</em><TD><input type="text" id="prim" maxlength="100" />' +
                 '<tr><td class="label">Статус заявки: <TD><INPUT type="hidden" id="acc_status" value="2" />' +
@@ -819,7 +858,7 @@ $(document)
                 '<tr><td class="label">Добавить напоминание:<TD><INPUT type="hidden" id="acc_remind" />' +
             '</TABLE>' +
 
-            '<TABLE cellspacing="8" class="zayav_accrual_add remind">' +
+            '<TABLE class="zayav_accrual_add remind">' +
                 '<tr><td class="label">Содержание:<TD><input type="text" id="reminder_txt" value="Позвонить и сообщить о готовности.">' +
                 '<tr><td class="label">Дата:<TD><INPUT type="hidden" id="reminder_day">' +
             '</TABLE>';
@@ -889,7 +928,7 @@ $(document)
         }
     })
     .on('click', '#zayavInfo .op_add', function() {
-        var html = '<TABLE cellspacing="8" class="zayav_oplata_add">' +
+        var html = '<TABLE class="zayav_oplata_add">' +
             '<TR><TD class="label">Сумма:<TD><input type="text" id="sum" class="money" maxlength="5"> руб.' +
             '<TR><TD class="label">Деньги поступили в кассу?:<TD><input type="hidden" id="kassa" value="-1">' +
             '<TR><TD class="label">Местонахождение устройства:<TD><input type="hidden" id="dev_place" value="2">' +
@@ -1014,7 +1053,7 @@ $(document)
         }, 'json');
     })
     .on('click', '#zayavInfo .status_place', function() {
-        var html = '<TABLE cellspacing="8">' +
+        var html = '<TABLE style="border-spacing:8px">' +
             '<TR><TD class="label r top">Статус заявки:<TD><input type="hidden" id="z_status" value="' + G.zayavInfo.z_status + '">' +
             '<TR><TD class="label r top">Местонахождение устройства:<TD><input type="hidden" id="dev_place" value="' + G.zayavInfo.dev_place + '">' +
             '<TR><TD class="label r top">Состояние устройства:<TD><input type="hidden" id="dev_status" value="' + G.zayavInfo.dev_status + '">' +
@@ -1119,7 +1158,7 @@ $(document)
         }, 'json');
     })
     .on('click', '#zayavInfo .zakaz_ok', function() {
-        location.href = URL + '&my_page=remZp&id=[4]';//todo change link
+        location.href = URL + '&p=zp&menu=3';
     })
     .on('click', '#zayavInfo .zpAdd', function() {
         var html = '<div class="zayav_zp_add">' +
@@ -1130,10 +1169,10 @@ $(document)
                         G.model_ass[G.zayavInfo.model] +
                     '</b>.'+
                 '</CENTER>' +
-                '<TABLE cellspacing="5">' +
-                    '<TR><TD class="label r">Наименование запчасти:<TD><INPUT TYPE="hidden" id="name_id">' +
-                    '<TR><TD class="label r">Дополнительная информация:<TD><INPUT TYPE="text" id="name_dop" maxlength="30">' +
-                    '<TR><TD class="label r">Цвет:<TD><INPUT TYPE="hidden" id="color_id">' +
+                '<TABLE style="border-spacing:5px">' +
+                    '<TR><TD class="label r">Наименование запчасти:<TD><input type="hidden" id="name_id">' +
+                    '<TR><TD class="label r">Дополнительная информация:<TD><input type="text" id="dop" maxlength="30">' +
+                    '<TR><TD class="label r">Цвет:<TD><input type="hidden" id="color_id">' +
                 '</TABLE>' +
             '</div>',
             dialog = vkDialog({
@@ -1159,7 +1198,7 @@ $(document)
                 op:'zayav_zp_add',
                 zayav_id: G.zayavInfo.id,
                 name_id:$('#name_id').val(),
-                name_dop:$('#name_dop').val(),
+                dop:$('#dop').val(),
                 color_id:$('#color_id').val()
             };
             if(send.name_id == 0)
@@ -1216,6 +1255,210 @@ $(document)
     });
 
 $(document)
+    .on('click', '#zp .ajaxNext', function() {
+        if($(this).hasClass('busy'))
+            return;
+        var next = $(this),
+            send = zpFilter();
+        send.op = 'zp_next';
+        send.page = $(this).attr('val');
+        next.addClass('busy');
+        $.post(AJAX_MAIN, send, function (res) {
+            if(res.success)
+                next.after(res.spisok).remove();
+            else
+                next.removeClass('busy');
+        }, 'json');
+    })
+    .on('click', '#zp .avai_add', function() {
+        var unit = $(this),
+            count = unit.hasClass('avai') ? unit.find('b').html() : 0;
+        while(!unit.hasClass('unit'))
+            unit = unit.parent();
+        var html = '<table class="avai_add">' +
+            '<tr><td class="left">' +
+                '<div class="name">' + unit.find('.name').html() + '</div>' +
+                '<div>' + unit.find('.for').html() + '</div>' +
+                '<div class="avai">Текущее наличие: <b>' + count + '</b> шт.</div>' +
+                '<table class="inp">' +
+                    '<tr><td class="label">Количество:<td><input type="text" id="count" maxlength="5">' +
+                    '<tr><td class="label">Цена за ед.:<td><input type="text" id="cena" maxlength="10"><span>не обязательно</span>' +
+                '</table>' +
+            '<td valign="top">' + unit.find('.img').html() +
+        '</table>',
+            dialog = vkDialog({
+                head:'Внесение наличия запчасти',
+                content:html,
+                submit:submit
+            });
+        if($('.avai_add img').attr('val'))
+            $('.avai_add img').addClass('fotoView');
+        $('#count').focus();
+        function submit() {
+            var msg,
+                send = {
+                    op:'zp_avai_add',
+                    zp_id:unit.attr('val'),
+                    count:$('#count').val(),
+                    cena:$('#cena').val()
+                };
+            if(!send.cena)
+                send.cena = 0;
+            if (!REGEXP_NUMERIC.test(send.count) || send.count == 0) {
+                msg = 'Некорректно указано количество.';
+                $('#count').focus();
+            } else if(send.cena != 0 && !REGEXP_CENA.test(send.cena)) {
+                msg = 'Некорректно указана цена.';
+                $('#cena').focus();
+            } else {
+                dialog.process();
+                $.post(AJAX_MAIN, send, function(res) {
+                    dialog.abort();
+                    if(res.success) {
+                        unit.find('.avai_add')
+                            .removeClass('hid')
+                            .addClass('avai')
+                            .html('В наличии: <b>' + res.count + '</b>');
+                        dialog.close();
+                        vkMsgOk('Внесение наличия запчасти произведено.');
+                    }
+                }, 'json');
+            }
+            if(msg)
+                dialog.bottom.vkHint({
+                    msg:'<SPAN class="red">' + msg + '</SPAN>',
+                    remove:1,
+                    indent:40,
+                    show:1,
+                    top:-48,
+                    left:92
+                });
+        }
+    })
+    .on('mouseenter', '#zp a.zakaz:not(.busy)', function() {
+        window.zakaz_count = $(this).find('tt:first').next('b').html();
+    })
+    .on('mouseleave', '#zp a.zakaz:not(.busy)', function() {
+        var t = $(this),
+            count = t.find('tt:first').next('b').html(),
+            unit = t;
+        if(count != window.zakaz_count) {
+            t.removeClass('hid')
+             .addClass('busy')
+             .find('.cnt').html('ано: <b></b>');
+            while(!unit.hasClass('unit'))
+                unit = unit.parent();
+            var send = {
+                op:'zp_zakaz_edit',
+                zp_id:unit.attr('val'),
+                count:count
+            };
+            $.post(AJAX_MAIN, send, function(res) {
+                t.removeClass('busy');
+                if(res.success) {
+                    t.find('.cnt').html(count > 0 ? 'ано: <b>' + count + '</b>' : 'ать');
+                    if(count == 0)
+                        t.addClass('hid');
+                }
+            }, 'json');
+        }
+    })
+    .on('click', '#zp tt', function() {
+        var t = $(this),
+            znak = t.html(),
+            c = t[znak == '+' ? 'prev' : 'next'](),
+            count = c.html();
+        if(znak == '+')
+            count++;
+        else {
+            count--;
+            if(count < 0)
+                count = 0;
+        }
+        c.html(count);
+    })
+    .on('click', '#zp .add', function() {
+        var html = '<table class="zp_add_dialog">' +
+            '<tr><td class="label">Наименование запчасти:<td><input type="hidden" id="name_id">' +
+            '<tr><td class="label top">Устройство:<td id="add_dev">' +
+            '<tr><td class="label">Версия:<td><input type="text" id="version">' +
+            '<tr><td class="label">Б/у:<td><input type="hidden" id="bu">' +
+            '<tr><td class="label">Цвет:<td><input type="hidden" id="color_id">' +
+            '<tr><td class="label">Дополнительная информация:<td><input type="text" id="dop" maxlength="30">' +
+            '</table>',
+            dialog = vkDialog({
+                top:70,
+                width:410,
+                head:'Внесение новой запчасти в каталог',
+                content:html,
+                submit:submit
+            });
+        $('#name_id').vkSel({
+            width:200,
+            title0:'Наименование не выбрано',
+            spisok:G.zp_name_spisok
+        });
+        $('#color_id').vkSel({
+            width:130,
+            title0:'Цвет не указан',
+            spisok:G.color_spisok
+        });
+        $('#bu').vkCheck();
+        $('#add_dev').device({
+            width:200
+        });
+
+        function submit() {
+            var msg,
+                send = {
+                    op:'zp_add',
+                    name_id:$('#name_id').val(),
+                    device_id:$('#add_dev_device').val(),
+                    vendor_id:$('#add_dev_vendor').val(),
+                    model_id:$('#add_dev_model').val(),
+                    version:$('#version').val(),
+                    bu:$('#bu').val(),
+                    color_id:$('#color_id').val(),
+                    dop:$('#dop').val()
+                };
+            if(send.name_id == 0) msg = 'Не указано наименование запчасти.';
+            else if(send.device_id == 0) msg = 'Не выбрано устройство';
+            else if(send.vendor_id == 0) msg = 'Не выбран производитель';
+            else if(send.model_id == 0) msg = 'Не выбрана модель';
+            else {
+                dialog.process();
+                $.post(AJAX_MAIN, send, function(res) {
+                    dialog.abort();
+                    if(res.success) {
+                        dialog.close();
+                        window.zp_name.val(send.name_id);
+                        $("#dev").device({
+                            width:153,
+                            type_no:1,
+                            device_ids:G.ws.devs,
+                            device_id:send.device_id,
+                            vendor_id:send.vendor_id,
+                            model_id:send.model_id,
+                            func:zpSpisokLoad
+                        });
+                        zpSpisokLoad();
+                    }
+                },'json');
+            }
+
+            if(msg)
+                dialog.bottom.vkHint({
+                    msg:'<SPAN class="red">' + msg + '</SPAN>',
+                    left:110,
+                    top:-47,
+                    indent:50,
+                    show:1,
+                    remove:1
+                });
+        }
+    });
+
+$(document)
     .on('click', '#report_history_next', function() {
         if($(this).hasClass('busy'))
             return;
@@ -1242,25 +1485,20 @@ $(document)
             show = info.hasClass('show');
         info[(show ? 'remove' : 'add') + 'Class']('show');
     })
-    .on('mouseenter', '.remind_unit', function() {
-        $(this).find('.action').show();
-    })
-    .on('mouseleave', '.remind_unit', function() {
-        $(this).find('.action').hide();
-    })
     .on('click', '.remind_unit .hist_a', function() {
         $(this).parent().parent().find('.hist').slideToggle();
     })
     .on('click', '.report_remind_add', function() {
-        var html = '<TABLE class="remind_add_tab" cellspacing="6">' +
-            '<TR><TD class="label">Назначение:<TD><INPUT type="hidden" id=destination>' +
-            '<TR><TD class="label" id=target_name><TD id=target>' +
+        //todo переделать
+        var html = '<TABLE class="remind_add_tab">' +
+            '<tr><td class="label">Назначение:<TD><INPUT type="hidden" id=destination>' +
+            '<tr><td class="label" id=target_name><TD id=target>' +
             '</TABLE>' +
 
-            '<TABLE class="remind_add_tab" id="tab_content" cellspacing="6">' +
-            '<TR><TD class="label top">Задание:<TD><TEXTAREA id=txt></TEXTAREA>' +
-            '<TR><TD class="label">Крайний день выполнения:<TD><INPUT type="hidden" id=data>' +
-            '<TR><TD class="label">Личное:<TD><INPUT type="hidden" id=private>' +
+            '<TABLE class="remind_add_tab" id="tab_content">' +
+            '<tr><td class="label top">Задание:<TD><TEXTAREA id=txt></TEXTAREA>' +
+            '<tr><td class="label">Крайний день выполнения:<TD><INPUT type="hidden" id=data>' +
+            '<tr><td class="label">Личное:<TD><INPUT type="hidden" id=private>' +
             '</TABLE>';
         var dialog = vkDialog({
             top:30,
@@ -1316,7 +1554,7 @@ $(document)
                         $('#img').imgUp();
                         $.getJSON('/remont/zp/view/AjaxZayavFind.php?' + G.values + '&nomer=' + val, function (res) {
                             if(res.id > 0) {
-                                html = '<TABLE cellpadding=0 cellspacing=5><TR>' +
+                                html = '<TABLE style="border-spacing:5px"><TR>' +
                                     '<TD><A href="index.php?' + G.values + '&my_page=remZayavkiInfo&id=' + res.id + '"><IMG src="' + res.img + '" height=40></A>' +
                                     '<TD><A href="index.php?' + G.values + '&my_page=remZayavkiInfo&id=' + res.id + '">' +
                                         G.category_ass[res.category] + '<br />' +
@@ -1410,17 +1648,17 @@ $(document)
             };
         $.post(AJAX_MAIN, send, function(res) {
             curDay = res.day;
-            var html = '<TABLE cellspacing="6" class="remind_action_tab">' +
-                '<TR><TD class="label">' + (res.client ? 'Клиент:' : '') + (res.zayav ? 'Заявка:' : '') +
+            var html = '<TABLE class="remind_action_tab">' +
+                '<tr><td class="label">' + (res.client ? 'Клиент:' : '') + (res.zayav ? 'Заявка:' : '') +
                     '<TD>' + (res.client ? res.client : '') + (res.zayav ? res.zayav : '') +
-                '<TR><TD class="label">Задание:<TD><B>' + res.txt + '</B>' +
-                '<TR><TD class="label">Внёс:<TD>' + res.viewer + ', ' + res.dtime +
-                '<TR><TD class="label top">Действие:<TD><INPUT type="hidden" id=action value="0">' +
+                '<tr><td class="label">Задание:<TD><B>' + res.txt + '</B>' +
+                '<tr><td class="label">Внёс:<TD>' + res.viewer + ', ' + res.dtime +
+                '<tr><td class="label top">Действие:<TD><INPUT type="hidden" id=action value="0">' +
                 '</TABLE>' +
 
-                '<TABLE cellspacing="6" class=remind_action_tab id=new_action>' +
-                '<TR><TD class="label" id=new_about><TD id=new_title>' +
-                '<TR><TD class="label top" id=new_comm><TD><TEXTAREA id=comment></TEXTAREA>' +
+                '<TABLE class="remind_action_tab" id="new_action">' +
+                '<tr><td class="label" id="new_about"><TD id="new_title">' +
+                '<tr><td class="label top" id="new_comm"><TD><TEXTAREA id="comment"></TEXTAREA>' +
                 '</TABLE>';
             dialog.content.html(html);
 
@@ -1516,10 +1754,10 @@ $(document)
         }, 'json');
     })
     .on('click', '#report_prihod .summa_add', function() {
-        var html = '<TABLE cellspacing="8" id="report_prihod_add">' +
-            '<TR><TD class="label">Содержание:<TD><INPUT type="text" id="about" maxlength="100">' +
-            '<TR><TD class="label">Сумма:<TD><INPUT type="text" id="sum" class="money" maxlength="8"> руб.' +
-            '<TR><TD class="label">Деньги поступили в кассу?:<TD><INPUT type="hidden" id="kassa" value="-1">' +
+        var html = '<TABLE id="report_prihod_add">' +
+            '<tr><td class="label">Содержание:<TD><INPUT type="text" id="about" maxlength="100">' +
+            '<tr><td class="label">Сумма:<TD><INPUT type="text" id="sum" class="money" maxlength="8"> руб.' +
+            '<tr><td class="label">Деньги поступили в кассу?:<TD><INPUT type="hidden" id="kassa" value="-1">' +
             '</TABLE>';
         var dialog = vkDialog({
                 width:380,
@@ -1629,12 +1867,12 @@ $(document)
         }, 'json');
     })
     .on('click', '#report_rashod #add', function() {
-        var html = '<TABLE cellpadding="0" cellspacing="8" id="report_rashod_add">' +
-                '<TR><TD class="label">Категория:<TD><INPUT type="hidden" id="category" value="0">' +
-                '<TR><TD class="label">Описание:<TD><INPUT type="text" id="about" maxlength="100">' +
-                '<TR><TD class="label">Сотрудник:<TD><INPUT type="hidden" id="worker" value="0">' +
-                '<TR><TD class="label">Сумма:<TD><INPUT type="text" id="sum" class="money" maxlength="8"> руб.' +
-                '<TR><TD class="label">Деньги взяты из кассы?:<TD><INPUT type="hidden" id="kassa" value="-1">' +
+        var html = '<TABLE id="report_rashod_add">' +
+                '<tr><td class="label">Категория:<TD><INPUT type="hidden" id="category" value="0">' +
+                '<tr><td class="label">Описание:<TD><INPUT type="text" id="about" maxlength="100">' +
+                '<tr><td class="label">Сотрудник:<TD><INPUT type="hidden" id="worker" value="0">' +
+                '<tr><td class="label">Сумма:<TD><INPUT type="text" id="sum" class="money" maxlength="8"> руб.' +
+                '<tr><td class="label">Деньги взяты из кассы?:<TD><INPUT type="hidden" id="kassa" value="-1">' +
             '</TABLE>',
             dialog = vkDialog({
                 top:60,
@@ -1737,12 +1975,12 @@ $(document)
                 id:id
             };
         $.post(AJAX_MAIN, send, function(res) {
-            var html = '<TABLE cellpadding="0" cellspacing="8" id="report_rashod_add">' +
-                '<TR><TD class="label">Категория:<TD><INPUT type="hidden" id="category" value="' + res.category + '">' +
-                '<TR><TD class="label">Описание:<TD><INPUT type="text" id="about" maxlength="150" value="' + res.about + '">' +
-                '<TR><TD class="label">Сотрудник:<TD><INPUT type="hidden" id="worker" value="' + res.worker_id + '">' +
-                '<TR><TD class="label">Сумма:<TD><INPUT type="text" id="sum" class="money" maxlength="8" value="' + res.sum + '"> руб.' +
-                '<TR><TD class="label">Деньги взяты из кассы?:<TD><INPUT type="hidden" id="kassa" value="' + res.kassa + '">' +
+            var html = '<TABLE id="report_rashod_add">' +
+                '<tr><td class="label">Категория:<TD><INPUT type="hidden" id="category" value="' + res.category + '">' +
+                '<tr><td class="label">Описание:<TD><INPUT type="text" id="about" maxlength="150" value="' + res.about + '">' +
+                '<tr><td class="label">Сотрудник:<TD><INPUT type="hidden" id="worker" value="' + res.worker_id + '">' +
+                '<tr><td class="label">Сумма:<TD><INPUT type="text" id="sum" class="money" maxlength="8" value="' + res.sum + '"> руб.' +
+                '<tr><td class="label">Деньги взяты из кассы?:<TD><INPUT type="hidden" id="kassa" value="' + res.kassa + '">' +
                 '</TABLE>';
             dialog.content.html(html);
             category = $('#report_rashod_add #category');
@@ -1859,9 +2097,9 @@ $(document)
     .on('click', '#report_kassa .actions a:first', function() {
         var kassa = $('#kassa_summa'),
             kassa_sum = parseInt(kassa.html()),
-            html = '<TABLE cellspacing="8">' +
-                '<TR><TD class="label r">Сумма:<TD><INPUT type="text" class="money" id="kassa_down_sum" maxlength="8" />' +
-                '<TR><TD class="label r">Комментарий:<TD><INPUT type="text" id="kassa_down_txt" />' +
+            html = '<TABLE style="border-spacing:8px">' +
+                '<tr><td class="label r">Сумма:<TD><INPUT type="text" class="money" id="kassa_down_sum" maxlength="8" />' +
+                '<tr><td class="label r">Комментарий:<TD><INPUT type="text" id="kassa_down_txt" />' +
                 '</TABLE>',
             dialog = vkDialog({
                 head:'Внесение денег в кассу',
@@ -1909,10 +2147,10 @@ $(document)
     .on('click', '#report_kassa .actions a:last', function() {
         var kassa = $('#kassa_summa'),
             kassa_sum = kassa.html(),
-            html = '<TABLE cellspacing="8">' +
-                '<TR><TD class="label r">Сумма:' +
+            html = '<TABLE style="border-spacing:8px">' +
+                '<tr><td class="label r">Сумма:' +
                     '<TD><INPUT type="text" class="money" id="kassa_down_sum" maxlength="8" /> max: ' + kassa_sum +
-                '<TR><TD class="label r">Комментарий:<TD><INPUT type="text" id="kassa_down_txt" />' +
+                '<tr><td class="label r">Комментарий:<TD><INPUT type="text" id="kassa_down_txt" />' +
                 '</TABLE>',
             dialog = vkDialog({
                 head:'Взятие денег из кассы',
@@ -2139,11 +2377,10 @@ $(document).ready(function() {
             spisok:G.device_status_spisok,
             func:zayavSpisokLoad
         }).o;
-        //zayavFilter();
+        zayavFilter();
     }
     if($('#zayavAdd').length > 0) {
         $('#client_id').clientSel({add:1});
-        $('#category').vkSel({width:150, spisok:G.category_spisok});
         // создание нового списка устройств, которые выбраны для этой мастерской
         G.device_spisok = [];
         for(var n = 0; n < G.ws.devs.length; n++) {
@@ -2190,7 +2427,6 @@ $(document).ready(function() {
             var send = {
                 op:'zayav_add',
                 client:$('#client_id').val(),
-                category:$('#category').val(),
                 device:$('#dev_device').val(),
                 vendor:$('#dev_vendor').val(),
                 model:$('#dev_model').val(),
@@ -2244,6 +2480,44 @@ $(document).ready(function() {
             owner:'zayav' + G.zayavInfo.id,
             func:zayavImgUpdate
         });
+    }
+
+    if($('#zp').length > 0) {
+        $('#find')
+            .topSearch({
+                width:134,
+                focus:1,
+                txt:'Быстрый поиск...',
+                enter:1,
+                func:zpSpisokLoad
+            })
+            .topSearchSet(G.zp_find);
+        $("#menu")
+            .infoLink({
+            spisok:[
+                {uid:0,title:'Общий каталог'},
+                {uid:1,title:'Наличие'},
+                {uid:2,title:'Нет в наличии'},
+                {uid:3,title:'Заказ'}],
+            func:zpSpisokLoad
+        })
+            .infoLinkSet(G.zp_menu);
+        window.zp_name = $("#zp_name").vkSel({
+            width:153,
+            title0:'Любое наименование',
+            spisok:G.zp_name_spisok,
+            func:zpSpisokLoad
+        }).o;
+        $("#dev").device({
+            width:153,
+            type_no:1,
+            device_ids:G.ws.devs,
+            device_id:G.zp_device,
+            vendor_id:G.zp_vendor,
+            model_id:G.zp_model,
+            func:zpSpisokLoad
+        });
+        zpFilter();
     }
 
     if($('#report_history').length > 0) {

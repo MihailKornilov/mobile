@@ -20,7 +20,7 @@ $(document).ready(function() {
                 if(!t.val()) {
                     if(t.parent().parent().hasClass('empty')) {
                         t.parent().parent().hide()
-                            .parent().find('span').show();
+                         .parent().find('span').show();
                         return;
                     }
                     var val = t.attr('val');
@@ -71,7 +71,7 @@ $(document).ready(function() {
                     val;
                 for(var n = 0; n < 10; n++) {
                     p = p.parent();
-                    if(p.hasClass('unit'))
+                    if(p.hasClass('cunit'))
                         pid = p.attr('val');
                     if(p.hasClass('vkComment')) {
                         val = p.attr('val').split('_');
@@ -100,27 +100,21 @@ $(document).ready(function() {
                 }, 'json');
             })
             .on('click', '.vkComment .unit_del', function() {
-                var t = $(this);
-                var p = t.parent(),
-                    id;
-                for(var n = 0; n < 10; n++) {
-                    p = p.parent();
-                    if(p.hasClass('unit')) {
-                        id = p.attr('val');
-                        break;
-                    }
-                }
-                if(p.hasClass('busy'))
+                var u = $(this);
+                while(!u.hasClass('cunit'))
+                    u = u.parent();
+                if(u.hasClass('busy'))
                     return;
-                var send = {
-                    op:'vkcomment_del',
-                    id:id
-                };
-                p.addClass('busy');
+                var id = u.attr('val'),
+                    send = {
+                        op:'vkcomment_del',
+                        id:id
+                    };
+                u.addClass('busy');
                 $.post(AJAX_MAIN, send, function(res) {
-                    p.removeClass('busy');
+                    u.removeClass('busy');
                     if(res.success)
-                        p.find('table:first').hide()
+                        u.find('table:first').hide()
                          .before('<div class="deleted">Заметка удалена. <a class="unit_rest" val="' + id + '">Восстановить</a></div>');
                 }, 'json');
             })
@@ -139,22 +133,16 @@ $(document).ready(function() {
                 }, 'json');
             })
             .on('click', '.vkComment .child_del', function() {
-                var t = $(this);
-                var p = t.parent(),
-                    id;
-                for(var n = 0; n < 10; n++) {
+                var p = $(this);
+                while(!p.hasClass('child'))
                     p = p.parent();
-                    if(p.hasClass('child')) {
-                        id = p.attr('val');
-                        break;
-                    }
-                }
                 if(p.hasClass('busy'))
                     return;
-                var send = {
-                    op:'vkcomment_del',
-                    id:id
-                };
+                var id = p.attr('val'),
+                    send = {
+                        op:'vkcomment_del',
+                        id:id
+                    };
                 p.addClass('busy');
                 $.post(AJAX_MAIN, send, function(res) {
                     p.removeClass('busy');
@@ -243,7 +231,7 @@ $(document).on('click', '.fotoView', function() {
     var t = $(this),
         html ='<DIV id="foto_view">' +
             '<DIV class="head"><EM><img src="/img/upload.gif"></EM><A>Закрыть</A></DIV>' +
-            '<table cellspacing="0" class="image"><tr><td><img src="' + t.attr('src').replace('small', 'big') + '"></table>' +
+            '<table class="image"><tr><td><img src="' + t.attr('src').replace('small', 'big') + '"></table>' +
             '<DIV class="about"><DIV class="dtime"></DIV></DIV>' +
             '<DIV class="hide"></DIV>' +
             '</DIV>';
@@ -539,7 +527,7 @@ $.fn.years = function(obj) {
     var id = t.attr('id');
 
     var html = "<DIV class=years id=years_" + id + ">" +
-        "<TABLE cellpadding=0 cellspacing=0>" +
+        "<TABLE>" +
         "<TR><TD class=but>&laquo;<TD id=ycenter><SPAN>" + obj.year + "</SPAN><TD class=but>&raquo;" +
         "</TABLE></DIV>";
     t.after(html);

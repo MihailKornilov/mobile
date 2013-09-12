@@ -180,7 +180,7 @@ td.r{text-align:right}
 .zayav_link td{border:0;padding:0}
 .zayav_link .image{max-width:100px;overflow:hidden}
 .zayav_link img{height:70px}
-.zayav_link .inf{white-space:nowrap;padding-left:5px}
+.zayav_link .inf{white-space:nowrap;padding-left:5px;vertical-align:top}
 
 
 
@@ -195,6 +195,7 @@ td.r{text-align:right}
 #client #active_check{margin-top:10px}
 #client .left{padding-bottom:10px}
 #client .unit{margin:5px 10px 0 10px;border-bottom:#dae1e8 solid 1px;padding:5px}
+#client .unit table{border-spacing:1px}
 #client .label{width:70px}
 #client .balans{float:right;width:80px;color:#888}
 #client .balans b{float:right}
@@ -211,7 +212,7 @@ td.r{text-align:right}
 #clientInfo .cinf{margin:0 10px 0 28px;height:90px}
 #clientInfo .cinf .label{width:60px}
 #clientInfo .dtime{font-size:10px;color:#999;text-align:right}
-.client_edit{margin-left:5px}
+.client_edit{margin-left:5px;border-spacing:10px}
 .client_edit .label{width:80px;text-align:right}
 .client_edit #fio,.client_edit #telefon{width:228px}
 .client_edit .tr_join{display:none}
@@ -242,12 +243,14 @@ td.r{text-align:right}
     box-shadow: 0 0 5px rgba(0,0,0,0.2);
 }
 .zayav_unit:hover{border:#bbb solid 1px;box-shadow: 0 0 5px rgba(0,0,0,0.4);}
-.zayav_unit H1{margin:4px 0 2px 6px}
+.zayav_unit .name{display:block;margin:4px 0 2px 6px;font-size:12px}
+.zayav_unit .name b{font-size:12px}
 .zayav_unit H2{float:right;font-size:10px;color:#777;margin:4px}
 .zayav_unit H2.finded{background:#FFC;color:#444;text-decoration:underline}
 .zayav_unit em{background:#FFC;border-bottom:1px solid #FE2}
 .zayav_unit b em{font-weight:bold}
 .zayav_unit .label{width:90px;padding-left:10px}
+.zayav_unit .zz{color:#a33}
 .zayav_unit .image {
     width:80px;
     height:80px;
@@ -278,7 +281,7 @@ td.r{text-align:right}
 #zayavAdd #serial{width:200px}
 #zayavAdd #fault .check0,#zayavAdd #fault .check1{white-space:nowrap;margin:4px 15px 0 0}
 #zayavAdd #comm{width:260px;height:40px}
-#zayavAdd #reminder_tab{display:none;position:relative;top:-8px}
+#zayavAdd #reminder_tab{display:none;border-spacing:8px;position:relative;top:-8px}
 #zayavAdd #reminder_txt{width:260px}
 #zayavAdd .vkButton{margin:10px 7px 0 206px}
 
@@ -286,9 +289,10 @@ td.r{text-align:right}
 
 /* Информация о заявке */
 #zayavInfo .delete{float:right;margin-top:4px;color:#933}
+#zayavInfo .itab{width:100%;border-spacing:10px}
 #zayavInfo #left{vertical-align:top}
 #zayavInfo .headName{margin:0;padding:4px 3px}
-#zayavInfo .tabInfo{margin:2px 10px 15px 10px; }
+#zayavInfo .tabInfo{margin:2px 10px 15px 10px;border-spacing:4px}
 #zayavInfo .label{width:85px}
 #zayavInfo .dtime_add{cursor:help}
 #zayavInfo #status {
@@ -310,9 +314,11 @@ td.r{text-align:right}
 #zayavInfo .acc{color:#07a;cursor:help}
 #zayavInfo ._money .del{width:20px;padding:0}
 #zayavInfo ._money .img_del{margin:0 0 -2px 4px}
+.zayav_accrual_add{border-spacing:8px}
 .zayav_accrual_add .label{width:140px;text-align:right}
 .zayav_accrual_add #prim,.zayav_accrual_add #reminder_txt { width:200px; }
 .zayav_accrual_add.remind{display:none;margin-top:-8px;}
+.zayav_oplata_add{border-spacing:8px}
 .zayav_oplata_add .label{width:165px;text-align:right}
 .zayav_oplata_add #prim{width:200px}
 #zayavInfo .deleting{text-align:center;color:#555}
@@ -323,13 +329,13 @@ td.r{text-align:right}
 #zayavInfo .devContent{border-left:#e9edf1 solid 1px}
 #zayavInfo .devName{padding:7px 0 0 7px}
 #zayavInfo .devName a{font-weight:bold}
-#zayavInfo .devInfo{margin:7px 0 10px 7px}
+#zayavInfo .devInfo{margin:7px 0 10px 7px;border-spacing:1px}
 #zayavInfo .devInfo *{font-size:10px}
 #zayavInfo .devInfo th{width:70px;color:#777;text-align:left;font-size:10px}
 #zayavInfo .goZp{font-weight:bold}
 .zayav_zp_add center{margin-bottom:15px}
 .zayav_zp_add center,.zayav_zp_add center b{font-size:12px}
-.zayav_zp_add #name_dop{width:188px}
+.zayav_zp_add #dop{width:188px}
 .zayav_zp_set,.zayav_zp_set b{font-size:12px}
 #zayavInfo #zpSpisok{margin:7px 7px 60px 7px}
 #zayavInfo #zpSpisok *{font-size:10px}
@@ -359,6 +365,173 @@ td.r{text-align:right}
 
 
 
+
+/* Список запчастей */
+#zp .right{width:155px}
+#zp .unit{padding:7px 0;margin:0 8px;border-bottom:#dae2e8 solid 1px}
+#zp .unit .img{width:80px;height:80px;padding-right:10px;text-align:center;vertical-align:top}
+#zp .unit IMG{cursor:pointer}
+#zp .cont{vertical-align:top;width:235px}
+#zp .name,#zp .name B,#zp .dop,#zp em{font-size:12px}
+#zp .name em{font-weight:bold}
+#zp em{background:#FFC;border-bottom:1px solid #FE2}
+#zp .dop{color:#555;margin:1px 0}
+#zp .color{margin-top:6px}
+#zp .color span{color:#777}
+#zp .action{vertical-align:top}
+#zp .unit:not(:hover) .hid{visibility:hidden}
+#zp .action a{display:inline-block;padding:4px 0 4px 5px;width:105px}
+#zp .action a:hover{background-color:#e9edf1;text-decoration:none}
+#zp a.avai{color:#2A2}
+#zp a.zakaz:not(.hid),#zp a.zakaz:hover{color:#A33}
+#zp a.zakaz.busy .edit,
+#zp a.zakaz:not(:hover) .edit,
+#zp a.zakaz:not(.busy):hover .cnt{display:none}
+#zp a.zakaz.busy{background-position:58px 8px}
+#zp a.zakaz tt{display:inline-block;padding:0 4px;color:#aaa}
+#zp a.zakaz tt:hover{color:#004}
+#zp .zz{margin-top:10px;color:#777}
+#zp .add{float:right}
+.zp_add_dialog{border-spacing:10px}
+.zp_add_dialog #dop{width:188px}
+.zp_add_dialog .label{width:155px;text-align:right}
+.avai_add{width:100%}
+.avai_add .left{width:250px;vertical-align:top}
+.avai_add .name,table.avai_add b,.avai_add em{font-size:12px}
+.avai_add em{font-weight:bold}
+.avai_add .avai{margin:15px 0;color:#777}
+.avai_add .inp{border-spacing:6px}
+.avai_add input{text-align:right}
+.avai_add #count{width:40px;margin-left:25px}
+.avai_add #cena{width:65px}
+.avai_add span{color:#aaa;margin-left:5px}
+#zp #menu{margin-top:10px}
+#zp .ajaxNext{margin:0 8px 10px 8px}
+/*
+
+#zp .unit .action EM { color:#AAA; }
+#zp .unit .action EM:hover { color:#004; }
+
+
+
+#zp #view { min-height:400px; }
+#zp #view .tab { margin:10px 10px 10px 0;}
+#zp #view .tab .td1 {
+    vertical-align:top;
+    width:397px;
+    padding:0 10px;
+}
+#zp #view .tab H1 {
+    color:#45688E;
+    font:bold 12px Tahoma;
+    margin-top:5px;
+    margin-bottom:2px;
+}
+#zp #view .tab H1 EM {
+    font:bold 12px Tahoma;
+    margin-left:12px;
+    color:#777;
+}
+#zp #view .tab H2, #zp #view .tab H2 A { font-size:12px; }
+#zp #view .tab H3 { margin-top:5px; }
+#zp #view .tab H3 EM {
+    text-align:right;
+    margin-top:2px;
+    margin-right:7px;
+    width:40px;
+    color:#777;
+    display:inline-block;
+}
+#zp #view .tabnal { margin:15px 0 10px 10px; }
+#zp #view .nal {
+    font-weight:bold;
+    padding-right:30px;
+}
+#zp #view .tab .add {
+    color:#AAA;
+    margin:6px 0 15px 0;
+    font-size:10px;
+    text-align:right;
+}
+#zp #view .foto {
+    vertical-align:top;
+    width:200px;
+    text-align:center;
+    cursor:pointer;
+}
+#zp #dopMenu EM { margin:0 4px; }
+#zp #dopMenu SPAN { font-weight:bold; }
+#zp #compat { margin-bottom:15px; }
+#zp #compat .headBlue A {
+    float:right;
+    color:#777;
+}
+#zp #compat EM {
+    margin-left:8px;
+    color:#999;
+}
+#zp #compat TABLE { width:100%; }
+#zp #compat TD { padding:2px 3px 2px 8px; }
+#zp #compat .del {
+    width:19px;
+    padding:0;
+    text-align:center;
+}
+#zp #compat .img_del { margin:2px 0 0 2px; }
+#zp #compat .empty { color:#777; }
+#zp #compat_add H1 { font-size:12px; margin-bottom:10px; }
+#zp #compat_add #cdev { margin:10px 0 10px 90px; }
+#zp #compat_add #cres { text-align:center; }
+
+#zp .mov {
+    margin:8px 0 4px 0;
+    padding-bottom:5px;
+    border-bottom:#DEE solid 1px;
+}
+#zp .mov TD, #zp .mov TH { vertical-align:top; }
+#zp .mov TH { padding-right:7px; }
+#zp .mov TD { width:360px; }
+#zp .mov .img_del {
+    float:right;
+}
+#zp .mov H2 { margin-top:3px; }
+#zp .mov H2, #zp .mov H2 B { font-size:12px; }
+#zp .mov H3 {
+    font-size:10px;
+    color:#777;
+    margin-top:5px;
+}
+#zp .mov H4 {
+    color:#774;
+    font:italic 12px Arial;
+    padding-top:2px;
+}
+.zpDecTab .tdAbout {
+    margin-top:3px;
+    text-align:right;
+    width:90px;
+}
+.zpDecTab #count {
+    width:45px;
+    font:bold 12px Tahoma;
+    text-align:right;
+}
+.zpDecTab SPAN {
+    margin-left:5px;
+    color:#888;
+}
+.zpDecTab #zayavNomer { width:60px; }
+.zpDecTab #cena { width:50px; }
+.zpDecTab TEXTAREA {
+    width:200px;
+    height:40px;
+    resize:none;
+}
+*/
+
+
+
+
 #report_history{margin:8px}
 #report_history .head{font-size:10px;color:#777;margin-top:10px}
 #report_history .head a{font-size:10px;margin-left:10px}
@@ -382,7 +555,8 @@ td.r{text-align:right}
 .remind_unit .day{padding-top:3px;padding-bottom:3px;font-weight:bold;color:#884}
 .remind_unit .day EM{color:#884; margin-left:4px}
 .remind_unit .day SPAN{color:#888}
-.remind_unit .action{float:right;display:none;margin-right:4px}
+.remind_unit .action{float:right;margin-right:4px}
+.remind_unit:not(:hover) .action{display:none}
 .remind_unit .action a{font-size:10px}
 .remind_unit .hist{
     display:none;
@@ -420,6 +594,7 @@ td.r{text-align:right}
 .rightLinks a:not(.sel) .report_remind_add{display:none}
 .report_remind_add{float:right;margin:1px 0}
 /* таблица внесения нового напоминания */
+.remind_add_tab{border-spacing:6px}
 .remind_add_tab .label{width:160px;text-align:right}
 .remind_add_tab#tab_content{display:none}
 .remind_add_tab #txt{width:240px;height:40px}
@@ -427,7 +602,7 @@ td.r{text-align:right}
 .remind_add_tab #zayav_nomer{width:60px}
 .remind_add_tab #img{color:#666;margin-left:5px}
 /* Новое действие для напоминания */
-.remind_action_tab{margin:0 10px}
+.remind_action_tab{margin:0 10px;border-spacing:6px}
 .remind_action_tab .label{width:80px;text-align:right}
 .remind_action_tab b{
     display:block;
@@ -454,6 +629,7 @@ td.r{text-align:right}
 #report_prihod .deleted *{color:#999}
 #report_prihod .summa{margin-bottom:7px}
 #report_prihod .summa_add{float:right}
+#report_prihod_add{border-spacing:8px}
 #report_prihod_add #about{width:170px}
 .report_prihod_rl .label{display:inline-block;width:20px}
 .report_prihod_rl .cal{margin-top:5px}
@@ -475,6 +651,7 @@ td.r{text-align:right}
 #years_rashod_year{margin-top:20px}
 #rashod_monthSum_radio .sum{float:right}
 #rashod_monthSum_radio .off .sum{color:#888}
+#report_rashod_add{border-spacing:8px}
 #report_rashod_add #about{width:190px}
 #rashod_category_name{width:190px}
 

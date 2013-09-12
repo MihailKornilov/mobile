@@ -117,7 +117,7 @@ $.fn.vkSel = function (obj) {
 
   var html = "<DIV class=vkSel id=vkSel_" + id + " style=width:" + obj.width + "px;display:" + obj.display + ";>";
 
-    html += "<TABLE cellspacing=0 cellpadding=0 class=main style=width:" + obj.width + "px;>";
+    html += "<TABLE class=main style=width:" + obj.width + "px;>";
       var sel_width = obj.width - 17 - 4;
       if (obj.funcAdd) { sel_width -= 17; }
       html += "<TD class=selected style=width:" + sel_width + "px; val=inp_>";
@@ -577,8 +577,8 @@ G.months_sel_ass = {1:'января',2:'февраля',3:'марта',4:'апреля',5:'мая',6:'июня'
       this.year = this.curYear;
       this.mon = this.curMon;
       var html = "<DIV class=cal_calendar style=left:" + (this.place == 'right' ? 0 : -64) + "px;>" +
-          "<TABLE cellpadding=0 cellspacing=0 class=cal_head><TR><TD class=cal_back val=cal_back><TD class=cal_month><TD class=cal_next val=cal_next></TABLE>" +
-          "<TABLE cellpadding=0 cellspacing=0 class=cal_week_name><TR><TD>Пн<TD>Вт<TD>Ср<TD>Чт<TD>Пт<TD>Сб<TD>Вс</TABLE>" +
+          "<TABLE class=cal_head><TR><TD class=cal_back val=cal_back><TD class=cal_month><TD class=cal_next val=cal_next></TABLE>" +
+          "<TABLE class=cal_week_name><TR><TD>Пн<TD>Вт<TD>Ср<TD>Чт<TD>Пт<TD>Сб<TD>Вс</TABLE>" +
           "<DIV class=cal_days></DIV>" +
         "</DIV>";
       this.calAbs.html(html);
@@ -630,7 +630,7 @@ G.months_sel_ass = {1:'января',2:'февраля',3:'марта',4:'апреля',5:'мая',6:'июня'
 
   // вывод списка дней
   Calendar.prototype.daysPrint = function () {
-    var html = "<TABLE cellpadding=0 cellspacing=0><TR>";
+    var html = "<TABLE><TR>";
 
     // установка пустых ячеек
     dayFirst = getDayFirst(this.year, this.mon);
@@ -1219,7 +1219,7 @@ $.fn.myRadioSet = function (VAL) {
 
         var correct = o.correct == 1 ? "<DIV class=correct>top: <SPAN id=correct_top>" + o.top + "</SPAN> left: <SPAN id=correct_left>" + o.left + "</SPAN></DIV>" : '';
 
-        var html = "<TABLE cellpadding=0 cellspacing=0 class=cont_table>" +
+        var html = "<TABLE class=cont_table>" +
             "<TR><TD class=ugttd colspan=3>" + (o.ugol == 'top' ? "<DIV class=ugt></DIV>" : '') +
             "<TR><TD class=ugltd>" + (o.ugol == 'left' ? "<DIV class=ugl></DIV>" : '') +
             "<TD class=cont>" + correct + o.msg +
@@ -1227,12 +1227,12 @@ $.fn.myRadioSet = function (VAL) {
             "<TR><TD class=ugbtd colspan=3>" + (o.ugol == 'bottom' ? "<DIV class=ugb></DIV>" : '') +
             "</TABLE>";
 
-        html = "<TABLE cellpadding=0 cellspacing=0>" +
+        html = "<TABLE>" +
             "<TR><TD class=side012><TD>" + html + "<TD class=side012>" +
             "<TR><TD class=b012 colspan=3>" +
             "</TABLE>";
 
-        html = "<TABLE cellpadding=0 cellspacing=0 class=hint_table>" +
+        html = "<TABLE class=hint_table>" +
             "<TR><TD class=side005><TD>" + html + "<TD class=side005>" +
             "<TR><TD class=b005 colspan=3>" +
             "</TABLE>";
@@ -1450,13 +1450,13 @@ $.fn.alertShow = function(OBJ) {
   if ($("#alert").length > 0) { $("#alert").remove(); }
   var HTML="<DIV id=alert>";
 
-    HTML+="<TABLE cellpadding=0 cellspacing=0 id=table style=width:"+(OBJ.width>0?OBJ.width+'px':'auto')+">";
+    HTML+="<TABLE id=table style=width:"+(OBJ.width>0?OBJ.width+'px':'auto')+">";
     if(OBJ.ugol=='top') HTML+="<TR><TD class=UGT><DIV>&nbsp;</DIV>";
     HTML+="<TR>";
     if(OBJ.ugol=='left') HTML+="<TD class=UGL><DIV>&nbsp;</DIV>";
 
     HTML+="<TD>";
-      HTML+="<TABLE cellpadding=0 cellspacing=0>";
+      HTML+="<TABLE>";
       HTML+="<TR><TD class=LR1><TD class=LR2><TD class=RAM>";
       HTML+="<DIV class=txt>"+OBJ.txt+"</DIV>";
       HTML+="<TD class=LR2><TD class=LR1>";

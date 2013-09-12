@@ -15,6 +15,7 @@ define('URL', SITE.'/index.php?'.VALUES);
 require_once(DOCUMENT_ROOT.'/syncro.php');
 
 define('REGEXP_NUMERIC', '/^[0-9]{1,20}$/i');
+define('REGEXP_CENA', '/^[0-9]{1,6}(.[0-9]{1,2})?$/i');
 define('REGEXP_BOOL', '/^[0-1]$/');
 define('REGEXP_DATE', '/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/');
 define('REGEXP_YEAR', '/^[0-9]{4}$/');

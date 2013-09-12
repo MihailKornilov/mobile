@@ -6,7 +6,7 @@ require_once(DOCUMENT_ROOT.'/view/main.php');
 function jsonError($values=null) {
     $send['error'] = 1;
     if(empty($values))
-        $send['text'] = 'Произошла неизвестная ошибка.<br />Попробуйте позднее.';
+        $send['text'] = utf8('Произошла неизвестная ошибка.<br />Попробуйте позднее.');
     elseif(is_array($values))
         $send += $values;
     else
@@ -234,7 +234,7 @@ switch(@$_POST['op']) {
         break;
     case 'client_spisok_load':
         $filter = clientFilter($_POST);
-        $send = get_client_list(1, $filter);
+        $send = client_data(1, $filter);
         $send['all'] = utf8(client_count($send['all'], $filter['dolg']));
         $send['spisok'] = utf8($send['spisok']);
         jsonSuccess($send);
@@ -242,7 +242,7 @@ switch(@$_POST['op']) {
     case 'client_next':
         if(!preg_match(REGEXP_NUMERIC, $_POST['page']))
             jsonError();
-        $send = get_client_list(intval($_POST['page']), clientFilter($_POST));
+        $send = client_data(intval($_POST['page']), clientFilter($_POST));
         $send['spisok'] = utf8($send['spisok']);
         jsonSuccess($send);
         break;
@@ -282,27 +282,24 @@ switch(@$_POST['op']) {
         jsonSuccess();
         break;
     case 'client_zayav_load':
-        $data = get_zayav_list(1, zayavfilter($_POST), 10);
-        $send['all'] = utf8(show_zayav_count($data['all'], 0));
-        $send['html'] = utf8(show_zayav_spisok($data));
+        $data = zayav_data(1, zayavfilter($_POST), 10);
+        $send['all'] = utf8(zayav_count($data['all'], 0));
+        $send['html'] = utf8(zayav_spisok($data));
         jsonSuccess($send);
         break;
     case 'client_zayav_next':
         if(!preg_match(REGEXP_NUMERIC, $_POST['page']))
             jsonError();
-        $send['html'] = utf8(show_zayav_spisok(get_zayav_list(intval($_POST['page']), zayavfilter($_POST), 10)));
+        $send['html'] = utf8(zayav_spisok(zayav_data(intval($_POST['page']), zayavfilter($_POST), 10)));
         jsonSuccess($send);
         break;
 
     case 'zayav_add':
         if(!preg_match(REGEXP_NUMERIC, $_POST['client']) || $_POST['client'] == 0)
             jsonError();
-        if(!preg_match(REGEXP_NUMERIC, $_POST['category']))
-            jsonError();
         if(!preg_match(REGEXP_NUMERIC, $_POST['device']) || $_POST['device'] == 0)
             jsonError();
         $client = intval($_POST['client']);
-        $category = intval($_POST['category']);
         $device = intval($_POST['device']);
         $vendor = intval($_POST['vendor']);
         $model = intval($_POST['model']);
@@ -335,7 +332,6 @@ switch(@$_POST['op']) {
                     `ws_id`,
                     `nomer`,
                     `client_id`,
-                    `category`,
 
                     `base_device_id`,
                     `base_vendor_id`,
@@ -358,7 +354,6 @@ switch(@$_POST['op']) {
                     ".WS_ID.",
                     ".$nomer.",
                     ".$client.",
-                    ".$category.",
 
                     ".$device.",
                     ".$vendor.",
@@ -379,7 +374,7 @@ switch(@$_POST['op']) {
                     '".$modelName." ".$imei." ".$serial."'
                 )";
         query($sql);
-        $insert_id = mysql_insert_id();
+        $send['id'] = mysql_insert_id();
         xcache_unset('vkmobile_zayav_base_device'.WS_ID);
         xcache_unset('vkmobile_zayav_base_vendor'.WS_ID);
         xcache_unset('vkmobile_zayav_base_model'.WS_ID);
@@ -392,7 +387,7 @@ switch(@$_POST['op']) {
                         `viewer_id_add`
                     ) VALUES (
                         'zayav',
-                        ".$insert_id.",
+                        ".$send['id'].",
                         '".$comm."',
                         ".VIEWER_ID."
                     )";
@@ -409,7 +404,7 @@ switch(@$_POST['op']) {
                 `viewer_id_add`
              ) VALUES (
                 ".WS_ID.",
-                ".$insert_id.",
+                ".$send['id'].",
                 '".$reminder_txt."',
                 '".$reminder_day."',
                 '".FullDataTime(curTime())." "._viewerName()." добавил напоминание для заявки.',
@@ -420,9 +415,8 @@ switch(@$_POST['op']) {
         history_insert(array(
             'type' => 1,
             'client_id' => $client,
-            'zayav_id' => $insert_id
+            'zayav_id' => $send['id']
         ));
-        $send['id'] = $insert_id;
         jsonSuccess($send);
         break;
     case 'model_img_get':
@@ -433,16 +427,16 @@ switch(@$_POST['op']) {
         break;
     case 'zayav_spisok_load':
         $_POST['find'] = win1251($_POST['find']);
-        $data = get_zayav_list(1, zayavfilter($_POST));
-        $send['all'] = utf8(show_zayav_count($data['all']));
-        $send['html'] = utf8(show_zayav_spisok($data));
+        $data = zayav_data(1, zayavfilter($_POST));
+        $send['all'] = utf8(zayav_count($data['all']));
+        $send['html'] = utf8(zayav_spisok($data));
         jsonSuccess($send);
         break;
     case 'zayav_next':
         $_POST['find'] = win1251($_POST['find']);
         if(!preg_match(REGEXP_NUMERIC, $_POST['page']))
             jsonError();
-        $send['html'] = utf8(show_zayav_spisok(get_zayav_list(intval($_POST['page']), zayavfilter($_POST))));
+        $send['html'] = utf8(zayav_spisok(zayav_data(intval($_POST['page']), zayavfilter($_POST))));
         jsonSuccess($send);
         break;
     case 'zayav_edit':
@@ -901,42 +895,22 @@ switch(@$_POST['op']) {
             jsonError();
         if(!preg_match(REGEXP_NUMERIC, $_POST['color_id']))
             jsonError();
-        $sql = "SELECT *
+        $sql = "SELECT
+                    `base_device_id` AS `device_id`,
+                    `base_vendor_id` AS `vendor_id`,
+                    `base_model_id` AS `model_id`
                 FROM `zayavki`
                 WHERE `ws_id`=".WS_ID."
                   AND `id`=".intval($_POST['zayav_id']);
-        if(!$zayav = mysql_fetch_assoc(query($sql)))
+        if(!$zp = mysql_fetch_assoc(query($sql)))
             jsonError();
-        $name_id = intval($_POST['name_id']);
-        $name_dop = win1251(htmlspecialchars(trim($_POST['name_dop'])));
-        $color_id = intval($_POST['color_id']);
-        $sql = "INSERT INTO `zp_catalog` (
-                    `name_id`,
-                    `name_dop`,
-                    `color_id`,
-                    `base_device_id`,
-                    `base_vendor_id`,
-                    `base_model_id`,
-                    `viewer_id_add`,
-                    `find`
-                ) VALUES (
-                    ".$name_id.",
-                    '".$name_dop."',
-                    ".$color_id.",
-                    ".$zayav['base_device_id'].",
-                    ".$zayav['base_vendor_id'].",
-                    ".$zayav['base_model_id'].",
-                    ".VIEWER_ID.",
-                    '"._modelName($zayav['base_model_id'])." ".$name_dop."'
-                )";
-        query($sql);
-        $zp = array(
-            'id' => mysql_insert_id(),
-            'name_id' => $name_id,
-            'name_dop' => $name_dop,
-            'color_id' => $color_id
-        );
-        $send['html'] = utf8(zayav_zp_unit($zp, _vendorName($zayav['base_vendor_id'])._modelName($zayav['base_model_id'])));
+        $zp['name_id'] = intval($_POST['name_id']);
+        $zp['version'] = '';
+        $zp['bu'] = 0;
+        $zp['color_id'] = intval($_POST['color_id']);
+        $zp['dop'] = win1251(htmlspecialchars(trim($_POST['dop'])));
+        $zp['id'] = zpAddQuery($zp);
+        $send['html'] = utf8(zayav_zp_unit($zp, _vendorName($zp['vendor_id'])._modelName($zp['model_id'])));
         jsonSuccess($send);
         break;
     case 'zayav_zp_zakaz':
@@ -951,7 +925,7 @@ switch(@$_POST['op']) {
 
         $sql = "INSERT INTO `zp_zakaz` (
                     `ws_id`,
-                    `zp_catalog_id`,
+                    `zp_id`,
                     `zayav_id`,
                     `viewer_id_add`
                 ) VALUES (
@@ -964,7 +938,7 @@ switch(@$_POST['op']) {
         $send['msg'] = utf8('Запчасть <b>'._zpName($zp['name_id']).'</b> для '._vendorName($zp['base_vendor_id'])._modelName($zp['base_model_id']).' добавлена к заказу.');
         jsonSuccess($send);
         break;
-    case 'zayav_zp_set':
+    case 'zayav_zp_set':// Установка запчасти из заявки
         if(!preg_match(REGEXP_NUMERIC, $_POST['zayav_id']) || $_POST['zayav_id'] == 0)
             jsonError();
         if(!preg_match(REGEXP_NUMERIC, $_POST['zp_id']) || $_POST['zp_id'] == 0)
@@ -975,8 +949,7 @@ switch(@$_POST['op']) {
         $compat_id = _zpCompatId($_POST['zp_id']);
         $sql = "INSERT INTO `zp_move` (
                     `ws_id`,
-                    `zp_catalog_id`,
-                    `prihod`,
+                    `zp_id`,
                     `count`,
                     `type`,
                     `zayav_id`,
@@ -984,27 +957,17 @@ switch(@$_POST['op']) {
                 ) VALUES (
                     ".WS_ID.",
                     ".$compat_id.",
-                    0,
-                    1,
+                    -1,
                     'set',
                     ".intval($_POST['zayav_id']).",
                     ".VIEWER_ID."
                 )";
         query($sql);
 
-        $prihod = query_value("SELECT SUM(`count`) FROM `zp_move` WHERE `ws_id`=".WS_ID." AND `zp_catalog_id`=".$compat_id." AND `prihod`=1 LIMIT 1");
-        $rashod = query_value("SELECT SUM(`count`) FROM `zp_move` WHERE `ws_id`=".WS_ID." AND `zp_catalog_id`=".$compat_id." AND `prihod`=0 LIMIT 1");
-        $count =  $prihod - $rashod;
-        $sql = "DELETE FROM `zp_available` WHERE `ws_id`=".WS_ID." AND `zp_catalog_id`=".$compat_id;
-        query($sql);
-        if($count > 0) {
-            $sql = "INSERT INTO `zp_available` (`ws_id`,`zp_catalog_id`,`count`) VALUES (".WS_ID.",".$compat_id.",".$count.")";
-            query($sql);
-        }
+        $count = _zpAvaiSet($zp_id);
 
         //Удаление из заказа запчасти, привязанной к заявке
-        $sql = "DELETE FROM `zp_zakaz` WHERE `ws_id`=".WS_ID." AND `zayav_id`=".$zayav_id." AND `zp_catalog_id`=".$zp_id;
-        query($sql);
+        query("DELETE FROM `zp_zakaz` WHERE `ws_id`=".WS_ID." AND `zayav_id`=".$zayav_id." AND `zp_id`=".$zp_id);
 
         $parent_id = 0;
         $sql = "SELECT `id`,`parent_id`
@@ -1028,7 +991,7 @@ switch(@$_POST['op']) {
                 ) VALUES (
                     'zayav',
                     ".$zayav_id.",
-                    '".addslashes('Установка запчасти: <a href="'.URL.'&my_page=remZp&id='.$zp_id.'">'._zpName($zp['name_id']).' '.$model.'</a>')."',
+                    '".addslashes('Установка запчасти: <a href="'.URL.'&p=zp&d=info&id='.$zp_id.'">'._zpName($zp['name_id']).' '.$model.'</a>')."',
                     ".$parent_id.",
                     ".VIEWER_ID."
                 )";
@@ -1037,6 +1000,124 @@ switch(@$_POST['op']) {
         $send['zp_unit'] = utf8(zayav_zp_unit($zp, $model));
         $send['comment'] = utf8(_vkComment('zayav', $zayav_id));
         jsonSuccess($send);
+        break;
+
+    case 'zp_add':
+        if(!preg_match(REGEXP_NUMERIC, $_POST['name_id']) || $_POST['name_id'] == 0)
+            jsonError();
+        if(!preg_match(REGEXP_NUMERIC, $_POST['device_id']) || $_POST['device_id'] == 0)
+            jsonError();
+        if(!preg_match(REGEXP_NUMERIC, $_POST['vendor_id']) || $_POST['vendor_id'] == 0)
+            jsonError();
+        if(!preg_match(REGEXP_NUMERIC, $_POST['model_id']) || $_POST['model_id'] == 0)
+            jsonError();
+        if(!preg_match(REGEXP_BOOL, $_POST['bu']))
+            jsonError();
+        if(!preg_match(REGEXP_NUMERIC, $_POST['color_id']))
+            jsonError();
+
+        $zp = array(
+            'name_id' => intval($_POST['name_id']),
+            'device_id' => intval($_POST['device_id']),
+            'vendor_id' => intval($_POST['vendor_id']),
+            'model_id' => intval($_POST['model_id']),
+            'version' => win1251(htmlspecialchars(trim($_POST['version']))),
+            'bu' => intval($_POST['bu']),
+            'color_id' => intval($_POST['color_id']),
+            'dop' => win1251(htmlspecialchars(trim($_POST['dop'])))
+        );
+        zpAddQuery($zp);
+
+        jsonSuccess();
+        break;
+    case 'zp_spisok_load':
+        $_POST['find'] = win1251($_POST['find']);
+        $data = zp_data(1, zpfilter($_POST));
+        $send['all'] = utf8(zp_count($data));
+        $send['html'] = utf8($data['spisok']);
+        jsonSuccess($send);
+        break;
+    case 'zp_next':
+        if(!preg_match(REGEXP_NUMERIC, $_POST['page']))
+            jsonError();
+        $send = zp_data(intval($_POST['page']), zpfilter($_POST));
+        $send['spisok'] = utf8($send['spisok']);
+        jsonSuccess($send);
+        break;
+    case 'zp_avai_add':
+        if(!preg_match(REGEXP_NUMERIC, $_POST['zp_id']) || $_POST['zp_id'] == 0)
+            jsonError();
+        if(!preg_match(REGEXP_NUMERIC, $_POST['count']) || $_POST['count'] == 0)
+            jsonError();
+        if(!preg_match(REGEXP_CENA, $_POST['cena']))
+            jsonError();
+        $zp_id = _zpCompatId($_POST['zp_id']);
+        $count = intval($_POST['count']);
+        $cena = round($_POST['cena'], 2);
+        $summa = round($count * $cena, 2);
+        $sql = "INSERT INTO `zp_move` (
+                    `ws_id`,
+                    `zp_id`,
+                    `count`,
+                    `cena`,
+                    `summa`,
+                    `viewer_id_add`
+                ) VALUES (
+                    ".WS_ID.",
+                    ".$zp_id.",
+                    ".$count.",
+                    '".$cena."',
+                    '".$summa."',
+                    ".VIEWER_ID."
+                )";
+        query($sql);
+        history_insert(array(
+            'type' => 18,
+            'zp_id' => $zp_id,
+            'value' => $count
+        ));
+        $send['count'] = _zpAvaiSet($zp_id);
+        jsonSuccess($send);
+        break;
+    case 'zp_zakaz_edit':
+        if(!preg_match(REGEXP_NUMERIC, $_POST['zp_id']) || $_POST['zp_id'] == 0)
+            jsonError();
+        if(!preg_match(REGEXP_NUMERIC, $_POST['count']))
+            jsonError();
+        $zp_id = _zpCompatId($_POST['zp_id']);
+        $count = intval($_POST['count']);
+        $zakazId = query_value("SELECT `id` FROM `zp_zakaz` WHERE `ws_id`=".WS_ID." AND `zp_id`=".$zp_id." AND `zayav_id`=0 LIMIT 1");
+        if($count > 0) {
+            $sql = "SELECT IFNULL(SUM(`count`),0)
+                    FROM `zp_zakaz`
+                    WHERE `ws_id`=".WS_ID."
+                      AND `zp_id`=".$zp_id."
+                      AND `zayav_id`>0
+                    LIMIT 1";
+            $zakazZayavCount = query_value($sql);
+            if($zakazZayavCount)
+                $count -= $zakazZayavCount;
+        }
+        if($count > 0) {
+            if($zakazId)
+                query("UPDATE `zp_zakaz` SET `count`=".$count." WHERE `id`=".$zakazId);
+            else {
+                $sql = "INSERT INTO `zp_zakaz` (
+                            `ws_id`,
+                            `zp_id`,
+                            `count`,
+                            `viewer_id_add`
+                        ) VALUES (
+                            ".WS_ID.",
+                            ".$zp_id.",
+                            ".$count.",
+                            ".VIEWER_ID."
+                        )";
+                query($sql);
+            }
+        } else
+            query("DELETE FROM `zp_zakaz` WHERE `ws_id`=".WS_ID." AND `zp_id`=".$zp_id);
+        jsonSuccess();
         break;
 
     case 'report_history_load':
@@ -1518,7 +1599,6 @@ switch(@$_POST['op']) {
         $html = '<table><tr>'.
                     '<td><div class="image">'._zayavImg($id).'</div></td>'.
                     '<td class="inf">'.
-                        _zayavCategory($zayav['category']).'<br />'.
                         _deviceName($zayav['base_device_id']).'<br />'.
                         '<b>'._vendorName($zayav['base_vendor_id'])._modelName($zayav['base_model_id']).'</b><br /><br />'.
                         '<span style="color:#000">Клиент:</span> '.$client.

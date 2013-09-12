@@ -36,7 +36,7 @@ $.fn.device = function(obj) {
   if (obj.add > 0) {
     var devD;
     obj.device_funcAdd = function () {
-      var HTML = "<TABLE cellpadding=0 cellspacing=10>";
+      var HTML = "<TABLE style='border-spacing:10px'>";
       HTML+="<TR><TD class=tdAbout>Название:<TD><INPUT TYPE=text id=device_name>";
       HTML+="</TABLE>";
       devD = dialog.vkDialog({
@@ -75,7 +75,7 @@ $.fn.device = function(obj) {
 
     // добавление производителя
     obj.vendor_funcAdd = function () {
-      var HTML="<TABLE cellpadding=0 cellspacing=10>";
+      var HTML="<TABLE style='border-spacing:10px'>";
       HTML+="<TR><TD class=tdAbout>Название:<TD><INPUT TYPE=text id=vendor_name>";
       HTML+="</TABLE>";
       devD = dialog.vkDialog({
@@ -121,7 +121,7 @@ $.fn.device = function(obj) {
     
     // добавление новой модели
     obj.model_funcAdd = function(){
-      var HTML="<TABLE cellpadding=0 cellspacing=10>";
+      var HTML="<TABLE style='border-spacing:10px'>";
       HTML+="<TR><TD class=tdAbout>Название:<TD><INPUT TYPE=text id=model_name>";
       HTML+="</TABLE>";
       devD = dialog.vkDialog({
