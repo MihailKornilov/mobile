@@ -10,7 +10,7 @@
 }
 
 
-.result {
+.result{
     height:17px;
     padding:12px 10px 0 10px;
     font:bold 11px Tahoma;
@@ -25,7 +25,22 @@ td.label EM{font-size:10px;color:#bbb;display:block}
 td.top{vertical-align:top;padding-top:3px}
 td.r{text-align:right}
 
-.money{font:bold 14px Tahoma;width:70px}
+input.money{font:bold 14px Tahoma;width:70px}
+
+
+/* Горизонтальное меню */
+#mainLinks{border-bottom:#31618C solid 1px;padding:10px 5px 0 5px}
+#mainLinks a{
+    display:inline-block;
+    margin-left:5px;
+    padding:5px 10px;
+    color:#31618C;
+    border-radius:4px 4px 0 0;
+}
+#mainLinks a:hover{text-decoration:none}
+#mainLinks a:not(.sel):hover{background-color:#DEE3EF}
+#mainLinks .sel{color:#FFF;background-color:#31618C}
+#mainLinks.busy{background-position:right 18px}
 
 
 .rightLinks a{display:block;padding:5px 12px;border:transparent solid 1px;color:#29597B}
@@ -183,6 +198,39 @@ td.r{text-align:right}
 .zayav_link .inf{white-space:nowrap;padding-left:5px;vertical-align:top}
 
 
+
+
+/* Комментарии VK */
+.vkComment{margin-top:15px}
+.vkComment .headBlue{margin-top:0}
+.vkComment .count{float:right;color:#666}
+.vkComment TEXTAREA{resize:none;overflow:hidden;width:100%;height:13px;color:#777;border:#CCD solid 1px}
+.vkComment .add{background-color:#F7F7F7;padding:8px 20px 8px 8px}
+.vkComment .add .vkButton{margin-top:8px;display:none}
+.vkComment .cunit{padding:10px 0;border-bottom:#DAE1E8 solid 1px}
+.vkComment .img_del{float:right}
+.vkComment .cunit:not(:hover) .unit_del,.vkComment .child:not(:hover) .child_del,.vkComment .hide{display:none}
+.vkComment .cunit.busy,.vkComment .child.busy{background-color:#eee;opacity:0.4}
+.vkComment .cunit.busy *{color:#777}
+.vkComment .t{width:100%}
+.vkComment .ava{width:58px;vertical-align:top}
+.vkComment .ava img{width:50px;height:50px}
+.vkComment .i{vertical-align:top}
+.vkComment .i .vlink{display:inline-block;font-weight:bold}
+.vkComment .ctxt{margin-top:3px}
+.vkComment .cdat{color:#999;font-size:10px;margin-top:6px}
+.vkComment .cdat SPAN,.vkComment .cdat A{font-size:10px}
+.vkComment .cdop{margin:7px 0 0 -7px}
+.vkComment .child{padding:7px 0;border-top:#E9EDF1 solid 1px}
+.vkComment .dava{width:35px;vertical-align:top}
+.vkComment .dava img{width:30px;height:30px}
+.vkComment .di{vertical-align:top}
+.vkComment .di .vlink{font-weight:normal}
+.vkComment .dtxt{margin-top:3px}
+.vkComment .ddat{color:#999;font-size:10px;margin-top:5px}
+.vkComment .cadd{background-color:#F7F7F7;padding:6px 18px 6px 6px;margin-top:6px}
+.vkComment .cadd .vkButton{margin-top:6px;display:none}
+.vkComment .deleted{color:#555;text-align:center}
 
 
 
@@ -372,6 +420,7 @@ td.r{text-align:right}
 #zp .unit .img{width:80px;height:80px;padding-right:10px;text-align:center;vertical-align:top}
 #zp .unit IMG{cursor:pointer}
 #zp .cont{vertical-align:top;width:235px}
+#zp .bu{font:bold 12px Verdana;margin-right:6px;color:#800}
 #zp .name,#zp .name B,#zp .dop,#zp em{font-size:12px}
 #zp .name em{font-weight:bold}
 #zp em{background:#FFC;border-bottom:1px solid #FE2}
@@ -407,31 +456,24 @@ td.r{text-align:right}
 .avai_add span{color:#aaa;margin-left:5px}
 #zp #menu{margin-top:10px}
 #zp .ajaxNext{margin:0 8px 10px 8px}
+
+
+
+#zpInfo .ztab{width:100%;border-spacing:10px}
+#zpInfo .left{vertical-align:top}
+#zpInfo .name{color:#45688E;font-weight:bold;font-size:12px;margin-top:5px}
+#zpInfo .name span{font:bold 12px Verdana;margin-right:8px;color:#800}
+#zpInfo .name em{font-weight:bold;font-size:12px;margin-left:12px;color:#777}
+#zpInfo .for{font-size:12px;margin-top:4px}
+#zpInfo .for a{font-size:12px}
+#zpInfo .prop{border-spacing:2px;margin:5px 0 0 5px}
+#zpInfo .avai{margin:5px 0 0 7px;font-weight:bold;color:#0b0}
+#zpInfo .avai.no{color:#555}
+#zpInfo .added{color:#aaa;margin-top:6px;font-size:10px;text-align:right}
+#zpInfo .right{width:200px;vertical-align:top}
+#zpInfo #foto{text-align:center}
+
 /*
-
-#zp .unit .action EM { color:#AAA; }
-#zp .unit .action EM:hover { color:#004; }
-
-
-
-#zp #view { min-height:400px; }
-#zp #view .tab { margin:10px 10px 10px 0;}
-#zp #view .tab .td1 {
-    vertical-align:top;
-    width:397px;
-    padding:0 10px;
-}
-#zp #view .tab H1 {
-    color:#45688E;
-    font:bold 12px Tahoma;
-    margin-top:5px;
-    margin-bottom:2px;
-}
-#zp #view .tab H1 EM {
-    font:bold 12px Tahoma;
-    margin-left:12px;
-    color:#777;
-}
 #zp #view .tab H2, #zp #view .tab H2 A { font-size:12px; }
 #zp #view .tab H3 { margin-top:5px; }
 #zp #view .tab H3 EM {
@@ -446,18 +488,6 @@ td.r{text-align:right}
 #zp #view .nal {
     font-weight:bold;
     padding-right:30px;
-}
-#zp #view .tab .add {
-    color:#AAA;
-    margin:6px 0 15px 0;
-    font-size:10px;
-    text-align:right;
-}
-#zp #view .foto {
-    vertical-align:top;
-    width:200px;
-    text-align:center;
-    cursor:pointer;
 }
 #zp #dopMenu EM { margin:0 4px; }
 #zp #dopMenu SPAN { font-weight:bold; }

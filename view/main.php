@@ -138,32 +138,27 @@ function _remindActiveSet() { //Получение количества активных напоминаний
 }//end of _remindActiveSet()
 
 function _mainLinks() {
-    global $html, $sel;
+    global $html;
     _remindActiveSet();
     $links = array(
         array(
             'name' => 'Клиенты',
-            'page' => 'no&p=client',
+            'page' => 'client',
             'show' => 1
         ),
         array(
             'name' => 'Заявки',
-            'page' => 'no&p=zayav',
+            'page' => 'zayav',
             'show' => 1
         ),
         array(
-            'name' => 'Устройства',
-            'page' => 'remDevice',
-            'show' => 0
-        ),
-        array(
             'name' => 'Запчасти',
-            'page' => 'remZp',
+            'page' => 'zp',
             'show' => 1
         ),
         array(
             'name' => 'Отчёты'.REMIND_ACTIVE,
-            'page' => 'no&p=report',
+            'page' => 'report',
             'show' => VIEWER_ADMIN
         ),
         array(
@@ -175,19 +170,8 @@ function _mainLinks() {
 
     $send = '<div id="mainLinks">';
     foreach($links as $l)
-        if($l['show']) {
-            $s = $l['page'] == $sel ? ' sel' : '';
-            // todo для удаления
-            if(!$s) {
-                $page = explode('=', $l['page']);
-                $s = isset($page[1]) && $page[1] == @$_GET['p'] ? ' sel' : '';
-            }
-            $send .= "<a HREF='".URL."&my_page=".$l['page']."' class='la".$s."'>".
-                    "<div class=l1></div>".
-                    "<div class=l2></div>".
-                    "<div class=l3>".$l['name']."</div>".
-                "</a>";
-        }
+        if($l['show'])
+            $send .= '<a href="'.URL.'&p='.$l['page'].'"'.($l['page'] == $_GET['p'] ? 'class="sel"' : '').'>'.$l['name'].'</a>';
     $send .= '</div>';
     $html .= $send;
 }//end of _mainLinks()
@@ -613,7 +597,7 @@ function _getImg($type, $arr, $size='small', $x_new=10000, $y_new=10000, $class=
         );
     $send = array(
         'success' => false,
-        'img' => '<img src="/img/nofoto.gif">'
+        'img' => '<img src="/img/nofoto-'.$size.'.gif">'
     );
     $owners = array();
     foreach($arr as $k => $r) {
@@ -1574,6 +1558,7 @@ function zpAddQuery($zp) {//Внесение новой запчасти из заявки и из списка запчас
                 `base_device_id`,
                 `base_vendor_id`,
                 `base_model_id`,
+                `bu`,
                 `version`,
                 `color_id`,
                 `dop`,
@@ -1584,6 +1569,7 @@ function zpAddQuery($zp) {//Внесение новой запчасти из заявки и из списка запчас
                 ".$zp['device_id'].",
                 ".$zp['vendor_id'].",
                 ".$zp['model_id'].",
+                ".$zp['bu'].",
                 '".$zp['version']."',
                 ".$zp['color_id'].",
                 '".$zp['dop']."',
@@ -1592,7 +1578,7 @@ function zpAddQuery($zp) {//Внесение новой запчасти из заявки и из списка запчас
             )";
     query($sql);
     return mysql_insert_id();
-}
+}//end of zpAddQuery()
 
 function zpFilter($v) {
     if(empty($v['menu']) || !preg_match(REGEXP_NUMERIC, $v['menu']))
@@ -1738,7 +1724,11 @@ function zp_data($page=1, $filter=array(), $limit=20) {
             '<table>'.
                 '<tr><td class="img">'._zpImg($r['zp_id']).
                     '<td class="cont">'.
-                        '<a class="name">'._zpName($r['name_id']).' <b>'._vendorName($r['base_vendor_id']).$r['model'].'</b></a>'.
+                        ($r['bu'] ? '<span class="bu">Б/у</span>' : '').
+                        '<a href="'.URL.'&p=zp&d=info&id='.$id.'" class="name">'.
+                            _zpName($r['name_id']).
+                            ' <b>'._vendorName($r['base_vendor_id']).$r['model'].'</b>'.
+                        '</a>'.
                         ($r['dop'] ? '<div class="dop">'.$r['dop'].'</div>' : '').
                         '<div class="for">для '._deviceName($r['base_device_id'], 1).'</div>'.
                         ($r['color_id'] ? '<div class="color"><span>Цвет:</span> '._colorName($r['color_id']).'</div>' : '').
@@ -1789,11 +1779,39 @@ function zp_count($data) {
 }//end of zp_count()
 
 function zp_info($zp_id) {
-    $sql = "SELECT * FROM `zp_catalog` WHERE `ws_id`=".WS_ID." AND `id`=".$zp_id;
+    $sql = "SELECT * FROM `zp_catalog` WHERE `id`=".$zp_id;
     if(!$zp = mysql_fetch_assoc(query($sql)))
         return 'Запасти не существует';
 
-    return false;
+    $avai = query_value("SELECT `count` FROM `zp_avai` WHERE `ws_id`=".WS_ID." AND `zp_id`=".$zp_id);
+
+    return '<div id="zpInfo">'.
+        '<div id="dopLinks">'.
+            '<a class="link sel">Просмотр</a>'.
+            '<a class="link">Редактирование</a>'.
+            '<a class="link">Внести приход</a>'.
+            '<a class="link">Заказать</a>'.
+        '</div>'.
+        '<table class="ztab">'.
+            '<tr><td class="left">'.
+                    '<div class="name">'.
+                        ($zp['bu'] ? '<span>Б/у</span>' : '').
+                        _zpName($zp['name_id']).
+                        '<em>'.$zp['dop'].'</em>'.
+                    '</div>'.
+                    '<div class="for">'.
+                        'для '._deviceName($zp['base_device_id'], 1).
+                        ' <a>'._vendorName($zp['base_vendor_id'])._modelName($zp['base_model_id']).'</a>'.
+                    '</div>'.
+                    '<table class="prop">'.
+                        ($zp['version'] ? '<tr><td class="label">Версия:<td>'.$zp['version'] : '').
+                        ($zp['color_id'] ? '<tr><td class="label">Цвет:<td>'._colorName($zp['color_id']) : '').
+                    '</table>'.
+                    '<div class="avai'.($avai ? '' : ' no').'">'.($avai ? 'В наличии '.$avai.' шт.' : 'Нет в наличии.').'</div>'.
+                    '<div class="added">Добавлено в каталог '.FullData($zp['dtime_add'], 1).'</div>'.
+                '<td class="right">'.
+                    '<div id="foto">'._zpImg($zp_id, 'big', 200, 320, 'fotoView').'</div>'.
+        '</table>';
 }//end of zp_info()
 
 

@@ -1,11 +1,11 @@
 <?php
 /*
- * îáúåäèíåíèå ñîâìåñòèìûõ ìîäåëåé â ãğóïïó
+ * ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 */
 
 require_once('../../../include/AjaxHeader.php');
 
-// åñëè ñîâìåñòèìîñòü èñõîäíîé çàï÷àñòè íå óñòàíîâëåíà, òî óñòàíàâëèâàåòñÿ ñâîé id
+// ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ id
 if ($_POST['compat_id'] > 0) {
   $send->compat = $_POST['compat_id'];
 } else {
@@ -13,11 +13,11 @@ if ($_POST['compat_id'] > 0) {
   $VK->Query("update zp_catalog set compat_id=id where id=".$_POST['zid']);
 }
 
-// èìÿ ìîäåëè ïî id èç áàçû ìîäåëåé
+// ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ id ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 $send->model = $VK->QRow("select name from base_model where id=".$_POST['model_id']);
 
 if ($_POST['add'] == 1) {
-  // åñëè íåîáõîäèìî - âíåñòè íîâóş çàï÷àñòü â êàòàëîã
+  // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ - ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
   $send->id = $VK->Query("insert into zp_catalog (
 name_id,
 name_dop,
@@ -42,20 +42,20 @@ compat_id
 } else {
   $compat_id = $VK->QRow("select compat_id from zp_catalog where id=".$_POST['new_id']);
   if ($compat_id == 0) {
-    // åñëè ñóùåñòâóşùàÿ çàï÷àñòü íå èìååò ñîâìåñòèìîñòåé, òî ïğèñâàèâàåì ıòó ñîâìåñòèìîñòü
+    // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     $send->id = $_POST['new_id'];
     $VK->Query("update zp_catalog set compat_id=".$send->compat." where id=".$send->id);
   } else {
-    // èíà÷å ïğèñâàèâàåì íîâóş ñîâìåñòèìîñòü âñåì å¸ ñîâìåñòèìîñòÿì è äàëåå ïåğåïğèñâàèâàåì å¸ çàêàçû, íàëè÷èÿ è äâèæåíèÿ
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     $send->id = $compat_id;
     $VK->Query("update zp_catalog set compat_id=".$send->compat." where compat_id=".$send->id);
   }
 
-  // óçíà¸ì, áûëà ëè îíà â çàêàçå
+  // ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
   $oldZakaz = $VK->QRow("select ifnull(sum(count),0) from zp_zakaz where ws_id=".$vku->ws_id." and zp_catalog_id=".$send->id);
   $compatZakaz = 0;
   if ($oldZakaz > 0) {
-    // åñëè äà, òî îáúåäèíåíèå çàêàçîâ
+    // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½, ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     $VK->Query("delete from zp_zakaz where zp_catalog_id=".$send->id);
     $compatZakaz = $VK->QRow("select ifnull(sum(count),0) from zp_zakaz where ws_id=".$vku->ws_id." and zp_catalog_id=".$send->compat);
     $VK->Query("delete from zp_zakaz where ws_id=".$vku->ws_id." and zp_catalog_id=".$send->compat);
@@ -71,15 +71,15 @@ viewer_id_add
 ".$vku->viewer_id.")");
   }
 
-  // óçíà¸ì, áûëà ëè îíà â íàëè÷èè
-  $oldAvai = $VK->QRow("select ifnull(sum(count),0) from zp_available where ws_id=".$vku->ws_id." and zp_catalog_id=".$send->id);
+  // ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+  $oldAvai = $VK->QRow("select ifnull(sum(count),0) from zp_avai where ws_id=".$vku->ws_id." and zp_catalog_id=".$send->id);
   $compatAvai = 0;
   if ($oldAvai > 0) {
-    // åñëè äà, òî îáúåäèíåíèå íàëè÷èÿ
-    $VK->Query("delete from zp_available where ws_id=".$vku->ws_id." and zp_catalog_id=".$send->id);
-    $compatAvai = $VK->QRow("select ifnull(sum(count),0) from zp_available where ws_id=".$vku->ws_id." and zp_catalog_id=".$send->compat);
-    $VK->Query("delete from zp_available where ws_id=".$vku->ws_id." and zp_catalog_id=".$send->compat);
-    $VK->Query("insert into zp_available (
+    // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½, ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+    $VK->Query("delete from zp_avai where ws_id=".$vku->ws_id." and zp_catalog_id=".$send->id);
+    $compatAvai = $VK->QRow("select ifnull(sum(count),0) from zp_avai where ws_id=".$vku->ws_id." and zp_catalog_id=".$send->compat);
+    $VK->Query("delete from zp_avai where ws_id=".$vku->ws_id." and zp_catalog_id=".$send->compat);
+    $VK->Query("insert into zp_avai (
 ws_id,
 zp_catalog_id,
 count
@@ -89,7 +89,7 @@ count
 ".($oldAvai + $compatAvai).")");
   }
 
-  // îáúåäèíåíèå äâèæåíèÿ
+  // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
   $VK->Query("update zp_move set zp_catalog_id=".$send->compat." where ws_id=".$vku->ws_id." and zp_catalog_id=".$send->id);
 }
 

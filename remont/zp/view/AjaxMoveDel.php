@@ -6,12 +6,12 @@ if ($move->id) {
   $VK->Query("delete from zp_move where id=".$move->id);
 }
 
-$avai = $VK->QueryObjectOne("select * from zp_available where zp_catalog_id=".$move->zp_catalog_id." and ws_id=".$vku->ws_id." limit 1");
+$avai = $VK->QueryObjectOne("select * from zp_avai where zp_catalog_id=".$move->zp_catalog_id." and ws_id=".$vku->ws_id." limit 1");
 $send->count = $avai->count + $move->count * ($move->prihod ? -1 : 1);
 if ($send->count > 0) {
-  $VK->Query("update zp_available set count=".$send->count." where id=".$avai->id); 
+  $VK->Query("update zp_avai set count=".$send->count." where id=".$avai->id);
 } else {
-  $VK->Query("delete from zp_available where id=".$avai->id); 
+  $VK->Query("delete from zp_avai where id=".$avai->id);
 }
 
 $send->time = getTime($T);

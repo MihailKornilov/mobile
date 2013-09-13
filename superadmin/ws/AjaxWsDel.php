@@ -6,7 +6,7 @@ $tables = array(
 'client',
 'money',
 'zayavki',
-'zp_available',
+'zp_avai',
 'zp_move',
 'zp_zakaz'
 );

@@ -182,13 +182,11 @@ var REGEXP_NUMERIC = /^\d+$/,
         $('.condLost')[(send.find ? 'add' : 'remove') + 'Class']('hide');
         send.op = 'zayav_spisok_load';
 
-        $('#mainLinks')
-            .find('img').remove().end()
-            .append('<img src="/img/upload.gif">');
+        $('#mainLinks').addClass('busy');
         $.post(AJAX_MAIN, send, function (res) {
             $('#zayav .result').html(res.all);
             $('#zayav #spisok').html(res.html);
-            $('#mainLinks img').remove();
+            $('#mainLinks').removeClass('busy');
         }, 'json');
     },
     zayavImgUpdate = function() {
@@ -244,13 +242,11 @@ var REGEXP_NUMERIC = /^\d+$/,
     zpSpisokLoad = function() {
         var send = zpFilter();
         send.op = 'zp_spisok_load';
-        $('#mainLinks')
-            .find('img').remove().end()
-            .append('<img src="/img/upload.gif">');
+        $('#mainLinks').addClass('busy');
         $.post(AJAX_MAIN, send, function (res) {
+            $('#mainLinks').removeClass('busy');
             $('#zp .result').html(res.all);
             $('#zp .left').html(res.html);
-            $('#mainLinks img').remove();
         }, 'json');
     },
 
@@ -260,12 +256,10 @@ var REGEXP_NUMERIC = /^\d+$/,
             worker:$('#report_history_worker').val(),
             action:$('#report_history_action').val()
         };
-        $('#mainLinks')
-            .find('img').remove().end()
-            .append('<img src="/img/upload.gif">');
+        $('#mainLinks').addClass('busy');
         $.post(AJAX_MAIN, send, function (res) {
             $('#report_history').html(res.html);
-            $('#mainLinks img').remove();
+            $('#mainLinks').removeClass('busy');
         }, 'json');
     },
     reportRemindLoad = function() {
@@ -274,12 +268,10 @@ var REGEXP_NUMERIC = /^\d+$/,
             status:$('#remind_status').val(),
             private:$('#remind_private').val()
         };
-        $('#mainLinks')
-            .find('img').remove().end()
-            .append('<img src="/img/upload.gif">');
+        $('#mainLinks').addClass('busy');
         $.post(AJAX_MAIN, send, function (res) {
             $('#remind_spisok').html(res.html);
-            $('#mainLinks img').remove();
+            $('#mainLinks').removeClass('busy');
         }, 'json');
     },
     reportPrihodLoad = function() {
@@ -304,14 +296,12 @@ var REGEXP_NUMERIC = /^\d+$/,
             month:$('#rashod_monthSum').val()
         };
         if(send.month < 10) send.month = '0' + send.month;
-        $('#mainLinks')
-            .find('img').remove().end()
-            .append('<img src="/img/upload.gif">');
+        $('#mainLinks').addClass('busy');
         $.post(AJAX_MAIN, send, function (res) {
             monthSum = res.summ.split(',');
             reportRashodMonthPrint();
             $('#report_rashod #spisok').html(res.html);
-            $('#mainLinks img').remove();
+            $('#mainLinks').removeClass('busy');
         }, 'json');
     },
     reportRashodMonthPrint = function() {
@@ -371,12 +361,10 @@ var REGEXP_NUMERIC = /^\d+$/,
             op:'report_kassa_load',
             del_show:$('#kassaShowDel').val() == 1 ? 1 : 0
         };
-        $('#mainLinks')
-            .find('img').remove().end()
-            .append('<img src="/img/upload.gif">');
+        $('#mainLinks').addClass('busy');
         $.post(AJAX_MAIN, send, function (res) {
             $('#report_kassa #spisok').html(res.html);
-            $('#mainLinks img').remove();
+            $('#mainLinks').removeClass('busy');
         }, 'json');
     };
 
