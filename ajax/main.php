@@ -602,10 +602,9 @@ switch(@$_POST['op']) {
         }
         jsonSuccess($send);
         break;
-    case 'zayav_img_update':
-        //ќбновление картинки за€вки после загрузки новой
+    case 'zayav_img_update'://ќбновление картинки за€вки после загрузки новой
         if(!preg_match(REGEXP_NUMERIC, $_POST['zayav_id']))
-            jsonError();
+        jsonError();
         $send['html'] = _zayavImg(intval($_POST['zayav_id']), 'big', 200, 320, 'fotoView');
         jsonSuccess($send);
         break;
@@ -895,6 +894,8 @@ switch(@$_POST['op']) {
             jsonError();
         if(!preg_match(REGEXP_NUMERIC, $_POST['color_id']))
             jsonError();
+        if(!preg_match(REGEXP_BOOL, $_POST['bu']))
+            jsonError();
         $sql = "SELECT
                     `base_device_id` AS `device_id`,
                     `base_vendor_id` AS `vendor_id`,
@@ -905,10 +906,9 @@ switch(@$_POST['op']) {
         if(!$zp = mysql_fetch_assoc(query($sql)))
             jsonError();
         $zp['name_id'] = intval($_POST['name_id']);
-        $zp['version'] = '';
-        $zp['bu'] = 0;
+        $zp['version'] = win1251(htmlspecialchars(trim($_POST['version'])));
+        $zp['bu'] = intval($_POST['bu']);
         $zp['color_id'] = intval($_POST['color_id']);
-        $zp['dop'] = win1251(htmlspecialchars(trim($_POST['dop'])));
         $zp['id'] = zpAddQuery($zp);
         $send['html'] = utf8(zayav_zp_unit($zp, _vendorName($zp['vendor_id'])._modelName($zp['model_id'])));
         jsonSuccess($send);
@@ -1024,7 +1024,6 @@ switch(@$_POST['op']) {
             'version' => win1251(htmlspecialchars(trim($_POST['version']))),
             'bu' => intval($_POST['bu']),
             'color_id' => intval($_POST['color_id']),
-            'dop' => win1251(htmlspecialchars(trim($_POST['dop'])))
         );
         zpAddQuery($zp);
 
@@ -1118,6 +1117,12 @@ switch(@$_POST['op']) {
         } else
             query("DELETE FROM `zp_zakaz` WHERE `ws_id`=".WS_ID." AND `zp_id`=".$zp_id);
         jsonSuccess();
+        break;
+    case 'zp_img_update'://ќбновление картинки за€вки после загрузки новой
+        if(!preg_match(REGEXP_NUMERIC, $_POST['zp_id']))
+            jsonError();
+        $send['html'] = _zpImg(intval($_POST['zp_id']), 'big', 160, 280, 'fotoView');
+        jsonSuccess($send);
         break;
 
     case 'report_history_load':

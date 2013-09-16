@@ -383,15 +383,16 @@ input.money{font:bold 14px Tahoma;width:70px}
 #zayavInfo .goZp{font-weight:bold}
 .zayav_zp_add center{margin-bottom:15px}
 .zayav_zp_add center,.zayav_zp_add center b{font-size:12px}
-.zayav_zp_add #dop{width:188px}
+.zayav_zp_add #version{width:188px}
 .zayav_zp_set,.zayav_zp_set b{font-size:12px}
 #zayavInfo #zpSpisok{margin:7px 7px 60px 7px}
 #zayavInfo #zpSpisok *{font-size:10px}
 #zayavInfo #zpSpisok .unit{border-bottom:#DEE3EF solid 1px;padding-bottom:4px;margin-bottom:7px}
 #zayavInfo #zpSpisok .unit:not(:hover) .zakaz,#zayavInfo #zpSpisok .unit:not(:hover) .set{visibility:hidden}
+#zayavInfo #zpSpisok .bu{font-weight:bold;margin-right:4px;color:#800}
 #zayavInfo #zpSpisok .zakaz{color:#567f9e}
 #zayavInfo #zpSpisok .set{color:#567f9e;float:right}
-#zayavInfo #zpSpisok .dop{color:#333}
+#zayavInfo #zpSpisok .version{color:#333}
 #zayavInfo #zpSpisok .color{color:#777}
 #zayavInfo #zpSpisok .zakaz_ok{color:#933}
 #zayavInfo #zpSpisok .avai{float:right;color:#393;margin-left:4px}
@@ -416,15 +417,16 @@ input.money{font:bold 14px Tahoma;width:70px}
 
 /* Список запчастей */
 #zp .right{width:155px}
+#zp #bu_check{margin-top:15px}
 #zp .unit{padding:7px 0;margin:0 8px;border-bottom:#dae2e8 solid 1px}
 #zp .unit .img{width:80px;height:80px;padding-right:10px;text-align:center;vertical-align:top}
 #zp .unit IMG{cursor:pointer}
 #zp .cont{vertical-align:top;width:235px}
 #zp .bu{font:bold 12px Verdana;margin-right:6px;color:#800}
-#zp .name,#zp .name B,#zp .dop,#zp em{font-size:12px}
+#zp .name,#zp .name B,#zp .version,#zp em{font-size:12px}
 #zp .name em{font-weight:bold}
 #zp em{background:#FFC;border-bottom:1px solid #FE2}
-#zp .dop{color:#555;margin:1px 0}
+#zp .version{color:#555;margin:1px 0}
 #zp .color{margin-top:6px}
 #zp .color span{color:#777}
 #zp .action{vertical-align:top}
@@ -442,18 +444,17 @@ input.money{font:bold 14px Tahoma;width:70px}
 #zp .zz{margin-top:10px;color:#777}
 #zp .add{float:right}
 .zp_add_dialog{border-spacing:10px}
-.zp_add_dialog #dop{width:188px}
 .zp_add_dialog .label{width:155px;text-align:right}
-.avai_add{width:100%}
-.avai_add .left{width:250px;vertical-align:top}
-.avai_add .name,table.avai_add b,.avai_add em{font-size:12px}
-.avai_add em{font-weight:bold}
-.avai_add .avai{margin:15px 0;color:#777}
-.avai_add .inp{border-spacing:6px}
-.avai_add input{text-align:right}
-.avai_add #count{width:40px;margin-left:25px}
-.avai_add #cena{width:65px}
-.avai_add span{color:#aaa;margin-left:5px}
+.avaiAddTab{width:100%}
+.avaiAddTab .left{width:250px;vertical-align:top}
+.avaiAddTab .name,table.avaiAddTab b,.avaiAddTab em{font-size:12px}
+.avaiAddTab em{font-weight:bold}
+.avaiAddTab .avai{margin:15px 0;color:#777}
+.avaiAddTab .inp{border-spacing:6px}
+.avaiAddTab input{text-align:right}
+.avaiAddTab #count{width:40px;margin-left:25px}
+.avaiAddTab #cena{width:65px}
+.avaiAddTab span{color:#aaa;margin-left:5px}
 #zp #menu{margin-top:10px}
 #zp .ajaxNext{margin:0 8px 10px 8px}
 
@@ -470,8 +471,8 @@ input.money{font:bold 14px Tahoma;width:70px}
 #zpInfo .avai{margin:5px 0 0 7px;font-weight:bold;color:#0b0}
 #zpInfo .avai.no{color:#555}
 #zpInfo .added{color:#aaa;margin-top:6px;font-size:10px;text-align:right}
-#zpInfo .right{width:200px;vertical-align:top}
-#zpInfo #foto{text-align:center}
+#zpInfo .right{width:160px;vertical-align:top}
+#zpInfo #foto{text-align:center;margin-bottom:10px}
 
 /*
 #zp #view .tab H2, #zp #view .tab H2 A { font-size:12px; }

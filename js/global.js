@@ -227,7 +227,8 @@ var REGEXP_NUMERIC = /^\d+$/,
                 name:$('#zp_name').val(),
                 device:$('#dev_device').val(),
                 vendor:$('#dev_vendor').val(),
-                model:$('#dev_model').val()
+                model:$('#dev_model').val(),
+                bu:$('#bu').val()
             },
             loc = '';
         if(v.find) loc += '.find=' + escape(v.find);
@@ -236,6 +237,7 @@ var REGEXP_NUMERIC = /^\d+$/,
         if(v.device > 0) loc += '.device=' + v.device;
         if(v.vendor > 0) loc += '.vendor=' + v.vendor;
         if(v.model > 0) loc += '.model=' + v.model;
+        if(v.bu > 0) loc += '.bu=' + v.bu;
         VK.callMethod('setLocation', hashLoc + loc);
         return v;
     },
@@ -249,7 +251,75 @@ var REGEXP_NUMERIC = /^\d+$/,
             $('#zp .left').html(res.html);
         }, 'json');
     },
-
+    zpImgUpdate = function() {
+        var send = {
+            op:'zp_img_update',
+            zp_id:G.zpInfo.id
+        };
+        $.post(AJAX_MAIN, send, function (res) {
+            if(res.success) {
+                $('#foto').html(res.html);
+            }
+        }, 'json');
+    },
+    zpAvaiAdd = function(obj) {
+        var html = '<table class="avaiAddTab">' +
+                        '<tr><td class="left">' +
+                            '<div class="name">' + obj.name + '</div>' +
+                            '<div>' + obj.for + '</div>' +
+                            '<div class="avai">Текущее наличие: <b>' + obj.count + '</b> шт.</div>' +
+                            '<table class="inp">' +
+                                '<tr><td class="label">Количество:<td><input type="text" id="count" maxlength="5">' +
+                                '<tr><td class="label">Цена за ед.:<td><input type="text" id="cena" maxlength="10"><span>не обязательно</span>' +
+                            '</table>' +
+                            '<td valign="top">' + obj.img +
+                    '</table>',
+            dialog = vkDialog({
+                head:'Внесение наличия запчасти',
+                content:html,
+                submit:submit
+            });
+        if($('.avaiAddTab img').attr('val'))
+            $('.avaiAddTab img').addClass('fotoView');
+        $('#count').focus();
+        function submit() {
+            var msg,
+                send = {
+                    op:'zp_avai_add',
+                    zp_id:obj.zp_id,
+                    count:$('#count').val(),
+                    cena:$('#cena').val()
+                };
+            if(!send.cena)
+                send.cena = 0;
+            if (!REGEXP_NUMERIC.test(send.count) || send.count == 0) {
+                msg = 'Некорректно указано количество.';
+                $('#count').focus();
+            } else if(send.cena != 0 && !REGEXP_CENA.test(send.cena)) {
+                msg = 'Некорректно указана цена.';
+                $('#cena').focus();
+            } else {
+                dialog.process();
+                $.post(AJAX_MAIN, send, function(res) {
+                    dialog.abort();
+                    if(res.success) {
+                        obj.callback(res);
+                        dialog.close();
+                        vkMsgOk('Внесение наличия запчасти произведено.');
+                    }
+                }, 'json');
+            }
+            if(msg)
+                dialog.bottom.vkHint({
+                    msg:'<SPAN class="red">' + msg + '</SPAN>',
+                    remove:1,
+                    indent:40,
+                    show:1,
+                    top:-48,
+                    left:92
+                });
+        }
+    },
     reportHistoryLoad = function() {
         var send = {
             op:'report_history_load',
@@ -1157,15 +1227,16 @@ $(document)
                         G.model_ass[G.zayavInfo.model] +
                     '</b>.'+
                 '</CENTER>' +
-                '<TABLE style="border-spacing:5px">' +
+                '<TABLE style="border-spacing:6px">' +
                     '<TR><TD class="label r">Наименование запчасти:<TD><input type="hidden" id="name_id">' +
-                    '<TR><TD class="label r">Дополнительная информация:<TD><input type="text" id="dop" maxlength="30">' +
+                    '<TR><TD class="label r">Версия:<TD><input type="text" id="version" maxlength="30">' +
                     '<TR><TD class="label r">Цвет:<TD><input type="hidden" id="color_id">' +
+                    '<TR><TD class="label r">Б/у:<TD><input type="hidden" id="bu">' +
                 '</TABLE>' +
             '</div>',
             dialog = vkDialog({
                 top:40,
-                width:400,
+                width:380,
                 head:'Внесение новой запчасти',
                 content:html,
                 submit:submit
@@ -1181,13 +1252,15 @@ $(document)
             title0:'Цвет не указан',
             spisok:G.color_spisok
         });
+        $('#bu').vkCheck();
         function submit() {
             var send = {
                 op:'zayav_zp_add',
                 zayav_id: G.zayavInfo.id,
                 name_id:$('#name_id').val(),
-                dop:$('#dop').val(),
-                color_id:$('#color_id').val()
+                version:$('#version').val(),
+                color_id:$('#color_id').val(),
+                bu:$('#bu').val()
             };
             if(send.name_id == 0)
                 dialog.bottom.vkHint({msg:'<SPAN class="red">Не указано наименование запчасти.</SPAN>',
@@ -1203,7 +1276,9 @@ $(document)
                     if(res.success) {
                         vkMsgOk('Внесение запчасти произведено.');
                         dialog.close();
-                        $('#zpSpisok').append(res.html);
+                        $('#zpSpisok')
+                            .append(res.html)
+                            .find('._empty').remove();
                     }
                 }, 'json');
             }
@@ -1243,6 +1318,7 @@ $(document)
     });
 
 $(document)
+    .on('click', '#zp #bu_check', zpSpisokLoad)
     .on('click', '#zp .ajaxNext', function() {
         if($(this).hasClass('busy'))
             return;
@@ -1260,68 +1336,21 @@ $(document)
     })
     .on('click', '#zp .avai_add', function() {
         var unit = $(this),
-            count = unit.hasClass('avai') ? unit.find('b').html() : 0;
+            obj = {};
+        obj.count = unit.hasClass('avai') ? unit.find('b').html() : 0;
         while(!unit.hasClass('unit'))
             unit = unit.parent();
-        var html = '<table class="avai_add">' +
-            '<tr><td class="left">' +
-                '<div class="name">' + unit.find('.name').html() + '</div>' +
-                '<div>' + unit.find('.for').html() + '</div>' +
-                '<div class="avai">Текущее наличие: <b>' + count + '</b> шт.</div>' +
-                '<table class="inp">' +
-                    '<tr><td class="label">Количество:<td><input type="text" id="count" maxlength="5">' +
-                    '<tr><td class="label">Цена за ед.:<td><input type="text" id="cena" maxlength="10"><span>не обязательно</span>' +
-                '</table>' +
-            '<td valign="top">' + unit.find('.img').html() +
-        '</table>',
-            dialog = vkDialog({
-                head:'Внесение наличия запчасти',
-                content:html,
-                submit:submit
-            });
-        if($('.avai_add img').attr('val'))
-            $('.avai_add img').addClass('fotoView');
-        $('#count').focus();
-        function submit() {
-            var msg,
-                send = {
-                    op:'zp_avai_add',
-                    zp_id:unit.attr('val'),
-                    count:$('#count').val(),
-                    cena:$('#cena').val()
-                };
-            if(!send.cena)
-                send.cena = 0;
-            if (!REGEXP_NUMERIC.test(send.count) || send.count == 0) {
-                msg = 'Некорректно указано количество.';
-                $('#count').focus();
-            } else if(send.cena != 0 && !REGEXP_CENA.test(send.cena)) {
-                msg = 'Некорректно указана цена.';
-                $('#cena').focus();
-            } else {
-                dialog.process();
-                $.post(AJAX_MAIN, send, function(res) {
-                    dialog.abort();
-                    if(res.success) {
-                        unit.find('.avai_add')
-                            .removeClass('hid')
-                            .addClass('avai')
-                            .html('В наличии: <b>' + res.count + '</b>');
-                        dialog.close();
-                        vkMsgOk('Внесение наличия запчасти произведено.');
-                    }
-                }, 'json');
-            }
-            if(msg)
-                dialog.bottom.vkHint({
-                    msg:'<SPAN class="red">' + msg + '</SPAN>',
-                    remove:1,
-                    indent:40,
-                    show:1,
-                    top:-48,
-                    left:92
-                });
-        }
+        obj.zp_id = unit.attr('val');
+        obj.name = unit.find('.name').html();
+        obj.for = unit.find('.for').html();
+        obj.img = unit.find('.img').html();
+        obj.callback = function(res) {
+            unit.find('.avai_add')
+                .removeClass('hid')
+                .addClass('avai')
+                .html('В наличии: <b>' + res.count + '</b>');
+        };
+        zpAvaiAdd(obj);
     })
     .on('mouseenter', '#zp a.zakaz:not(.busy)', function() {
         window.zakaz_count = $(this).find('tt:first').next('b').html();
@@ -1372,7 +1401,6 @@ $(document)
             '<tr><td class="label">Версия:<td><input type="text" id="version">' +
             '<tr><td class="label">Б/у:<td><input type="hidden" id="bu">' +
             '<tr><td class="label">Цвет:<td><input type="hidden" id="color_id">' +
-            '<tr><td class="label">Дополнительная информация:<td><input type="text" id="dop" maxlength="30">' +
             '</table>',
             dialog = vkDialog({
                 top:70,
@@ -1406,8 +1434,7 @@ $(document)
                     model_id:$('#add_dev_model').val(),
                     version:$('#version').val(),
                     bu:$('#bu').val(),
-                    color_id:$('#color_id').val(),
-                    dop:$('#dop').val()
+                    color_id:$('#color_id').val()
                 };
             if(send.name_id == 0) msg = 'Не указано наименование запчасти.';
             else if(send.device_id == 0) msg = 'Не выбрано устройство';
@@ -1444,6 +1471,11 @@ $(document)
                     remove:1
                 });
         }
+    });
+
+$(document)
+    .on('click', '#zpInfo .avai_add', function() {
+
     });
 
 $(document)
@@ -2507,7 +2539,12 @@ $(document).ready(function() {
         });
         zpFilter();
     }
-
+    if($('#zpInfo').length > 0) {
+        $('.fotoUpload').fotoUpload({
+            owner:'zp' + G.zpInfo.id,
+            func:zpImgUpdate
+        });
+    }
     if($('#report_history').length > 0) {
         $('#report_history_worker').vkSel({
             width:140,

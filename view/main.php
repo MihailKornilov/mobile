@@ -597,7 +597,7 @@ function _getImg($type, $arr, $size='small', $x_new=10000, $y_new=10000, $class=
         );
     $send = array(
         'success' => false,
-        'img' => '<img src="/img/nofoto-'.$size.'.gif">'
+        'img' => '<img src="/img/nofoto-'.$size.'.gif"'.($x_new < 10000 ? 'width="'.$x_new.'"' : '').'>'
     );
     $owners = array();
     foreach($arr as $k => $r) {
@@ -1534,8 +1534,9 @@ function zayav_oplata_unit($op) {
 function zayav_zp_unit($r, $model) {
     return '<div class="unit" val="'.$r['id'].'">'.
         '<div class="image"><div>'._zpImg($r['id']).'</div></div>'.
-        '<a href="'.URL.'&my_page=remZp&id='.$r['id'].'"><b>'._zpName($r['name_id']).'</b> '.$model.'</a>'.
-        ($r['dop'] ? '<div class="dop">'.$r['dop'].'</div>' : '').
+        ($r['bu'] ? '<span class="bu">Б/у</span>' : '').
+        '<a href="'.URL.'&p=zp&d=info&id='.$r['id'].'"><b>'._zpName($r['name_id']).'</b> '.$model.'</a>'.
+        ($r['version'] ? '<div class="version">'.$r['version'].'</div>' : '').
         ($r['color_id'] ? '<div class="color">Цвет: '._colorName($r['color_id']).'</div>' : '').
         '<div>'.
             (isset($r['zakaz']) ? '<a class="zakaz_ok">Заказано!</a>' : '<a class="zakaz">Заказать</a>').
@@ -1561,7 +1562,6 @@ function zpAddQuery($zp) {//Внесение новой запчасти из заявки и из списка запчас
                 `bu`,
                 `version`,
                 `color_id`,
-                `dop`,
                 `viewer_id_add`,
                 `find`
             ) VALUES (
@@ -1572,9 +1572,8 @@ function zpAddQuery($zp) {//Внесение новой запчасти из заявки и из списка запчас
                 ".$zp['bu'].",
                 '".$zp['version']."',
                 ".$zp['color_id'].",
-                '".$zp['dop']."',
                 ".VIEWER_ID.",
-                '".win1251(_modelName($zp['model_id']))." ".$zp['version']." ".$zp['dop']."'
+                '".win1251(_modelName($zp['model_id']))." ".$zp['version']."'
             )";
     query($sql);
     return mysql_insert_id();
@@ -1587,10 +1586,12 @@ function zpFilter($v) {
         $v['name'] = 0;
     if(empty($v['device']) || !preg_match(REGEXP_NUMERIC, $v['device']))
         $v['device'] = 0;
-    if($v['device'] == 0 || !preg_match(REGEXP_NUMERIC, $v['vendor']))
+    if(empty($v['vendor']) || !preg_match(REGEXP_NUMERIC, $v['vendor']))
         $v['vendor'] = 0;
-    if($v['device'] == 0 || !preg_match(REGEXP_NUMERIC, $v['model']))
+    if(empty($v['model']) || !preg_match(REGEXP_NUMERIC, $v['model']))
         $v['model'] = 0;
+    if(empty($v['bu']) || !preg_match(REGEXP_BOOL, $v['bu']))
+        $v['bu'] = 0;
 
     $filter = array();
     $filter['find'] = htmlspecialchars(trim(@$v['find']));
@@ -1599,6 +1600,7 @@ function zpFilter($v) {
     $filter['device'] = intval($v['device']);
     $filter['vendor'] = intval($v['vendor']);
     $filter['model'] = intval($v['model']);
+    $filter['bu'] = intval($v['bu']);
     return $filter;
 }//end of zpFilter()
 function zp_data($page=1, $filter=array(), $limit=20) {
@@ -1642,6 +1644,8 @@ function zp_data($page=1, $filter=array(), $limit=20) {
         $cond .= " AND `base_vendor_id`=".$filter['vendor'];
     if(isset($filter['model']) && $filter['model'] > 0)
         $cond .= " AND `base_model_id`=".$filter['model'];
+    if(isset($filter['bu']) && $filter['bu'] == 1)
+        $cond .= " AND `bu`=1";
 
     $send['filter'] = $filter;
     $send['all'] = query_value("SELECT COUNT(`id`) AS `all` FROM `zp_catalog` WHERE ".$cond." LIMIT 1");
@@ -1663,8 +1667,8 @@ function zp_data($page=1, $filter=array(), $limit=20) {
         if(!empty($filter['find'])) {
             if(preg_match($reg, $r['model']))
                 $r['model'] = preg_replace($reg, "<em>\\1</em>", $r['model'], 1);
-            if(preg_match($reg, $r['dop']))
-                $r['dop'] = preg_replace($reg, "<em>\\1</em>", $r['dop'], 1);
+            if(preg_match($reg, $r['version']))
+                $r['version'] = preg_replace($reg, "<em>\\1</em>", $r['version'], 1);
         }
         $r['zp_id'] = $r['compat_id'] > 0 ? $r['compat_id'] : $r['id'];
         $ids[$r['zp_id']] = $r['zp_id'];
@@ -1729,7 +1733,7 @@ function zp_data($page=1, $filter=array(), $limit=20) {
                             _zpName($r['name_id']).
                             ' <b>'._vendorName($r['base_vendor_id']).$r['model'].'</b>'.
                         '</a>'.
-                        ($r['dop'] ? '<div class="dop">'.$r['dop'].'</div>' : '').
+                        ($r['version'] ? '<div class="version">'.$r['version'].'</div>' : '').
                         '<div class="for">для '._deviceName($r['base_device_id'], 1).'</div>'.
                         ($r['color_id'] ? '<div class="color"><span>Цвет:</span> '._colorName($r['color_id']).'</div>' : '').
                         ($r['compat_id'] == $id ? '<b>главная</b>' : '').
@@ -1759,6 +1763,7 @@ function zp_list($data) {
                     '<div id="menu"></div>'.
                     '<div class="findHead">Наименование</div><INPUT type="hidden" id="zp_name" value="'.$filter['name'].'" />'.
                     '<div class="findHead">Устройство</div><div id="dev"></div>'.
+                    _checkbox('bu', 'Б/у', $filter['bu']).
         '</table>'.
         '<script type="text/javascript">'.
             'G.zp_find = "'.$filter['find'].'";'.
@@ -1785,33 +1790,42 @@ function zp_info($zp_id) {
 
     $avai = query_value("SELECT `count` FROM `zp_avai` WHERE `ws_id`=".WS_ID." AND `zp_id`=".$zp_id);
 
-    return '<div id="zpInfo">'.
-        '<div id="dopLinks">'.
-            '<a class="link sel">Просмотр</a>'.
-            '<a class="link">Редактирование</a>'.
-            '<a class="link">Внести приход</a>'.
-            '<a class="link">Заказать</a>'.
-        '</div>'.
+    return
+    '<script type="text/javascript">'.
+        'G.zpInfo = {id:"'.$zp_id.'"};'.
+    '</script>'.
+    '<div id="zpInfo">'.
         '<table class="ztab">'.
             '<tr><td class="left">'.
                     '<div class="name">'.
                         ($zp['bu'] ? '<span>Б/у</span>' : '').
                         _zpName($zp['name_id']).
-                        '<em>'.$zp['dop'].'</em>'.
+                        '<em>'.$zp['version'].'</em>'.
                     '</div>'.
                     '<div class="for">'.
                         'для '._deviceName($zp['base_device_id'], 1).
                         ' <a>'._vendorName($zp['base_vendor_id'])._modelName($zp['base_model_id']).'</a>'.
                     '</div>'.
                     '<table class="prop">'.
-                        ($zp['version'] ? '<tr><td class="label">Версия:<td>'.$zp['version'] : '').
                         ($zp['color_id'] ? '<tr><td class="label">Цвет:<td>'._colorName($zp['color_id']) : '').
                     '</table>'.
                     '<div class="avai'.($avai ? '' : ' no').'">'.($avai ? 'В наличии '.$avai.' шт.' : 'Нет в наличии.').'</div>'.
                     '<div class="added">Добавлено в каталог '.FullData($zp['dtime_add'], 1).'</div>'.
                 '<td class="right">'.
-                    '<div id="foto">'._zpImg($zp_id, 'big', 200, 320, 'fotoView').'</div>'.
-        '</table>';
+                    '<div id="foto">'._zpImg($zp_id, 'big', 160, 280, 'fotoView').'</div>'.
+                    '<div class="rightLinks">'.
+                        '<a class="fotoUpload">Добавить изображение</a>'.
+                        '<a>Редактировать</a>'.
+                        '<a class="avai_add">Внести наличие</a>'.
+                        '<a>Заказать</a>'.
+                        '<a> - установка</a>'.
+                        '<a> - продажа</a>'.
+                        '<a> - брак</a>'.
+                        '<a> - возврат</a>'.
+                        '<a> - списание</a>'.
+                    '</div>'.
+        '</table>'.
+    '</div>';
 }//end of zp_info()
 
 
