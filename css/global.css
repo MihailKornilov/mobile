@@ -434,17 +434,17 @@ input.money{font:bold 14px Tahoma;width:70px}
 #zp .action a{display:inline-block;padding:4px 0 4px 5px;width:105px}
 #zp .action a:hover{background-color:#e9edf1;text-decoration:none}
 #zp a.avai{color:#2A2}
-#zp a.zakaz:not(.hid),#zp a.zakaz:hover{color:#A33}
-#zp a.zakaz.busy .edit,
-#zp a.zakaz:not(:hover) .edit,
-#zp a.zakaz:not(.busy):hover .cnt{display:none}
-#zp a.zakaz.busy{background-position:58px 8px}
-#zp a.zakaz tt{display:inline-block;padding:0 4px;color:#aaa}
-#zp a.zakaz tt:hover{color:#004}
+.zpzakaz:not(.hid),.zpzakaz:hover{color:#A33}
+.zpzakaz.busy .zzedit,
+.zpzakaz:not(:hover) .zzedit,
+.zpzakaz:not(.busy):hover .cnt{display:none}
+.zpzakaz.busy{background-position:64px 8px}
+.zpzakaz tt{display:inline-block;padding:0 4px;color:#aaa}
+.zpzakaz tt:hover{color:#004}
 #zp .zz{margin-top:10px;color:#777}
 #zp .add{float:right}
 .zp_add_dialog{border-spacing:10px}
-.zp_add_dialog .label{width:155px;text-align:right}
+.zp_add_dialog .label{text-align:right}
 .avaiAddTab{width:100%}
 .avaiAddTab .left{width:250px;vertical-align:top}
 .avaiAddTab .name,table.avaiAddTab b,.avaiAddTab em{font-size:12px}
@@ -473,25 +473,16 @@ input.money{font:bold 14px Tahoma;width:70px}
 #zpInfo .added{color:#aaa;margin-top:6px;font-size:10px;text-align:right}
 #zpInfo .right{width:160px;vertical-align:top}
 #zpInfo #foto{text-align:center;margin-bottom:10px}
+.zp_dec_dialog{border-spacing:6px}
+.zp_dec_dialog #count{width:45px;font:bold 12px Tahoma;text-align:right}
+.zp_dec_dialog span{margin-left:5px;color:#888}
+#zayavNomer{width:60px;margin-right:5px}
+span.zayavNomerTab{color:#955}
+table.zayavNomerTab{border-spacing:5px}
+table.zayavNomerTab td{vertical-align:top}
+.zp_dec_dialog textarea{width:200px;height:40px;resize:none}
 
 /*
-#zp #view .tab H2, #zp #view .tab H2 A { font-size:12px; }
-#zp #view .tab H3 { margin-top:5px; }
-#zp #view .tab H3 EM {
-    text-align:right;
-    margin-top:2px;
-    margin-right:7px;
-    width:40px;
-    color:#777;
-    display:inline-block;
-}
-#zp #view .tabnal { margin:15px 0 10px 10px; }
-#zp #view .nal {
-    font-weight:bold;
-    padding-right:30px;
-}
-#zp #dopMenu EM { margin:0 4px; }
-#zp #dopMenu SPAN { font-weight:bold; }
 #zp #compat { margin-bottom:15px; }
 #zp #compat .headBlue A {
     float:right;
@@ -537,27 +528,8 @@ input.money{font:bold 14px Tahoma;width:70px}
     font:italic 12px Arial;
     padding-top:2px;
 }
-.zpDecTab .tdAbout {
-    margin-top:3px;
-    text-align:right;
-    width:90px;
-}
-.zpDecTab #count {
-    width:45px;
-    font:bold 12px Tahoma;
-    text-align:right;
-}
-.zpDecTab SPAN {
-    margin-left:5px;
-    color:#888;
-}
-.zpDecTab #zayavNomer { width:60px; }
+
 .zpDecTab #cena { width:50px; }
-.zpDecTab TEXTAREA {
-    width:200px;
-    height:40px;
-    resize:none;
-}
 */
 
 

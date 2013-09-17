@@ -279,8 +279,6 @@ var REGEXP_NUMERIC = /^\d+$/,
                 content:html,
                 submit:submit
             });
-        if($('.avaiAddTab img').attr('val'))
-            $('.avaiAddTab img').addClass('fotoView');
         $('#count').focus();
         function submit() {
             var msg,
@@ -472,6 +470,24 @@ $(document)
             tooltip
                 .html(res.html)
                 .removeClass('empty');
+        }, 'json');
+    })
+    .on('keyup', '#zayavNomer', function() {
+        var t = $(this);
+        if(t.hasClass('busy'))
+            return;
+        t.next('.zayavNomerTab').remove().end()
+         .after('<img src="/img/upload.gif">')
+         .addClass('busy');
+        var send = {
+            op:'zayav_nomer_info',
+            nomer:t.val()
+        };
+        $.post(AJAX_MAIN, send, function(res) {
+            t.removeClass('busy')
+             .next('img').remove();
+            if(res.success)
+                t.after(res.html);
         }, 'json');
     });
 
@@ -754,7 +770,6 @@ $(document)
     .on('click', '#zayavInfo .zedit', function() {
         var html = '<TABLE style="border-spacing:8px">' +
             '<tr><td class="label r">Клиент:        <TD><INPUT type="hidden" id="client_id" value=' + G.zayavInfo.client_id + '>' +
-            '<tr><td class="label r">Категория:     <TD><INPUT type="hidden" id="category" value=' + G.zayavInfo.category + '>' +
             '<tr><td class="label r top">Устройство:<TD><TABLE><TD id="dev"><TD id="device_image"></TABLE>' +
             '<tr><td class="label r">IMEI:          <TD><INPUT type=text id="imei" maxlength="20" value="' + G.zayavInfo.imei + '">' +
             '<tr><td class="label r">Серийный номер:<TD><INPUT type=text id="serial" maxlength="30" value="' + G.zayavInfo.serial + '">' +
@@ -777,7 +792,6 @@ $(document)
             delayShow:1500,
             correct:0
         });
-        $('#category').vkSel({width:150, spisok:G.category_spisok});
         $('#dev').device({
             width:190,
             device_id:G.zayavInfo.device,
@@ -796,7 +810,6 @@ $(document)
                     op:'zayav_edit',
                     zayav_id:G.zayavInfo.id,
                     client_id:$('#client_id').val(),
-                    category:$('#category').val(),
                     device:$('#dev_device').val(),
                     vendor:$('#dev_vendor').val(),
                     model:$('#dev_model').val(),
@@ -1335,27 +1348,30 @@ $(document)
         }, 'json');
     })
     .on('click', '#zp .avai_add', function() {
-        var unit = $(this),
-            obj = {};
-        obj.count = unit.hasClass('avai') ? unit.find('b').html() : 0;
+        var unit = $(this);
         while(!unit.hasClass('unit'))
             unit = unit.parent();
-        obj.zp_id = unit.attr('val');
-        obj.name = unit.find('.name').html();
-        obj.for = unit.find('.for').html();
-        obj.img = unit.find('.img').html();
-        obj.callback = function(res) {
-            unit.find('.avai_add')
-                .removeClass('hid')
-                .addClass('avai')
-                .html('В наличии: <b>' + res.count + '</b>');
-        };
+        var obj = {
+            zp_id:unit.attr('val'),
+            name:unit.find('.name').html(),
+            for:unit.find('.for').html(),
+            count:$(this).hasClass('avai') ? $(this).find('b').html() : 0,
+            img:unit.find('.img').html(),
+            callback:function(res) {
+                unit.find('.avai_add')
+                    .removeClass('hid')
+                    .addClass('avai')
+                    .html('В наличии: <b>' + res.count + '</b>');
+            }
+        }
         zpAvaiAdd(obj);
+        if($('.avaiAddTab img').attr('val'))
+            $('.avaiAddTab img').addClass('fotoView');
     })
-    .on('mouseenter', '#zp a.zakaz:not(.busy)', function() {
+    .on('mouseenter', '.zpzakaz:not(.busy)', function() {
         window.zakaz_count = $(this).find('tt:first').next('b').html();
     })
-    .on('mouseleave', '#zp a.zakaz:not(.busy)', function() {
+    .on('mouseleave', '.zpzakaz:not(.busy)', function() {
         var t = $(this),
             count = t.find('tt:first').next('b').html(),
             unit = t;
@@ -1380,7 +1396,7 @@ $(document)
             }, 'json');
         }
     })
-    .on('click', '#zp tt', function() {
+    .on('click', '.zpzakaz tt', function() {
         var t = $(this),
             znak = t.html(),
             c = t[znak == '+' ? 'prev' : 'next'](),
@@ -1399,12 +1415,12 @@ $(document)
             '<tr><td class="label">Наименование запчасти:<td><input type="hidden" id="name_id">' +
             '<tr><td class="label top">Устройство:<td id="add_dev">' +
             '<tr><td class="label">Версия:<td><input type="text" id="version">' +
-            '<tr><td class="label">Б/у:<td><input type="hidden" id="bu">' +
+            '<tr><td class="label">Б/у:<td><input type="hidden" id="add_bu">' +
             '<tr><td class="label">Цвет:<td><input type="hidden" id="color_id">' +
             '</table>',
             dialog = vkDialog({
                 top:70,
-                width:410,
+                width:380,
                 head:'Внесение новой запчасти в каталог',
                 content:html,
                 submit:submit
@@ -1419,7 +1435,7 @@ $(document)
             title0:'Цвет не указан',
             spisok:G.color_spisok
         });
-        $('#bu').vkCheck();
+        $('#add_bu').vkCheck();
         $('#add_dev').device({
             width:200
         });
@@ -1433,7 +1449,7 @@ $(document)
                     vendor_id:$('#add_dev_vendor').val(),
                     model_id:$('#add_dev_model').val(),
                     version:$('#version').val(),
-                    bu:$('#bu').val(),
+                    bu:$('#add_bu').val(),
                     color_id:$('#color_id').val()
                 };
             if(send.name_id == 0) msg = 'Не указано наименование запчасти.';
@@ -1475,7 +1491,142 @@ $(document)
 
 $(document)
     .on('click', '#zpInfo .avai_add', function() {
+        var obj = G.zpInfo;
+        obj.zp_id = obj.id;
+        obj.callback = function(res) {
+            $('#zpInfo .avai')
+                .removeClass('no')
+                .html('В наличии ' + res.count + ' шт.');
+        };
+        zpAvaiAdd(obj);
+        $('.avaiAddTab img')
+            .removeAttr('height')
+            .width(80);
+    })
+    .on('click', '#zpInfo .edit', function() {
+        var html = '<table class="zp_add_dialog">' +
+                '<tr><td class="label">Наименование запчасти:<td><input type="hidden" id="name_id" value="' + G.zpInfo.name_id + '">' +
+                '<tr><td class="label top">Устройство:<td id="add_dev">' +
+                '<tr><td class="label">Версия:<td><input type="text" id="version" value="' + G.zpInfo.version + '">' +
+                '<tr><td class="label">Б/у:<td><input type="hidden" id="add_bu" value="' + G.zpInfo.bu + '">' +
+                '<tr><td class="label">Цвет:<td><input type="hidden" id="color_id" value="' + G.zpInfo.color_id + '">' +
+            '</table>',
+            dialog = vkDialog({
+                top:30,
+                width:380,
+                head:'Редактирование запчасти',
+                content:html,
+                butSubmit:'Сохранить',
+                submit:submit
+            });
+        $('#name_id').vkSel({
+            width:200,
+            title0:'Наименование не выбрано',
+            spisok:G.zp_name_spisok
+        });
+        $('#color_id').vkSel({
+            width:130,
+            title0:'Цвет не указан',
+            spisok:G.color_spisok
+        });
+        $('#add_bu').vkCheck();
+        $('#add_dev').device({
+            width:200,
+            device_id:G.zpInfo.device,
+            vendor_id:G.zpInfo.vendor,
+            model_id:G.zpInfo.model
+        });
 
+        function submit() {
+            var msg,
+                send = {
+                    op:'zp_edit',
+                    zp_id:G.zpInfo.id,
+                    name_id:$('#name_id').val(),
+                    device_id:$('#add_dev_device').val(),
+                    vendor_id:$('#add_dev_vendor').val(),
+                    model_id:$('#add_dev_model').val(),
+                    version:$('#version').val(),
+                    bu:$('#add_bu').val(),
+                    color_id:$('#color_id').val()
+                };
+            if(send.name_id == 0) msg = 'Не указано наименование запчасти.';
+            else if(send.device_id == 0) msg = 'Не выбрано устройство';
+            else if(send.vendor_id == 0) msg = 'Не выбран производитель';
+            else if(send.model_id == 0) msg = 'Не выбрана модель';
+            else {
+                dialog.process();
+                $.post(AJAX_MAIN, send, function(res) {
+                    dialog.abort();
+                    if(res.success) {
+                        dialog.close();
+                        vkMsgOk('Редактирование данных произведено.');
+                        window.location.reload();
+                    }
+                },'json');
+            }
+
+            if(msg)
+                dialog.bottom.vkHint({
+                    msg:'<SPAN class="red">' + msg + '</SPAN>',
+                    left:110,
+                    top:-47,
+                    indent:50,
+                    show:1,
+                    remove:1
+                });
+        }
+    })
+    .on('click', '#zpInfo .setup', function() {
+        var html = '<table class="zp_dec_dialog">' +
+                '<tr><td class="label r">Количество:<td><input type="text" id="count" value="1"><span>(max: <b>' + G.zpInfo.count + '</b>)</span>' +
+                '<tr><td class="label r top">Номер заявки:<td><input type="text" id="zayavNomer">' +
+                '<tr><td class="label r top">Примечание:<td><textarea id="prim"></textarea>' +
+            '</table>',
+            dialog = vkDialog({
+                width:380,
+                head:'Установка запчасти',
+                content:html,
+                submit:submit
+            });
+        $('#count').focus();
+
+        function submit() {
+            var msg,
+                send = {
+                    op:'zayav_zp_set',
+                    zp_id:G.zpInfo.id,
+                    count:$('#count').val(),
+                    zayav_id:$('#zayavNomerId').length > 0 ? $('#zayavNomerId').val() : 0,
+                    prim:$('#prim').val()
+                };
+            if(!REGEXP_NUMERIC.test(send.count) || send.count > G.zpInfo.count || send.count == 0) {
+                msg = 'Некорректно указано количество.';
+                $('#count').focus();
+            } else if(send.zayav_id == 0) {
+                msg = 'Не указан номер заявки.';
+                $('#zayavNomer').focus();
+            } else {
+                dialog.process();
+                $.post(AJAX_MAIN, send, function(res) {
+                    dialog.abort();
+                    if(res.success) {
+                        dialog.close();
+                        vkMsgOk('Установка запчасти произведена.');
+                    }
+                },'json');
+            }
+
+            if(msg)
+                dialog.bottom.vkHint({
+                    msg:'<SPAN class="red">' + msg + '</SPAN>',
+                    left:92,
+                    top:-47,
+                    indent:50,
+                    show:1,
+                    remove:1
+                });
+        }
     });
 
 $(document)
@@ -1509,16 +1660,15 @@ $(document)
         $(this).parent().parent().find('.hist').slideToggle();
     })
     .on('click', '.report_remind_add', function() {
-        //todo переделать
         var html = '<TABLE class="remind_add_tab">' +
-            '<tr><td class="label">Назначение:<TD><INPUT type="hidden" id=destination>' +
-            '<tr><td class="label" id=target_name><TD id=target>' +
+            '<tr><td class="label">Назначение:<TD><INPUT type="hidden" id="destination" />' +
+            '<tr><td class="label top" id="target_name"><TD id="target">' +
             '</TABLE>' +
 
             '<TABLE class="remind_add_tab" id="tab_content">' +
             '<tr><td class="label top">Задание:<TD><TEXTAREA id=txt></TEXTAREA>' +
-            '<tr><td class="label">Крайний день выполнения:<TD><INPUT type="hidden" id=data>' +
-            '<tr><td class="label">Личное:<TD><INPUT type="hidden" id=private>' +
+            '<tr><td class="label">Крайний день выполнения:<TD><INPUT type="hidden" id="data" />' +
+            '<tr><td class="label">Личное:<TD><INPUT type="hidden" id="private" />' +
             '</TABLE>';
         var dialog = vkDialog({
             top:30,
@@ -1556,49 +1706,21 @@ $(document)
             $('#target_name').html('');
             $('#tab_content #txt').val('');
             $('#tab_content').css('display', id > 0 ? 'block' : 'none');
-            // если выбран клиент, вставляется селект с клиентами
-            if (id == 1) {
+            if(id == 1) {
                 $('#target_name').html('Клиент:');
-                $('#target').html('<DIV id=client_id></DIV>');
+                $('#target').html('<DIV id="client_id"></DIV>');
                 $('#client_id').clientSel();
             }
-            // если выбрана заявка
-            if (id == 2) {
+            if(id == 2) {
                 $('#target_name').html('Номер заявки:');
-                $('#target').html('<INPUT type=text id=zayav_nomer><INPUT type="hidden" id=zayav_id value=0><SPAN id=img></SPAN><DIV id=zayav_find></DIV>');
-                $('#zayav_nomer').focus().on('keyup', function () {
-                    $('#zayav_id').val(0);
-                    $('#zayav_find').html('');
-                    var val = $(this).val();
-                    if (REGEXP_NUMERIC.test(val)) {
-                        $('#img').imgUp();
-                        $.getJSON('/remont/zp/view/AjaxZayavFind.php?' + G.values + '&nomer=' + val, function (res) {
-                            if(res.id > 0) {
-                                html = '<TABLE style="border-spacing:5px"><TR>' +
-                                    '<TD><A href="index.php?' + G.values + '&my_page=remZayavkiInfo&id=' + res.id + '"><IMG src="' + res.img + '" height=40></A>' +
-                                    '<TD><A href="index.php?' + G.values + '&my_page=remZayavkiInfo&id=' + res.id + '">' +
-                                        G.category_ass[res.category] + '<br />' +
-                                        G.device_ass[res.device_id] + '<br />' +
-                                        G.vendor_ass[res.vendor_id] + ' ' +
-                                        G.model_ass[res.model_id] + '</A>' +
-                                    '</TABLE>';
-                                $('#zayav_id').val(res.id);
-                                $('#zayav_find').html(html);
-                                $('#img').html('');
-                            } else {
-                                $('#img').html('Заявка не найдена.');
-                            }
-                        });
-                    } else {
-                        $('#img').html('некорректный ввод');
-                    }
-                });
+                $('#target').html('<INPUT type="text" id="zayavNomer" />');
+                $('#zayavNomer').focus();
             }
-        }//destination()
+        }
 
         function submit() {
             var client_id = dest.val() == 1 ? $('#client_id').val() : 0,
-                zayav_id = dest.val() == 2 ? $('#zayav_id').val() : 0,
+                zayav_id = $('#zayavNomerId').length > 0 ? $('#zayavNomerId').val() : 0,
                 send = {
                     op:'report_remind_add',
                     client_id:client_id,
@@ -1609,9 +1731,11 @@ $(document)
                 },
                 msg;
             if(dest.val() == 0) msg = 'Не выбрано назначение.';
-            else if($('#client_id').length > 0 && send.client_id == 0) msg = 'Не выбран клиент.';
-            else if($('#zayav_id').length > 0 && send.zayav_id == 0) msg = 'Не указан номер заявки.';
-            else if(!send.txt) msg = 'Не указано содержание напоминания.';
+            else if(dest.val() == 1 && send.client_id == 0) msg = 'Не выбран клиент.';
+            else if(dest.val() == 2 && send.zayav_id == 0) {
+                msg = 'Не указан номер заявки.';
+                $('#zayavNomer').focus();
+            } else if(!send.txt) msg = 'Не указано содержание напоминания.';
             else {
                 dialog.process();
                 $.post(AJAX_MAIN, send, function(res) {
@@ -1631,7 +1755,7 @@ $(document)
                     top:-48,
                     left:150
                 });
-        }//submit()
+        }
         return false;
     })
     .on('click', '#report_remind .ajaxNext', function() {
@@ -2344,12 +2468,6 @@ $(document).ready(function() {
             bottom:5,
             func:zayavSpisokLoad
         });
-        G.vkSel_category = $('#category').vkSel({
-            width:155,
-            title0:'Любая категория',
-            spisok:G.category_spisok,
-            func:zayavSpisokLoad
-        }).o;
         G.status_spisok.unshift({uid:0, title:'Любой статус'});
         $('#status').infoLink({
             spisok:G.status_spisok,

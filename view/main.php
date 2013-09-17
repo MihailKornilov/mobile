@@ -597,7 +597,7 @@ function _getImg($type, $arr, $size='small', $x_new=10000, $y_new=10000, $class=
         );
     $send = array(
         'success' => false,
-        'img' => '<img src="/img/nofoto-'.$size.'.gif"'.($x_new < 10000 ? 'width="'.$x_new.'"' : '').'>'
+        'img' => '<img src="/img/nofoto-'.$size.'.gif"'.($x_new < 10000 ? ' width="'.$x_new.'"' : '').'>'
     );
     $owners = array();
     foreach($arr as $k => $r) {
@@ -1443,7 +1443,6 @@ function zayav_info($zayav_id) {
             'id:'.$zayav['id'].','.
             'nomer:'.$zayav['nomer'].','.
             'client_id:'.$zayav['client_id'].','.
-            'category:'.$zayav['category'].','.
             'device:'.$zayav['base_device_id'].','.
             'vendor:'.$zayav['base_vendor_id'].','.
             'model:'.$zayav['base_model_id'].','.
@@ -1494,8 +1493,7 @@ function zayav_info($zayav_id) {
                 '<div class="fotoUpload">Добавить изображение</div>'.
                 '<div class="headBlue">Информация об устройстве</div>'.
                 '<div class="devContent">'.
-                    '<div class="devName">'._deviceName($zayav['base_device_id']).'<br />'.'<a>'.$model.'</a>'.
-                    '</div>'.
+                    '<div class="devName">'._deviceName($zayav['base_device_id']).'<br />'.'<a>'.$model.'</a></div>'.
                     '<table class="devInfo">'.
                         ($zayav['imei'] ? '<tr><th>imei:      <td>'.$zayav['imei'] : '').
                         ($zayav['serial'] ? '<tr><th>serial:  <td>'.$zayav['serial'] : '').
@@ -1715,15 +1713,14 @@ function zp_data($page=1, $filter=array(), $limit=20) {
         $zayav[$r['zayav_id']] = $r['zayav_id'];
     }
     _zayavNomerLink($zayav);
-    foreach($zakazZayav as $id => $zz){
+    foreach($zakazZayav as $id => $zz)
         foreach($zz as $i => $zayav_id)
             $zakazZayav[$id][$i] = _zayavNomerLink($zayav_id);
-    }
 
     $send['spisok'] = '';
     foreach($spisok as $id => $r) {
         $zakazCount = isset($zakaz[$r['zp_id']]) ? $zakaz[$r['zp_id']] : 0;
-        $zakazEdit = '<span class="edit">ано: <tt>—</tt><b>'.$zakazCount.'</b><tt>+</tt></span>';
+        $zakazEdit = '<span class="zzedit">ано: <tt>—</tt><b>'.$zakazCount.'</b><tt>+</tt></span>';
         $send['spisok'] .= '<div class="unit" val="'.$id.'">'.
             '<table>'.
                 '<tr><td class="img">'._zpImg($r['zp_id']).
@@ -1741,7 +1738,7 @@ function zp_data($page=1, $filter=array(), $limit=20) {
                         (isset($zakazZayav[$id]) ? '<div class="zz">Заказано для заяв'.(count($zakazZayav[$id]) > 1 ? 'ок' : 'ки').' '.implode(', ', $zakazZayav[$id]).'</div>' : '').
                     '<td class="action">'.
                         (isset($avai[$r['zp_id']]) ? '<a class="avai avai_add">В наличии: <b>'.$avai[$r['zp_id']].'</b></a>' : '<a class="hid avai_add">Внести наличие</a>').
-                        '<a class="zakaz'.($zakazCount ? '' : ' hid').'">Заказ<span class="cnt">'.($zakazCount ? 'ано: <b>'.$zakazCount.'</b>' : 'ать').'</span>'.$zakazEdit.'</a>'.
+                        '<a class="zpzakaz'.($zakazCount ? '' : ' hid').'">Заказ<span class="cnt">'.($zakazCount ? 'ано: <b>'.$zakazCount.'</b>' : 'ать').'</span>'.$zakazEdit.'</a>'.
             '</table>'.
         '</div>';
     }
@@ -1786,13 +1783,31 @@ function zp_count($data) {
 function zp_info($zp_id) {
     $sql = "SELECT * FROM `zp_catalog` WHERE `id`=".$zp_id;
     if(!$zp = mysql_fetch_assoc(query($sql)))
-        return 'Запасти не существует';
+        return 'Запчасти не существует';
 
     $avai = query_value("SELECT `count` FROM `zp_avai` WHERE `ws_id`=".WS_ID." AND `zp_id`=".$zp_id);
 
+    $zakazCount = query_value("SELECT IFNULL(SUM(`count`),0) FROM `zp_zakaz` WHERE `ws_id`=".WS_ID." AND `zp_id`=".$zp_id);
+    $zakazEdit = '<span class="zzedit">ано: <tt>—</tt><b>'.$zakazCount.'</b><tt>+</tt></span>';
+
+    _zpImg($zp_id, 'big', 160, 280, 'fotoView');
+
     return
     '<script type="text/javascript">'.
-        'G.zpInfo = {id:"'.$zp_id.'"};'.
+        'G.zpInfo = {'.
+            'id:'.$zp_id.','.
+            'name_id:'.$zp['name_id'].','.
+            'device:'.$zp['base_device_id'].','.
+            'vendor:'.$zp['base_vendor_id'].','.
+            'model:'.$zp['base_model_id'].','.
+            'version:"'.$zp['version'].'",'.
+            'color_id:'.$zp['color_id'].','.
+            'bu:'.$zp['bu'].','.
+            'name:"'._zpName($zp['name_id']).' <b>'._vendorName($zp['base_vendor_id'])._modelName($zp['base_model_id']).'</b>",'.
+            'for:"для '._deviceName($zp['base_device_id'], 1).'",'.
+            'count:'.($avai ? $avai : 0).','.
+            'img:"'.addslashes(_zpImg($zp_id)).'"'.
+        '};'.
     '</script>'.
     '<div id="zpInfo">'.
         '<table class="ztab">'.
@@ -1812,13 +1827,16 @@ function zp_info($zp_id) {
                     '<div class="avai'.($avai ? '' : ' no').'">'.($avai ? 'В наличии '.$avai.' шт.' : 'Нет в наличии.').'</div>'.
                     '<div class="added">Добавлено в каталог '.FullData($zp['dtime_add'], 1).'</div>'.
                 '<td class="right">'.
-                    '<div id="foto">'._zpImg($zp_id, 'big', 160, 280, 'fotoView').'</div>'.
+                    '<div id="foto">'._zpImg($zp_id).'</div>'.
                     '<div class="rightLinks">'.
                         '<a class="fotoUpload">Добавить изображение</a>'.
-                        '<a>Редактировать</a>'.
+                        '<a class="edit">Редактировать</a>'.
                         '<a class="avai_add">Внести наличие</a>'.
-                        '<a>Заказать</a>'.
-                        '<a> - установка</a>'.
+                        '<a class="zpzakaz unit'.($zakazCount ? '' : ' hid').'" val="'.$zp_id.'">'.
+                            'Заказ<span class="cnt">'.($zakazCount ? 'ано: <b>'.$zakazCount.'</b>' : 'ать').'</span>'.
+                            $zakazEdit.
+                        '</a>'.
+                        '<a class="setup"> - установка</a>'.
                         '<a> - продажа</a>'.
                         '<a> - брак</a>'.
                         '<a> - возврат</a>'.

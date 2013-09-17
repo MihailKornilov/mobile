@@ -982,7 +982,7 @@ $.fn.topSearchSet = function (VAL) {
 $.fn.vkCheck = function() {
     var t = $(this),
         id = t.attr('id'),
-        val = t.val() ? 1 : 0;
+        val = t.val() == 1 ? 1 : 0;
     t.val(val);
     t.after('<div class="check' + val + '" id="' + id + '_check"></div>');
 };
