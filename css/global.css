@@ -473,14 +473,16 @@ input.money{font:bold 14px Tahoma;width:70px}
 #zpInfo .added{color:#aaa;margin-top:6px;font-size:10px;text-align:right}
 #zpInfo .right{width:160px;vertical-align:top}
 #zpInfo #foto{text-align:center;margin-bottom:10px}
-.zp_dec_dialog{border-spacing:6px}
+.zp_dec_dialog{border-spacing:8px}
 .zp_dec_dialog #count{width:45px;font:bold 12px Tahoma;text-align:right}
 .zp_dec_dialog span{margin-left:5px;color:#888}
+.zp_dec_dialog #cena{width:45px;text-align:right}
+.zp_dec_dialog textarea{width:200px;height:40px;resize:none}
 #zayavNomer{width:60px;margin-right:5px}
 span.zayavNomerTab{color:#955}
 table.zayavNomerTab{border-spacing:5px}
 table.zayavNomerTab td{vertical-align:top}
-.zp_dec_dialog textarea{width:200px;height:40px;resize:none}
+
 
 /*
 #zp #compat { margin-bottom:15px; }

@@ -318,6 +318,21 @@ var REGEXP_NUMERIC = /^\d+$/,
                 });
         }
     },
+    zpAvaiNo = function(c) {
+        if(c == 0) {
+            vkDialog({
+                top:100,
+                width:300,
+                head:'Нет наличия',
+                content:'<center>Запчасти нет в наличии.</center>',
+                butSubmit:'',
+                butCancel:'Закрыть'
+            });
+            return true;
+        }
+        return false;
+    },
+
     reportHistoryLoad = function() {
         var send = {
             op:'report_history_load',
@@ -1497,6 +1512,7 @@ $(document)
             $('#zpInfo .avai')
                 .removeClass('no')
                 .html('В наличии ' + res.count + ' шт.');
+            G.zpInfo.count = res.count;
         };
         zpAvaiAdd(obj);
         $('.avaiAddTab img')
@@ -1577,19 +1593,21 @@ $(document)
                 });
         }
     })
-    .on('click', '#zpInfo .setup', function() {
+    .on('click', '#zpInfo .set', function() {
+        if(zpAvaiNo(G.zpInfo.count))
+            return;
         var html = '<table class="zp_dec_dialog">' +
                 '<tr><td class="label r">Количество:<td><input type="text" id="count" value="1"><span>(max: <b>' + G.zpInfo.count + '</b>)</span>' +
                 '<tr><td class="label r top">Номер заявки:<td><input type="text" id="zayavNomer">' +
                 '<tr><td class="label r top">Примечание:<td><textarea id="prim"></textarea>' +
             '</table>',
             dialog = vkDialog({
-                width:380,
+                width:340,
                 head:'Установка запчасти',
                 content:html,
                 submit:submit
             });
-        $('#count').focus();
+        $('#count').focus().select();
 
         function submit() {
             var msg,
@@ -1620,12 +1638,128 @@ $(document)
             if(msg)
                 dialog.bottom.vkHint({
                     msg:'<SPAN class="red">' + msg + '</SPAN>',
-                    left:92,
+                    left:74,
                     top:-47,
                     indent:50,
                     show:1,
                     remove:1
                 });
+        }
+    })
+    .on('click', '#zpInfo .sale', function() {
+        if(zpAvaiNo(G.zpInfo.count))
+            return;
+        var html = '<table class="zp_dec_dialog">' +
+                '<tr><td class="label r">Количество:<td><input type="text" id="count" value="1"><span>(max: <b>' + G.zpInfo.count + '</b>)</span>' +
+                '<tr><td class="label r">Цена за ед.:<td><input type="text" id="cena" maxlength="8"> руб.' +
+                '<tr><td class="label r">Деньги поступили в кассу?:<td><input type="hidden" id="kassa" value="-1">' +
+                '<tr><td class="label r">Клиент:<td><input type="hidden" id="client_id">' +
+                '<tr><td class="label r top">Примечание:<td><textarea id="prim"></textarea>' +
+                '</table>',
+            dialog = vkDialog({
+                top:40,
+                width:440,
+                head:'Продажа запчасти',
+                content:html,
+                submit:submit
+            });
+
+        $('#count').focus().select();
+        $('#client_id').clientSel({add:1});
+        $('#kassa').vkRadio({
+            display:'inline-block',
+            right:15,
+            spisok:[{uid:1, title:'да'},{uid:0, title:'нет'}]
+        });
+
+        function submit() {
+            var msg,
+                send = {
+                    op:'zp_sale',
+                    zp_id:G.zpInfo.id,
+                    count:$('#count').val(),
+                    cena:$('#cena').val(),
+                    kassa:$('#kassa').val(),
+                    client_id:$('#client_id').val(),
+                    prim:$('#prim').val()
+                };
+            if(!REGEXP_NUMERIC.test(send.count) || send.count > G.zpInfo.count || send.count == 0) {
+                msg = 'Некорректно указано количество.';
+                $('#count').focus();
+            } else if(!REGEXP_CENA.test(send.cena)) {
+                msg = 'Некорректно указана цена.';
+                $('#cena').focus();
+            } else if(send.kassa == '-1') msg = 'Укажите, поступили деньги в кассу или нет.';
+            else {
+                dialog.process();
+                $.post(AJAX_MAIN, send, function(res) {
+                    dialog.abort();
+                    if(res.success) {
+                        dialog.close();
+                        vkMsgOk('Продажа запчасти произведена.');
+                    }
+                },'json');
+            }
+
+            if(msg)
+                dialog.bottom.vkHint({
+                    msg:'<SPAN class="red">' + msg + '</SPAN>',
+                    left:123,
+                    top:-47,
+                    indent:50,
+                    show:1,
+                    remove:1
+                });
+        }
+    })
+    .on('click', '#zpInfo .defect,#zpInfo .return,#zpInfo .writeoff', function() {
+        if(zpAvaiNo(G.zpInfo.count))
+            return;
+        var rus = {defect:'Забраковка', return:'Возврат', 'writeoff':'Списание'},
+            end = {defect:'ена', return:'ён', 'writeoff':'ено'},
+            type = $(this).attr('class'),
+            html = '<table class="zp_dec_dialog">' +
+                '<tr><td class="label r">Количество:<td><input type="text" id="count" value="1"><span>(max: <b>' + G.zpInfo.count + '</b>)</span>' +
+                '<tr><td class="label r top">Примечание:<td><textarea id="prim"></textarea>' +
+                '</table>',
+            dialog = vkDialog({
+                top:60,
+                width:340,
+                head:rus[type] + ' запчасти',
+                content:html,
+                submit:submit
+            });
+
+        $('#count').focus().select();
+
+        function submit() {
+            var send = {
+                op:'zp_other',
+                zp_id:G.zpInfo.id,
+                type:type,
+                count:$('#count').val(),
+                prim:$('#prim').val()
+            };
+            if(!REGEXP_NUMERIC.test(send.count) || send.count > G.zpInfo.count || send.count == 0) {
+                dialog.bottom.vkHint({
+                    msg:'<SPAN class="red">Некорректно указано количество.</SPAN>',
+                    left:73,
+                    top:-47,
+                    indent:50,
+                    show:1,
+                    remove:1
+                });
+                $('#count').focus();
+            } else {
+                dialog.process();
+                $.post(AJAX_MAIN, send, function(res) {
+                    dialog.abort();
+                    if(res.success) {
+                        dialog.close();
+                        vkMsgOk(rus[type] + ' запчасти произвед' + end[type] + '.');
+                    }
+                },'json');
+            }
         }
     });
 

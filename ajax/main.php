@@ -1001,6 +1001,14 @@ switch(@$_POST['op']) {
                     ".VIEWER_ID."
                 )";
         query($sql);
+
+        history_insert(array(
+            'type' => 13,
+            'value' => $count,
+            'zp_id' => $zp_id,
+            'zayav_id' => $zayav_id
+        ));
+
         $zp['avai'] = $count;
         $send['zp_unit'] = utf8(zayav_zp_unit($zp, $model));
         $send['comment'] = utf8(_vkComment('zayav', $zayav_id));
@@ -1188,6 +1196,115 @@ switch(@$_POST['op']) {
                     `color_id`=".$color_id."
                 WHERE `id`=".$zp_id;
         query($sql);
+        jsonSuccess();
+        break;
+    case 'zp_sale':// Продажа запчасти
+        if(!preg_match(REGEXP_NUMERIC, $_POST['zp_id']) || $_POST['zp_id'] == 0)
+            jsonError();
+        if(!preg_match(REGEXP_NUMERIC, $_POST['count']) || $_POST['count'] == 0)
+            jsonError();
+        if(!preg_match(REGEXP_CENA, $_POST['cena']))
+            jsonError();
+        if(!preg_match(REGEXP_BOOL, $_POST['kassa']))
+            jsonError();
+        if(!preg_match(REGEXP_NUMERIC, $_POST['client_id']))
+            jsonError();
+
+        $zp_id = _zpCompatId($_POST['zp_id']);
+        $count = intval($_POST['count']) * -1;
+        $cena = round($_POST['cena'], 2);
+        $summa = $count * $cena * -1;
+        $kassa = intval($_POST['kassa']);
+        $client_id = intval($_POST['client_id']);
+        $prim = win1251(htmlspecialchars(trim($_POST['prim'])));
+
+        $sql = "INSERT INTO `zp_move` (
+                    `ws_id`,
+                    `zp_id`,
+                    `count`,
+                    `summa`,
+                    `type`,
+                    `client_id`,
+                    `prim`,
+                    `viewer_id_add`
+                ) VALUES (
+                    ".WS_ID.",
+                    ".$zp_id.",
+                    ".$count.",
+                    ".$summa.",
+                    'set',
+                    ".$client_id.",
+                    '".$prim."',
+                    ".VIEWER_ID."
+                )";
+        query($sql);
+
+        _zpAvaiSet($zp_id);
+
+        $sql = "INSERT INTO `money` (
+                    `ws_id`,
+                    `zp_id`,
+                    `summa`,
+                    `kassa`,
+                    `viewer_id_add`
+                ) VALUES (
+                    ".WS_ID.",
+                    ".$zp_id.",
+                    ".$summa.",
+                    ".$kassa.",
+                    ".VIEWER_ID."
+                )";
+        query($sql);
+
+        history_insert(array(
+            'type' => 14,
+            'value' => $summa,
+            'zp_id' => $zp_id,
+            'client_id' => $client_id
+        ));
+
+        jsonSuccess();
+        break;
+    case 'zp_other':// Продажа запчасти
+        if(!preg_match(REGEXP_NUMERIC, $_POST['zp_id']) || $_POST['zp_id'] == 0)
+            jsonError();
+        if(!preg_match(REGEXP_NUMERIC, $_POST['count']) || $_POST['count'] == 0)
+            jsonError();
+        switch($_POST['type']) {
+            case 'defect': $type = 17; break;
+            case 'return': $type = 16; break;
+            case 'writeoff': $type = 15; break;
+            default: jsonError();
+        }
+
+        $zp_id = _zpCompatId($_POST['zp_id']);
+        $count = intval($_POST['count']) * -1;
+        $prim = win1251(htmlspecialchars(trim($_POST['prim'])));
+
+        $sql = "INSERT INTO `zp_move` (
+                    `ws_id`,
+                    `zp_id`,
+                    `count`,
+                    `type`,
+                    `prim`,
+                    `viewer_id_add`
+                ) VALUES (
+                    ".WS_ID.",
+                    ".$zp_id.",
+                    ".$count.",
+                    '".$_POST['type']."',
+                    '".$prim."',
+                    ".VIEWER_ID."
+                )";
+        query($sql);
+
+        _zpAvaiSet($zp_id);
+
+        history_insert(array(
+            'type' => $type,
+            'zp_id' => $zp_id
+        ));
+
         jsonSuccess();
         break;
 

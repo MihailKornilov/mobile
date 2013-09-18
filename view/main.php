@@ -1836,11 +1836,11 @@ function zp_info($zp_id) {
                             'Заказ<span class="cnt">'.($zakazCount ? 'ано: <b>'.$zakazCount.'</b>' : 'ать').'</span>'.
                             $zakazEdit.
                         '</a>'.
-                        '<a class="setup"> - установка</a>'.
-                        '<a> - продажа</a>'.
-                        '<a> - брак</a>'.
-                        '<a> - возврат</a>'.
-                        '<a> - списание</a>'.
+                        '<a class="set"> - установка</a>'.
+                        '<a class="sale"> - продажа</a>'.
+                        '<a class="defect"> - брак</a>'.
+                        '<a class="return"> - возврат</a>'.
+                        '<a class="writeoff"> - списание</a>'.
                     '</div>'.
         '</table>'.
     '</div>';
