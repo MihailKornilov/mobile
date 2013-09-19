@@ -332,6 +332,21 @@ var REGEXP_NUMERIC = /^\d+$/,
         }
         return false;
     },
+    zpAvaiUpdate = function() {
+        var send = {
+            op:'zp_avai_update',
+            zp_id: G.zpInfo.id
+        };
+        $.post(AJAX_MAIN, send, function(res) {
+            if(res.success) {
+                G.zpInfo.count = res.count;
+                $('.move').html(res.move);
+                $('.avai')
+                    [(res.count == 0 ? 'add' : 'remove') + 'Class']('no')
+                    .html(res.count == 0 ? 'Нет в наличии.' : 'В наличии ' + res.count + ' шт.');
+            }
+        }, 'json');
+    },
 
     reportHistoryLoad = function() {
         var send = {
@@ -1508,12 +1523,7 @@ $(document)
     .on('click', '#zpInfo .avai_add', function() {
         var obj = G.zpInfo;
         obj.zp_id = obj.id;
-        obj.callback = function(res) {
-            $('#zpInfo .avai')
-                .removeClass('no')
-                .html('В наличии ' + res.count + ' шт.');
-            G.zpInfo.count = res.count;
-        };
+        obj.callback = zpAvaiUpdate;
         zpAvaiAdd(obj);
         $('.avaiAddTab img')
             .removeAttr('height')
@@ -1629,6 +1639,7 @@ $(document)
                 $.post(AJAX_MAIN, send, function(res) {
                     dialog.abort();
                     if(res.success) {
+                        zpAvaiUpdate();
                         dialog.close();
                         vkMsgOk('Установка запчасти произведена.');
                     }
@@ -1695,6 +1706,7 @@ $(document)
                 $.post(AJAX_MAIN, send, function(res) {
                     dialog.abort();
                     if(res.success) {
+                        zpAvaiUpdate();
                         dialog.close();
                         vkMsgOk('Продажа запчасти произведена.');
                     }
@@ -1755,12 +1767,55 @@ $(document)
                 $.post(AJAX_MAIN, send, function(res) {
                     dialog.abort();
                     if(res.success) {
+                        zpAvaiUpdate();
                         dialog.close();
                         vkMsgOk(rus[type] + ' запчасти произвед' + end[type] + '.');
                     }
                 },'json');
             }
         }
+    })
+    .on('click', '#zpInfo .move .img_del', function() {
+        var id = $(this).attr('val');
+        var dialog = vkDialog({
+            top:110,
+            width:250,
+            head:'Удаление заявки',
+            content:'<center>Подтвердите удаление записи.</center>',
+            butSubmit:'Удалить',
+            submit:function() {
+                var send = {
+                    op:'zp_move_del',
+                    id:id
+                };
+                dialog.process();
+                $.post(AJAX_MAIN, send, function(res) {
+                    dialog.abort();
+                    if(res.success) {
+                        zpAvaiUpdate();
+                        dialog.close();
+                        vkMsgOk('Запись удалена.');
+                    }
+                }, 'json');
+            }
+        });
+    })
+    .on('click', '#zpInfo .move .ajaxNext', function() {
+        if($(this).hasClass('busy'))
+            return;
+        var next = $(this),
+            send = {
+                op:'zp_move_next',
+                zp_id: G.zpInfo.id,
+                page:$(this).attr('val')
+            };
+        next.addClass('busy');
+        $.post(AJAX_MAIN, send, function (res) {
+            if(res.success)
+                next.after(res.spisok).remove();
+            else
+                next.removeClass('busy');
+        }, 'json');
     });
 
 $(document)

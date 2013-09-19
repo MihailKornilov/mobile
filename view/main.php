@@ -222,7 +222,7 @@ function _checkbox($id, $txt='', $value=0) {
 }//end of _checkbox()
 
 function _end($count, $o1, $o2, $o5=false) {
-    if(!$o5) $o5 = $o2;
+    if($o5 === false) $o5 = $o2;
     if($count / 10 % 10 == 1)
         return $o5;
     else
@@ -752,7 +752,7 @@ function _zpName($name_id) {
     return constant('ZP_NAME_'.$name_id);
 }//end of _zpName()
 function _zpCompatId($zp_id) {
-    $sql = "SELECT * FROM `zp_catalog` WHERE `id`=".intval($zp_id);
+    $sql = "SELECT `compat_id` FROM `zp_catalog` WHERE `id`=".intval($zp_id);
     $zp = mysql_fetch_assoc(query($sql));
     return $zp['compat_id'] ? $zp['compat_id'] : $zp['id'];
 }//end of _zpCompatId()
@@ -1602,7 +1602,8 @@ function zpFilter($v) {
     return $filter;
 }//end of zpFilter()
 function zp_data($page=1, $filter=array(), $limit=20) {
-    $cond = "`id` AND (`compat_id`=0 OR `compat_id`=`id`)";//todo не показываются совместимости
+    $cond = "`id`";
+    //$cond .= " AND (`compat_id`=0 OR `compat_id`=`id`)";//todo не показываются совместимости
     if(!empty($filter['find'])) {
         $cond .= " AND `find` LIKE '%".$filter['find']."%'";
         $reg = '/('.$filter['find'].')/i';
@@ -1785,12 +1786,16 @@ function zp_info($zp_id) {
     if(!$zp = mysql_fetch_assoc(query($sql)))
         return 'Запчасти не существует';
 
-    $avai = query_value("SELECT `count` FROM `zp_avai` WHERE `ws_id`=".WS_ID." AND `zp_id`=".$zp_id);
+    $compat_id = $zp['compat_id'] ? $zp['compat_id'] : $zp_id;
+    $avai = query_value("SELECT `count` FROM `zp_avai` WHERE `ws_id`=".WS_ID." AND `zp_id`=".$compat_id);
 
-    $zakazCount = query_value("SELECT IFNULL(SUM(`count`),0) FROM `zp_zakaz` WHERE `ws_id`=".WS_ID." AND `zp_id`=".$zp_id);
+    $zakazCount = query_value("SELECT IFNULL(SUM(`count`),0) FROM `zp_zakaz` WHERE `ws_id`=".WS_ID." AND `zp_id`=".$compat_id);
     $zakazEdit = '<span class="zzedit">ано: <tt>—</tt><b>'.$zakazCount.'</b><tt>+</tt></span>';
 
-    _zpImg($zp_id, 'big', 160, 280, 'fotoView');
+    _zpImg($compat_id, 'big', 160, 280, 'fotoView');
+
+    $compatSpisok = zp_compat_spisok($zp_id, $compat_id);
+    $compatCount = count($compatSpisok);
 
     return
     '<script type="text/javascript">'.
@@ -1806,7 +1811,7 @@ function zp_info($zp_id) {
             'name:"'._zpName($zp['name_id']).' <b>'._vendorName($zp['base_vendor_id'])._modelName($zp['base_model_id']).'</b>",'.
             'for:"для '._deviceName($zp['base_device_id'], 1).'",'.
             'count:'.($avai ? $avai : 0).','.
-            'img:"'.addslashes(_zpImg($zp_id)).'"'.
+            'img:"'.addslashes(_zpImg($compat_id)).'"'.
         '};'.
     '</script>'.
     '<div id="zpInfo">'.
@@ -1826,8 +1831,10 @@ function zp_info($zp_id) {
                     '</table>'.
                     '<div class="avai'.($avai ? '' : ' no').'">'.($avai ? 'В наличии '.$avai.' шт.' : 'Нет в наличии.').'</div>'.
                     '<div class="added">Добавлено в каталог '.FullData($zp['dtime_add'], 1).'</div>'.
+                    '<div class="headBlue">Движение</div>'.
+                    '<div class="move">'.zp_move($compat_id).'</div>'.
                 '<td class="right">'.
-                    '<div id="foto">'._zpImg($zp_id).'</div>'.
+                    '<div id="foto">'._zpImg($compat_id).'</div>'.
                     '<div class="rightLinks">'.
                         '<a class="fotoUpload">Добавить изображение</a>'.
                         '<a class="edit">Редактировать</a>'.
@@ -1842,11 +1849,86 @@ function zp_info($zp_id) {
                         '<a class="return"> - возврат</a>'.
                         '<a class="writeoff"> - списание</a>'.
                     '</div>'.
+                    '<div class="headBlue">Совместимость<a class="add">добавить</a></div>'.
+                    '<div class="compatCount">'.($compatCount ? $compatCount.' устройств'._end($compatCount, 'о', 'а', '') : 'Совместимостей нет').'</div>'.
+                    '<div class="compatSpisok">'.($compatCount ? implode($compatSpisok) : '').'</div>'.
         '</table>'.
     '</div>';
 }//end of zp_info()
+function zp_move($zp_id, $page=1) {
+    $all = query_value("SELECT COUNT(`id`) FROM `zp_move` WHERE `ws_id`=".WS_ID." AND `zp_id`=".$zp_id);
+    if(!$all)
+        return '<div class="unit">Движения запчасти нет.</div>';
 
-
+    $limit = 10;
+    $start = ($page - 1) * $limit;
+    $sql = "SELECT *
+            FROM `zp_move`
+            WHERE `ws_id`=".WS_ID."
+              AND `zp_id`=".$zp_id."
+            ORDER BY `id` DESC
+            LIMIT ".$start.",".$limit;
+    $q = query($sql);
+    $spisok = array();
+    $viewer = array();
+    $zayav = array();
+    $client = array();
+    while($r = mysql_fetch_assoc($q)) {
+        $spisok[] = $r;
+        $viewer[$r['viewer_id_add']] = $r['viewer_id_add'];
+        if($r['zayav_id'] > 0)
+            $zayav[$r['zayav_id']] = $r['zayav_id'];
+        if($r['client_id'] > 0)
+            $client[$r['client_id']] = $r['client_id'];
+    }
+    $viewer = _viewersInfo($viewer);
+    _zayavNomerLink($zayav);
+    $client = _clientsLink($client);
+    $move = '';
+    $type = array(
+        '' => 'Приход',
+        'set' => 'Установка',
+        'sale' => 'Продажа',
+        'defect' => 'Брак',
+        'return' => 'Возврат',
+        'writeoff' => 'Списание'
+    );
+    foreach($spisok as $n => $r) {
+        $cena = round($r['cena'], 2);
+        $summa = round($r['summa'], 2);
+        $count = abs($r['count']);
+        $move .= '<div class="unit">'.
+            '<div>'.
+                (!$n && $page == 1 ? '<div class="img_del" val="'.$r['id'].'"></div>' : '').
+                $type[$r['type']].' <b>'.$count.'</b> шт. '.
+                ($summa ? 'на сумму '.$summa.' руб.'.($count > 1 ? ' <span class="cenaed">('.$cena.' руб./шт.)</span> ' : '') : '').
+                ($r['zayav_id'] ? 'по заявке '._zayavNomerLink($r['zayav_id']).'.' : '').
+                ($r['client_id'] ? 'клиенту '.$client[$r['client_id']].'.' : '').
+            '</div>'.
+            ($r['prim'] ? '<div class="prim">'.$r['prim'].'</div>' : '').
+            '<div class="dtime" title="Внёс '.$viewer[$r['viewer_id_add']]['name'].'">'.FullDataTime($r['dtime_add']).'</div>'.
+        '</div>';
+    }
+    if($start + $limit < $all) {
+        $c = $all - $start - $limit;
+        $c = $c > $limit ? $limit : $c;
+        $move .= '<div class="ajaxNext" val="'.($page + 1).'"><span>Показать ещё '.$c.' запис'._end($c, 'ь', 'и', 'ей').'</span></div>';
+    }
+    return $move;
+}//end of zp_move()
+function zp_compat_spisok($zp_id, $compat_id=false) {
+    if(!$compat_id)
+        $compat_id = _zpCompatId($zp_id);
+    $sql = "SELECT * FROM `zp_catalog` WHERE `id`!=".$zp_id." AND `compat_id`=".$compat_id;
+    $q = query($sql);
+    $send = array();
+    while($r = mysql_fetch_assoc($q))
+        $send[] = '<a href="'.URL.'&p=zp&d=info&id='.$r['id'].'">'.
+            '<div class="img_del" title="Удалить совместимость"></div>'.
+            _vendorName($r['base_vendor_id'])._modelName($r['base_model_id']).
+        '</a>';
+    return $send;
+}//end of zp_compat_spisok()
 
 // ---===! report !===--- Секция отчётов
 

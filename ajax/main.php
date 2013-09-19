@@ -803,6 +803,7 @@ switch(@$_POST['op']) {
         query($sql);
         $sql = "SELECT * FROM `accrual` WHERE `id`=".$id;
         $r = mysql_fetch_assoc(query($sql));
+        setClientBalans($r['client_id']);
         history_insert(array(
             'type' => 8,
             'value' => $r['summa'],
@@ -848,6 +849,7 @@ switch(@$_POST['op']) {
                     `dtime_del`='0000-00-00 00:00:00'
                 WHERE `id`=".$id;
         query($sql);
+        setClientBalans($acc['client_id']);
         history_insert(array(
             'type' => 27,
             'value' => $acc['summa'],
@@ -874,6 +876,7 @@ switch(@$_POST['op']) {
                     `dtime_del`='0000-00-00 00:00:00'
                 WHERE `id`=".$id;
         query($sql);
+        setClientBalans($acc['client_id']);
         history_insert(array(
             'type' => 19,
             'value' => $acc['summa'],
@@ -1222,6 +1225,7 @@ switch(@$_POST['op']) {
                     `ws_id`,
                     `zp_id`,
                     `count`,
+                    `cena`,
                     `summa`,
                     `type`,
                     `client_id`,
@@ -1231,8 +1235,9 @@ switch(@$_POST['op']) {
                     ".WS_ID.",
                     ".$zp_id.",
                     ".$count.",
+                    ".$cena.",
                     ".$summa.",
-                    'set',
+                    'sale',
                     ".$client_id.",
                     '".$prim."',
                     ".VIEWER_ID."
@@ -1306,6 +1311,41 @@ switch(@$_POST['op']) {
         ));
 
         jsonSuccess();
+        break;
+    case 'zp_avai_update':
+        if(!preg_match(REGEXP_NUMERIC, $_POST['zp_id']) || $_POST['zp_id'] == 0)
+            jsonError();
+        $zp_id = _zpCompatId($_POST['zp_id']);
+        $send['count'] = _zpAvaiSet($zp_id);
+        $send['move'] = utf8(zp_move($zp_id));
+        jsonSuccess($send);
+        break;
+    case 'zp_move_del':
+        if(!preg_match(REGEXP_NUMERIC, $_POST['id']) || $_POST['id'] == 0)
+            jsonError();
+        $id = intval($_POST['id']);
+        $sql = "SELECT * FROM `zp_move` WHERE `ws_id`=".WS_ID." AND `id`=".$id;
+        if(!$move = mysql_fetch_assoc(query($sql)))
+            jsonError();
+        $lastMoveId = query_value("SELECT `id`
+                                   FROM `zp_move`
+                                   WHERE `ws_id`=".WS_ID." AND `zp_id`="._zpCompatId($move['zp_id'])."
+                                   ORDER BY `id` DESC
+                                   LIMIT 1");
+        if($id != $lastMoveId)
+            jsonError();
+        $sql = "DELETE FROM `zp_move` WHERE `ws_id`=".WS_ID." AND `id`=".$id;
+        query($sql);
+        jsonSuccess();
+        break;
+    case 'zp_move_next':
+        if(!preg_match(REGEXP_NUMERIC, $_POST['zp_id']) || $_POST['zp_id'] == 0)
+            jsonError();
+        if(!preg_match(REGEXP_NUMERIC, $_POST['page']))
+            jsonError();
+        $zp_id = _zpCompatId($_POST['zp_id']);
+        $send['spisok'] = utf8(zp_move($zp_id, intval($_POST['page'])));
+        jsonSuccess($send);
         break;
 
     case 'report_history_load':

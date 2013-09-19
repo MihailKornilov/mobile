@@ -471,6 +471,18 @@ input.money{font:bold 14px Tahoma;width:70px}
 #zpInfo .avai{margin:5px 0 0 7px;font-weight:bold;color:#0b0}
 #zpInfo .avai.no{color:#555}
 #zpInfo .added{color:#aaa;margin-top:6px;font-size:10px;text-align:right}
+#zpInfo .headBlue{margin-top:10px}
+#zpInfo .compatCount{background-color:#f1f1f1;color:#777;padding:3px 8px}
+#zpInfo .compatSpisok a{display:block;margin:3px 0 3px 6px}
+#zpInfo .compatSpisok a:not(:hover) .img_del{display:none}
+#zpInfo .compatSpisok .img_del{float:right;margin-top:2px}
+#zpInfo .move *{font-size:12px}
+#zpInfo .move .unit{border-bottom:#DEE solid 1px;padding:5px}
+#zpInfo .move .img_del{float:right;margin-top:2px}
+#zpInfo .move .dtime{display:inline-block;margin-top:4px;font-size:10px;color:#888;cursor:help}
+#zpInfo .move .cenaed{color:#777}
+#zpInfo .move .prim{color:#774;font:italic 12px Arial;margin-top:2px}
+#zpInfo .move .ajaxNext *{font-size:11px}
 #zpInfo .right{width:160px;vertical-align:top}
 #zpInfo #foto{text-align:center;margin-bottom:10px}
 .zp_dec_dialog{border-spacing:8px}
@@ -506,32 +518,6 @@ table.zayavNomerTab td{vertical-align:top}
 #zp #compat_add H1 { font-size:12px; margin-bottom:10px; }
 #zp #compat_add #cdev { margin:10px 0 10px 90px; }
 #zp #compat_add #cres { text-align:center; }
-
-#zp .mov {
-    margin:8px 0 4px 0;
-    padding-bottom:5px;
-    border-bottom:#DEE solid 1px;
-}
-#zp .mov TD, #zp .mov TH { vertical-align:top; }
-#zp .mov TH { padding-right:7px; }
-#zp .mov TD { width:360px; }
-#zp .mov .img_del {
-    float:right;
-}
-#zp .mov H2 { margin-top:3px; }
-#zp .mov H2, #zp .mov H2 B { font-size:12px; }
-#zp .mov H3 {
-    font-size:10px;
-    color:#777;
-    margin-top:5px;
-}
-#zp .mov H4 {
-    color:#774;
-    font:italic 12px Arial;
-    padding-top:2px;
-}
-
-.zpDecTab #cena { width:50px; }
 */
 
 
