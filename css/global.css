@@ -463,11 +463,11 @@ input.money{font:bold 14px Tahoma;width:70px}
 #zpInfo .ztab{width:100%;border-spacing:10px}
 #zpInfo .left{vertical-align:top}
 #zpInfo .name{color:#45688E;font-weight:bold;font-size:12px;margin-top:5px}
-#zpInfo .name span{font:bold 12px Verdana;margin-right:8px;color:#800}
+#zpInfo .name span,.compatAddTab .bu{font:bold 12px Verdana;margin-right:8px;color:#800}
 #zpInfo .name em{font-weight:bold;font-size:12px;margin-left:12px;color:#777}
 #zpInfo .for{font-size:12px;margin-top:4px}
 #zpInfo .for a{font-size:12px}
-#zpInfo .prop{border-spacing:2px;margin:5px 0 0 5px}
+#zpInfo .prop,.compatAddTab .prop{border-spacing:2px;margin:5px 0 0 5px}
 #zpInfo .avai{margin:5px 0 0 7px;font-weight:bold;color:#0b0}
 #zpInfo .avai.no{color:#555}
 #zpInfo .added{color:#aaa;margin-top:6px;font-size:10px;text-align:right}
@@ -475,7 +475,10 @@ input.money{font:bold 14px Tahoma;width:70px}
 #zpInfo .compatCount{background-color:#f1f1f1;color:#777;padding:3px 8px}
 #zpInfo .compatSpisok a{display:block;margin:3px 0 3px 6px}
 #zpInfo .compatSpisok a:not(:hover) .img_del{display:none}
-#zpInfo .compatSpisok .img_del{float:right;margin-top:2px}
+#zpInfo .compatSpisok .img_del{float:right;margin-top:3px}
+.compatAddTab .name,.compatAddTab .name *{font-size:12px}
+.compatAddTab #dev{margin:10px 0 10px 90px}
+.compatAddTab #cres{text-align:center}
 #zpInfo .move *{font-size:12px}
 #zpInfo .move .unit{border-bottom:#DEE solid 1px;padding:5px}
 #zpInfo .move .img_del{float:right;margin-top:2px}

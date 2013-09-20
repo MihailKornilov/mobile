@@ -752,7 +752,7 @@ function _zpName($name_id) {
     return constant('ZP_NAME_'.$name_id);
 }//end of _zpName()
 function _zpCompatId($zp_id) {
-    $sql = "SELECT `compat_id` FROM `zp_catalog` WHERE `id`=".intval($zp_id);
+    $sql = "SELECT `id`,`compat_id` FROM `zp_catalog` WHERE `id`=".intval($zp_id);
     $zp = mysql_fetch_assoc(query($sql));
     return $zp['compat_id'] ? $zp['compat_id'] : $zp['id'];
 }//end of _zpCompatId()
@@ -1552,6 +1552,8 @@ function zayav_zp_unit($r, $model) {
 // ---===! zp !===--- Секция запчастей
 
 function zpAddQuery($zp) {//Внесение новой запчасти из заявки и из списка запчастей
+    if(!isset($zp['compat_id']))
+        $zp['compat_id'] = 0;
     $sql = "INSERT INTO `zp_catalog` (
                 `name_id`,
                 `base_device_id`,
@@ -1560,6 +1562,7 @@ function zpAddQuery($zp) {//Внесение новой запчасти из заявки и из списка запчас
                 `bu`,
                 `version`,
                 `color_id`,
+                `compat_id`,
                 `viewer_id_add`,
                 `find`
             ) VALUES (
@@ -1570,6 +1573,7 @@ function zpAddQuery($zp) {//Внесение новой запчасти из заявки и из списка запчас
                 ".$zp['bu'].",
                 '".$zp['version']."',
                 ".$zp['color_id'].",
+                ".$zp['compat_id'].",
                 ".VIEWER_ID.",
                 '".win1251(_modelName($zp['model_id']))." ".$zp['version']."'
             )";
@@ -1787,6 +1791,13 @@ function zp_info($zp_id) {
         return 'Запчасти не существует';
 
     $compat_id = $zp['compat_id'] ? $zp['compat_id'] : $zp_id;
+    if($zp_id != $compat_id) {
+        $sql = "SELECT * FROM `zp_catalog` WHERE `id`=".$compat_id;
+        $compat = mysql_fetch_assoc(query($sql));
+        $zp['color_id'] = $compat['color_id'];
+        $zp['bu'] = $compat['bu'];
+    }
+
     $avai = query_value("SELECT `count` FROM `zp_avai` WHERE `ws_id`=".WS_ID." AND `zp_id`=".$compat_id);
 
     $zakazCount = query_value("SELECT IFNULL(SUM(`count`),0) FROM `zp_zakaz` WHERE `ws_id`=".WS_ID." AND `zp_id`=".$compat_id);
@@ -1801,12 +1812,14 @@ function zp_info($zp_id) {
     '<script type="text/javascript">'.
         'G.zpInfo = {'.
             'id:'.$zp_id.','.
+            'compat_id:'.$compat_id.','.
             'name_id:'.$zp['name_id'].','.
             'device:'.$zp['base_device_id'].','.
             'vendor:'.$zp['base_vendor_id'].','.
             'model:'.$zp['base_model_id'].','.
             'version:"'.$zp['version'].'",'.
             'color_id:'.$zp['color_id'].','.
+            ($zp['color_id'] ? 'color_name:"'._colorName($zp['color_id']).'",' : '').
             'bu:'.$zp['bu'].','.
             'name:"'._zpName($zp['name_id']).' <b>'._vendorName($zp['base_vendor_id'])._modelName($zp['base_model_id']).'</b>",'.
             'for:"для '._deviceName($zp['base_device_id'], 1).'",'.
@@ -1849,7 +1862,7 @@ function zp_info($zp_id) {
                         '<a class="return"> - возврат</a>'.
                         '<a class="writeoff"> - списание</a>'.
                     '</div>'.
-                    '<div class="headBlue">Совместимость<a class="add">добавить</a></div>'.
+                    '<div class="headBlue">Совместимость<a class="add compat_add">добавить</a></div>'.
                     '<div class="compatCount">'.($compatCount ? $compatCount.' устройств'._end($compatCount, 'о', 'а', '') : 'Совместимостей нет').'</div>'.
                     '<div class="compatSpisok">'.($compatCount ? implode($compatSpisok) : '').'</div>'.
         '</table>'.
@@ -1922,11 +1935,14 @@ function zp_compat_spisok($zp_id, $compat_id=false) {
     $sql = "SELECT * FROM `zp_catalog` WHERE `id`!=".$zp_id." AND `compat_id`=".$compat_id;
     $q = query($sql);
     $send = array();
-    while($r = mysql_fetch_assoc($q))
-        $send[] = '<a href="'.URL.'&p=zp&d=info&id='.$r['id'].'">'.
+    while($r = mysql_fetch_assoc($q)) {
+        $key = explode(' ', _modelName($r['base_model_id']));
+        $send[$key[0]] = '<a href="'.URL.'&p=zp&d=info&id='.$r['id'].'">'.
             '<div class="img_del" title="Удалить совместимость"></div>'.
             _vendorName($r['base_vendor_id'])._modelName($r['base_model_id']).
         '</a>';
+    }
+    ksort($send);
     return $send;
 }//end of zp_compat_spisok()
 

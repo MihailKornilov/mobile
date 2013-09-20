@@ -1806,7 +1806,7 @@ $(document)
         var next = $(this),
             send = {
                 op:'zp_move_next',
-                zp_id: G.zpInfo.id,
+                zp_id:G.zpInfo.id,
                 page:$(this).attr('val')
             };
         next.addClass('busy');
@@ -1816,6 +1816,119 @@ $(document)
             else
                 next.removeClass('busy');
         }, 'json');
+    })
+    .on('click', '#zpInfo .compat_add', function() {
+        var sp = G.zpInfo,
+            html = '<div class="compatAddTab">' +
+                '<div class="name">' +
+                    (sp.bu == 1 ? '<span class="bu">Б/y</span>' : '') +
+                    sp.name + '<br />' +
+                    sp.for +
+                '</div>' +
+                '<table class="prop">' +
+                    (sp.version ? '<tr><td class="label">Версия:<td>' + sp.version : '') +
+                    (sp.color_id > 0 ? '<tr><td class="label">Цвет:<td>' + sp.color_name : '') +
+                '</table>' +
+                '<div class="headName">Подходит к устройству:</div>' +
+                '<div id="dev"></div>' +
+                '<div id="cres"></div>' +
+            '</div>',
+            dialog = vkDialog({
+                top:90,
+                width:400,
+                head:'Добавление совместимости с другими устройствами',
+                content:html,
+                butSubmit:'Добавить',
+                submit:submit
+            }),
+            cres = $('#cres'),
+            dev = {},
+            go = 0;
+        $('#dev').device({
+            width:220,
+            device_id:sp.device,
+            vendor_id:sp.vendor,
+            add:1,
+            func:devSelect
+        });
+
+        function devSelect(obj) {
+            dialog.abort();
+            go = 0;
+            dev = obj;
+            cres.html('');
+            if(obj.device_id > 0 && obj.vendor_id > 0 && obj.model_id > 0) {
+                if(obj.device_id == sp.device && obj.vendor_id == sp.vendor && obj.model_id == sp.model) {
+                    cres.html('<em class="red">Невозможно создать совместимость на это же устройство.</em>');
+                    return;
+                }
+                var send = {
+                    op:'zp_compat_find',
+                    zp_id:sp.id,
+                    bu:sp.bu,
+                    name_id:sp.name_id,
+                    device_id:obj.device_id,
+                    vendor_id:obj.vendor_id,
+                    model_id:obj.model_id,
+                    color_id:sp.color_id
+                };
+                cres.html('<img src="/img/upload.gif">');
+                $.post(AJAX_MAIN, send, function(res) {
+                    cres.html('');
+                    if(res.success)
+                        finded(res);
+                }, 'json');
+            }
+        }
+
+        function finded(res) {
+            if(res.id) {
+                if(res.compat_id == sp.compat_id) {
+                    cres.html('<em class="red">Выбранная запчасть уже является совместимостью этой запчасти.</em>');
+                    return;
+                }
+                cres.html('Запчасть <B>' + res.name + '</B><br />' +
+                          'будет добавлена в совместимость.<br /><br />' +
+                          'Информация о движениях, наличиях<br />' +
+                          'и заказах будет сложена и станет<br />' +
+                          'общей для обоих запчастей.');
+            } else
+                cres.html('Запчасти <b>' + res.name + '</b><br />' +
+                          'нет в каталоге запчастей.<br /><br />' +
+                          'При добавлении совместимости она<br />' +
+                          'будет автоматически внесена в каталог.');
+            go = 1;
+        }
+
+        function submit() {
+            if(go == 0) {
+                dialog.bottom.vkHint({
+                    msg:'<SPAN class="red">Выберите устройство для добавления совместимости.</SPAN>',
+                    left:103,
+                    top:-47,
+                    indent:50,
+                    show:1,
+                    remove:1
+                });
+                return;
+            }
+            var send = {
+                op:'zp_compat_add',
+                zp_id:sp.id,
+                device_id:dev.device_id,
+                vendor_id:dev.vendor_id,
+                model_id:dev.model_id
+            };
+            dialog.process();
+            $.post(AJAX_MAIN, send, function(res) {
+                dialog.abort();
+                if(res.success) {
+                    dialog.close();
+                    vkMsgOk('Совместимость создана.');
+                    window.location.reload();
+                }
+            }, 'json');
+        }
     });
 
 $(document)

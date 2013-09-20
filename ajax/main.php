@@ -1199,6 +1199,19 @@ switch(@$_POST['op']) {
                     `color_id`=".$color_id."
                 WHERE `id`=".$zp_id;
         query($sql);
+
+        $compat_id = _zpCompatId($zp_id);
+        if($compat_id != $zp_id) {
+            $sql = "UPDATE `zp_catalog`
+                    SET `name_id`=".$name_id.",
+                        `version`='".$version."',
+                        `bu`=".$bu.",
+                        `color_id`=".$color_id."
+                    WHERE `id`=".$compat_id;
+            query($sql);
+        }
+
+
         jsonSuccess();
         break;
     case 'zp_sale':// Продажа запчасти
@@ -1346,6 +1359,99 @@ switch(@$_POST['op']) {
         $zp_id = _zpCompatId($_POST['zp_id']);
         $send['spisok'] = utf8(zp_move($zp_id, intval($_POST['page'])));
         jsonSuccess($send);
+        break;
+    case 'zp_compat_find':
+        if(!preg_match(REGEXP_NUMERIC, $_POST['zp_id']) || $_POST['zp_id'] == 0)
+            jsonError();
+        if(!preg_match(REGEXP_BOOL, $_POST['bu']))
+            jsonError();
+        if(!preg_match(REGEXP_NUMERIC, $_POST['name_id']) || $_POST['name_id'] == 0)
+            jsonError();
+        if(!preg_match(REGEXP_NUMERIC, $_POST['device_id']) || $_POST['device_id'] == 0)
+            jsonError();
+        if(!preg_match(REGEXP_NUMERIC, $_POST['vendor_id']) || $_POST['vendor_id'] == 0)
+            jsonError();
+        if(!preg_match(REGEXP_NUMERIC, $_POST['model_id']) || $_POST['model_id'] == 0)
+            jsonError();
+        if(!preg_match(REGEXP_NUMERIC, $_POST['color_id']))
+            jsonError();
+
+        $zp_id = intval($_POST['zp_id']);
+        $bu = intval($_POST['bu']);
+        $name_id = intval($_POST['name_id']);
+        $device_id = intval($_POST['device_id']);
+        $vendor_id = intval($_POST['vendor_id']);
+        $model_id = intval($_POST['model_id']);
+        $color_id = intval($_POST['color_id']);
+
+        $sql = "SELECT `id`,`compat_id`
+                FROM `zp_catalog`
+                WHERE `id`!=".$zp_id."
+                  AND `bu`=".$bu."
+                  AND `name_id`=".$name_id."
+                  AND `base_device_id`=".$device_id."
+                  AND `base_vendor_id`=".$vendor_id."
+                  AND `base_model_id`=".$model_id."
+                  AND `color_id`=".$color_id."
+                LIMIT 1";
+        $send = mysql_fetch_assoc(query($sql));
+        $send['name'] = utf8(_zpName($name_id).' для '._deviceName($device_id, 1)._vendorName($vendor_id)._modelName($model_id));
+        jsonSuccess($send);
+        break;
+    case 'zp_compat_add':
+        if(!preg_match(REGEXP_NUMERIC, $_POST['zp_id']) || $_POST['zp_id'] == 0)
+            jsonError();
+        if(!preg_match(REGEXP_NUMERIC, $_POST['device_id']) || $_POST['device_id'] == 0)
+            jsonError();
+        if(!preg_match(REGEXP_NUMERIC, $_POST['vendor_id']) || $_POST['vendor_id'] == 0)
+            jsonError();
+        if(!preg_match(REGEXP_NUMERIC, $_POST['model_id']) || $_POST['model_id'] == 0)
+            jsonError();
+
+        $zp_id = intval($_POST['zp_id']);
+        $compat_id = _zpCompatId($zp_id);
+        $sql = "SELECT * FROM `zp_catalog` WHERE `id`=".$compat_id;
+        if(!$zp = mysql_fetch_assoc(query($sql)))
+            jsonError();
+
+        $device_id = intval($_POST['device_id']);
+        $vendor_id = intval($_POST['vendor_id']);
+        $model_id = intval($_POST['model_id']);
+
+        $sql = "SELECT `id`,`compat_id`
+                FROM `zp_catalog`
+                WHERE `id`!=".$zp_id."
+                  AND `bu`=".$zp['bu']."
+                  AND `name_id`=".$zp['name_id']."
+                  AND `base_device_id`=".$device_id."
+                  AND `base_vendor_id`=".$vendor_id."
+                  AND `base_model_id`=".$model_id."
+                  AND `color_id`=".$zp['color_id']."
+                LIMIT 1";
+
+        if($r = mysql_fetch_assoc(query($sql))) {
+            if($r['compat_id'] == $compat_id)
+                jsonError();
+            if(!$r['compat_id']) {
+                $sql = "UPDATE `zp_catalog`
+                        SET `compat_id`=".$compat_id.",
+                            `bu`=".$zp['bu'].",
+                            `name_id`=".$zp['name_id'].",
+                            `color_id`=".$zp['color_id']."
+                        WHERE `id`=".$r['id'];
+                query($sql);
+            }
+        } else {
+            $zpNew = $zp;
+            $zpNew['device_id'] = $device_id;
+            $zpNew['vendor_id'] = $vendor_id;
+            $zpNew['model_id'] = $model_id;
+            $zpNew['compat_id'] = $compat_id;
+            zpAddQuery($zpNew);
+        }
+        if(!$zp['compat_id'])
+            query("UPDATE `zp_catalog` SET `compat_id`=".$compat_id." WHERE `id`=".$compat_id);
+        jsonSuccess();
         break;
 
     case 'report_history_load':
