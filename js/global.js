@@ -254,7 +254,7 @@ var REGEXP_NUMERIC = /^\d+$/,
     zpImgUpdate = function() {
         var send = {
             op:'zp_img_update',
-            zp_id:G.zpInfo.id
+            zp_id:G.zpInfo.compat_id
         };
         $.post(AJAX_MAIN, send, function (res) {
             if(res.success) {
@@ -1929,6 +1929,34 @@ $(document)
                 }
             }, 'json');
         }
+    })
+    .on('click', '#zpInfo .compatSpisok .img_del', function() {
+        var id = $(this).attr('val');
+        var dialog = vkDialog({
+            top:110,
+            width:250,
+            head:'Удаление совместимости',
+            content:'<center>Подтвердите удаление совместимости.</center>',
+            butSubmit:'Удалить',
+            submit:function() {
+                var send = {
+                    op:'zp_compat_del',
+                    id:id,
+                    zp_id:G.zpInfo.id
+                };
+                dialog.process();
+                $.post(AJAX_MAIN, send, function(res) {
+                    dialog.abort();
+                    if(res.success) {
+                        dialog.close();
+                        vkMsgOk('Совместимость удалена.');
+                        $('.compatCount').html(res.count);
+                        $('.compatSpisok').html(res.spisok);
+                    }
+                }, 'json');
+            }
+        });
+        return false;
     });
 
 $(document)
@@ -2961,7 +2989,7 @@ $(document).ready(function() {
     }
     if($('#zpInfo').length > 0) {
         $('.fotoUpload').fotoUpload({
-            owner:'zp' + G.zpInfo.id,
+            owner:'zp' + G.zpInfo.compat_id,
             func:zpImgUpdate
         });
     }

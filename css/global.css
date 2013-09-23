@@ -99,6 +99,113 @@ input.money{font:bold 14px Tahoma;width:70px}
 }
 
 
+
+#vkMsgOk {
+    padding:15px 20px;
+    position:absolute;
+    width:400px;
+    left:100px;
+    top:100px;
+    background-color:#333;
+    font:bold 12px Tahoma;
+    color:#FFF;
+    opacity:0.9;
+    filter:alpha(opacity=90);
+    border-radius:5px;
+    z-index:99999
+}
+#vkMsgOk A{color:#b1daff;font:bold 12px Tahoma}
+#vkMsgOk B{font-size:12px}
+
+
+/* чекбокс */
+.check0,.check1{
+    display:inline-block;
+    height:14px;
+    min-width:14px;
+    padding-left:18px;
+    color:#333;
+    cursor:pointer;
+    background:no-repeat url("data:image/gif;base64,R0lGODlhDwA4AKIHANrh6P///8DK1a22wF+DpbfAy9/l6v///yH5BAEAAAcALAAAAAAPADgAAAOzKLrMJyHKGcWjOFiY5+7eBVbi+I1aCZ6m2rGrm21NrTx2LWMEwYE93yho+PF6gmKHyCJIiEVRMABNcQzBnsFAumK13K5kS9iGjNuwBPbC5RyDuHw+PwwA+LweP7Dv/wB9d4B6goSFfod8iYqGioGMh46NkYSTkpWAgnSccXadnJl/PYOHQaWAQQWoe6qrhK6MBHmujkEArpCDBVkEBQWLu7w9v3mTv77AxpG/ysusmp+gdQkAOw==")
+}
+.check0{background-position:0 0}
+.check0:hover{background-position:0 -28px}
+.check1{background-position:0 -14px}
+.check1:hover{background-position:0 -42px}
+
+
+.radio .off,.radio .on{
+    background-image:url("data:image/gif;base64,R0lGODlhDgA4AMQAAAAAAP///7fAy9/k6sDK1a22wMPL1M/W3rvJ19rh6F+DpZyyxq/B0sfT3tfg6LDBz9/l6u/y9Ozv8efq7P///wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACH5BAEAABQALAAAAAAOADgAAAX/ICVSEmES0jiWRBQEkZmK5fDewYCKhI3fOhLh90O1iLjYEIkzMZvHZ6z0DOx6zKDQh9PNhFHld3XaqcinMc3kgsnIXKAZiwxSXw4Gw3Ezth0KgQp8bksBDIIKDH2GiIIMEC9seIkNkVOGeQyWkil0LxCROQRrcS9eaG1iZ2BvrBQTBbIFE6yxBQcJCQeytSKxBrrCCQa0IgXBw8LFsAXKyrS4z8O8ztPDstfY0tq8sdoJxsjXzM3Jw8W+zdzV6iO3va/r8We3ubv05s/px+fKzN90IViwAIGwaPcQJDKIz1qCBYkWHHQIUdACAbpkJUz0AKM3hwMXdMxYa5wwARiJDxX4ZRKdMZbs8r2b9VJECAA7");
+    background-repeat:no-repeat;
+    height:14px;
+    cursor:pointer;
+    padding-left:18px;
+    display:inline-block;
+}
+.radio .off{background-position:0 0}
+.radio .off:hover{background-position:0 -28px}
+.radio .on{background-position:0 -14px}
+.radio .on:hover{background-position:0 -42px}
+
+
+
+
+/* кнопка из контакта */
+.vkButton{border:#45688E solid 1px;background-color:#5D81A7}
+.vkButton,.vkCancel{
+    display:inline-block;
+    border-radius:2px;
+    -moz-border-radius: 2px;
+    -khtml-border-radius: 2px;
+    -webkit-border-radius: 2px;
+}
+.vkButton button,.vkCancel button {
+    background-image:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAABUCAIAAADMNMqaAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAABXSURBVHjapI7BDYAwDANNxmYVZmGxPOKmkKgNqvj0YflaWcrJed0CQEh482nSe+ZPLNkwOP/N6qazJdd9DeImi0t38xyqGp7vZubVe+kdbrubn9tNgAEAaD7UiMhv1xkAAAAASUVORK5CYII=");
+    background-repeat:repeat-x;
+    border:1px solid;
+    font-size:11px;
+    cursor:pointer;
+    white-space:nowrap;
+    outline:none;
+    padding:4px 14px;
+    font-family:tahoma,verdana,arial,sans-serif,Lucida Sans;
+}
+.vkButton button {
+    color:#FFF;
+    border-color:#789ABF #5980A9 #5980A9 #5980A9;
+    text-shadow:0 1px 0 #45688E;
+    background-color:#6181a6;
+    background-position:0 -16px;
+}
+.vkButton button:hover{background-position:0 -8px}
+.vkButton button:active{background:#5e80a5;border:1px solid #5e80a5}
+.vkButton.busy button{visibility:hidden}
+.vkButton.busy,
+.ajaxNext.busy,
+.tooltip.empty,
+#device_image.busy,
+#fotoUpload #direct a.busy,
+#client .result.busy,
+#clientInfo #dopLinks.busy,
+.zpzakaz.busy,
+#mainLinks.busy{
+    background-image:url("data:image/gif;base64,R0lGODlhIAAIAKECAEVojoSctMHN2QAAACH/C05FVFNDQVBFMi4wAwEAAAAh+QQFCgADACwAAAAAIAAIAAACFZyPqcvtD6KMr445LcRUN9554kiSBQAh+QQFCgADACwCAAIAEgAEAAACD4xvM8DNiJRz8Mj5ari4AAAh+QQFCgADACwCAAIAHAAEAAACGJRvM8HNCqKMCCnn4JT1XPwMG9cJH6iNBQAh+QQFCgADACwMAAIAEgAEAAACD5RvM8HNiJRz8Mj5qri4AAAh+QQFCgADACwWAAIACAAEAAACBZSPqYsFACH5BAUUAAMALAAAAAAgAAgAAAIOnI+py+0Po5y02ouzPgUAOw==");
+    background-repeat:no-repeat;
+    background-position:center center;
+}
+/* кнопка отмена */
+.vkCancel{border:#B3B3B3 solid 1px;background:#E0E0E0}
+.vkCancel button {
+    color: #444;
+    border-color:#FFF #E7E7E7 #E5E5E5 #E7E7E7;
+    text-shadow:0 1px 0 #FFF;
+    background-color:#DDD;
+    background-position:0 -54px;
+}
+.vkCancel button:hover{background-position:0 -46px}
+.vkCancel button:active{background:#DCDCDC;border:1px solid #DCDCDC}
+
+
 /* Просмотр изображений */
 .fotoView{cursor:pointer}
 #foto_view{position:absolute;top:0;left:0;width:625px;background:#fff;z-index:1000}
@@ -497,32 +604,6 @@ input.money{font:bold 14px Tahoma;width:70px}
 span.zayavNomerTab{color:#955}
 table.zayavNomerTab{border-spacing:5px}
 table.zayavNomerTab td{vertical-align:top}
-
-
-/*
-#zp #compat { margin-bottom:15px; }
-#zp #compat .headBlue A {
-    float:right;
-    color:#777;
-}
-#zp #compat EM {
-    margin-left:8px;
-    color:#999;
-}
-#zp #compat TABLE { width:100%; }
-#zp #compat TD { padding:2px 3px 2px 8px; }
-#zp #compat .del {
-    width:19px;
-    padding:0;
-    text-align:center;
-}
-#zp #compat .img_del { margin:2px 0 0 2px; }
-#zp #compat .empty { color:#777; }
-#zp #compat_add H1 { font-size:12px; margin-bottom:10px; }
-#zp #compat_add #cdev { margin:10px 0 10px 90px; }
-#zp #compat_add #cres { text-align:center; }
-*/
-
 
 
 

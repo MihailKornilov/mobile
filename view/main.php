@@ -1607,7 +1607,8 @@ function zpFilter($v) {
 }//end of zpFilter()
 function zp_data($page=1, $filter=array(), $limit=20) {
     $cond = "`id`";
-    //$cond .= " AND (`compat_id`=0 OR `compat_id`=`id`)";//todo не показываются совместимости
+    if(empty($filter['find']) && (!isset($filter['model']) || $filter['model'] == 0))
+        $cond .= " AND (`compat_id`=0 OR `compat_id`=`id`)";
     if(!empty($filter['find'])) {
         $cond .= " AND `find` LIKE '%".$filter['find']."%'";
         $reg = '/('.$filter['find'].')/i';
@@ -1738,8 +1739,8 @@ function zp_data($page=1, $filter=array(), $limit=20) {
                         ($r['version'] ? '<div class="version">'.$r['version'].'</div>' : '').
                         '<div class="for">для '._deviceName($r['base_device_id'], 1).'</div>'.
                         ($r['color_id'] ? '<div class="color"><span>Цвет:</span> '._colorName($r['color_id']).'</div>' : '').
-                        ($r['compat_id'] == $id ? '<b>главная</b>' : '').
-                        ($r['compat_id'] > 0 && $r['compat_id'] != $id ? '<b>совместимость</b>' : '').
+                        //($r['compat_id'] == $id ? '<b>главная</b>' : '').
+                        //($r['compat_id'] > 0 && $r['compat_id'] != $id ? '<b>совместимость</b>' : '').
                         (isset($zakazZayav[$id]) ? '<div class="zz">Заказано для заяв'.(count($zakazZayav[$id]) > 1 ? 'ок' : 'ки').' '.implode(', ', $zakazZayav[$id]).'</div>' : '').
                     '<td class="action">'.
                         (isset($avai[$r['zp_id']]) ? '<a class="avai avai_add">В наличии: <b>'.$avai[$r['zp_id']].'</b></a>' : '<a class="hid avai_add">Внести наличие</a>').
@@ -1841,6 +1842,8 @@ function zp_info($zp_id) {
                     '</div>'.
                     '<table class="prop">'.
                         ($zp['color_id'] ? '<tr><td class="label">Цвет:<td>'._colorName($zp['color_id']) : '').
+                        //'<tr><td class="label">id:<td>'.$zp['id'].
+                        //'<tr><td class="label">compat_id:<td>'.$zp['compat_id'].
                     '</table>'.
                     '<div class="avai'.($avai ? '' : ' no').'">'.($avai ? 'В наличии '.$avai.' шт.' : 'Нет в наличии.').'</div>'.
                     '<div class="added">Добавлено в каталог '.FullData($zp['dtime_add'], 1).'</div>'.
@@ -1863,7 +1866,7 @@ function zp_info($zp_id) {
                         '<a class="writeoff"> - списание</a>'.
                     '</div>'.
                     '<div class="headBlue">Совместимость<a class="add compat_add">добавить</a></div>'.
-                    '<div class="compatCount">'.($compatCount ? $compatCount.' устройств'._end($compatCount, 'о', 'а', '') : 'Совместимостей нет').'</div>'.
+                    '<div class="compatCount">'.zp_compat_count($compatCount).'</div>'.
                     '<div class="compatSpisok">'.($compatCount ? implode($compatSpisok) : '').'</div>'.
         '</table>'.
     '</div>';
@@ -1938,14 +1941,16 @@ function zp_compat_spisok($zp_id, $compat_id=false) {
     while($r = mysql_fetch_assoc($q)) {
         $key = explode(' ', _modelName($r['base_model_id']));
         $send[$key[0]] = '<a href="'.URL.'&p=zp&d=info&id='.$r['id'].'">'.
-            '<div class="img_del" title="Удалить совместимость"></div>'.
+            '<div class="img_del" val="'.$r['id'].'" title="Разорвать совместимость"></div>'.
             _vendorName($r['base_vendor_id'])._modelName($r['base_model_id']).
         '</a>';
     }
     ksort($send);
     return $send;
 }//end of zp_compat_spisok()
-
+function zp_compat_count($c) {
+    return $c ? $c.' устройств'._end($c, 'о', 'а', '') : 'Совместимостей нет';
+}
 // ---===! report !===--- Секция отчётов
 
 function history_insert($arr) {

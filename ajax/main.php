@@ -1429,29 +1429,57 @@ switch(@$_POST['op']) {
                   AND `color_id`=".$zp['color_id']."
                 LIMIT 1";
 
+        if(!$zp['compat_id'])
+            query("UPDATE `zp_catalog` SET `compat_id`=".$compat_id." WHERE `id`=".$zp_id);
+
         if($r = mysql_fetch_assoc(query($sql))) {
             if($r['compat_id'] == $compat_id)
                 jsonError();
             if(!$r['compat_id']) {
-                $sql = "UPDATE `zp_catalog`
-                        SET `compat_id`=".$compat_id.",
-                            `bu`=".$zp['bu'].",
-                            `name_id`=".$zp['name_id'].",
-                            `color_id`=".$zp['color_id']."
-                        WHERE `id`=".$r['id'];
-                query($sql);
+                query("UPDATE `zp_catalog` SET `compat_id`=".$compat_id." WHERE `id`=".$r['id']);
+                $r['compat_id'] = $r['id'];
             }
+            query("UPDATE `zp_catalog` SET `compat_id`=".$compat_id." WHERE `compat_id`=".$r['compat_id']);
+            query("UPDATE `zp_avai` SET `zp_id`=".$compat_id." WHERE `zp_id`=".$r['compat_id']);
+            query("UPDATE `zp_zakaz` SET `zp_id`=".$compat_id." WHERE `zp_id`=".$r['compat_id']);
+            query("UPDATE `zp_move` SET `zp_id`=".$compat_id." WHERE `zp_id`=".$r['compat_id']);
+            _zpAvaiSet($zp_id);
         } else {
-            $zpNew = $zp;
-            $zpNew['device_id'] = $device_id;
-            $zpNew['vendor_id'] = $vendor_id;
-            $zpNew['model_id'] = $model_id;
-            $zpNew['compat_id'] = $compat_id;
-            zpAddQuery($zpNew);
+            $zp['device_id'] = $device_id;
+            $zp['vendor_id'] = $vendor_id;
+            $zp['model_id'] = $model_id;
+            $zp['compat_id'] = $compat_id;
+            zpAddQuery($zp);
         }
-        if(!$zp['compat_id'])
-            query("UPDATE `zp_catalog` SET `compat_id`=".$compat_id." WHERE `id`=".$compat_id);
         jsonSuccess();
+        break;
+    case 'zp_compat_del':
+        if(!preg_match(REGEXP_NUMERIC, $_POST['id']) || $_POST['id'] == 0)
+            jsonError();
+        if(!preg_match(REGEXP_NUMERIC, $_POST['zp_id']) || $_POST['zp_id'] == 0)
+            jsonError();
+        $id = intval($_POST['id']);
+        $zp_id = intval($_POST['zp_id']);
+        $sql = "SELECT * FROM `zp_catalog` WHERE `id`=".$id;
+        if(!$zp = mysql_fetch_assoc(query($sql)))
+            jsonError();
+        query("UPDATE `zp_catalog` SET `compat_id`=0 WHERE `id`=".$id);
+        if($id == $zp['compat_id']) {
+            $sql = "SELECT * FROM `zp_catalog` WHERE `compat_id`=".$id;
+            $q = query($sql);
+            $r = mysql_fetch_assoc($q);
+            if(mysql_num_rows($q) == 1)
+                query("UPDATE `zp_catalog` SET `compat_id`=0 WHERE `id`=".$r['id']);
+            else
+                query("UPDATE `zp_catalog` SET `compat_id`=".$r['id']." WHERE `compat_id`=".$id);
+            query("UPDATE `zp_avai` SET `zp_id`=".$r['id']." WHERE `zp_id`=".$id);
+            query("UPDATE `zp_zakaz` SET `zp_id`=".$r['id']." WHERE `zp_id`=".$id);
+            query("UPDATE `zp_move` SET `zp_id`=".$r['id']." WHERE `zp_id`=".$id);
+        }
+        $spisok = zp_compat_spisok($zp_id);
+        $send['count'] = utf8(zp_compat_count(count($spisok)));
+        $send['spisok'] = utf8(implode($spisok));
+        jsonSuccess($send);
         break;
 
     case 'report_history_load':
