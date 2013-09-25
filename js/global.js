@@ -466,15 +466,61 @@ var REGEXP_NUMERIC = /^\d+$/,
         }, 'json');
     };
 
-$(document).ajaxError(function(event, request, settings) {
-    if(!request.responseText)
-        return;
-    alert('Ошибка:\n\n' + request.responseText);
-    //var txt = request.responseText;
-    //throw new Error('<br />AJAX:<br /><br />' + txt + '<br />');
-});
+$.fn.clientSel = function(obj) {
+    var t = $(this);
+    obj = $.extend({
+        width:240,
+        add:null,
+        client_id:t.val() || 0
+    }, obj);
+
+    if(obj.add)
+        obj.add = function() {
+            clientAdd(function(res) {
+                sel.add(res).val(res.uid)
+            });
+        };
+
+    var sel = t.vkSel({
+        width:obj.width,
+        title0:'Начните вводить данные клиента...',
+        spisok:[],
+        ro:0,
+        nofind:'Клиентов не найдено',
+        funcAdd:obj.add,
+        funcKeyup:clientsGet
+    }).o;
+    sel.process();
+    clientsGet();
+
+    function clientsGet(val) {
+        var send = {
+            op:'client_sel',
+            val:val ? val : '',
+            client_id:obj.client_id
+        };
+        $.post(AJAX_MAIN, send, function(res) {
+            if(res.success) {
+                sel.spisok(res.spisok);
+                if(obj.client_id > 0) {
+                    sel.val(obj.client_id)
+                    obj.client_id = 0;
+                }
+            }
+        }, 'json');
+    }
+    return t;
+};
 
 $(document)
+    .ajaxError(function(event, request, settings) {
+        if(!request.responseText)
+            return;
+        alert('Ошибка:\n\n' + request.responseText);
+        //var txt = request.responseText;
+        //throw new Error('<br />AJAX:<br /><br />' + txt + '<br />');
+    })
+
     .on('click', '#script_style', function() {
         $.post(AJAX_MAIN, {'op':'script_style'}, function(res) {
             if(res.success)
@@ -519,55 +565,8 @@ $(document)
             if(res.success)
                 t.after(res.html);
         }, 'json');
-    });
+    })
 
-$.fn.clientSel = function(obj) {
-    var t = $(this);
-    obj = $.extend({
-        width:240,
-        add:null,
-        client_id:t.val() || 0
-    }, obj);
-
-    if(obj.add)
-        obj.add = function() {
-            clientAdd(function(res) {
-                sel.add(res).val(res.uid)
-            });
-        };
-
-    var sel = t.vkSel({
-            width:obj.width,
-            title0:'Начните вводить данные клиента...',
-            spisok:[],
-            ro:0,
-            nofind:'Клиентов не найдено',
-            funcAdd:obj.add,
-            funcKeyup:clientsGet
-        }).o;
-    sel.process();
-    clientsGet();
-
-    function clientsGet(val) {
-        var send = {
-            op:'client_sel',
-            val:val ? val : '',
-            client_id:obj.client_id
-        };
-        $.post(AJAX_MAIN, send, function(res) {
-            if(res.success) {
-                sel.spisok(res.spisok);
-                if(obj.client_id > 0) {
-                    sel.val(obj.client_id)
-                    obj.client_id = 0;
-                }
-            }
-        }, 'json');
-    }
-    return t;
-};
-
-$(document)
     .on('click', '#client #buttonCreate', clientAdd)
     .on('click', '#client #dolg_check', clientSpisokLoad)
     .on('click', '#client #active_check', clientSpisokLoad)
@@ -586,9 +585,8 @@ $(document)
             } else
                 next.removeClass('busy');
         }, 'json');
-    });
+    })
 
-$(document)
     .on('click', '#clientInfo .cedit', function() {
         var html = '<TABLE class="client_edit">' +
             '<tr><td class="label">Имя:<TD><INPUT TYPE="text" id="fio" value="' + $('.fio').html() + '">' +
@@ -740,9 +738,8 @@ $(document)
                 }, 'json');
             }
         }//submit()
-    });
+    })
 
-$(document)
     .on('click', '#zayav .ajaxNext', function() {
         if($(this).hasClass('busy'))
             return;
@@ -794,9 +791,8 @@ $(document)
         G.vkSel_device_place.val(0);
         G.vkSel_device_status.val(0);
         zayavSpisokLoad();
-    });
+    })
 
-$(document)
     .on('click', '#zayavInfo .zedit', function() {
         var html = '<TABLE style="border-spacing:8px">' +
             '<tr><td class="label r">Клиент:        <TD><INPUT type="hidden" id="client_id" value=' + G.zayavInfo.client_id + '>' +
@@ -1358,9 +1354,8 @@ $(document)
                 }
             },'json');
         }
-    });
+    })
 
-$(document)
     .on('click', '#zp #bu_check', zpSpisokLoad)
     .on('click', '#zp .ajaxNext', function() {
         if($(this).hasClass('busy'))
@@ -1517,9 +1512,8 @@ $(document)
                     remove:1
                 });
         }
-    });
+    })
 
-$(document)
     .on('click', '#zpInfo .avai_add', function() {
         var obj = G.zpInfo;
         obj.zp_id = obj.id;
@@ -1957,9 +1951,8 @@ $(document)
             }
         });
         return false;
-    });
+    })
 
-$(document)
     .on('click', '#report_history_next', function() {
         if($(this).hasClass('busy'))
             return;
@@ -1978,9 +1971,8 @@ $(document)
             } else
                 next.removeClass('busy');
         }, 'json');
-    });
+    })
 
-$(document)
     .on('click', '#report_remind .info a', function() {
         var info = $(this).parent(),
             show = info.hasClass('show');
@@ -2204,9 +2196,8 @@ $(document)
                 });
         }
     })
-    .on('click', '#remind_private_check', reportRemindLoad);
+    .on('click', '#remind_private_check', reportRemindLoad)
 
-$(document)
     .on('click', '#report_prihod_next', function() {
         if($(this).hasClass('busy'))
             return;
@@ -2320,9 +2311,8 @@ $(document)
             }
         }, 'json');
     })
-    .on('click', '#prihodShowDel_check', reportPrihodLoad);
+    .on('click', '#prihodShowDel_check', reportPrihodLoad)
 
-$(document)
     .on('click', '#report_rashod_next', function() {
         if($(this).hasClass('busy'))
             return;
@@ -2518,9 +2508,8 @@ $(document)
                     correct:0
                 });
         }
-    });
+    })
 
-$(document)
     .on('click', '#report_kassa #set_go', function() {
         if($(this).hasClass('busy'))
             return;
@@ -2709,7 +2698,82 @@ $(document)
             }
         }, 'json');
     })
-    .on('click', '#kassaShowDel_check', reportKassaLoad);
+    .on('click', '#kassaShowDel_check', reportKassaLoad)
+
+    .on('blur', '#setup_main #org_name', function() {
+        var t = $(this),
+            send = {
+                op:'setup_org_name_save',
+                name:t.val()
+            };
+        if(t.hasClass('busy') || G.org_name == send.name)
+            return;
+        t.addClass('busy').next('span').remove();
+        t.after('<img src="/img/upload.gif">');
+        $.post(AJAX_MAIN, send, function(res) {
+            t.removeClass('busy').next('img').remove();
+            if(res.success) {
+                G.org_name = send.name;
+                t.after('<span class="saved">Сохранено.</span>')
+                 .next('span')
+                 .delay(1500)
+                 .fadeOut(1500, function() {
+                     $(this).remove();
+                 });
+            }
+        }, 'json');
+    })
+    .on('click', '#setup_main #devs div', function() {
+        var t = $(this),
+            inp = t.parent().find('input'),
+            devs = [];
+        for(var n = 0; n < inp.length; n++) {
+            var u = inp.eq(n);
+            if(u.val() == 1)
+                devs.push(u.attr('id'));
+        }
+        if(devs.length == 0) {
+            spanShow('Не сохранено!<br />Необходимо выбрать<br />минимум одну категорию', true);
+            return;
+        }
+        var send = {
+            op:'setup_devs_set',
+            devs:devs.join()
+        };
+        $.post(AJAX_MAIN, send, function(res) {
+            if(res.success)
+                spanShow('Изменения сохранены');
+        }, 'json');
+
+        function spanShow(msg, err) {
+            $('#setup_main #devs span').remove();
+            err = err ? ' class="err"' : '';
+            t.prepend('<span><em' + err + '>' + msg + '</em></span>')
+             .find('span')
+             .delay(1500)
+             .fadeOut(1500, function() {
+                 $(this).remove();
+             });
+        }
+    })
+    .on('click', '#setup_main #ws_del', function() {
+        dialog = vkDialog({
+            top:150,
+            width:300,
+            head:'Удаление мастерской',
+            content:'<center>Вы действительно хотите<BR>удалить мастерскую и все данные?</center>',
+            butSubmit:'&nbsp;&nbsp;&nbsp;&nbsp;Да&nbsp;&nbsp;&nbsp;&nbsp;',
+            submit:function() {
+                dialog.process();
+                $.post(AJAX_MAIN, {op:'setup_ws_del'}, function(res) {
+                    if(res.success)
+                        location.href = URL;
+                    else
+                        dialog.abort();
+                }, 'json');
+            }
+        });
+    });
 
 $(document).ready(function() {
     frameHidden.onresize = frameBodyHeightSet;

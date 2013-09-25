@@ -81,7 +81,7 @@ function _getVkUser() {
 function _getWorkshop() {
     $ws = xcache_get('vkmobile_workshop_'.WS_ID);
     if(empty($ws)) {
-        $sql = "SELECT * FROM `workshop` WHERE `id`=".WS_ID." LIMIT 1";
+        $sql = "SELECT * FROM `workshop` WHERE `id`=".WS_ID." AND `status`=1 LIMIT 1";
         $ws = mysql_fetch_assoc(query($sql));
         xcache_set('vkmobile_workshop_'.WS_ID, $ws, 86400);
     }

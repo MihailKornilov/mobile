@@ -29,6 +29,22 @@ function hashRead($h) {
             }
     }
 }//end of hashRead()
+function cacheClear() {
+    xcache_unset('vkmobile_setup_global');
+    xcache_unset('vkmobile_viewer_'.VIEWER_ID);
+    xcache_unset('vkmobile_workshop_'.WS_ID);
+    xcache_unset('vkmobile_remind_active');
+    xcache_unset('vkmobile_device_name');
+    xcache_unset('vkmobile_vendor_name');
+    xcache_unset('vkmobile_model_name_count');
+    xcache_unset('vkmobile_zp_name');
+    xcache_unset('vkmobile_color_name');
+    xcache_unset('vkmobile_device_place');
+    xcache_unset('vkmobile_device_status');
+    xcache_unset('vkmobile_zayav_base_device'.WS_ID);
+    xcache_unset('vkmobile_zayav_base_vendor'.WS_ID);
+    xcache_unset('vkmobile_zayav_base_model'.WS_ID);
+}//ens of cacheClear()
 
 function _header() {
     global $html, $vku, $WS;
@@ -163,7 +179,7 @@ function _mainLinks() {
         ),
         array(
             'name' => 'Установки',
-            'page' => 'remSetup',
+            'page' => 'setup',
             'show' => VIEWER_ADMIN
         )
     );
@@ -1254,7 +1270,7 @@ function zayav_data($page=1, $filter=array(), $limit=20) {
         $articles[$r['table_id']] = $r['txt'];
 
     foreach($zayav as $id => $r) {
-        $img = '/img/nofoto.gif';
+        $img = '/img/nofoto-small.gif';
         if(isset($imgLinks['zayav'.$id]))
             $img = $imgLinks['zayav'.$id];
         elseif(isset($imgLinks['dev'.$r['base_model_id']]))
@@ -1951,6 +1967,12 @@ function zp_compat_spisok($zp_id, $compat_id=false) {
 function zp_compat_count($c) {
     return $c ? $c.' устройств'._end($c, 'о', 'а', '') : 'Совместимостей нет';
 }
+
+
+
+
+
+
 // ---===! report !===--- Секция отчётов
 
 function history_insert($arr) {
@@ -2567,3 +2589,48 @@ function report_kassa_spisok($page=1, $del_show=0) {
     if($page == 1) $send .= '</table>';
     return $send;
 }//end of report_kassa_spisok()
+
+
+
+// ---===! setup !===--- Секция установок
+
+function setup_main() {
+    $sql = "SELECT * FROM `workshop` WHERE `id`=".WS_ID." LIMIT 1";
+    if(!$ws = mysql_fetch_assoc(query($sql)))
+        return 'Мастерской не существует';
+
+    $ex = explode(',', $ws['devs']);
+    $devs = array();
+    foreach($ex as $d)
+        $devs[$d] = $d;
+
+    $sql = "SELECT `id`,`name_mn` FROM `base_device` ORDER BY `sort`";
+    $q = query($sql);
+    $checkDevs = '';
+    while($r = mysql_fetch_assoc($q))
+        $checkDevs .= _checkbox($r['id'], $r['name_mn'], isset($devs[$r['id']]) ? 1 : 0);
+
+    return
+    '<script type="text/javascript">'.
+        'G.org_name = "'.$ws['org_name'].'";'.
+    '</script>'.
+    '<DIV id="setup_main">'.
+	    '<DIV class="headName" id="headName">Информация о мастерской</DIV>'.
+	    '<TABLE class="tab">'.
+            '<TR><TD class="label">Название организации:<TD><INPUT type="text" id="org_name" maxlength="100" value="'.$ws['org_name'].'">'.
+            '<TR><TD class="label">Город:<TD>'.$ws['city_name'].', '.$ws['country_name'].
+            '<TR><TD class="label">Главный администратор:<TD><B>'._viewerName($ws['admin_id']).'</B>'.
+        '</TABLE>'.
+
+        '<DIV class="headName">Категории ремонтируемых устройств</DIV>'.
+        '<DIV id="devs">'.$checkDevs.'</DIV>'.
+
+        '<DIV class="headName">Удаление мастерской</DIV>'.
+        '<div class="del_inf">Мастерская, а также все данные удаляются без возможности восстановления.</div>'.
+        '<DIV class="vkButton" id="ws_del"><BUTTON>Удалить мастерскую</BUTTON></DIV>'.
+    '</DIV>';
+}//end of setup_main()
+
+function setup_workers() {
+    return 'workers';
+}//end of setup_workers()

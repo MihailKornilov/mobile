@@ -27,20 +27,7 @@ switch(@$_POST['op']) {
         jsonSuccess();
         break;
     case 'cache_clear':
-        xcache_unset('vkmobile_setup_global');
-        xcache_unset('vkmobile_viewer_'.VIEWER_ID);
-        xcache_unset('vkmobile_workshop_'.WS_ID);
-        xcache_unset('vkmobile_remind_active');
-        xcache_unset('vkmobile_device_name');
-        xcache_unset('vkmobile_vendor_name');
-        xcache_unset('vkmobile_model_name_count');
-        xcache_unset('vkmobile_zp_name');
-        xcache_unset('vkmobile_color_name');
-        xcache_unset('vkmobile_device_place');
-        xcache_unset('vkmobile_device_status');
-        xcache_unset('vkmobile_zayav_base_device'.WS_ID);
-        xcache_unset('vkmobile_zayav_base_vendor'.WS_ID);
-        xcache_unset('vkmobile_zayav_base_model'.WS_ID);
+        cacheClear();
         jsonSuccess();
         break;
 
@@ -1933,6 +1920,32 @@ switch(@$_POST['op']) {
         ));
         $send['sum'] = kassa_sum();
         jsonSuccess($send);
+        break;
+
+    case 'setup_org_name_save':
+        if(!ADMIN)
+            jsonError();
+        $name = win1251(htmlspecialchars(trim($_POST['name'])));
+        query("UPDATE `workshop` SET `org_name`='".$name."' WHERE `id`=".WS_ID);
+        jsonSuccess();
+        break;
+    case 'setup_devs_set':
+        if(!ADMIN)
+            jsonError();
+        $ex = explode(',', $_POST['devs']);
+        foreach($ex as $id)
+            if(!preg_match(REGEXP_NUMERIC, $id))
+                jsonError();
+        query("UPDATE `workshop` SET `devs`='".$_POST['devs']."' WHERE `id`=".WS_ID);
+        jsonSuccess();
+        break;
+    case 'setup_ws_del':
+        if(!ADMIN)
+            jsonError();
+        query("UPDATE `workshop` SET `status`=0,`dtime_del`=CURRENT_TIMESTAMP WHERE `id`=".WS_ID);
+        query("UPDATE `vk_user` SET `ws_id`=0,`admin`=0 WHERE `ws_id`=".WS_ID);
+        cacheClear();
+        jsonSuccess();
         break;
 
     case 'setup_rashod_category_add':

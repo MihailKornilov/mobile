@@ -1007,36 +1007,6 @@ TABLE{border:0;border-spacing:0}
 
 
 
-#setupMain { padding:20px 30px; }
-#setupMain .infoTab { margin:10px 0 30px 20px;}
-#setupMain .infoTab .tdAbout {
-  padding-top:4px;
-  width:140px;
-  text-align:right;
-}
-#setupMain #org_name { width:220px; }
-#setupMain #org_name_save {
-  margin-left:10px;
-  color:#666;
-}
-#setupMain #devs { margin:5px 0 50px 175px;}
-#setupMain .check_info { position:absolute; }
-#setupMain .check_info EM {
-  display:inline-block;
-  width:140px;
-  position:relative;
-  top:-15px;
-  left:-145px;
-  color:#666;
-  text-align:right;
-}
-#setupMain H3 { margin:2px 0 10px 20px; }
-#setupMain #ws_del { margin-left:180px; }
-#setupMain #ws_dialog .content {
-  font-size:13px;
-  color:#C22;
-  text-align:center;
-}
 
 
 

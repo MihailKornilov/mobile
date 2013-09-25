@@ -79,12 +79,8 @@ switch($_GET['my_page']) {
   case 'saZp':          include('superadmin/zp/setupZp_tpl.php');break;
   case 'saColor':       include('superadmin/color/setupColor_tpl.php');break;  // цвета для устройств и запчастей
 
-  case 'remSetup':      include('remont/setup/ws/ws_tpl.php');break;
-  case 'remSetupWorker':include('remont/setup/worker/worker_tpl.php');break;
-
   case 'nopage':        include('nopage_tpl.php');break;      // несуществующая страница
 
-  // создание мастерской
   case 'wsIndex':       include('workshop/wsIndex_tpl.php');break;
   case 'wsStep1':       include('workshop/wsStep1_tpl.php');break;
     default: unset($_GET['my_page']);
@@ -247,6 +243,30 @@ if(isset($_GET['p'])) {
                 $report = $dl.$report;
             $html .= $report;
         break;
+        case 'setup':
+            $d = isset($_GET['d']) ? $_GET['d'] : 'main';
+            $links = array(
+                array(
+                    'name' => 'Основные настройки',
+                    'd' => 'main',
+                    'sel' => 1
+                ),
+                array(
+                    'name' => 'Сотрудники',
+                    'd' => 'workers'
+                )
+            );
+            $html .= _dopLinks('setup', $links, $d);
+            switch($d) {
+                case 'main':
+                default:
+                    $html .= setup_main();
+                    break;
+                case 'workers':
+                    $html .= setup_workers();
+                    break;
+            }
+            break;
     }
     _footer();
     mysql_close();
