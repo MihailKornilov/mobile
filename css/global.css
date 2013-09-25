@@ -787,3 +787,19 @@ table.zayavNomerTab td{vertical-align:top}
 #setup_main #devs em.err{color:#f44}
 #setup_main .del_inf{margin:2px 0 10px 20px}
 #setup_main #ws_del{margin-left:189px}
+
+#setup_workers{margin:20px 0;height:400px}
+#setup_workers .headName{margin-bottom:15px}
+#setup_workers .unit,#setup_worker_add table{border-spacing:10px;border:#DDE solid 1px;width:300px;margin:6px 0 6px 159px}
+#setup_workers .unit td,#setup_worker_add td{vertical-align:top}
+#setup_workers .photo,#setup_worker_add .photo{width:50px}
+#setup_workers .img_del{float:right;margin-top:2px}
+#setup_workers .name,#setup_worker_add .name{font-weight:bold;font-size:12px;color:#45688e}
+#setup_workers .adm{margin-top:5px;color:#555}
+#setup_workers .adm_cancel{font-size:10px}
+#setup_worker_add{margin:10px 0}
+#setup_worker_add h1{font-weight:bold;color:#31618C}
+#setup_worker_add input{width:250px;padding:5px;margin:7px 5px 0 0}
+#setup_worker_add .res{margin:10px 0 0 20px}
+#setup_worker_add .photo img{width:50px;height:50px}
+

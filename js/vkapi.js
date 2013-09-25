@@ -155,17 +155,17 @@ $(document).ready(function() {
 });
 
 
-// диалог 2013-07-23 14:46
+// диалог 2013-09-25 21:03
 function vkDialog(obj) {
     var t = $(this);
     var id = t.attr('id');
     obj = $.extend({
         width:360,
-        top:100,              // отступ сверху с учётом скрола
+        top:100,
         head:'head: Название заголовка',
         content:'content: содержимое центрального поля',
-        submit:function() {}, // функция, выполняющаяся при нажатии синей кнопки
-        cancel:function() {}, // функция, выполняющаяся при нажатии кнопки отмена
+        submit:function() {},
+        cancel:function() {},
         butSubmit:'Внести',
         butCancel:'Отмена'
     }, obj);
@@ -174,14 +174,14 @@ function vkDialog(obj) {
             '<DIV class="head"><DIV><A class="img_del"></A>' + obj.head + '</DIV></DIV>' +
             '<DIV class="content">' + obj.content + '</DIV>' +
             '<DIV class="bottom">' +
-                (obj.butSubmit ? '<DIV class="vkButton img_upload"><button>' + obj.butSubmit + '</button></DIV>' : '') +
-                (obj.butCancel ? '<DIV class="vkCancel"><BUTTON>' + obj.butCancel + '</BUTTON></DIV>' : '') +
+                (obj.butSubmit ? '<DIV class="vkButton"><button>' + obj.butSubmit + '</button></DIV>' : '') +
+                (obj.butCancel ? '<DIV class="vkCancel"><button>' + obj.butCancel + '</button></DIV>' : '') +
             "</DIV>" +
         "</DIV>";
 
     var dialog = $('body').append(html).find('.vk_dialog:last');
     dialog.find('.img_del').click(dialogClose);
-    var butSubmit = dialog.find('.vkButton');
+    var butSubmit = dialog.find('.vkButton:last');
     butSubmit.find('button').click(obj.submit);
     dialog.find('.vkCancel').click(function() { obj.cancel(); dialogClose(); });
 

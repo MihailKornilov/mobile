@@ -19,14 +19,10 @@ function jsonSuccess($send=array()) {
 }//end of jsonSuccess()
 
 switch(@$_POST['op']) {
-    case 'script_style':
+    case 'cache_clear':
         if(!ADMIN)
             jsonError();
         query("UPDATE `setup_global` SET `script_style`=`script_style`+1");
-        xcache_unset('vkmobile_setup_global');
-        jsonSuccess();
-        break;
-    case 'cache_clear':
         cacheClear();
         jsonSuccess();
         break;

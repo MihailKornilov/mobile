@@ -990,63 +990,6 @@ TABLE{border:0;border-spacing:0}
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#setup_worker { padding:10px; }
-#setup_worker .add_tab { margin:15px 0 0 40px; }
-#setup_worker #worker_id { width:250px; }
-#setup_worker .w_user {
-  border:#DDE solid 1px;
-  width:300px;
-  margin-left:159px;
-  margin-bottom:6px;
-}
-#setup_worker .photo { width:50px; height:50px; }
-#setup_worker .name {
-  font:bold 12px Tahoma;
-  color:#45688e;
-  vertical-align:top;
-}
-#setup_worker .place { color:#AAA; margin-top:4px; }
-#setup_worker .admin { color:#666; margin-top:4px; }
-#setup_worker .admin A { font-size:10px; }
-#setup_worker .img_del { float:right; margin-top:2px; }
-#setup_worker .but { margin-top:10px; }
-#setup_worker .vkButton { margin-right:5px; }
-#setup_worker #h-workers { margin-top:30px; margin-bottom:10px; }
-
-
-
-
-
-
-
-
-
-
 #setupZpName { padding:0 15px 40px 15px; }
 #setupZpName .tdAbout { padding-top:4px; }
 #setupZpName INPUT { width:220px; }

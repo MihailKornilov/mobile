@@ -9,6 +9,12 @@ var REGEXP_NUMERIC = /^\d+$/,
         hashLoc = hash.p;
         var s = true;
         switch(hash.p) {
+            case 'client':
+                if(hash.d == 'info')
+                    hashLoc += '_' + hash.id;
+                else
+                    s = false;
+                break;
             case 'zayav':
                 if(hash.d == 'info')
                     hashLoc += '_' + hash.id;
@@ -18,7 +24,10 @@ var REGEXP_NUMERIC = /^\d+$/,
                     s = false;
                 break;
             case 'zp':
-                s = false;
+                if(hash.d == 'info')
+                    hashLoc += '_' + hash.id;
+                else
+                    s = false;
                 break;
             default:
                 if(hash.d) {
@@ -521,16 +530,12 @@ $(document)
         //throw new Error('<br />AJAX:<br /><br />' + txt + '<br />');
     })
 
-    .on('click', '#script_style', function() {
-        $.post(AJAX_MAIN, {'op':'script_style'}, function(res) {
-            if(res.success)
-                document.location.reload();
-        }, 'json');
-    })
     .on('click', '#cache_clear', function() {
         $.post(AJAX_MAIN, {'op':'cache_clear'}, function(res) {
-            if(res.success)
+            if(res.success) {
                 vkMsgOk('Кэш очищен.');
+                document.location.reload();
+            }
         }, 'json');
     })
     .on('mouseenter', '.zayav_link', function(e) {
@@ -2757,7 +2762,7 @@ $(document)
         }
     })
     .on('click', '#setup_main #ws_del', function() {
-        dialog = vkDialog({
+        var dialog = vkDialog({
             top:150,
             width:300,
             head:'Удаление мастерской',
@@ -2773,6 +2778,76 @@ $(document)
                 }, 'json');
             }
         });
+    })
+
+    .on('click', '#setup_workers .add', function() {
+        var html = '<div id="setup_worker_add">' +
+                '<h1>Ссылка на страницу или ID пользователя ВКонтакте:</h1>' +
+                '<input type="text" />' +
+                '<DIV class="vkButton"><BUTTON>Найти</BUTTON></DIV>' +
+            '</div>',
+            dialog = vkDialog({
+                top:50,
+                width:360,
+                head:'Добавление нового сотрудника',
+                content:html,
+                butSubmit:'Добавить',
+                submit:submit
+            }),
+            user_id,
+            input = dialog.content.find('input');
+        input.focus();
+        dialog.content.find('.vkButton').click(function() {
+            var t = $(this);
+            if(t.hasClass('busy'))
+                return;
+            user_id = false;
+            var send = {
+                user_ids:$.trim(input.val()),
+                fields:'photo_50',
+                v:5.2
+            };
+            if(!send.user_ids)
+                return;
+            t.addClass('busy').next('.res').remove();
+            VK.api('users.get', send, function(data) {
+                t.removeClass('busy');
+
+                if(data.response) {
+                    var u = data.response[0],
+                        html = '<TABLE class="res">' +
+                        '<TR><TD class="photo"><IMG src=' + u.photo_50 + '>' +
+                            '<TD class="name">' + u.first_name + ' ' + u.last_name +
+                        '</TABLE>';
+                    t.after(html);
+                    user_id = u.id;
+                }
+            });
+        });
+
+        function submit() {
+            if(!user_id) {
+                dialog.bottom.vkHint({
+                    msg:'<SPAN class="red">Не выбран пользователь</SPAN>',
+                    remove:1,
+                    indent:40,
+                    show:1,
+                    top:-48,
+                    left:92
+                });
+                return;
+            }
+            var send = {
+                op:'setup_worker_add',
+                id:user_id
+            };
+            dialog.process();
+            $.post(AJAX_MAIN, send, function(res) {
+                dialog.abort();
+                //if(res.success)
+
+            }, 'json');
+        }
     });
 
 $(document).ready(function() {
