@@ -2844,8 +2844,11 @@ $(document)
             dialog.process();
             $.post(AJAX_MAIN, send, function(res) {
                 dialog.abort();
-                //if(res.success)
-
+                if(res.success) {
+                    dialog.close();
+                    vkMsgOk('Новый сотрудник успешно добавлен.');
+                    $('#spisok').html(res.html);
+                }
             }, 'json');
         }
     });

@@ -1,4 +1,54 @@
 <?php
+function _vkUserCheck($uid=VIEWER_ID) {
+    require_once(DOCUMENT_ROOT.'/include/vkapi.class.php');
+    $VKAPI = new vkapi($_GET['api_id'], SECRET);
+    $res = $VKAPI->api('users.get',array('uids' => $uid, 'fields' => 'photo,sex,country,city'));
+    $u = $res['response'][0];
+    $u['first_name'] = win1251($u['first_name']);
+    $u['last_name'] = win1251($u['last_name']);
+    $u['country_id'] = isset($u['country']) ? $u['country'] : 0;
+    $u['city_id'] = isset($u['city']) ? $u['city'] : 0;
+    $u['menu_left_set'] = 0;
+
+    // установил ли приложение
+    $app = $VKAPI->api('isAppUser', array('uid'=>$uid));
+    $u['app_setup'] = $app['response'];
+
+    // поместил ли в левое меню
+    //$mls = $VKAPI->api('getUserSettings', array('uid'=>$uid));
+    $u['menu_left_set'] = 0;//($mls['response']&256) > 0 ? 1 : 0;
+
+    $sql = 'INSERT INTO `vk_user` (
+                `viewer_id`,
+                `first_name`,
+                `last_name`,
+                `sex`,
+                `photo`,
+                `app_setup`,
+                `menu_left_set`,
+                `country_id`,
+                `city_id`
+            ) VALUES (
+                '.$uid.',
+                "'.$u['first_name'].'",
+                "'.$u['last_name'].'",
+                '.$u['sex'].',
+                "'.$u['photo'].'",
+                '.$u['app_setup'].',
+                '.$u['menu_left_set'].',
+                '.$u['country_id'].',
+                '.$u['city_id'].'
+            ) ON DUPLICATE KEY UPDATE
+                `first_name`="'.$u['first_name'].'",
+                `last_name`="'.$u['last_name'].'",
+                `sex`='.$u['sex'].',
+                `photo`="'.$u['photo'].'",
+                `app_setup`='.$u['app_setup'].',
+                `menu_left_set`='.$u['menu_left_set'].',
+                `country_id`='.$u['country_id'].',
+                `city_id`='.$u['city_id'];
+    query($sql);
+}
 function hashRead($h) {
     if(empty($h)) {
         define('HASH_VALUES', false);
@@ -2646,15 +2696,22 @@ function setup_main() {
 }//end of setup_main()
 
 function setup_workers() {
+    return
+    '<DIV id="setup_workers">'.
+        '<DIV class="headName">—отрудники мастерской<a class="add">ƒобавить нового сотрудника</a></DIV>'.
+        '<DIV id="spisok">'.setup_workers_spisok().'</DIV>'.
+    '</DIV>';
+}//end of setup_workers()
+function setup_workers_spisok() {
     $sql = "SELECT * FROM `workshop` WHERE `id`=".WS_ID." LIMIT 1";
     $ws = mysql_fetch_assoc(query($sql));
 
     $sql = "SELECT * FROM `vk_user` WHERE `ws_id`=".WS_ID." ORDER BY `dtime_add`";
     $q = query($sql);
-    $spisok = '';
+    $send = '';
     while($r = mysql_fetch_assoc($q)) {
-        $wsAdmin = $ws['admin_id'] != $r['viewer_id'];
-        $spisok .=
+        $wsAdmin = $ws['admin_id'] == $r['viewer_id'];
+        $send .=
         '<table class="unit">'.
             '<tr><td class="photo"><img src="'.$r['photo'].'">'.
                 '<td>'.
@@ -2665,9 +2722,5 @@ function setup_workers() {
                         : '').
         '</table>';
     }
-    return
-    '<DIV id="setup_workers">'.
-        '<DIV class="headName">—отрудники мастерской<a class="add">ƒобавить нового сотрудника</a></DIV>'.
-        '<DIV id="spisok">'.$spisok.'</DIV>'.
-    '</DIV>';
+    return $send;
 }//end of setup_workers()

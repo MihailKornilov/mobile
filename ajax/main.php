@@ -1943,6 +1943,15 @@ switch(@$_POST['op']) {
         cacheClear();
         jsonSuccess();
         break;
+    case 'setup_worker_add':
+        if(!preg_match(REGEXP_NUMERIC, $_POST['id']))
+            jsonError();
+        $id = intval($_POST['id']);
+        _vkUserCheck($id);
+        query("UPDATE `vk_user` SET `ws_id`=".WS_ID." WHERE `viewer_id`=".$id);
+        $send['html'] = utf8(setup_workers_spisok());
+        jsonSuccess($send);
+        break;
 
     case 'setup_rashod_category_add':
         if(empty($_POST['name']))
