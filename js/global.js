@@ -12,8 +12,6 @@ var REGEXP_NUMERIC = /^\d+$/,
             case 'client':
                 if(hash.d == 'info')
                     hashLoc += '_' + hash.id;
-                else
-                    s = false;
                 break;
             case 'zayav':
                 if(hash.d == 'info')

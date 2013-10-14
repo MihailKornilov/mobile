@@ -1,5 +1,5 @@
 <?php
-function _vkUserCheck($uid=VIEWER_ID) {
+function _vkUserUpdate($uid=VIEWER_ID) {//ќбновление пользовател€ из  онтакта
     require_once(DOCUMENT_ROOT.'/include/vkapi.class.php');
     $VKAPI = new vkapi($_GET['api_id'], SECRET);
     $res = $VKAPI->api('users.get',array('uids' => $uid, 'fields' => 'photo,sex,country,city'));
@@ -48,17 +48,29 @@ function _vkUserCheck($uid=VIEWER_ID) {
                 `country_id`='.$u['country_id'].',
                 `city_id`='.$u['city_id'];
     query($sql);
-}
-function hashRead($h) {
-    if(empty($h)) {
+    return $u;
+}//end of _vkUserUpdate()
+
+function _hashRead() {
+    if(empty($_GET['hash'])) {
         define('HASH_VALUES', false);
+        if(isset($_GET['start'])) {// восстановление последней посещЄнной страницы
+            $_GET['p'] = isset($_COOKIE['p']) ? $_COOKIE['p'] : '';
+            $_GET['d'] = isset($_COOKIE['d']) ? $_COOKIE['d'] : '';
+            $_GET['d1'] = isset($_COOKIE['d1']) ? $_COOKIE['d1'] : '';
+            $_GET['id'] = isset($_COOKIE['id']) ? $_COOKIE['id'] : '';
+        } else
+            _hashCookieSet();
         return;
     }
-    $ex = explode('.', $h);
+    $ex = explode('.', $_GET['hash']);
     $r = explode('_', $ex[0]);
     unset($ex[0]);
     define('HASH_VALUES', empty($ex) ? false : implode('.', $ex));
     $_GET['p'] = $r[0];
+    unset($_GET['d']);
+    unset($_GET['d1']);
+    unset($_GET['id']);
     switch($_GET['p']) {
         case 'client':
             if(isset($r[1]))
@@ -92,8 +104,15 @@ function hashRead($h) {
                     $_GET['d1'] = $r[2];
             }
     }
-}//end of hashRead()
-function cacheClear() {
+    _hashCookieSet();
+}//end of _hashRead()
+function _hashCookieSet() {
+    setcookie('p', $_GET['p'], time() + 2592000, '/');
+    setcookie('d', isset($_GET['d']) ? $_GET['d'] : '', time() + 2592000, '/');
+    setcookie('d1', isset($_GET['d1']) ? $_GET['d1'] : '', time() + 2592000, '/');
+    setcookie('id', isset($_GET['id']) ? $_GET['id'] : '', time() + 2592000, '/');
+}//end of _hashCookieSet()
+function _cacheClear() {
     xcache_unset('vkmobile_setup_global');
     xcache_unset('vkmobile_viewer_'.VIEWER_ID);
     xcache_unset('vkmobile_workshop_'.WS_ID);
@@ -108,10 +127,10 @@ function cacheClear() {
     xcache_unset('vkmobile_zayav_base_device'.WS_ID);
     xcache_unset('vkmobile_zayav_base_vendor'.WS_ID);
     xcache_unset('vkmobile_zayav_base_model'.WS_ID);
-}//ens of cacheClear()
+}//ens of _cacheClear()
 
 function _header() {
-    global $html, $vku, $WS;
+    global $html;
     $html =
         '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">'.
         //'<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">'.
@@ -122,28 +141,26 @@ function _header() {
         '<link href="'.SITE.'/include/globalStyle.css?'.VERSION.'" rel="stylesheet" type="text/css" />'.
         '<link href="'.SITE.'/css/global.css?'.VERSION.'" rel="stylesheet" type="text/css" />'.
         (ADMIN ? '<script type="text/javascript" src="http://nyandoma'.(LOCAL ? '' : '.ru').'/js/errors.js?'.VERSION.'"></script>' : '').
-        '<script type="text/javascript" src="'.SITE.'/include/jquery-1.9.1.min.js"></script>'.
-        '<script type="text/javascript" src="'.SITE.'/include/xd_connection.js"></script>'.
+        '<script type="text/javascript" src="'.SITE.'/js/jquery-1.9.1.min.js"></script>'.
+        '<script type="text/javascript" src="'.SITE.'/js/xd_connection.js"></script>'.
         '<script type="text/javascript" src="'.SITE.'/js/highstock.js"></script>'.
         '<script type="text/javascript" src="'.SITE.'/js/vkapi.js?'.VERSION.'"></script>'.
         '<script type="text/javascript" src="'.SITE.'/include/globalScript.js?'.VERSION.'"></script>'.
         '<script type="text/javascript">'.
             (LOCAL ? 'for(var i in VK)if(typeof VK[i]=="function")VK[i]=function(){return false};' : '').
-            'G.domain = "'.DOMAIN.'";'.
-            'G.values = "'.VALUES.'";'.
-            'G.vku = {'.
+            'G.domain="'.DOMAIN.'";'.
+            'G.values="'.VALUES.'";'.
+            'G.vku={'.
                 'viewer_id:'.VIEWER_ID.','.
-                'first_name:"'.$vku->first_name.'",'.
-                'last_name:"'.$vku->last_name.'",'.
-                'name:"'.$vku->first_name.' '.$vku->last_name.'",'.
+                'name:"'.VIEWER_NAME.'",'.
                 'ws_id:'.WS_ID.','.
-                'country_id:'.$vku->country_id.','.
-                'city_id:'.$vku->city_id.
+                'country_id:'.VIEWER_COUNTRY_ID.','.
+                'city_id:'.VIEWER_CITY_ID.
             '};'.
-            'G.ws = {devs:['.($WS ? $WS->devs : '').']};'.
+            'G.ws={devs:['.WS_DEVS.']};'.
         '</script>'.
         '<script type="text/javascript" src="'.SITE.'/js/global.js?'.VERSION.'"></script>'.
-        '<script type="text/javascript" src="'.SITE.'/include/G_values.js?'.G_VALUES.'"></script>'.
+        '<script type="text/javascript" src="'.SITE.'/js/G_values.js?'.G_VALUES.'"></script>'.
         '<script type="text/javascript" src="/include/device/device.js?'.VERSION.'"></script>'.//todo дл€ удалени€
         '</head>'.
         '<body>'.
@@ -315,23 +332,124 @@ function _end($count, $o1, $o2, $o5=false) {
     return $o5;
 }//end of _end()
 
+function win1251($txt) { return iconv('UTF-8','WINDOWS-1251',$txt); }
+function utf8($txt) { return iconv('WINDOWS-1251','UTF-8',$txt); }
+function curTime() { return strftime('%Y-%m-%d %H:%M:%S',time()); }
+
+function GvaluesCreate() {//—оставление файла G_values.js
+    $save =
+        'function SpisokToAss(s){var a=[];for(var n=0;n<s.length;a[s[n].uid]=s[n].title,n++);return a}'.
+
+        'G.status_spisok='.query_selJson("SELECT `id`,`name` FROM `setup_zayavki_status` ORDER BY id").';G.status_ass = SpisokToAss(G.status_spisok);'.
+        'G.status_color_ass='.query_ptpJson("SELECT `id`,`bg` FROM setup_zayavki_status").';'.
+        'G.color_spisok='.query_selJson("SELECT `id`,`name` FROM setup_color_name ORDER BY name").';G.color_ass = SpisokToAss(G.color_spisok);'.
+        'G.fault_spisok='.query_selJson("SELECT `id`,`name` FROM setup_fault ORDER BY sort").';G.fault_ass = SpisokToAss(G.fault_spisok);'.
+        'G.zp_name_spisok='.query_selJson("SELECT `id`,`name` FROM setup_zp_name ORDER BY name").';G.zp_name_ass = SpisokToAss(G.zp_name_spisok);'.
+        'G.category_spisok='.query_selJson("SELECT `id`,`name` FROM setup_zayavki_category ORDER BY id").';G.category_ass = SpisokToAss(G.category_spisok);'.
+        'G.device_status_spisok='.query_selJson("SELECT `id`,`name` FROM setup_device_status ORDER BY sort").';G.device_status_spisok.unshift({uid:0, title:"не известно"});G.device_status_ass = SpisokToAss(G.device_status_spisok);'.
+        'G.device_place_spisok='.query_selJson("SELECT `id`,`name` FROM setup_device_place ORDER BY sort").';G.device_place_ass = SpisokToAss(G.device_place_spisok);'.
+
+        'G.device_spisok='.query_selJson("SELECT `id`,`name` FROM base_device ORDER BY sort").';G.device_ass = SpisokToAss(G.device_spisok);'.
+        'G.device_rod_spisok='.query_selJson("SELECT `id`,name_rod FROM base_device ORDER BY sort").';G.device_rod_ass = SpisokToAss(G.device_rod_spisok);'.
+        'G.device_mn_spisok='.query_selJson("SELECT `id`,name_mn FROM base_device ORDER BY sort").';G.device_mn_ass = SpisokToAss(G.device_mn_spisok);';
+
+
+    $sql = "SELECT * FROM `base_vendor` ORDER BY `device_id`,`sort`";
+    $q = query($sql);
+    $vendor = array();
+    while($r = mysql_fetch_assoc($q)) {
+        if(!isset($vendor[$r['device_id']]))
+            $vendor[$r['device_id']] = array();
+        $vendor[$r['device_id']][] = '{'.
+            'uid:'.$r['id'].','.
+            'title:"'.$r['name'].'"'.($r['bold'] ? ','.
+            'content:"<B>'.$r['name'].'</B>"' : '').
+        '}';
+    }
+    $v = array();
+    foreach($vendor as $n => $sp)
+        $v = $n.':['.implode(',', $vendor[$n]).']';
+    $save .= 'G.vendor_spisok={'.implode(',', $v).'};'.
+             'G.vendor_ass=[];'.
+             'G.vendor_ass[0]="";'.
+             'for(var k in G.vendor_spisok){for(var n=0;n<G.vendor_spisok[k].length;n++){var sp=G.vendor_spisok[k][n];G.vendor_ass[sp.uid]=sp.title;}}';
+
+
+    $sql = "SELECT * FROM `base_model` ORDER BY `vendor_id`,`name`";
+    $q = query($sql);
+    $model = array();
+    while($r = mysql_fetch_assoc($q)) {
+        if(!isset($model[$r['vendor_id']]))
+            $model[$r['vendor_id']] = array();
+        $model[$r['vendor_id']][] = '{uid:'.$r['id'].',title:"'.$r['name'].'"}';
+    }
+    $m = array();
+    foreach($model as $n => $sp)
+        $m =  $n.':['.implode(',',$model[$n]).']';
+    $save .= 'G.model_spisok={'.implode(',',$m).'};'.
+             'G.model_ass=[];'.
+             'G.model_ass[0]="";'.
+             'for(var k in G.model_spisok){for(var n=0;n<G.model_spisok[k].length;n++){var sp=G.model_spisok[k][n];G.model_ass[sp.uid]=sp.title;}}';
+
+    $fp = fopen(PATH_FILES.'../js/G_values.js','w+');
+    fwrite($fp, $save);
+    fclose($fp);
+
+    query("UPDATE `setup_global` SET `g_values`=`g_values`+1");
+}//end of GvaluesCreate()
+
 function _monthFull($n) {
     $mon = array(
-        1 => '€нварь',
-        2 => 'февраль',
-        3 => 'март',
-        4 => 'апрель',
-        5 => 'май',
-        6 => 'июнь',
-        7 => 'июль',
-        8 => 'август',
-        9 => 'сент€брь',
-        10 => 'окт€брь',
-        11 => 'но€брь',
-        12 => 'декабрь'
+        1 => '€нвар€',
+        2 => 'феврал€',
+        3 => 'марта',
+        4 => 'апрел€',
+        5 => 'ма€',
+        6 => 'июн€',
+        7 => 'июл€',
+        8 => 'августа',
+        9 => 'сент€бр€',
+        10 => 'окт€бр€',
+        11 => 'но€бр€',
+        12 => 'декабр€'
     );
     return $mon[intval($n)];
 }//end of _monthFull
+function _monthCut($n) {
+    $mon = array(
+        1 => '€нв',
+        2 => 'фев',
+        3 => 'мар',
+        4 => 'апр',
+        5 => 'май',
+        6 => 'июн',
+        7 => 'июл',
+        8 => 'авг',
+        9 => 'сен',
+        10 => 'окт',
+        11 => 'но€',
+        12 => 'дек'
+    );
+    return $mon[intval($n)];
+}//end of _monthCut
+function FullData($value, $noyear=false) {//14 апрел€ 2010
+    $d = explode('-', $value);
+    return
+        abs($d[2]).' '.
+        _monthFull($d[1]).
+        (!$noyear || date('Y') != $d[0] ? ' '.$d[0] : '');
+}//end of FullData()
+function FullDataTime($value, $cut=false) {//14 апрел€ 2010 в 12:45
+    $arr = explode(' ',$value);
+    $d = explode('-',$arr[0]);
+    $t = explode(':',$arr[1]);
+    return
+        abs($d[2]).' '.
+        ($cut ? _monthCut($d[1]) : _monthFull($d[1])).
+        (date('Y') == $d[0] ? '' : ' '.$d[0]).
+        ' в '.$t[0].':'.$t[1];
+}//end of FullDataTime()
+
 
 function _vkComment($table, $id=0) {
     $sql = "SELECT *
@@ -1128,7 +1246,13 @@ function client_info($client_id) {
             '</table>'.
         '</div>';
 }//end of client_info()
-
+function clientBalansUpdate($client_id) {//ќбновление баланса клиента
+    $prihod = query_value("SELECT SUM(`summa`) FROM `money` WHERE `status`=1 AND `client_id`=".$client_id." AND `summa`>0");
+    $acc = query_value("SELECT SUM(`summa`) FROM `accrual` WHERE `status`=1 AND `client_id`=".$client_id);
+    $balans = $prihod - $acc;
+    query("UPDATE `client` SET `balans`=".$balans." WHERE `id`=".$client_id);
+    return $balans;
+}//end of clientBalansUpdate()
 
 
 

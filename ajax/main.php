@@ -1,7 +1,5 @@
 <?php
-require_once('../include/conf.php');//todo для удаления
 require_once('../config.php');
-require_once(DOCUMENT_ROOT.'/view/main.php');
 
 function jsonError($values=null) {
     $send['error'] = 1;
@@ -23,7 +21,7 @@ switch(@$_POST['op']) {
         if(!ADMIN)
             jsonError();
         query("UPDATE `setup_global` SET `script_style`=`script_style`+1");
-        cacheClear();
+        _cacheClear();
         jsonSuccess();
         break;
 
@@ -256,7 +254,7 @@ switch(@$_POST['op']) {
             query("UPDATE `zp_move`    SET `client_id`=".$client_id." WHERE `client_id`=".$client2);
             query("UPDATE `zp_zakaz`   SET `client_id`=".$client_id." WHERE `client_id`=".$client2);
             query("DELETE FROM `client` WHERE `id`=".$client2);
-            setClientBalans($client_id);
+            clientBalansUpdate($client_id);
         }
         history_insert(array(
             'type' => $join ? 11 : 10,
@@ -477,8 +475,8 @@ switch(@$_POST['op']) {
                       AND `zayav_id`=".$zayav_id."
                       AND `client_id`=".$zayav['client_id'];
             query($sql);
-            setClientBalans($zayav['client_id']);
-            setClientBalans($client_id);
+            clientBalansUpdate($zayav['client_id']);
+            clientBalansUpdate($client_id);
         }
 
         history_insert(array(
@@ -665,7 +663,7 @@ switch(@$_POST['op']) {
             'summa' => $sum,
             'prim' => $prim,
         )));
-        setClientBalans($zayav['client_id']);
+        clientBalansUpdate($zayav['client_id']);
         history_insert(array(
             'type' => 5,
             'zayav_id' => $zayav_id,
@@ -758,7 +756,7 @@ switch(@$_POST['op']) {
             'summa' => $sum,
             'prim' => $prim
         )));
-        setClientBalans($zayav['client_id']);
+        clientBalansUpdate($zayav['client_id']);
         history_insert(array(
             'type' => 6,
             'zayav_id' => $zayav_id,
@@ -786,7 +784,7 @@ switch(@$_POST['op']) {
         query($sql);
         $sql = "SELECT * FROM `accrual` WHERE `id`=".$id;
         $r = mysql_fetch_assoc(query($sql));
-        setClientBalans($r['client_id']);
+        clientBalansUpdate($r['client_id']);
         history_insert(array(
             'type' => 8,
             'value' => $r['summa'],
@@ -832,7 +830,7 @@ switch(@$_POST['op']) {
                     `dtime_del`='0000-00-00 00:00:00'
                 WHERE `id`=".$id;
         query($sql);
-        setClientBalans($acc['client_id']);
+        clientBalansUpdate($acc['client_id']);
         history_insert(array(
             'type' => 27,
             'value' => $acc['summa'],
@@ -859,7 +857,7 @@ switch(@$_POST['op']) {
                     `dtime_del`='0000-00-00 00:00:00'
                 WHERE `id`=".$id;
         query($sql);
-        setClientBalans($acc['client_id']);
+        clientBalansUpdate($acc['client_id']);
         history_insert(array(
             'type' => 19,
             'value' => $acc['summa'],
@@ -1940,14 +1938,14 @@ switch(@$_POST['op']) {
             jsonError();
         query("UPDATE `workshop` SET `status`=0,`dtime_del`=CURRENT_TIMESTAMP WHERE `id`=".WS_ID);
         query("UPDATE `vk_user` SET `ws_id`=0,`admin`=0 WHERE `ws_id`=".WS_ID);
-        cacheClear();
+        _cacheClear();
         jsonSuccess();
         break;
     case 'setup_worker_add':
         if(!preg_match(REGEXP_NUMERIC, $_POST['id']))
             jsonError();
         $id = intval($_POST['id']);
-        _vkUserCheck($id);
+        _vkUserUpdate($id);
         query("UPDATE `vk_user` SET `ws_id`=".WS_ID." WHERE `viewer_id`=".$id);
         $send['html'] = utf8(setup_workers_spisok());
         jsonSuccess($send);
