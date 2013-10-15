@@ -8,7 +8,7 @@ function jsonError($values=null) {
     elseif(is_array($values))
         $send += $values;
     else
-        $send['text'] = $values;
+        $send['text'] = utf8($values);
     die(json_encode($send));
 }//end of jsonError()
 function jsonSuccess($send=array()) {
@@ -1496,15 +1496,15 @@ switch(@$_POST['op']) {
         break;
     case 'report_remind_add':
         if(!preg_match(REGEXP_NUMERIC, $_POST['client_id']))
-            jsonError('client');
+            jsonError();
         if(!preg_match(REGEXP_NUMERIC, $_POST['zayav_id']))
-            jsonError('zayav');
+            jsonError();
         if(!preg_match(REGEXP_DATE, $_POST['day']))
-            jsonError('day');
+            jsonError();
         if(!preg_match(REGEXP_BOOL, $_POST['private']))
-            jsonError('private');
+            jsonError();
         if(empty($_POST['txt']))
-            jsonError('txt');
+            jsonError();
         $client_id = intval($_POST['client_id']);
         $zayav_id = intval($_POST['zayav_id']);
         $txt = win1251(htmlspecialchars(trim($_POST['txt'])));
@@ -1945,6 +1945,13 @@ switch(@$_POST['op']) {
         if(!preg_match(REGEXP_NUMERIC, $_POST['id']))
             jsonError();
         $id = intval($_POST['id']);
+        $sql = "SELECT * FROM `vk_user` WHERE `viewer_id`=".$id;
+        if($r = mysql_fetch_assoc(query($sql))) {
+            if($r['ws_id'] == WS_ID)
+                jsonError('Этот пользователь уже является</br >сотрудником этой мастерской.');
+            if($r['ws_id'] > 0)
+                jsonError('Этот пользователь уже является</br >сотрудником другой мастерской.');
+        }
         _vkUserUpdate($id);
         query("UPDATE `vk_user` SET `ws_id`=".WS_ID." WHERE `viewer_id`=".$id);
         $send['html'] = utf8(setup_workers_spisok());

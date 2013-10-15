@@ -1,5 +1,6 @@
 <?php
 define('TIME', microtime(true));
+define('DEBUG', $_COOKIE['debug'] == 1);
 define('DOCUMENT_ROOT', dirname(__FILE__));
 define('NAMES', 'cp1251');
 define('DOMAIN', $_SERVER["SERVER_NAME"]);
@@ -87,14 +88,20 @@ function _getSetupGlobal() {//Получение глобальных данных
     define('G_VALUES', $g['g_values']);
 }//end of _getSetupGlobal()
 function _getVkUser() {//Получение данных о пользователе
+    global $sqls;
     $key = 'vkmobile_viewer_'.VIEWER_ID;
     $u = xcache_get($key);
+    $from = 'Данные пользователя получены из кеша.';
     if(empty($u)) {
+        $from = 'Данные пользователя получены из базы.';
         $sql = "SELECT * FROM `vk_user` WHERE `viewer_id`='".VIEWER_ID."' LIMIT 1";
-        if(!$u = mysql_fetch_assoc(query($sql)))
+        if(!$u = mysql_fetch_assoc(query($sql))) {
+            $from = 'Данные пользователя получены из Контакта.';
             $u = _vkUserUpdate();
+        }
         xcache_set($key, $u, 86400);
     }
+    $sqls .= '<b>'.$from.'</b><br /><br />';
     define('WS_ID', $u['ws_id']);
     define('VIEWER_NAME', $u['first_name'].' '.$u['last_name']);
     define('VIEWER_COUNTRY_ID', $u['country_id']);
@@ -109,5 +116,6 @@ function _getWorkshop() {//Получение данных о мастерской
         xcache_set('vkmobile_workshop_'.WS_ID, $ws, 86400);
     }
     define('WS_DEVS', $ws['devs']);
+    define('WS_ADMIN', $ws['admin_id']);
     define('KASSA_START', $ws['kassa_start']);
 }//end of _getWorkshop()

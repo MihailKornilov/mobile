@@ -536,6 +536,12 @@ $(document)
             }
         }, 'json');
     })
+    .on('click', '.debug_toggle', function() {
+        var d = getCookie('debug');
+        setCookie('debug', d == 0 ? 1 : 0);
+        vkMsgOk('Debug включен.');
+        document.location.reload();
+    })
     .on('mouseenter', '.zayav_link', function(e) {
         var t = $(this),
             tooltip = t.find('.tooltip');
@@ -2846,7 +2852,15 @@ $(document)
                     dialog.close();
                     vkMsgOk('Новый сотрудник успешно добавлен.');
                     $('#spisok').html(res.html);
-                }
+                } else
+                    dialog.bottom.vkHint({
+                        msg:'<SPAN class="red">' + res.text + '</SPAN>',
+                        remove:1,
+                        indent:40,
+                        show:1,
+                        top:-60,
+                        left:92
+                    });
             }, 'json');
         }
     });

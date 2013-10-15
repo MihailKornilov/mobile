@@ -169,19 +169,19 @@ function _header() {
 }//end of _header()
 
 function _footer() {
-    global $html, $sqlQuery, $sqls; //todo временная переменная для отображения списка запросов
+    global $html, $sqlQuery, $sqls;
     if(ADMIN)
         $html .= '<div id="admin">'.
                 '<a href="'.URL.'&my_page=superAdmin&pre_page='.@$_GET['my_page'].'&pre_id='.@$_GET['id'].'">Admin</a> :: '.
-                '<a href="https://github.com/MihailKornilov/vkmobile/issues" target="_blank">Issues</a> :: '.
+                //'<a href="https://github.com/MihailKornilov/vkmobile/issues" target="_blank">Issues</a> :: '.
                 '<a href="http://vkmobile.reformal.ru" target="_blank">Reformal</a> :: '.
+                '<a class="debug_toggle'.(DEBUG ? ' on' : '').'">В'.(DEBUG ? 'ы' : '').'ключить Debug</a> :: '.
                 '<a id="cache_clear">Очисить кэш ('.VERSION.')</a> :: '.
                 'sql '.$sqlQuery.' :: '.
                 'php '.round(microtime(true) - TIME, 3).' :: '.
                 'js <EM></EM>'.
             '</div>'
-            .$sqls
-        ;
+            .(DEBUG ? $sqls : '');
     $getArr = array(
         'start' => 1,
         'api_url' => 1,
@@ -2827,22 +2827,18 @@ function setup_workers() {
     '</DIV>';
 }//end of setup_workers()
 function setup_workers_spisok() {
-    $sql = "SELECT * FROM `workshop` WHERE `id`=".WS_ID." LIMIT 1";
-    $ws = mysql_fetch_assoc(query($sql));
-
     $sql = "SELECT * FROM `vk_user` WHERE `ws_id`=".WS_ID." ORDER BY `dtime_add`";
     $q = query($sql);
     $send = '';
     while($r = mysql_fetch_assoc($q)) {
-        $wsAdmin = $ws['admin_id'] == $r['viewer_id'];
         $send .=
         '<table class="unit">'.
             '<tr><td class="photo"><img src="'.$r['photo'].'">'.
                 '<td>'.
-                    (!$wsAdmin ? '<div class="img_del"></div>' : '').
+                    (WS_ADMIN != $r['viewer_id'] ? '<div class="img_del"></div>' : '').
                     '<a class="name">'.$r['first_name'].' '.$r['last_name'].'</a>'.
                     ($r['admin'] ?
-                        '<div class="adm">Администратор'.(!$wsAdmin ? ' <a class="adm_cancel">отменить</a>' : '').'</div>'
+                        '<div class="adm">Администратор'.(WS_ADMIN != $r['viewer_id'] ? ' <a class="adm_cancel">отменить</a>' : '').'</div>'
                         : '').
         '</table>';
     }

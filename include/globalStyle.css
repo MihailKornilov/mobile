@@ -1,55 +1,24 @@
-* {
-  padding:0;
-  margin:0;
-  font:11px normal;
-  font-family: tahoma, verdana, arial, sans-serif, Lucida Sans;
+*{
+    padding:0;
+    margin:0;
+    font:11px normal;
+    font-family: tahoma, verdana, arial, sans-serif, Lucida Sans;
 }
-BODY { background-color:#FFF; }
-A{color:#2B587A;text-decoration:none;outline:none;cursor:pointer}
-A:hover { text-decoration:underline; }
-B{font-weight:bold}
+body{background-color:#fff}
+a{color:#2B587A;text-decoration:none;outline:none;cursor:pointer}
+a:hover{text-decoration:underline}
+b{font-weight:bold}
 i{font-style:italic}
 INPUT,TEXTAREA{border:#CCC solid 1px;padding:3px 5px;outline:none}
 INPUT.oplata{font:bold 13px Tahoma;width:60px;padding:4px}
-IMG{border:none}
-TABLE{border:0;border-spacing:0}
-
-
-.ui-resizable { position: relative;}
-.ui-resizable-handle { position: absolute;font-size: 0.1px;z-index: 99999; display: block; }
-.ui-resizable-disabled .ui-resizable-handle, .ui-resizable-autohide .ui-resizable-handle { display: none; }
-.ui-resizable-n { cursor: n-resize; height: 7px; width: 100%; top: -5px; left: 0; }
-.ui-resizable-s { cursor: s-resize; height: 7px; width: 100%; bottom: -5px; left: 0; }
-.ui-resizable-e { cursor: e-resize; width: 7px; right: -5px; top: 0; height: 100%; }
-.ui-resizable-w { cursor: w-resize; width: 7px; left: -5px; top: 0; height: 100%; }
-.ui-resizable-se { cursor: se-resize; width: 12px; height: 12px; right: 1px; bottom: 1px; }
-.ui-resizable-sw { cursor: sw-resize; width: 9px; height: 9px; left: -5px; bottom: -5px; }
-.ui-resizable-nw { cursor: nw-resize; width: 9px; height: 9px; left: -5px; top: -5px; }
-.ui-resizable-ne { cursor: ne-resize; width: 9px; height: 9px; right: -5px; top: -5px;}
-
-
-
-
-
-
-/* нижняя панель администрирования */
-#admin {
-  text-align:center;
-  background-color:#F7F7F7;
-  border-top:#DDD solid 1px;
-  padding:2px 0 3px 0;
-}
-#admin A {
-  color:#888;
-  font-size:10px;
-}
-
+img{border:none}
+table{border:0;border-spacing:0}
 
 
 
 
 /* ГЛОБАЛЬНЫЕ СТИЛИ */
-.pad10 { padding:10px; }
+.pad10{padding:10px}
 .head3 {
   font:bold 12px Tahoma;
   color:#2b587a;
@@ -58,20 +27,20 @@ TABLE{border:0;border-spacing:0}
   font:10px Trebuchet MS;
   color:#888;
   }
-.top5 { margin-top:5px; }
-.top10 { margin-top:10px; }
-.mRight5 { margin-right:5px; }
-.mLeft10 { margin-left:10px; }
+.top5{margin-top:5px}
+.top10{margin-top:10px}
+.mRight5{margin-right:5px}
+.mLeft10{margin-left:10px}
 .bLin {
   border-bottom:#dae2e8 solid 1px;
   padding-bottom:5px;
   }
 .dn{display:none}
 .db{display:block}
-.color_white { color:#FFF; }
+.color_white{color:#FFF}
 
-.link9 { font:9px Tahoma; }
-.bgGrey { background:#F7F7F7; }
+.link9{font:9px Tahoma}
+.bgGrey{background:#F7F7F7}
 
 
 
@@ -82,12 +51,12 @@ TABLE{border:0;border-spacing:0}
 
 
 /* ОСНОВНОЕ ОКНО ФРЕЙМА */
-#frameBody {
+#frameBody{
     position:relative;
-  background-color:#FFF;
-  width:625px;
-  border-bottom:#DAE1E8 solid 1px;
-  overflow:hidden;
+    background-color:#FFF;
+    width:625px;
+    border-bottom:#DAE1E8 solid 1px;
+    overflow:hidden;
 }
 #frameHidden{
     background-color:#ffd;
@@ -139,11 +108,11 @@ TABLE{border:0;border-spacing:0}
   font-weight:bold;
   padding:4px 10px;
   }
-.path A { font-weight:bold; }
+.path A{font-weight:bold}
 .path SPAN {
   float:right;
   }
-.path SPAN A { font-weight:normal; }
+.path SPAN A{font-weight:normal}
 
 
 
@@ -311,7 +280,7 @@ TABLE{border:0;border-spacing:0}
     width:12px;
     background-position:3px 2px;
 }
-.img_minidel:hover{ background-position: 3px -21px; }
+.img_minidel:hover{ background-position: 3px -21px}
 .img_rest{
     background-image:url("data:image/gif;base64,R0lGODlhDAAaAKIAAAAAAP///9Pd6GuNsf///wAAAAAAAAAAACH5BAEAAAQALAAAAAAMABoAAAM2SKqyvqI9GCeL+OFdCf/X13nimIXOSGqs5b5wbA3wQLv2PeX5w/+KnzAo7BGLOiNBudQ1fb4EADs=");
 }
@@ -475,12 +444,12 @@ TABLE{border:0;border-spacing:0}
 .tdAbout EM{font-size:10px;color:#BBB;display:block}
 
 
-.tdInfo { float:left; }
+.tdInfo{float:left}
 
 
-.fl_l { float:left; }
-.fl_r { float:right; }
-.none { display:none; }
+.fl_l{float:left}
+.fl_r{float:right}
+.none{display:none}
 
 
 .divClear {
@@ -489,7 +458,7 @@ TABLE{border:0;border-spacing:0}
   overflow:hidden;
 }
 
-.red { color:#E22; }
+.red{color:#E22}
 
 
 #ajaxNext {
@@ -504,7 +473,7 @@ TABLE{border:0;border-spacing:0}
   background-color:#e9edf1;
   text-decoration:none;
   }
-#ajaxNext IMG { margin:3px 0 2px 0; }
+#ajaxNext IMG{margin:3px 0 2px 0}
 
 
 
@@ -515,7 +484,7 @@ TABLE{border:0;border-spacing:0}
   display:inline-block;
   background-color:#FFF;
 }
-.vkSel .main { border:#c0cad5 solid 1px; }
+.vkSel .main{border:#c0cad5 solid 1px}
 .vkSel .selected {
   min-height:18px;
   padding:2px 0 0 2px;
@@ -547,16 +516,16 @@ TABLE{border:0;border-spacing:0}
   position:absolute;
   z-index:10;
 }
-.vkSel DL { overflow:auto; }
-.vkSel DD { padding-left:10px; }
+.vkSel DL{overflow:auto}
+.vkSel DD{padding-left:10px}
 .vkSel .out {
   padding-top:3px;
   padding-bottom:4px;
   border-left:#CCC solid 1px;
   border-right:#CCC solid 1px;
 }
-.vkSel .last { border-bottom:#CCC solid 1px; }
-.vkSel .title0 { color:#888; }
+.vkSel .last{border-bottom:#CCC solid 1px}
+.vkSel .title0{color:#888}
 .vkSel .over {
   padding-top:2px;
   padding-bottom:3px;
@@ -564,12 +533,12 @@ TABLE{border:0;border-spacing:0}
   background-color:#587da1;
   color:#FFF;
 }
-.vkSel .out .pole2, .vkSel .over .pole2, .vkSel .out .pole2 EM, .vkSel .over .pole2 EM { font-size:10px; }
-.vkSel .out .pole2, .vkSel .out .nosel { color:#888; } /* дополнительное поле, например телефон или уточнение + невыбранное поле */
-.vkSel .over .pole2, .vkSel .over .nosel { color:#BBE; }
-.vkSel .out EM, .vkSel .over EM { font-weight:bold; } /* выделение символов, совпадающих при наборе */
-.vkSel .out EM { background-color:#DEE; }
-.vkSel .over EM { background-color:#358; }
+.vkSel .out .pole2, .vkSel .over .pole2, .vkSel .out .pole2 EM, .vkSel .over .pole2 EM{font-size:10px}
+.vkSel .out .pole2, .vkSel .out .nosel{color:#888} /* дополнительное поле, например телефон или уточнение + невыбранное поле */
+.vkSel .over .pole2, .vkSel .over .nosel{color:#BBE}
+.vkSel .out EM, .vkSel .over EM{font-weight:bold} /* выделение символов, совпадающих при наборе */
+.vkSel .out EM{background-color:#DEE}
+.vkSel .over EM{background-color:#358}
 .vkSel .nofind {
   background-color:#EEE;
   border-left:#CCC solid 1px;
@@ -579,10 +548,10 @@ TABLE{border:0;border-spacing:0}
   padding:3px 6px;
   cursor:default;
 }
-.vkSel .process { position:absolute; }
-.vkSel .process IMG { position:relative; top:5px; left:2px; }
-.vkSel .process_inp { position:absolute; text-align:right; }
-.vkSel .process_inp IMG { position:relative; top:5px; }
+.vkSel .process{position:absolute}
+.vkSel .process IMG{position:relative; top:5px; left:2px}
+.vkSel .process_inp{position:absolute; text-align:right}
+.vkSel .process_inp IMG{position:relative; top:5px}
 
 
 
@@ -641,7 +610,7 @@ TABLE{border:0;border-spacing:0}
 
 
 /* КНОПКА СОЗДАНИЯ */
-#buttonCreate { border:#39659C solid 1px; }
+#buttonCreate{border:#39659C solid 1px}
 #buttonCreate A {
   display:block;
   background:#6B8EB5;
@@ -727,8 +696,8 @@ TABLE{border:0;border-spacing:0}
 
 
 
-.findContent H2 { margin-top:7px; }
-.findContent .mySelect { margin-top:3px; }
+.findContent H2{margin-top:7px}
+.findContent .mySelect{margin-top:3px}
 
 
 
@@ -736,8 +705,8 @@ TABLE{border:0;border-spacing:0}
 
 
 
-#remIndex { padding:10px 0; }
-#remIndex .headName { padding-bottom:0; }
+#remIndex{padding:10px 0}
+#remIndex .headName{padding-bottom:0}
 #remIndex HR {
   width:90px;
   border:none;
@@ -746,7 +715,7 @@ TABLE{border:0;border-spacing:0}
   margin:4px 0;
   text-align:left;
   }
-#remIndex H6 { margin-left:35px; }
+#remIndex H6{margin-left:35px}
 
 
 
@@ -755,7 +724,7 @@ TABLE{border:0;border-spacing:0}
 
 
 /* СТРОКА ПОИСКА  */
-.topSearch H5 { position:absolute; }
+.topSearch H5{position:absolute}
 .topSearch H5 DIV {
   position:relative;
   top:6px;
@@ -864,7 +833,7 @@ TABLE{border:0;border-spacing:0}
   position:absolute;
   z-index:115;
 }
-#dialog H1 { border:#45688e solid 1px; }
+#dialog H1{border:#45688e solid 1px}
 #dialog H1 DIV {
   border-top:#648cb7 solid 1px;
   color:#FFF;
@@ -990,10 +959,10 @@ TABLE{border:0;border-spacing:0}
 
 
 
-#setupZpName { padding:0 15px 40px 15px; }
-#setupZpName .tdAbout { padding-top:4px; }
-#setupZpName INPUT { width:220px; }
-#setupZpName .headName { margin:20px 10px; }
+#setupZpName{padding:0 15px 40px 15px}
+#setupZpName .tdAbout{padding-top:4px}
+#setupZpName INPUT{width:220px}
+#setupZpName .headName{margin:20px 10px}
 #setupZpName .headName EM {
   float:right;
   color:#68A;
@@ -1003,16 +972,16 @@ TABLE{border:0;border-spacing:0}
   text-decoration:underline;
   color:#357;
 } 
-#setupZpName .headName IMG { margin-left:5px; }
-#setupZpName .tabSpisok { margin:0 0 1px 50px; }
+#setupZpName .headName IMG{margin-left:5px}
+#setupZpName .tabSpisok{margin:0 0 1px 50px}
 #setupZpName .tabSpisok TD {
   background-color:#FFF;
   cursor:move;
 }
-#setupZpName .device { width:180px; }
-#setupZpName .vendor { width:110px; }
-#setupZpName .model, #setupZpName .zayav { width:60px; }
-#setupZpName .edit { width:40px; }
+#setupZpName .device{width:180px}
+#setupZpName .vendor{width:110px}
+#setupZpName .model, #setupZpName .zayav{width:60px}
+#setupZpName .edit{width:40px}
 
 
 
@@ -1023,7 +992,7 @@ TABLE{border:0;border-spacing:0}
 
 
 /*** администрирование моделей ***/
-#saModel { padding:10px 15px 40px 15px; }
+#saModel{padding:10px 15px 40px 15px}
 #saModel .headName EM {
   float:right;
   color:#68A;
@@ -1033,7 +1002,7 @@ TABLE{border:0;border-spacing:0}
   text-decoration:underline;
   color:#357;
 } 
-#saModel .tabSpisok { margin:20px 0 0 50px; }
+#saModel .tabSpisok{margin:20px 0 0 50px}
 
 
 
@@ -1090,8 +1059,8 @@ TABLE{border:0;border-spacing:0}
   padding:20px;
   margin:0 30px 20px 30px;
   }
-#zpFindAdd TABLE { margin-bottom:20px; }
-#zpFindAdd .nam { text-align:left; }
+#zpFindAdd TABLE{margin-bottom:20px}
+#zpFindAdd .nam{text-align:left}
 #zpFindAdd .tdAbout {
   width:130px;
   text-align:right;
@@ -1111,8 +1080,8 @@ TABLE{border:0;border-spacing:0}
   background-color:#F7F7F7;
   padding:10px 0 30px 0;
 }
-#wCreate1 .vkButton { margin:0 5px 0 200px; }
-#wCreate1 .tab { margin:20px 0 20px 70px; }
+#wCreate1 .vkButton{margin:0 5px 0 200px}
+#wCreate1 .tab{margin:20px 0 20px 70px}
 #wCreate1 .tdAbout {
   width:140px;
   text-align:right;
@@ -1123,7 +1092,7 @@ TABLE{border:0;border-spacing:0}
   padding-top:4px;
   font-weight:bold;
 }
-#wCreate1 #org_name { width:250px; }
+#wCreate1 #org_name{width:250px}
 
 
 
@@ -1135,7 +1104,7 @@ TABLE{border:0;border-spacing:0}
   color:#47688D;
   border-bottom:#DAE1E8 solid 1px;
   }
-#workCount A { float:right; }
+#workCount A{float:right}
 .myWork {
   margin:10px;
   padding:0 0 5px 10px;
@@ -1165,8 +1134,8 @@ TABLE{border:0;border-spacing:0}
   color:#555;
   font-weight:bold;
   }
-#wTestOk H4 { margin-bottom:15px; }
-#wTestOk .vkButton { margin: 0 8px 0 260px ; }
+#wTestOk H4{margin-bottom:15px}
+#wTestOk .vkButton{margin: 0 8px 0 260px }
 
 
 
@@ -1182,16 +1151,16 @@ TABLE{border:0;border-spacing:0}
 
 
 /* ИНФОРМАЦИЯ ОБ УСТРОЙСТВЕ */
-.remDeviceView  { margin:10px; }
-.remDeviceView .td1, .remDeviceView .td2 { vertical-align:top; }
-.remDeviceView .td1 { width:200px; }
+.remDeviceView {margin:10px}
+.remDeviceView .td1, .remDeviceView .td2{vertical-align:top}
+.remDeviceView .td1{width:200px}
 .remDeviceView H1 {
   color:#31618C;
   font:bold 13px Tahoma;
   margin:3px 0 5px 15px;
   }
-.remDeviceView .specific { margin-left:12px; }
-.remDeviceView .specific .tdAbout { width:140px; }
+.remDeviceView .specific{margin-left:12px}
+.remDeviceView .specific .tdAbout{width:140px}
 .remDeviceView H2 {
   font-weight:bold;
   color:#45688e;
@@ -1201,25 +1170,25 @@ TABLE{border:0;border-spacing:0}
 
 
 /* РЕДАКТИРОВАНИЕ ИНФОРМАЦИИ ОБ УСТРОЙСТВЕ */
-.remDeviceEdit { margin:15px 0 30px 0; }
-.remDeviceEdit FORM { margin:25px 0 20px 70px; }
-.remDeviceEdit .tdAbout { width:150px; }
-.remDeviceEdit INPUT { width:320px; }
+.remDeviceEdit{margin:15px 0 30px 0}
+.remDeviceEdit FORM{margin:25px 0 20px 70px}
+.remDeviceEdit .tdAbout{width:150px}
+.remDeviceEdit INPUT{width:320px}
 .remDeviceEdit H2 {
   margin:10px 0 3px 5px;
   font-weight:bold;
   color:#45688e;
   }
-.remDeviceEdit .vkButton { margin-left:200px; }
-.remDeviceEdit #copy { margin:20px; }
-.remDeviceEdit #copy .market { margin-left:102px; }
+.remDeviceEdit .vkButton{margin-left:200px}
+.remDeviceEdit #copy{margin:20px}
+.remDeviceEdit #copy .market{margin-left:102px}
 .remDeviceEdit #copy SPAN {
   color:#666;
   font-weight:bold;
   margin-right:3px;
   }
-.remDeviceEdit #copy SPAN A { font-weight:bold; }
-.remDeviceEdit #copy INPUT { width:420px; }
+.remDeviceEdit #copy SPAN A{font-weight:bold}
+.remDeviceEdit #copy INPUT{width:420px}
 
 
 
@@ -1230,16 +1199,16 @@ TABLE{border:0;border-spacing:0}
 
 
 /* НАСТРОЙКИ ХАРАКТЕРИСТИК УСТРОЙСТВ */
-#devSpecific { padding:10px; }
-#devSpecific #razdelAdd { display:none; }
-#devSpecific .headBlue { margin-top:10px; }
+#devSpecific{padding:10px}
+#devSpecific #razdelAdd{display:none}
+#devSpecific .headBlue{margin-top:10px}
 #devSpecific .headBlue A {
   float:right;
   color:#BBB;
   margin-left:10px;
   }
-#devSpecific .headBlue A:hover { color:#2B587A; }
-#devSpecific .headBlue SPAN { font-weight:bold; }
+#devSpecific .headBlue A:hover{color:#2B587A}
+#devSpecific .headBlue SPAN{font-weight:bold}
 #devSpecific .tab {
   border-collapse:collapse;
   margin:0 20px 20px 0;
@@ -1278,7 +1247,7 @@ TABLE{border:0;border-spacing:0}
   width:100%;
   height:380px;
   }
-#remDevices #spisok { vertical-align:top; }
+#remDevices #spisok{vertical-align:top}
 #remDevices .unit {
   padding:4px;
   margin:6px;
@@ -1286,8 +1255,8 @@ TABLE{border:0;border-spacing:0}
   background-color:#FFF;
   height:80px;
   }
-#remDevices .unit TABLE { width:100%; }
-#remDevices .unit TD { vertical-align:top; }
+#remDevices .unit TABLE{width:100%}
+#remDevices .unit TD{vertical-align:top}
 #remDevices .image {
   width:80px;
   text-align:center;
@@ -1298,8 +1267,8 @@ TABLE{border:0;border-spacing:0}
   font:bold 14px Tahoma;
   color:#666;
   }
-#remDevices H3 { margin:2px 6px; }
-#remDevices H3 A { font:bold 12px Tahoma; }
+#remDevices H3{margin:2px 6px}
+#remDevices H3 A{font:bold 12px Tahoma}
 #remDevices #find {
   width:190px;
   vertical-align:top;
@@ -1320,24 +1289,24 @@ TABLE{border:0;border-spacing:0}
 
 
 /* Статусы устройств в заявках */
-#setup_device_status { padding-bottom:50px; }
-#setup_device_status .headName { margin:30px; }
-#setup_device_status .tabSpisok { margin:0 0 1px 80px; }
-#setup_device_status TD { background-color:#FFF; }
-#setup_device_status .uid { width:20px; text-align:right; }
-#setup_device_status .name { width:140px; cursor:move; }
-#setup_device_status .zayav_count { width:80px; text-align:center; }
-#setup_device_status .edit { width:50px; }
+#setup_device_status{padding-bottom:50px}
+#setup_device_status .headName{margin:30px}
+#setup_device_status .tabSpisok{margin:0 0 1px 80px}
+#setup_device_status TD{background-color:#FFF}
+#setup_device_status .uid{width:20px; text-align:right}
+#setup_device_status .name{width:140px; cursor:move}
+#setup_device_status .zayav_count{width:80px; text-align:center}
+#setup_device_status .edit{width:50px}
 
 /* Местонахождение устройств в заявках */
-#setup_device_place { padding-bottom:50px; }
-#setup_device_place .headName { margin:30px; }
-#setup_device_place .tabSpisok { margin:0 0 1px 80px; }
-#setup_device_place TD { background-color:#FFF; }
-#setup_device_place .uid { width:20px; text-align:right; }
-#setup_device_place .name { width:140px; cursor:move; }
-#setup_device_place .zayav_count { width:80px; text-align:center; }
-#setup_device_place .edit { width:50px; }
+#setup_device_place{padding-bottom:50px}
+#setup_device_place .headName{margin:30px}
+#setup_device_place .tabSpisok{margin:0 0 1px 80px}
+#setup_device_place TD{background-color:#FFF}
+#setup_device_place .uid{width:20px; text-align:right}
+#setup_device_place .name{width:140px; cursor:move}
+#setup_device_place .zayav_count{width:80px; text-align:center}
+#setup_device_place .edit{width:50px}
 
 
 
