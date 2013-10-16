@@ -2868,6 +2868,10 @@ $(document)
 $(document).ready(function() {
     frameHidden.onresize = frameBodyHeightSet;
 
+    VK.callMethod('scrollWindow', 0);
+    VK.callMethod('scrollSubscribe');
+    VK.addCallback('onScroll', function(top) { G.vkScroll = top; });
+
     if($('#client').length > 0) {
         $('#find').topSearch({
             width:585,
