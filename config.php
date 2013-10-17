@@ -70,10 +70,10 @@ function query_selJson($sql) {
     return '['.implode(',',$send).']';
 }
 function query_ptpJson($sql) {//Ассоциативный массив
-    $send = array();
     $q = query($sql);
+    $send = array();
     while($sp = mysql_fetch_row($q))
-        $send = $sp[0].':'.(preg_match(REGEXP_NUMERIC, $sp[1]) ? $sp[1] : '"'.$sp[1].'"');
+        $send[] = $sp[0].':'.(preg_match(REGEXP_NUMERIC, $sp[1]) ? $sp[1] : '"'.$sp[1].'"');
     return '{'.implode(',', $send).'}';
 }
 

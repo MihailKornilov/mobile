@@ -1,4 +1,18 @@
-
+*{
+    padding:0;
+    margin:0;
+    font:11px normal;
+    font-family: tahoma, verdana, arial, sans-serif, Lucida Sans;
+}
+body{background-color:#fff}
+a{color:#2B587A;text-decoration:none;outline:none;cursor:pointer}
+a:hover{text-decoration:underline}
+b{font-weight:bold}
+i{font-style:italic}
+INPUT,TEXTAREA{border:#CCC solid 1px;padding:3px 5px;outline:none}
+INPUT.oplata{font:bold 13px Tahoma;width:60px;padding:4px}
+img{border:none}
+table{border:0;border-spacing:0}
 
 .ui-resizable{position:relative}
 .ui-resizable-handle{position:absolute;font-size:0.1px;z-index:99999;display:block}
@@ -11,6 +25,35 @@
 .ui-resizable-sw{cursor:sw-resize;width:9px;height:9px;left:-5px;bottom:-5px}
 .ui-resizable-nw{cursor:nw-resize;width:9px;height:9px;left:-5px;top:-5px}
 .ui-resizable-ne{cursor:ne-resize;width:9px;height:9px;right:-5px;top:-5px;}
+
+
+/* Основное окно фрейма */
+#frameBody{
+    position:relative;
+    background-color:#FFF;
+    width:625px;
+    border-bottom:#DAE1E8 solid 1px;
+    overflow:hidden;
+}
+#frameHidden{
+    background-color:#ffd;
+    border:0;
+    width:100%;
+    height:100%;
+    position:absolute;
+    z-index:-1;
+}
+
+
+/* Путь в верхней строке */
+.path {background-color:#F7F7F7;border-bottom:#DAE2E8 solid 1px;font-weight:bold;padding:4px 10px  }
+.path a{font-weight:bold}
+.path span{float:right}
+.path SPAN a{font-weight:normal}
+
+
+.device-add-tab{border-spacing:10px}
+.device-add-tab input{width:170px}
 
 
 #admin{text-align:center;background-color:#F7F7F7;border-top:#DDD solid 1px;padding:2px 0 3px 0}
@@ -47,6 +90,96 @@ td.r{text-align:right}
 
 input.money{font:bold 14px Tahoma;width:70px}
 
+.red{color:#E22}
+.dn{display:none}
+
+/* Заголовки-описания */
+.headName {
+    color:#31618C;
+    font:bold 12px Tahoma;
+    border-bottom:#DEE3EF solid 1px;
+    padding:2px 0;
+    margin:5px 20px;
+}
+.headName .add{float:right;color:#68A;cursor:pointer}
+.headName .add:hover{text-decoration:underline;color:#357}
+
+.headBlue{
+    background-color:#E1E7ED;
+    border-top:#D3DAE0 solid 1px;
+    border-bottom:#D8DFE5 solid 1px;
+    font-weight:bold;
+    color:#45688E;
+    padding:3px 8px;
+    margin-top:5px;
+}
+.headBlue a.add{float:right;color:#88C}
+.headBlue a.add:hover{color:#2B587A}
+
+.findHead{color:#555;font-weight:bold;margin:15px 0 4px 0}
+
+
+/* Мини-картинки */
+.img_galka,.img_del,.img_edit,.img_minidel,.img_rest,.img_add{
+    height:13px;
+    width:13px;
+    background-position:0 0;
+    background-repeat:no-repeat;
+    display:inline-block;
+    cursor:pointer;
+    margin:0 3px;
+}
+.img_galka:hover,
+.img_del:hover,
+.img_edit:hover,
+.img_minidel:hover,
+.img_rest:hover,
+.img_add:hover{background-position:0 -15px}
+.img_galka{
+    background-image:url("data:image/gif;base64,R0lGODlhDQAaANUAAK7B1ZevyYCdvYaiwLnJ26q+0/v8/aO4z4Shv4Wgv6K4z8fU4uTr8fX4+sbU4uPp8ZauyMvX5Njh69rj66m80unu86G2zp+1zuDn73+cvHuZu5KqxoSfwHyZunyZu8TS4Ku+032au4Kevpuxy6W40KK2z6q/05atyKW50IahwK3A1J+1zePq8ZivyYiiwaS40M7Z5aW70YOevn6bvcXS4JWsyIKfvpyyzJuzy36bvH6cvLrCzIikwv///wAAAAAAACH5BAEAAD0ALAAAAAANABoAAAZFwJ5wSJRIiMie0ZgULpnJ51E5pS6dV+lQ+kRyq8Vu0zrels/otHrd02jObvc4Lk/S3218Pi6k7+t/d0h3gESCc4VNekhBADs=");
+}
+.img_del{
+    background-image:url("data:image/gif;base64,R0lGODlhCwAaAKIAAAAAAP///9Pd6GuNsf///wAAAAAAAAAAACH5BAEAAAQALAAAAAALABoAAAM7SCTarCI6GeuqDOu527WeJkEihX3m8zne0r5wLM/N0NrKoNe77hO+XjDIG96InuEupxT+jD8mDnhTJAAAOw==");
+}
+.img_edit,.img_edit:hover{
+    background-image:url("data:image/gif;base64,R0lGODlhCwAaALMAAN/m7sDP3oumwqm80W2OsvDz93qYuePp8Nni63eWt2uNsf///wAAAAAAAAAAAAAAACH5BAEAAAsALAAAAAALABoAAAQycMkpEaLUWrz0zh7mXaDGhVlFgpz6iWsrz3RtL4oi5znH95SfLvjDCH08owRI3CWRswgAOw==");
+}
+.img_minidel{
+    background-image:url("data:image/gif;base64,R0lGODlhBwAeAKIAAAAAAP///6azz9ri6P///wAAAAAAAAAAACH5BAEAAAQALAAAAAAHAB4AAAMmSEO88wq+yeJq00lZb/1gKI5kaZ5oWgoVK7zE68osI7d0DN91TCQAOw==");
+    height:11px;
+    width:12px;
+    background-position:3px 2px;
+}
+.img_minidel:hover{ background-position: 3px -21px}
+.img_rest{
+    background-image:url("data:image/gif;base64,R0lGODlhDAAaAKIAAAAAAP///9Pd6GuNsf///wAAAAAAAAAAACH5BAEAAAQALAAAAAAMABoAAAM2SKqyvqI9GCeL+OFdCf/X13nimIXOSGqs5b5wbA3wQLv2PeX5w/+KnzAo7BGLOiNBudQ1fb4EADs=");
+}
+.img_add{
+    background-image:url("data:image/gif;base64,R0lGODlhCwAaAKIAAAAAAP///9Pd6GuNsf///wAAAAAAAAAAACH5BAEAAAQALAAAAAALABoAAAMtSErS+8xB1cSkEtfNu+9PdUXWJZrZqK4sG7zjG8TwJT9yru98j9eTmw0IESoSADs=");
+}
+
+/* Кнопка создания */
+#buttonCreate{border:#39659C solid 1px}
+#buttonCreate a{
+    display:block;
+    background:#6B8EB5;
+    border-top:#7B9EBD solid 1px;
+    border-left:#7B9EBD solid 1px;
+    border-bottom:#5A82AD solid 1px;
+    border-right:#5A82AD solid 1px;
+    font:11px Tahoma;
+    color:#FFF;
+    text-align:center;
+    text-decoration:none;
+    padding:6px 0;
+}
+#buttonCreate a:hover {
+    background:#84A2BD;
+    border-top:#94AEC6 solid 1px;
+    border-left:#94AEC6 solid 1px;
+    border-bottom:#7392B5 solid 1px;
+    border-right:#7392B5 solid 1px;
+}
 
 
 /* кнопка из контакта */
@@ -104,6 +237,101 @@ input.money{font:bold 14px Tahoma;width:70px}
 .vkCancel button:hover{background-position:0 -46px}
 .vkCancel button:active{background:#DCDCDC;border:1px solid #DCDCDC}
 
+
+/* контактовский селект */
+.vkSel{display:inline-block;background-color:#fff}
+.vkSel .main{border:#c0cad5 solid 1px}
+.vkSel .selected{min-height:18px;padding:2px 0 0 2px}
+.vkSel .inp{border:none;height:16px;padding:0 0 0 3px;margin:0 2px 2px 0}
+.vkSel .ugol{
+    width:16px;
+    border-left:#FFF solid 1px;
+    background:#FFF no-repeat center center url("data:image/gif;base64,R0lGODlhBwAEAIABAAAAAP///yH5BAEAAAEALAAAAAAHAAQAAAIIhA+BGWoNWSgAOw==");
+}
+.vkSel .add{
+    width:16px;
+    border-left:#FFF solid 1px;
+    background:#FFF no-repeat center center url("data:image/gif;base64,R0lGODlhCAAIAKIAAAAAAP///ytYeuHo7ff398zMzIiIiP///yH5BAEAAAcALAAAAAAIAAgAAAMOeGqmfuytNpm92EW5X08AOw==");
+    cursor:pointer;
+}
+.vkSel .add:hover{border-left:#d2dbe0 solid 1px;background-color:#e1e8ed}
+.vkSel .results{background-color:#FFF;cursor:pointer;position:absolute;z-index:10}
+.vkSel dl{overflow:auto}
+.vkSel dd{padding-left:10px}
+.vkSel .out{padding-top:3px;padding-bottom:4px;border-left:#CCC solid 1px;border-right:#CCC solid 1px}
+.vkSel .last{border-bottom:#CCC solid 1px}
+.vkSel .title0{color:#888}
+.vkSel .over{
+    padding-top:2px;
+    padding-bottom:3px;
+    border:#2a5883 solid 1px;
+    background-color:#587da1;
+    color:#FFF;
+}
+.vkSel .out .pole2,.vkSel .over .pole2,.vkSel .out .pole2 EM,.vkSel .over .pole2 EM{font-size:10px}
+.vkSel .out .pole2,.vkSel .out .nosel{color:#888} /* дополнительное поле, например телефон или уточнение + невыбранное поле */
+.vkSel .over .pole2,.vkSel .over .nosel{color:#BBE}
+.vkSel .out EM, .vkSel .over EM{font-weight:bold} /* выделение символов, совпадающих при наборе */
+.vkSel .out EM{background-color:#DEE}
+.vkSel .over EM{background-color:#358}
+.vkSel .nofind {
+    background-color:#EEE;
+    border-left:#CCC solid 1px;
+    border-right:#CCC solid 1px;
+    border-bottom:#CCC solid 1px;
+    color:#444;
+    padding:3px 6px;
+    cursor:default;
+}
+.vkSel .process{position:absolute}
+.vkSel .process img{position:relative;top:5px;left:2px}
+.vkSel .process_inp{position:absolute;text-align:right}
+.vkSel .process_inp img{position:relative;top:5px}
+
+
+/* Календарь */
+.vk_calendar{display:inline-block}
+.vk_calendar .cal_input{
+    width:114px;
+    line-height:21px;
+    border:#c0cad5 solid 1px;
+    background:#FFF no-repeat 101px 3px url("data:image/gif;base64,R0lGODlhDwAQALMAAAAAAP///3mWuNTd6IeiwZOrx6G51J+1zavA2M7Z5QAAAAAAAAAAAAAAAAAAAAAAACwAAAAADwAQAAAEPDBIIaSltpBDD/mc4GmGQZXoaXwlgqDtuxJwDbO2/Vl8H+w+HzDIGxIlxmOSuAw2hZ+odEoYJK7YLHYQAQA7");
+    cursor:pointer;
+    padding-left:4px;
+}
+.vk_calendar .cal_abs{position:absolute;height:0}
+.vk_calendar .cal_calendar{
+    background-color:#FFF;
+    border:#597da3 solid 1px;
+    width:182px;
+    position:relative;
+    top:5px;
+}
+.vk_calendar .cal_head{
+    border-top:#4c7097 solid 1px;
+    border-bottom:#4c7097 solid 1px;
+    background-color:#597da3;
+    width:100%;
+    height:25px;
+}
+.vk_calendar .cal_back,.vk_calendar .cal_next{
+    background-image:url("data:image/gif;base64,R0lGODlhBAAeAJEAAAAAAP///////wAAACH5BAEAAAIALAAAAAAEAB4AAAIUlHMYy7ppBIq02ouz3lNO5jXOERUAOw==");
+    background-repeat:no-repeat;
+    width:25px;
+    cursor:pointer;
+}
+.vk_calendar .cal_back{background-position:10px 9px}
+.vk_calendar .cal_next{background-position:11px -14px}
+.vk_calendar .cal_month{color:#FFF;font-weight:bold;text-align:center;vertical-align:middle}
+.vk_calendar .cal_week_name{background-color:#F1F1F1;border-bottom:#EEE solid 1px;width:100%}
+.vk_calendar .cal_week_name TD{color:#777;text-align:center;line-height:23px}
+.vk_calendar .cal_days TABLE{width:100%}
+.vk_calendar .cal_days TD{line-height:23px;width:26px;text-align:center}
+.vk_calendar .lost{color:#777;cursor:default}
+.vk_calendar .cal_day{cursor:pointer}
+.vk_calendar .cal_day:hover{background-color:#e1e7ed}
+.vk_calendar .cal-day-cur{font-weight:bold}
+.vk_calendar .cal-day-set{background-color:#e1e7ed}
 
 
 /* Горизонтальное меню */
@@ -227,6 +455,53 @@ input.money{font:bold 14px Tahoma;width:70px}
 
 
 
+/* Задний фон при открытии поверхностных окон */
+.backfon {
+    position:absolute;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    background-color:#FFF;
+    opacity:0.7;
+    filter:alpha(opacity=70);
+}
+
+
+
+/* диалог */
+.vk_dialog{position:absolute;left:-1000px}
+.vk_dialog .head{border:#45688e solid 1px}
+.vk_dialog .head DIV {
+    border-top:#648cb7 solid 1px;
+    color:#FFF;
+    background-color:#597da3;
+    padding:7px 7px 7px 10px;
+    font:bold 12px Tahoma;
+}
+.vk_dialog .img_del{float:right;background-position: 0 -15px;margin:2px 0}
+.vk_dialog .head A:hover{background-position:0 0}
+.vk_dialog .content {
+    background-color:#FFF;
+    padding:10px;
+    border-left:#999 solid 1px;
+    border-right:#999 solid 1px;
+    border-bottom:#dae1e8 solid 1px;
+}
+.vk_dialog .bottom {
+    background-color:#f2f2f2;
+    border-left:#999 solid 1px;
+    border-right:#999 solid 1px;
+    border-bottom:#999 solid 1px;
+    padding:10px;
+    text-align:center;
+}
+.vk_dialog .vkButton{margin-right:8px}
+
+
+
+
+
 /* Просмотр изображений */
 .fotoView{cursor:pointer}
 #foto_view{position:absolute;top:0;left:0;width:625px;background:#fff;z-index:1000}
@@ -304,6 +579,81 @@ input.money{font:bold 14px Tahoma;width:70px}
 .years #ycenter SPAN{font:bold 12px Verdana;color:#666;top:1px;left:0;position:relative}
 
 
+
+
+
+
+
+
+/* Подсказки */
+.hint{position:absolute;height:0;z-index:999}
+.hint td{border:0;padding:0}
+.hint .hint_table{visibility:hidden;position:relative}
+.hint .cont_table{border:#aebdcc solid 1px;background-color:#FFF;cursor:default}
+.hint .cont{padding:3px}
+.hint .b012,
+.hint .b005,
+.hint .side012,
+.hint .side005{background-color:#000}
+.hint .b012,.hint .b005{height:1px}
+.hint .side012,.hint .side005{width:1px}
+.hint .b012,.hint .side012{opacity:0.12}
+.hint .b005,.hint .side005{opacity:0.05}
+/* уголок сверху */
+.hint .ugttd{height:6px}
+.hint .ugt{
+    display:inline-block;
+    height:6px;
+    width:11px;
+    background:transparent no-repeat 0 0 url("data:image/gif;base64,R0lGODlhCwAGAKIAAAAAAP///669zPLy8ubm5v///wAAAAAAACH5BAEAAAUALAAAAAALAAYAAAMSWKqyzqG9IoKVq9qbt2+atwkJADs=");
+    position:relative;
+    top:-6px;
+    margin:0 10px;
+    z-index:1000;
+}
+/* уголок снизу */
+.hint .ugbtd{height:7px}
+.hint .ugb{
+    display:inline-block;
+    height:7px;
+    width:11px;
+    background:transparent no-repeat 0 0 url("data:image/gif;base64,R0lGODlhCwAIAKIEAPLy8q69zObm5v///////wAAAAAAAAAAACH5BAEAAAQALAAAAAALAAgAAAMaOLo80SyIByWYzZJLnQBEyHlgKE6fqV5lmAAAOw==");
+    position:relative;
+    top:7px;
+    margin:0 10px;
+    z-index:1000;
+}
+/* уголок слева */
+.hint .ugltd{vertical-align:top;width:7px}
+.hint .ugl{
+    display:inline-block;
+    height:11px;
+    width:7px;
+    background:transparent no-repeat 0 0 url("data:image/gif;base64,R0lGODlhBwALAKIAAAAAAP///669zPLy8ubm5v///wAAAAAAACH5BAEAAAUALAAAAAAHAAsAAAMWWFpDsk0EFcOsFltnu76cRYUQtzBOAgA7");
+    position:relative;
+    left:-7px;
+    margin:3px 0;
+    z-index:1000;
+}
+/* уголок справа */
+.hint .ugrtd{vertical-align:top;width:7px}
+.hint .ugr{
+    display:inline-block;
+    height:11px;
+    width:7px;
+    background:transparent no-repeat 0 0 url("data:image/gif;base64,R0lGODlhBwALAKIAAAAAAP///669zPLy8ubm5v///wAAAAAAACH5BAEAAAUALAAAAAAHAAsAAAMXKDTVFYq1ANek8dE6NiZetGWfxDmZkwAAOw==");
+    position:relative;
+    left:7px;
+    top:0;
+    z-index:1000;
+}
+.correct{
+    position:absolute;
+    background-color:#FFA;
+    padding:1px 3px;
+    border:#CC9 solid 1px;
+}
+.correct span{margin-right:10px}
 
 
 
@@ -823,3 +1173,224 @@ table.zayavNomerTab td{vertical-align:top}
 #setup_worker_add input{width:250px;padding:5px;margin:7px 5px 0 0}
 #setup_worker_add .res{margin:10px 0 0 20px}
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* !!! Переделать !!! */
+
+/* Вертикальное меню */
+.infoLink DD {
+    padding:5px 12px;
+    border:transparent solid 1px;
+    color:#29597B;
+    cursor:pointer;
+}
+.infoLink DD:hover {
+    border:#DEE3EF solid 1px;
+    background:#DEE3EF;
+}
+.infoLink .sel, .infoLink .sel:hover {
+    color:#FFF;
+    background:#6B8EB5;
+    border:#39659C solid 1px;
+}
+.infoLink .imgUp {
+    float:right;
+    margin-top:3px;
+}
+
+
+
+
+
+
+
+/*удалить после переделки создания новой мастерской*/
+.infoTxt {
+    margin:10px;
+    background-color:#FFF;
+    padding:10px;
+    border:#DDD solid 1px;
+    text-align:justify;
+}
+.infoTxt H3 {
+    text-align:center;
+    font-weight:bold;
+    margin-bottom:4px;
+}
+
+
+
+
+
+
+
+/* СТРОКА ПОИСКА  */
+.topSearch H5{position:absolute}
+.topSearch H5 DIV {
+    position:relative;
+    top:6px;
+    left:6px;
+    padding-left:16px;
+    color:#777;
+    z-index:1;
+}
+.topSearch H6 {
+    border:#CCC solid 1px;
+    background:#FFF no-repeat 5px 6px url("data:image/gif;base64,R0lGODlhCwALANUAAAAAAP////z8/ert8+ns8vj5+/f4+unt8+Xp7+Pn7ejr7+ru8+nt8tPb5Nrh6dng6Njf59fe5t/l7N3j6tjg6Nbe5tXd5dTc5N3k69vi6eXq7+Tp7uLn7OHm6/Hz9fr7/Pn6+/j5+s3X4NTd5dPc5NLb49Ha4tnh6Njg59be5d7l687Y4NXe5dTd5N3l6+7y9dLc49jh5+Dn7N/m693l6urv8v3///z9/f39/fv7+wAAAAAAAAAAAAAAAAAAAAAAACwAAAAACwALAAAGWsCA8DM4ORwZRU54Y1xasg6LdBCGGpaX0JOqCA0rmVCYMH1Fs3GAYw6AKK6a8MXyulWVCU3VuiwCCCgRGBgPJxAEHxsjMDEFIJAgAgESJS0aakI4AhIbNplCQQA7");
+    padding:3px 0 0 19px;
+    height:20px;
+}
+.topSearch .img_del {
+    float:right;
+    margin-top:3px;
+    display:none;
+}
+.topSearch INPUT {
+    width:100%;
+    border:none;
+    padding:0;
+    position:relative;
+    top:2px;
+    left:1px;
+    background-color:transparent;
+    z-index:100;
+}
+
+
+
+
+
+
+
+/* Выпадающее меню по ссылке */
+.linkMenu .fordl {
+    position:absolute;
+    display:none;
+}
+.linkMenu DL {
+    position:relative;
+    top:-16px;
+    left:-7px;
+    border-left:#EEE solid 1px;
+    border-right:#EEE solid 1px;
+    border-bottom:#EEE solid 1px;
+    background-color:#FFF;
+    cursor:pointer;
+    z-index:1;
+}
+.linkMenu DT {
+    padding:2px 18px 3px 5px;
+    background:#EEF2F6 url("data:image/gif;base64,R0lGODlhEQAEAKIAAAAAAP///11xhXOLo+7y9v///wAAAAAAACH5BAEAAAUALAAAAAARAAQAAAMOWKrSLivGQam8quI9dgIAOw==") no-repeat right 7px;
+    color:#2C587D;
+    border-top:#96AABE solid 1px;
+    border-left:#96AABE solid 1px;
+    border-right:#96AABE solid 1px;
+}
+.linkMenu DD {
+    padding:3px 5px 4px 5px;
+    color:#2C587D;
+    border-left:#96AABE solid 1px;
+    border-right:#96AABE solid 1px;
+}
+.linkMenu .last {
+    border-bottom:#96AABE solid 1px;
+    padding-bottom:3px;
+}
+.linkMenu .hover {
+    background-color:#6D8FB3;
+    color:#FFF;
+    padding:2px 5px 3px 5px;
+    border:#476D96 solid 1px;
+}
+
+
+
+
+/* создание мастерской - шаг 1 */
+#wCreate1 {
+    background-color:#F7F7F7;
+    padding:10px 0 30px 0;
+}
+#wCreate1 .vkButton{margin:0 5px 0 200px}
+#wCreate1 .tab{margin:20px 0 20px 70px}
+#wCreate1 .tdAbout {
+    width:140px;
+    text-align:right;
+    vertical-align:top;
+    padding-top:4px;
+}
+#wCreate1 #adm {
+    padding-top:4px;
+    font-weight:bold;
+}
+#wCreate1 #org_name{width:250px}
+
+
+
+
+
+#workCount {
+    padding:12px 10px 2px 10px;
+    font:bold 11px Tahoma;
+    color:#47688D;
+    border-bottom:#DAE1E8 solid 1px;
+}
+#workCount A{float:right}
+.myWork {
+    margin:10px;
+    padding:0 0 5px 10px;
+    border-bottom:#DAE1E8 solid 1px;
+}
+
+#wTestOk {
+    height:50px;
+    margin:10px 20px 5px 20px;
+    background-color:#FFF;
+    border:#DDD solid 1px;
+    padding:10px;
+}
+#wTestOk IMG {
+    float:left;
+    margin-right:10px;
+}
+#wTestOk H1 {
+    float:right;
+    margin-right:10px;
+}
+#wTestOk H2 {
+    color:#999;
+    font-size:10px;
+}
+#wTestOk H3 {
+    color:#555;
+    font-weight:bold;
+}
+#wTestOk H4{margin-bottom:15px}
+#wTestOk .vkButton{margin: 0 8px 0 260px }

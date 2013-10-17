@@ -30,7 +30,7 @@ switch($_GET['my_page']) {
 _hashRead();
 _header();
 _mainLinks();
-switch(@$_GET['p']) {
+switch($_GET['p']) {
     case 'client':
         switch(@$_GET['d']) {
             case 'info':

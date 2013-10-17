@@ -52,10 +52,11 @@ function _vkUserUpdate($uid=VIEWER_ID) {//Обновление пользователя из Контакта
 }//end of _vkUserUpdate()
 
 function _hashRead() {
+    $_GET['p'] = isset($_GET['p']) ? $_GET['p'] : 'zayav';
     if(empty($_GET['hash'])) {
         define('HASH_VALUES', false);
         if(isset($_GET['start'])) {// восстановление последней посещённой страницы
-            $_GET['p'] = isset($_COOKIE['p']) ? $_COOKIE['p'] : '';
+            $_GET['p'] = isset($_COOKIE['p']) ? $_COOKIE['p'] : $_GET['p'];
             $_GET['d'] = isset($_COOKIE['d']) ? $_COOKIE['d'] : '';
             $_GET['d1'] = isset($_COOKIE['d1']) ? $_COOKIE['d1'] : '';
             $_GET['id'] = isset($_COOKIE['id']) ? $_COOKIE['id'] : '';
@@ -138,7 +139,6 @@ function _header() {
         '<head>'.
         '<meta http-equiv="content-type" content="text/html; charset=windows-1251" />'.
         '<title> Приложение 2031819 Hi-tech Service </title>'.
-        '<link href="'.SITE.'/include/globalStyle.css?'.VERSION.'" rel="stylesheet" type="text/css" />'.
         '<link href="'.SITE.'/css/global.css?'.VERSION.'" rel="stylesheet" type="text/css" />'.
         (ADMIN ? '<script type="text/javascript" src="http://nyandoma'.(LOCAL ? '' : '.ru').'/js/errors.js?'.VERSION.'"></script>' : '').
         '<script type="text/javascript" src="'.SITE.'/js/jquery-1.9.1.min.js"></script>'.
@@ -161,7 +161,6 @@ function _header() {
         '</script>'.
         '<script type="text/javascript" src="'.SITE.'/js/global.js?'.VERSION.'"></script>'.
         '<script type="text/javascript" src="'.SITE.'/js/G_values.js?'.G_VALUES.'"></script>'.
-        '<script type="text/javascript" src="/include/device/device.js?'.VERSION.'"></script>'.//todo для удаления
         '</head>'.
         '<body>'.
         '<div id="frameBody">'.
@@ -291,7 +290,7 @@ function _rightLinks($p, $data, $d='') {
     $send .= '</div>';
     return $send;
 }//end of _rightLinks()
-function _dopLinks($p, $data, $d=false, $d1=false) {
+function _dopLinks($p, $data, $d=false, $d1=false) {//Дополнительное меню на сером фоне
     $s = $d1 ? $d1 : $d;
     $page = false;
     foreach($data as $link) {
@@ -337,22 +336,18 @@ function utf8($txt) { return iconv('WINDOWS-1251','UTF-8',$txt); }
 function curTime() { return strftime('%Y-%m-%d %H:%M:%S',time()); }
 
 function GvaluesCreate() {//Составление файла G_values.js
-    $save =
-        'function SpisokToAss(s){var a=[];for(var n=0;n<s.length;a[s[n].uid]=s[n].title,n++);return a}'.
-
-        'G.status_spisok='.query_selJson("SELECT `id`,`name` FROM `setup_zayavki_status` ORDER BY id").';G.status_ass = SpisokToAss(G.status_spisok);'.
+    $save = 'function SpisokToAss(s){var a=[];for(var n=0;n<s.length;a[s[n].uid]=s[n].title,n++);return a}'.
+        'G.status_spisok='.query_selJson("SELECT `id`,`name` FROM `setup_zayavki_status` ORDER BY id").';G.status_ass=SpisokToAss(G.status_spisok);'.
         'G.status_color_ass='.query_ptpJson("SELECT `id`,`bg` FROM setup_zayavki_status").';'.
-        'G.color_spisok='.query_selJson("SELECT `id`,`name` FROM setup_color_name ORDER BY name").';G.color_ass = SpisokToAss(G.color_spisok);'.
-        'G.fault_spisok='.query_selJson("SELECT `id`,`name` FROM setup_fault ORDER BY sort").';G.fault_ass = SpisokToAss(G.fault_spisok);'.
-        'G.zp_name_spisok='.query_selJson("SELECT `id`,`name` FROM setup_zp_name ORDER BY name").';G.zp_name_ass = SpisokToAss(G.zp_name_spisok);'.
-        'G.category_spisok='.query_selJson("SELECT `id`,`name` FROM setup_zayavki_category ORDER BY id").';G.category_ass = SpisokToAss(G.category_spisok);'.
-        'G.device_status_spisok='.query_selJson("SELECT `id`,`name` FROM setup_device_status ORDER BY sort").';G.device_status_spisok.unshift({uid:0, title:"не известно"});G.device_status_ass = SpisokToAss(G.device_status_spisok);'.
-        'G.device_place_spisok='.query_selJson("SELECT `id`,`name` FROM setup_device_place ORDER BY sort").';G.device_place_ass = SpisokToAss(G.device_place_spisok);'.
+        'G.color_spisok='.query_selJson("SELECT `id`,`name` FROM setup_color_name ORDER BY name").';G.color_ass=SpisokToAss(G.color_spisok);'.
+        'G.fault_spisok='.query_selJson("SELECT `id`,`name` FROM setup_fault ORDER BY sort").';G.fault_ass=SpisokToAss(G.fault_spisok);'.
+        'G.zp_name_spisok='.query_selJson("SELECT `id`,`name` FROM setup_zp_name ORDER BY name").';G.zp_name_ass=SpisokToAss(G.zp_name_spisok);'.
+        'G.device_status_spisok='.query_selJson("SELECT `id`,`name` FROM setup_device_status ORDER BY sort").';G.device_status_spisok.unshift({uid:0, title:"не известно"});G.device_status_ass=SpisokToAss(G.device_status_spisok);'.
+        'G.device_place_spisok='.query_selJson("SELECT `id`,`name` FROM setup_device_place ORDER BY sort").';G.device_place_ass=SpisokToAss(G.device_place_spisok);'.
 
-        'G.device_spisok='.query_selJson("SELECT `id`,`name` FROM base_device ORDER BY sort").';G.device_ass = SpisokToAss(G.device_spisok);'.
-        'G.device_rod_spisok='.query_selJson("SELECT `id`,name_rod FROM base_device ORDER BY sort").';G.device_rod_ass = SpisokToAss(G.device_rod_spisok);'.
-        'G.device_mn_spisok='.query_selJson("SELECT `id`,name_mn FROM base_device ORDER BY sort").';G.device_mn_ass = SpisokToAss(G.device_mn_spisok);';
-
+        'G.device_spisok='.query_selJson("SELECT `id`,`name` FROM base_device ORDER BY sort").';G.device_ass=SpisokToAss(G.device_spisok);'.
+        'G.device_rod_spisok='.query_selJson("SELECT `id`,name_rod FROM base_device ORDER BY sort").';G.device_rod_ass=SpisokToAss(G.device_rod_spisok);'.
+        'G.device_mn_spisok='.query_selJson("SELECT `id`,name_mn FROM base_device ORDER BY sort").';G.device_mn_ass=SpisokToAss(G.device_mn_spisok);';
 
     $sql = "SELECT * FROM `base_vendor` ORDER BY `device_id`,`sort`";
     $q = query($sql);
@@ -368,7 +363,7 @@ function GvaluesCreate() {//Составление файла G_values.js
     }
     $v = array();
     foreach($vendor as $n => $sp)
-        $v = $n.':['.implode(',', $vendor[$n]).']';
+        $v[] = $n.':['.implode(',', $vendor[$n]).']';
     $save .= 'G.vendor_spisok={'.implode(',', $v).'};'.
              'G.vendor_ass=[];'.
              'G.vendor_ass[0]="";'.
@@ -385,7 +380,7 @@ function GvaluesCreate() {//Составление файла G_values.js
     }
     $m = array();
     foreach($model as $n => $sp)
-        $m =  $n.':['.implode(',',$model[$n]).']';
+        $m[] =  $n.':['.implode(',',$model[$n]).']';
     $save .= 'G.model_spisok={'.implode(',',$m).'};'.
              'G.model_ass=[];'.
              'G.model_ass[0]="";'.

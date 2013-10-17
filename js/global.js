@@ -58,8 +58,8 @@ var REGEXP_NUMERIC = /^\d+$/,
 
     clientAdd = function(callback) {
         var html = '<table style="border-spacing:10px">' +
-                '<tr><td class="label">Имя:<TD><INPUT TYPE="text" id="fio" style="width:220px;">' +
-                '<tr><td class="label">Телефон:<TD><INPUT TYPE="text" id="telefon" style=width:220px;>' +
+                '<tr><td class="label">Имя:<TD><input type="text" id="fio" style="width:220px;">' +
+                '<tr><td class="label">Телефон:<TD><input type="text" id="telefon" style=width:220px;>' +
             '</TABLE>',
             dialog = vkDialog({
                 width:340,
@@ -518,6 +518,298 @@ $.fn.clientSel = function(obj) {
     }
     return t;
 };
+$.fn.device = function(obj) {
+    obj = $.extend({
+        width:150,
+        func:function() {},
+        type_no:0,
+        device_id:0,
+        vendor_id:0,
+        model_id:0,
+        device_ids:null, // список id, которые нужно выводить в списке для устройств
+        vendor_ids:null, // для производителей
+        model_ids:null,  // для моделей
+        add:0,
+        device_funcAdd:null, // функции пусты, если нельзя добавлять новые элементы
+        vendor_funcAdd:null,
+        model_funcAdd:null
+    },obj);
+
+    var t = $(this),
+        id = t.attr('id'),
+        html = '<input type="hidden" id="' + id + '_device" value="' + obj.device_id + '">' +
+            '<input type="hidden" id="' + id + '_vendor" value="' + obj.vendor_id + '">' +
+            '<input type="hidden" id="' + id + '_model" value="' + obj.model_id + '">',
+        device_no = ['Устройство не выбрано','Любое устройство'],
+        vendor_no = ['Производитель не выбран','Любой производитель'],
+        model_no = ['Модель не выбрана','Любая модель'],
+        vk_device,
+        vk_vendor,
+        vk_model,
+        dialog;
+    t.html(html);
+
+    // создание нового списка устройств, которые нужно выводить в списке
+    if(obj.device_ids) {
+        G.device_spisok = [];
+        for(var n = 0; n < obj.device_ids.length; n++) {
+            var uid = obj.device_ids[n];
+            G.device_spisok.push({uid:uid, title:G.device_ass[uid]});
+        }
+    }
+
+    // создание нового списка производителей, которые нужно выводить в списке
+    if(obj.vendor_ids) {
+        var vendors = {};
+        for(var k in G.vendor_spisok) {
+            for(var n = 0; n < G.vendor_spisok[k].length; n++) {
+                var sp = G.vendor_spisok[k][n];
+                if(obj.vendor_ids.indexOf(sp.uid) >= 0) {
+                    if(vendors[k] == undefined)
+                        vendors[k] = [];
+                    vendors[k].push(sp);
+                }
+            }
+        }
+        G.vendor_spisok = vendors;
+    }
+
+    // создание нового списка моделей, которые нужно выводить в списке
+    if(obj.model_ids) {
+        var models = {};
+        for(var k in G.model_spisok) {
+            for(var n = 0; n < G.model_spisok[k].length; n++) {
+                var sp = G.model_spisok[k][n];
+                if(obj.model_ids.indexOf(sp.uid) >= 0) {
+                    if(models[k] == undefined)
+                        models[k] = [];
+                    models[k].push(sp);
+                }
+            }
+        }
+        G.model_spisok = models;
+    }
+
+    // добавление новых устройств
+    if (obj.add > 0) {
+        obj.device_funcAdd = function() {
+            var html = '<table class="device-add-tab">' +
+                '<tr><td class="label">Название:<TD><input type="text" id="daname">' +
+                '</table>';
+            dialog = vkDialog({
+                width:300,
+                head:'Добавление нoвого устройства',
+                content:html,
+                submit:deviceAddSubmit
+            });
+            $('#daname')
+                .focus()
+                .keyEnter(deviceAddSubmit);
+        };
+        obj.vendor_funcAdd = function () {
+            var html ='<TABLE class="device-add-tab">' +
+                '<TR><TD class="label">Название:<TD><input type="text" id="vaname">' +
+                '</TABLE>';
+            dialog = vkDialog({
+                width:300,
+                head:'Добавление нoвого производителя',
+                content:html,
+                submit:vendorAddSubmit
+            });
+            $('#vaname')
+                .focus()
+                .keyEnter(vendorAddSubmit);
+        };
+        obj.model_funcAdd = function(){
+            var html = '<TABLE class="device-add-tab">' +
+                '<TR><TD class="label">Название:<TD><input type="text" id="maname">' +
+                '</TABLE>';
+            dialog = vkDialog({
+                width:300,
+                head:'Добавление нoвой модели',
+                content:html,
+                submit:modelAddSubmit,
+                focus:'#model_name'
+            });
+            $('#maname')
+                .focus()
+                .keyEnter(modelAddSubmit);
+        };
+    }
+
+    function deviceAddSubmit() {
+        var send = {
+            op:'base_device_add',
+            name:$('#daname').focus().val()
+        };
+        if(!send.name)
+            addHint('Не указано название устройства.');
+        else if(name_test(vk_device.spisok(), send.name))
+            addHint();
+        else {
+            dialog.process();
+            $.post(AJAX_MAIN, send, function(res) {
+                dialog.abort();
+                if(res.success) {
+                    vk_device.add({uid:res.id, title:name}).val(res.id);
+                    G.device_ass[res.id] = name;
+                    getVendor(0);
+                    if(vk_model)
+                        vk_model.val(0).remove(); //Удаляется селект модели и устанавливается в 0
+                    obj.func(getIds());
+                    dialog.close();
+                }
+            } ,'json');
+        }
+    }
+    function vendorAddSubmit() {
+        var send = {
+            op:'base_vendor_add',
+            device_id:vk_device.val(),
+            name:$('#vaname').focus().val()
+        };
+        if(!send.name)
+            addHint('Не указано название производителя.');
+        else if(name_test(vk_vendor.spisok(), send.name))
+            addHint();
+        else {
+            dialog.process();
+            $.post(AJAX_MAIN, send, function(res) {
+                dialog.abort();
+                if(res.success) {
+                    // если у устройства нет производителей, сначала создаётся пустой массив
+                    if (!G.vendor_spisok[vk_device.val()]) {
+                        G.vendor_spisok[vk_device.val()] = [];
+                        G.vendor_spisok[vk_device.val()].unshift({uid:res.id, title:send.name});
+                    }
+                    vk_vendor.add({uid:res.id, title:send.name}).val(res.id);
+                    G.vendor_ass[res.id] = send.name;
+                    getModel();
+                    dialog.close();
+                }
+            }, 'json');
+        }
+    }
+    function modelAddSubmit() {
+        var send = {
+            op:'base_model_add',
+            device_id:vk_device.val(),
+            vendor_id:vk_vendor.val(),
+            name:$('#maname').focus().val()
+        };
+        if(!send.name)
+            addHint('Не указано название модели.');
+        else if(name_test(vk_model.spisok(), send.name)) {
+            addHint();
+        } else {
+            dialog.process();
+            $.post(AJAX_MAIN, send, function (res) {
+                dialog.abort();
+                if(res.success) {
+                    // если у производителя нет моделей, сначала создаётся пустой массив
+                    if(!G.model_spisok[vk_vendor.val()]) {
+                        G.model_spisok[vk_vendor.val()] = [];
+                        G.model_spisok[vk_vendor.val()].unshift({uid:res.id, title:send.name});
+                    }
+                    vk_model.add({uid:res.id, title:send.name}).val(res.id);
+                    G.model_ass[res.id] = send.name;
+                    dialog.close();
+                }
+            }, 'json');
+        }
+    }
+    function addHint(msg) {
+        msg = msg || 'Такое название уже есть в списке.';
+        dialog.bottom.vkHint({
+            msg:'<SPAN class="red">' + msg + '</SPAN>',
+            top:-47,
+            left:53,
+            indent:50,
+            show:1,
+            remove:1
+        });
+    }
+
+    // вывод списка устройств
+    vk_device = $('#' + id + '_device').vkSel({
+        width:obj.width,
+        title0:device_no[obj.type_no],
+        value:obj.device_id,
+        spisok:G.device_spisok,
+        func:function(id) {
+            if(id == 0) {
+                if(vk_vendor)
+                    vk_vendor.val(0).remove();
+            } else
+                getVendor(0);
+            if(vk_model)
+                vk_model.val(0).remove(); //Удаляется селект модели и устанавливается в 0, если был ранее
+            obj.func(getIds());
+        },
+        funcAdd:obj.device_funcAdd,
+        bottom:3
+    }).o;
+    if(obj.device_id > 0)
+        getVendor();
+
+    // вывод списка производителей
+    function getVendor(vendor_id) {
+        if(vendor_id != undefined)
+            obj.vendor_id = vendor_id; // изменяется значение производителя, если нужно
+        vk_vendor = $('#' + id + '_vendor').vkSel({
+            width:obj.width,
+            title0:vendor_no[obj.type_no],
+            value:obj.vendor_id,
+            spisok:G.vendor_spisok[vk_device.val()], // значение устройства получено из его объекта
+            func:function(id) {
+                if(id == 0) {
+                    if(vk_model)
+                        vk_model.val(0).remove(); //Удаляется селект модели и устанавливается в 0
+                } else
+                    getModel(0);
+                obj.func(getIds());
+            },
+            funcAdd:obj.vendor_funcAdd,
+            bottom:3
+        }).o;
+        if(obj.vendor_id > 0)
+            getModel();
+    }
+
+    // вывод списка моделей
+    function getModel(model_id) {
+        if(model_id != undefined)
+            obj.model_id = model_id; //Изменяется значение модели, если нужно
+        vk_model = $('#' + id + '_model').vkSel({
+            width:obj.width,
+            ro:0,
+            title0:model_no[obj.type_no],
+            value:obj.model_id,
+            spisok:G.model_spisok[vk_vendor.val()],
+            limit:50,
+            funcAdd:obj.model_funcAdd,
+            bottom:10,
+            func:function() { obj.func(getIds()); }
+        }).o;
+    }
+
+    // проверка на совпадение имени при внесении нового элемента
+    function name_test(spisok, name) {
+        name = name.toLowerCase();
+        for(var n = 0; n < spisok.length; n++)
+            if(spisok[n].title.toLowerCase() == name)
+                return true;
+        return false;
+    }
+
+    function getIds() {
+        return {
+            device_id:vk_device.val(),
+            vendor_id:vk_vendor ? vk_vendor.val() : 0,
+            model_id:vk_model ? vk_model.val() : 0
+        };
+    }
+};
 
 $(document)
     .ajaxError(function(event, request, settings) {
@@ -598,10 +890,10 @@ $(document)
 
     .on('click', '#clientInfo .cedit', function() {
         var html = '<TABLE class="client_edit">' +
-            '<tr><td class="label">Имя:<TD><INPUT TYPE="text" id="fio" value="' + $('.fio').html() + '">' +
-            '<tr><td class="label">Телефон:<TD><INPUT TYPE="text" id="telefon" value="' + $('.telefon').html() + '">' +
-            '<tr><td class="label">Объединить:<TD><INPUT TYPE="hidden" id="join">' +
-            '<TR class=tr_join><TD class="label">с клиентом:<TD><INPUT TYPE="hidden" id="client2">' +
+            '<tr><td class="label">Имя:<TD><input type="text" id="fio" value="' + $('.fio').html() + '">' +
+            '<tr><td class="label">Телефон:<TD><input type="text" id="telefon" value="' + $('.telefon').html() + '">' +
+            '<tr><td class="label">Объединить:<TD><input type="hidden" id="join">' +
+            '<TR class=tr_join><TD class="label">с клиентом:<TD><input type="hidden" id="client2">' +
             '</TABLE>';
         var dialog = vkDialog({
             head:'Редактирование данных клиента',
@@ -624,6 +916,7 @@ $(document)
                     'Все заявки, начисления и платежи станут общими после<br />объединения.<br /><br />' +
                     'Внимание, операция необратима!',
                 width:330,
+                delayShow:1500,
                 top:-162,
                 left:-79,
                 indent:80
@@ -646,6 +939,8 @@ $(document)
                 $("#fio").focus();
             } else if(send.join == 1 && send.client2 == 0)
                 msg = 'Укажите второго клиента.';
+            else if(send.join == 1 && send.client2 == G.clientInfo.id)
+                msg = 'Выберите другого клиента.';
             else {
                 dialog.process();
                 $.post(AJAX_MAIN, send, function(res) {
@@ -3007,15 +3302,10 @@ $(document).ready(function() {
     }
     if($('#zayavAdd').length > 0) {
         $('#client_id').clientSel({add:1});
-        // создание нового списка устройств, которые выбраны для этой мастерской
-        G.device_spisok = [];
-        for(var n = 0; n < G.ws.devs.length; n++) {
-            var uid = G.ws.devs[n];
-            G.device_spisok.push({uid:uid, title:G.device_ass[uid]});
-        }
         $('#dev').device({
             width:190,
             add:1,
+            device_ids:G.ws.devs,
             func:modelImageGet
         });
         G.device_place_spisok.push({uid:0, title:'другое: <DIV id="place_other_div"><INPUT type="text" id="place_other" maxlength="20"></DIV>'});

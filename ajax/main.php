@@ -25,6 +25,113 @@ switch(@$_POST['op']) {
         jsonSuccess();
         break;
 
+    case 'base_device_add':
+        $name = win1251(htmlspecialchars(trim($_POST['name'])));
+        if(empty($name))
+            jsonError();
+
+        $sql = "SELECT `name` FROM `base_device` WHERE `name`='".$name."'";
+        if(mysql_num_rows(query($sql)))
+            jsonError();
+
+        $sort = query_value("SELECT MAX(`sort`)+1  FROM `base_device`");
+        $sql = "INSERT INTO `base_device` (
+                `name`,
+                `name_rod`,
+                `name_mn`,
+                `sort`,
+                `viewer_id_add`
+            ) values (
+                '".$name."',
+                '".$name."',
+                '".$name."',
+                ".$sort.",
+                ".VIEWER_ID."
+            )";
+        query($sql);
+        $send['id'] = mysql_insert_id();
+
+        $sql = "UPDATE `workshop` SET `devs`=CONCAT(`devs`,',".$send['id']."') WHERE `id`=".WS_ID;
+        query($sql);
+
+        GvaluesCreate();
+        xcache_unset('vkmobile_setup_global');
+        xcache_unset('vkmobile_workshop_'.WS_ID);
+        jsonSuccess($send);
+        break;
+    case 'base_vendor_add':
+        if(!preg_match(REGEXP_NUMERIC, $_POST['device_id']))
+            jsonError();
+
+        $name = win1251(htmlspecialchars(trim($_POST['name'])));
+        if(empty($name))
+            jsonError();
+
+        $device_id = intval($_POST['device_id']);
+        $sql = "SELECT `name` FROM `base_vendor` WHERE `device_id`=".$device_id." AND `name`='".$name."'";
+        if(mysql_num_rows(query($sql)))
+            jsonError();
+
+        $sort = query_value("SELECT MAX(`sort`)+1 FROM `base_vendor` WHERE `device_id`=".$device_id);
+        $sql = "INSERT INTO `base_vendor` (
+                `device_id`,
+                `name`,
+                `sort`,
+                `viewer_id_add`
+            ) values (
+                ".$device_id.",
+                '".$name."',
+                ".$sort.",
+                ".VIEWER_ID."
+            )";
+        query($sql);
+        $send['id'] = mysql_insert_id();
+
+        GvaluesCreate();
+        xcache_unset('vkmobile_setup_global');
+        xcache_unset('vkmobile_workshop_'.WS_ID);
+        jsonSuccess($send);
+        break;
+    case 'base_model_add':
+        if(!preg_match(REGEXP_NUMERIC, $_POST['device_id']))
+            jsonError();
+        if(!preg_match(REGEXP_NUMERIC, $_POST['vendor_id']))
+            jsonError();
+
+        $name = win1251(htmlspecialchars(trim($_POST['name'])));
+        if(empty($name))
+            jsonError();
+
+        $device_id = intval($_POST['device_id']);
+        $vendor_id = intval($_POST['vendor_id']);
+        $sql = "SELECT `name`
+                FROM `base_model`
+                WHERE `device_id`=".$device_id."
+                  AND `vendor_id`=".$vendor_id."
+                  AND `name`='".$name."'";
+        if(mysql_num_rows(query($sql)))
+            jsonError();
+
+        $sql = "INSERT INTO `base_model` (
+                `device_id`,
+                `vendor_id`,
+                `name`,
+                `viewer_id_add`
+            ) values (
+                ".$device_id.",
+                ".$vendor_id.",
+                '".$name."',
+                ".VIEWER_ID."
+            )";
+        query($sql);
+        $send['id'] = mysql_insert_id();
+
+        GvaluesCreate();
+        xcache_unset('vkmobile_setup_global');
+        xcache_unset('vkmobile_workshop_'.WS_ID);
+        jsonSuccess($send);
+        break;
+
     case 'vkcomment_add':
         $table = htmlspecialchars(trim($_POST['table']));
         if(strlen($table) > 20)
@@ -252,7 +359,6 @@ switch(@$_POST['op']) {
             query("UPDATE `vk_comment` SET `table_id`=".$client_id."  WHERE `table_name`='client' AND `table_id`=".$client2);
             query("UPDATE `zayavki`    SET `client_id`=".$client_id." WHERE `client_id`=".$client2);
             query("UPDATE `zp_move`    SET `client_id`=".$client_id." WHERE `client_id`=".$client2);
-            query("UPDATE `zp_zakaz`   SET `client_id`=".$client_id." WHERE `client_id`=".$client2);
             query("DELETE FROM `client` WHERE `id`=".$client2);
             clientBalansUpdate($client_id);
         }
@@ -403,7 +509,7 @@ switch(@$_POST['op']) {
     case 'model_img_get':
         if(!preg_match(REGEXP_NUMERIC, $_POST['model_id']))
             jsonError();
-        $send['img'] = _modelImg(intval($_POST['model_id']), 'small', 100, 100, 'fotoView');
+        $send['img'] = _modelImg(intval($_POST['model_id']), 'small', 80, 80, 'fotoView');
         jsonSuccess($send);
         break;
     case 'zayav_spisok_load':
