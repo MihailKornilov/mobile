@@ -18,9 +18,51 @@ function jsonSuccess($send=array()) {
 
 switch(@$_POST['op']) {
     case 'cache_clear':
-        if(!ADMIN)
+        if(!SA)
             jsonError();
         query("UPDATE `setup_global` SET `script_style`=`script_style`+1");
+        _cacheClear();
+        jsonSuccess();
+        break;
+
+    case 'ws_create':
+        $org_name = win1251(htmlspecialchars(trim($_POST['org_name'])));
+        if(empty($org_name))
+            jsonError();
+        if(!preg_match(REGEXP_NUMERIC, $_POST['country_id']))
+            jsonError();
+        if(!preg_match(REGEXP_NUMERIC, $_POST['city_id']))
+            jsonError();
+
+        $country_id = intval($_POST['country_id']);
+        $city_id = intval($_POST['city_id']);
+        $country_name = win1251(htmlspecialchars(trim($_POST['country_name'])));
+        $city_name = win1251(htmlspecialchars(trim($_POST['city_name'])));
+
+        $ex = explode(',', $_POST['devs']);
+        foreach($ex as $id)
+            if(!preg_match(REGEXP_NUMERIC, $id))
+                jsonError();
+
+        $sql = "INSERT INTO `workshop` (
+                `admin_id`,
+                `org_name`,
+                `country_id`,
+                `country_name`,
+                `city_id`,
+                `city_name`,
+                `devs`
+            ) VALUES (
+                ".VIEWER_ID.",
+                '".$org_name."',
+                ".$country_id.",
+                '".$country_name."',
+                ".$city_id.",
+                '".$city_name."',
+                '".$_POST['devs']."'
+            )";
+        query($sql);
+        query("UPDATE `vk_user` SET `ws_id`=".mysql_insert_id().",`admin`=1 WHERE `viewer_id`=".VIEWER_ID);
         _cacheClear();
         jsonSuccess();
         break;
@@ -34,7 +76,7 @@ switch(@$_POST['op']) {
         if(mysql_num_rows(query($sql)))
             jsonError();
 
-        $sort = query_value("SELECT MAX(`sort`)+1  FROM `base_device`");
+        $sort = query_value("SELECT IFNULL(MAX(`sort`)+1,0) FROM `base_device`");
         $sql = "INSERT INTO `base_device` (
                 `name`,
                 `name_rod`,
@@ -72,7 +114,7 @@ switch(@$_POST['op']) {
         if(mysql_num_rows(query($sql)))
             jsonError();
 
-        $sort = query_value("SELECT MAX(`sort`)+1 FROM `base_vendor` WHERE `device_id`=".$device_id);
+        $sort = query_value("SELECT IFNULL(MAX(`sort`)+1,0) FROM `base_vendor` WHERE `device_id`=".$device_id);
         $sql = "INSERT INTO `base_vendor` (
                 `device_id`,
                 `name`,
@@ -188,7 +230,7 @@ switch(@$_POST['op']) {
         if(!preg_match(REGEXP_NUMERIC, $_POST['id']))
             jsonError();
         $id = intval($_POST['id']);
-        if(!ADMIN) {
+        if(!VIEWER_ADMIN) {
             $sql = "SELECT `viewer_id_add` FROM `vk_comment` WHERE `status`=1 AND `id`=".$id;
             if(!$r = mysql_fetch_assoc(query($sql)))
                 jsonError();
@@ -1726,7 +1768,7 @@ switch(@$_POST['op']) {
             $_POST['day_begin'] = _curMonday();
         if(!preg_match(REGEXP_DATE, $_POST['day_end']))
             $_POST['day_end'] = _curSunday();
-        if(!preg_match(REGEXP_BOOL, $_POST['del_show']) || !ADMIN)
+        if(!preg_match(REGEXP_BOOL, $_POST['del_show']) || !VIEWER_ADMIN)
             $_POST['del_show'] = 0;
         $send['html'] = utf8(report_prihod_spisok($_POST['day_begin'], $_POST['day_end'], intval($_POST['del_show'])));
         jsonSuccess($send);
@@ -1738,7 +1780,7 @@ switch(@$_POST['op']) {
             jsonError();
         if(!preg_match(REGEXP_DATE, $_POST['day_end']))
             jsonError();
-        if(!preg_match(REGEXP_BOOL, $_POST['del_show']) || !ADMIN)
+        if(!preg_match(REGEXP_BOOL, $_POST['del_show']) || !VIEWER_ADMIN)
             $_POST['del_show'] = 0;
         $send['html'] = utf8(report_prihod_spisok($_POST['day_begin'], $_POST['day_end'], intval($_POST['del_show']), intval($_POST['page'])));
         jsonSuccess($send);
@@ -1766,7 +1808,7 @@ switch(@$_POST['op']) {
         jsonSuccess();
         break;
     case 'report_prihod_del':
-        if(!ADMIN)
+        if(!VIEWER_ADMIN)
             jsonError();
         if(!preg_match(REGEXP_NUMERIC, $_POST['id']))
             jsonError();
@@ -1790,7 +1832,7 @@ switch(@$_POST['op']) {
         jsonSuccess();
         break;
     case 'report_prihod_rest':
-        if(!ADMIN)
+        if(!VIEWER_ADMIN)
             jsonError();
         if(!preg_match(REGEXP_NUMERIC, $_POST['id']))
             jsonError();
@@ -1862,7 +1904,7 @@ switch(@$_POST['op']) {
         jsonSuccess();
         break;
     case 'report_rashod_del':
-        if(!ADMIN)
+        if(!VIEWER_ADMIN)
             jsonError();
         if(!preg_match(REGEXP_NUMERIC, $_POST['id']))
             jsonError();
@@ -1955,7 +1997,7 @@ switch(@$_POST['op']) {
         jsonSuccess();
         break;
     case 'report_kassa_load':
-        if(!preg_match(REGEXP_BOOL, $_POST['del_show']) || !ADMIN)
+        if(!preg_match(REGEXP_BOOL, $_POST['del_show']) || !VIEWER_ADMIN)
             $_POST['del_show'] = 0;
         $send['html'] = utf8(report_kassa_spisok(1, intval($_POST['del_show'])));
         jsonSuccess($send);
@@ -2023,14 +2065,14 @@ switch(@$_POST['op']) {
         break;
 
     case 'setup_org_name_save':
-        if(!ADMIN)
+        if(!VIEWER_ADMIN)
             jsonError();
         $name = win1251(htmlspecialchars(trim($_POST['name'])));
         query("UPDATE `workshop` SET `org_name`='".$name."' WHERE `id`=".WS_ID);
         jsonSuccess();
         break;
     case 'setup_devs_set':
-        if(!ADMIN)
+        if(!VIEWER_ADMIN)
             jsonError();
         $ex = explode(',', $_POST['devs']);
         foreach($ex as $id)
@@ -2040,7 +2082,7 @@ switch(@$_POST['op']) {
         jsonSuccess();
         break;
     case 'setup_ws_del':
-        if(!ADMIN)
+        if(!VIEWER_ADMIN)
             jsonError();
         query("UPDATE `workshop` SET `status`=0,`dtime_del`=CURRENT_TIMESTAMP WHERE `id`=".WS_ID);
         query("UPDATE `vk_user` SET `ws_id`=0,`admin`=0 WHERE `ws_id`=".WS_ID);

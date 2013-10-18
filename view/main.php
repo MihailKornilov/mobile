@@ -116,7 +116,6 @@ function _hashCookieSet() {
 function _cacheClear() {
     xcache_unset('vkmobile_setup_global');
     xcache_unset('vkmobile_viewer_'.VIEWER_ID);
-    xcache_unset('vkmobile_workshop_'.WS_ID);
     xcache_unset('vkmobile_remind_active');
     xcache_unset('vkmobile_device_name');
     xcache_unset('vkmobile_vendor_name');
@@ -125,9 +124,12 @@ function _cacheClear() {
     xcache_unset('vkmobile_color_name');
     xcache_unset('vkmobile_device_place');
     xcache_unset('vkmobile_device_status');
-    xcache_unset('vkmobile_zayav_base_device'.WS_ID);
-    xcache_unset('vkmobile_zayav_base_vendor'.WS_ID);
-    xcache_unset('vkmobile_zayav_base_model'.WS_ID);
+    if(WS_ID) {
+        xcache_unset('vkmobile_workshop_'.WS_ID);
+        xcache_unset('vkmobile_zayav_base_device'.WS_ID);
+        xcache_unset('vkmobile_zayav_base_vendor'.WS_ID);
+        xcache_unset('vkmobile_zayav_base_model'.WS_ID);
+    }
 }//ens of _cacheClear()
 
 function _header() {
@@ -140,7 +142,7 @@ function _header() {
         '<meta http-equiv="content-type" content="text/html; charset=windows-1251" />'.
         '<title> Приложение 2031819 Hi-tech Service </title>'.
         '<link href="'.SITE.'/css/global.css?'.VERSION.'" rel="stylesheet" type="text/css" />'.
-        (ADMIN ? '<script type="text/javascript" src="http://nyandoma'.(LOCAL ? '' : '.ru').'/js/errors.js?'.VERSION.'"></script>' : '').
+        (SA ? '<script type="text/javascript" src="http://nyandoma'.(LOCAL ? '' : '.ru').'/js/errors.js?'.VERSION.'"></script>' : '').
         '<script type="text/javascript" src="'.SITE.'/js/jquery-1.9.1.min.js"></script>'.
         '<script type="text/javascript" src="'.SITE.'/js/xd_connection.js"></script>'.
         '<script type="text/javascript" src="'.SITE.'/js/highstock.js"></script>'.
@@ -153,11 +155,11 @@ function _header() {
             'G.vku={'.
                 'viewer_id:'.VIEWER_ID.','.
                 'name:"'.VIEWER_NAME.'",'.
-                'ws_id:'.WS_ID.','.
+                (WS_ID ? 'ws_id:'.WS_ID.',' : '').
                 'country_id:'.VIEWER_COUNTRY_ID.','.
                 'city_id:'.VIEWER_CITY_ID.
             '};'.
-            'G.ws={devs:['.WS_DEVS.']};'.
+            (defined('WS_DEVS') ? 'G.ws={devs:['.WS_DEVS.']};' : '').
         '</script>'.
         '<script type="text/javascript" src="'.SITE.'/js/global.js?'.VERSION.'"></script>'.
         '<script type="text/javascript" src="'.SITE.'/js/G_values.js?'.G_VALUES.'"></script>'.
@@ -169,7 +171,7 @@ function _header() {
 
 function _footer() {
     global $html, $sqlQuery, $sqls;
-    if(ADMIN)
+    if(SA)
         $html .= '<div id="admin">'.
                 '<a href="'.URL.'&my_page=superAdmin&pre_page='.@$_GET['my_page'].'&pre_id='.@$_GET['id'].'">Admin</a> :: '.
                 //'<a href="https://github.com/MihailKornilov/vkmobile/issues" target="_blank">Issues</a> :: '.
@@ -211,7 +213,7 @@ function _footer() {
     }
     $html .= '<script type="text/javascript">'.
                 'hashSet({'.implode(',', $gValues).'});'.
-                (ADMIN ? '$("#admin EM").html(((new Date().getTime())-G.T)/1000);' : '').
+                (SA ? '$("#admin EM").html(((new Date().getTime())-G.T)/1000);' : '').
              '</script>'.
          '</div></BODY></HTML>';
 }//end of _footer()
@@ -492,7 +494,7 @@ function _vkCommentUnit($id, $viewer, $txt, $dtime, $childs=array(), $n=0) {
         '<table class="t">'.
             '<tr><td class="ava">'.$viewer['photo'].
                 '<td class="i">'.$viewer['link'].
-                    ($viewer['id'] == VIEWER_ID || ADMIN ? '<div class="img_del unit_del" title="Удалить заметку"></div>' : '').
+                    ($viewer['id'] == VIEWER_ID || VIEWER_ADMIN ? '<div class="img_del unit_del" title="Удалить заметку"></div>' : '').
                     '<div class="ctxt">'.$txt.'</div>'.
                     '<div class="cdat">'.FullDataTime($dtime, 1).
                         '<SPAN'.($n == 1  && !empty($childs) ? ' class="hide"' : '').'> | '.
@@ -513,7 +515,7 @@ function _vkCommentChild($id, $viewer, $txt, $dtime) {
         '<table class="t">'.
             '<tr><td class="dava">'.$viewer['photo'].
                 '<td class="di">'.$viewer['link'].
-                    ($viewer['id'] == VIEWER_ID || ADMIN ? '<div class="img_del child_del" title="Удалить комментарий"></div>' : '').
+                    ($viewer['id'] == VIEWER_ID || VIEWER_ADMIN ? '<div class="img_del child_del" title="Удалить комментарий"></div>' : '').
                     '<div class="dtxt">'.$txt.'</div>'.
                     '<div class="ddat">'.FullDataTime($dtime, 1).'</div>'.
         '</table></div>';
@@ -1013,6 +1015,61 @@ function _devStatus($status_id) {
 }//end of _devStatus()
 
 
+// ---===! ws_create !===--- Секция создания мастерской
+
+function ws_create_info() {
+    return
+    '<div class="ws-create-info">'.
+        '<div class="txt">'.
+            '<h3>Добро пожаловать в приложение Hi-Tech Service!</h3>'.
+            'Данное приложение является программой для учёта ремонта мобильных телефонов, '.
+            'КПК, ноутбуков, телевизоров и другой радиоэлектронной аппаратуры и бытовой техники.<br />'.
+            '<br />'.
+            '<U>При помощи программы можно:</U><br />'.
+            '- вести клиентскую базу (хранить, изменять информацию о клиентах, которые сдают устройства в ремонт);<br />'.
+            '- вести учёт устройств, принятых в ремонт;<br />'.
+            '- начислять оплату за выполненную работу;<br />'.
+            '- принимать платежи и вести учёт денежных средств;<br />'.
+            '- получать, изменять информацию о запчастях.<br />'.
+            '<br />'.
+            'Для того, чтобы начать пользоваться приложением, необходимо создать свою мастерскую.'.
+        '</div>'.
+		'<div class="vkButton"><button onclick="location.href=\''.URL.'&p=wscreate&d=step1\'">Приступить к созданию мастерской</button></div>'.
+    '</div>';
+}//end of ws_create_info()
+function ws_create_step1() {
+    $sql = "SELECT `id`,`name_mn` FROM `base_device` ORDER BY `sort`";
+    $q = query($sql);
+    $checkDevs = '';
+    while($r = mysql_fetch_assoc($q))
+        $checkDevs .= _checkbox($r['id'], $r['name_mn']);
+
+    return
+    '<div class="ws-create-step1">'.
+        '<div class="txt">'.
+            'Для начала необходимо указать название Вашей мастерской и город, в котором Вы находитесь.<br />'.
+            'Сотрудников и категории устройств можно будет добавить или изменить позднее.'.
+        '</div>'.
+        '<div class="headName">Создание мастерской</div>'.
+        '<TABLE class="tab">'.
+            '<TR><TD class="label">Название организации:<TD><INPUT type="text" id="org_name" maxlength="100">'.
+            '<TR><TD class="label">Страна:<TD><INPUT type="hidden" id="countries" value="'.VIEWER_COUNTRY_ID.'">'.
+            '<TR><TD class="label">Город:<TD><INPUT type="hidden" id="cities" value="0">'.
+            '<TR><TD class="label">Главный администратор:<TD><b>'.VIEWER_NAME.'</b>'.
+            '<TR><TD class="label top">Категории устройств,<br />ремонтом которых<br />Вы занимаетесь:<TD id="devs">'.$checkDevs.
+        '</TABLE>'.
+
+        '<div class="vkButton"><button>Готово</button></div>'.
+        '<div class="vkCancel"><button>Отмена</button></div>'.
+        '<script type="text/javascript" src="'.SITE.'/js/ws_create_step1.js?'.VERSION.'"></script>'.
+    '</div>';
+}//end of ws_create_step1()
+
+
+
+
+
+
 // ---===! client !===--- Секция клиентов
 
 function clientFilter($v) {
@@ -1058,7 +1115,7 @@ function client_data($page=1, $filter=array()) {
             $ids = array();
             while($r = mysql_fetch_assoc($q))
                 $ids[] = $r['client_id'];
-            $cond .= " AND `id` IN (0,".implode(',', $ids).")";
+            $cond .= " AND `id` IN (".(empty($ids) ? 0 : implode(',', $ids)).")";
         }
     }
     $send['all'] = query_value("SELECT COUNT(`id`) AS `all` FROM `client` WHERE ".$cond." LIMIT 1");
@@ -2476,7 +2533,7 @@ function report_prihod_right() { //Условия поиска справа для отчётов
         '<div class="findHead">Период</div>'.
         '<div class="cal"><EM class="label">от:</EM><INPUT type="hidden" id="report_prihod_day_begin" value="'._curMonday().'"></div>'.
         '<div class="cal"><EM class="label">до:</EM><INPUT type="hidden" id="report_prihod_day_end" value="'._curSunday().'"></div>'.
-        (ADMIN ? _checkbox('prihodShowDel', 'Показывать удалённые платежи') : '').
+        (VIEWER_ADMIN ? _checkbox('prihodShowDel', 'Показывать удалённые платежи') : '').
         '</div>';
 }//end of report_prihod_right()
 function report_prihod() {
@@ -2488,7 +2545,7 @@ function report_prihod_spisok($day_begin, $day_end, $del_show=0, $page=1) {
         AND `summa`>0
         AND `dtime_add`>='".$day_begin." 00:00:00'
         AND `dtime_add`<='".$day_end." 23:59:59'
-        ".($del_show && ADMIN ? '' : ' AND `status`=1');
+        ".($del_show && VIEWER_ADMIN ? '' : ' AND `status`=1');
     $sql = "SELECT
                 COUNT(`id`) AS `all`,
                 SUM(`summa`) AS `sum`
@@ -2779,8 +2836,10 @@ function report_kassa_spisok($page=1, $del_show=0) {
 
 function setup_main() {
     $sql = "SELECT * FROM `workshop` WHERE `id`=".WS_ID." LIMIT 1";
-    if(!$ws = mysql_fetch_assoc(query($sql)))
-        return 'Мастерской не существует';
+    if(!$ws = mysql_fetch_assoc(query($sql))) {
+        _cacheClear();
+        header('Location:'.URL);
+    }
 
     $ex = explode(',', $ws['devs']);
     $devs = array();

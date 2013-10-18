@@ -26,8 +26,8 @@ define('REGEXP_WORDFIND', '/^[a-zа-я0-9,.;]{1,}$/i');
 
 $SA[982006] = 1; // Корнилов Михаил
 $SA[2170788] = 1; // Корнилов Виталий
-define('ADMIN', isset($SA[VIEWER_ID]));
-if(ADMIN) {
+define('SA', isset($SA[VIEWER_ID]));
+if(SA) {
     ini_set('display_errors',1);
     error_reporting(E_ALL);
 }
@@ -38,7 +38,6 @@ header('P3P: CP="IDC DSP COR ADM DEVi TAIi PSA PSD IVAi IVDi CONi HIS OUR IND CN
 _dbConnect();
 _getSetupGlobal();
 _getVkUser();
-_getWorkshop();
 
 
 
@@ -102,20 +101,23 @@ function _getVkUser() {//Получение данных о пользователе
         xcache_set($key, $u, 86400);
     }
     $sqls .= '<b>'.$from.'</b><br /><br />';
-    define('WS_ID', $u['ws_id']);
+    define('WS_ID', $u['ws_id'] && _getWorkshop($u['ws_id']) ? $u['ws_id'] : 0);
     define('VIEWER_NAME', $u['first_name'].' '.$u['last_name']);
     define('VIEWER_COUNTRY_ID', $u['country_id']);
     define('VIEWER_CITY_ID', $u['city_id']);
     define('VIEWER_ADMIN', ($u['admin'] == 1));
 }//end of _getVkUser()
-function _getWorkshop() {//Получение данных о мастерской
-    $ws = xcache_get('vkmobile_workshop_'.WS_ID);
+function _getWorkshop($ws_id) {//Получение данных о мастерской
+    $ws = xcache_get('vkmobile_workshop_'.$ws_id);
     if(empty($ws)) {
-        $sql = "SELECT * FROM `workshop` WHERE `id`=".WS_ID." AND `status`=1 LIMIT 1";
+        $sql = "SELECT * FROM `workshop` WHERE `id`=".$ws_id." AND `status`=1 LIMIT 1";
         $ws = mysql_fetch_assoc(query($sql));
-        xcache_set('vkmobile_workshop_'.WS_ID, $ws, 86400);
+        if(empty($ws))
+            return false;
+        xcache_set('vkmobile_workshop_'.$ws_id, $ws, 86400);
     }
     define('WS_DEVS', $ws['devs']);
     define('WS_ADMIN', $ws['admin_id']);
     define('KASSA_START', $ws['kassa_start']);
+    return true;
 }//end of _getWorkshop()

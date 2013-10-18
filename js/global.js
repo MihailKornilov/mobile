@@ -651,7 +651,7 @@ $.fn.device = function(obj) {
             $.post(AJAX_MAIN, send, function(res) {
                 dialog.abort();
                 if(res.success) {
-                    vk_device.add({uid:res.id, title:name}).val(res.id);
+                    vk_device.add({uid:res.id, title:send.name}).val(res.id);
                     G.device_ass[res.id] = name;
                     getVendor(0);
                     if(vk_model)

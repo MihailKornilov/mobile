@@ -364,18 +364,6 @@ $.fn.vkSel = function (obj) {
     }
   }
 
-
-
-
-
-
-
-
-
-
-
-
-
   // создание списка по регулярному выражению при вводе в INPUT
   function inp_write() {
     obj.value = 0;
@@ -442,11 +430,15 @@ $.fn.vkSel = function (obj) {
       } else { return obj.spisok; }
     },
 
-    val:function (val) { // установка либо получение значения
-      if (val != undefined) {
+    val:function(val) { // установка либо получение значения
+      if(val != undefined) {
         inp_set(val);
         return this;
       } else { return obj.value; }
+    },
+
+    title:function() {
+        return inp.val();
     },
 
     add:item_add, // добавление нового элемента

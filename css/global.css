@@ -1180,10 +1180,24 @@ table.zayavNomerTab td{vertical-align:top}
 
 
 
+.ws-create-info{background-color:#F7F7F7;padding:10px}
+.ws-create-info .txt,.ws-create-step1 .txt{
+    margin:10px;
+    background-color:#FFF;
+    padding:10px;
+    border:#DDD solid 1px;
+    text-align:justify;
+}
+.ws-create-info .txt h3,.ws-create-step1 .txt h3{text-align:center;font-weight:bold;margin-bottom:4px}
+.ws-create-info .vkButton{margin:10px 0 10px 190px}
 
-
-
-
+.ws-create-step1{background-color:#F7F7F7;padding:10px 0 30px 0}
+.ws-create-step1 .txt{margin-bottom:20px}
+.ws-create-step1 .tab{border-spacing:10px;margin:20px 0 20px 70px}
+.ws-create-step1 .label{width:140px;text-align:right}
+.ws-create-step1 #org_name{width:250px}
+.ws-create-step1 #devs div{display:block;margin-top:4px}
+.ws-create-step1 .vkButton{margin:0 5px 0 230px}
 
 
 
@@ -1224,27 +1238,6 @@ table.zayavNomerTab td{vertical-align:top}
     float:right;
     margin-top:3px;
 }
-
-
-
-
-
-
-
-/*удалить после переделки создания новой мастерской*/
-.infoTxt {
-    margin:10px;
-    background-color:#FFF;
-    padding:10px;
-    border:#DDD solid 1px;
-    text-align:justify;
-}
-.infoTxt H3 {
-    text-align:center;
-    font-weight:bold;
-    margin-bottom:4px;
-}
-
 
 
 
@@ -1329,28 +1322,6 @@ table.zayavNomerTab td{vertical-align:top}
     padding:2px 5px 3px 5px;
     border:#476D96 solid 1px;
 }
-
-
-
-
-/* создание мастерской - шаг 1 */
-#wCreate1 {
-    background-color:#F7F7F7;
-    padding:10px 0 30px 0;
-}
-#wCreate1 .vkButton{margin:0 5px 0 200px}
-#wCreate1 .tab{margin:20px 0 20px 70px}
-#wCreate1 .tdAbout {
-    width:140px;
-    text-align:right;
-    vertical-align:top;
-    padding-top:4px;
-}
-#wCreate1 #adm {
-    padding-top:4px;
-    font-weight:bold;
-}
-#wCreate1 #org_name{width:250px}
 
 
 
