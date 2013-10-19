@@ -3094,11 +3094,13 @@ $(document)
                 submit:submit
             }),
             user_id,
-            input = dialog.content.find('input');
-        input.focus();
-        dialog.content.find('.vkButton').click(function() {
-            var t = $(this);
-            if(t.hasClass('busy'))
+            input = dialog.content.find('input'),
+            but = input.next();
+        input.focus().keyEnter(user_find);
+        but.click(user_find);
+
+        function user_find() {
+            if(but.hasClass('busy'))
                 return;
             user_id = false;
             var send = {
@@ -3108,22 +3110,20 @@ $(document)
             };
             if(!send.user_ids)
                 return;
-            t.addClass('busy').next('.res').remove();
+            but.addClass('busy').next('.res').remove();
             VK.api('users.get', send, function(data) {
-                t.removeClass('busy');
-
+                but.removeClass('busy');
                 if(data.response) {
                     var u = data.response[0],
                         html = '<TABLE class="res">' +
-                        '<TR><TD class="photo"><IMG src=' + u.photo_50 + '>' +
+                            '<TR><TD class="photo"><IMG src=' + u.photo_50 + '>' +
                             '<TD class="name">' + u.first_name + ' ' + u.last_name +
-                        '</TABLE>';
-                    t.after(html);
+                            '</TABLE>';
+                    but.after(html);
                     user_id = u.id;
                 }
             });
-        });
-
+        }
         function submit() {
             if(!user_id) {
                 dialog.bottom.vkHint({
@@ -3158,6 +3158,70 @@ $(document)
                     });
             }, 'json');
         }
+    })
+    .on('click', '#setup_workers .img_del', function() {
+        var u = $(this);
+        while(!u.hasClass('unit'))
+            u = u.parent();
+        var dialog = vkDialog({
+            top:110,
+            width:250,
+            head:'Удаление сотрудника',
+            content:'<center>Подтвердите удаление сотрудника.</center>',
+            butSubmit:'Удалить',
+            submit:submit
+        });
+        function submit() {
+            var send = {
+                op:'setup_worker_del',
+                viewer_id:u.attr('val')
+            };
+            dialog.process();
+            $.post(AJAX_MAIN, send, function(res) {
+                if(res.success) {
+                    dialog.close();
+                    vkMsgOk('Сотрудник удален.');
+                    $('#spisok').html(res.html);
+                } else
+                    dialog.abort();
+            }, 'json');
+        }
+    })
+    .on('click', '#setup_workers .adm_set', function() {
+        var u = $(this),
+            adm = $(this).parent();
+        while(!u.hasClass('unit'))
+            u = u.parent();
+        var send = {
+            op:'setup_worker_admin_set',
+            viewer_id:u.attr('val')
+        };
+        if(adm.hasClass('busy'))
+            return;
+        adm.html('&nbsp;').addClass('busy');
+        $.post(AJAX_MAIN, send, function(res) {
+            adm.removeClass('busy')
+            if(res.success)
+                adm.html('Администратор <a class="adm_cancel">отменить</a>');
+        }, 'json');
+    })
+    .on('click', '#setup_workers .adm_cancel', function() {
+        var u = $(this),
+            adm = $(this).parent();
+        while(!u.hasClass('unit'))
+            u = u.parent();
+        var send = {
+            op:'setup_worker_admin_cancel',
+            viewer_id:u.attr('val')
+        };
+        if(adm.hasClass('busy'))
+            return;
+        adm.html('&nbsp;').addClass('busy');
+        $.post(AJAX_MAIN, send, function(res) {
+            adm.removeClass('busy')
+            if(res.success)
+                adm.html('<a class="adm_set">Назначить администратором</a>');
+        }, 'json');
     });
 
 $(document).ready(function() {

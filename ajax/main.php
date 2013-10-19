@@ -2084,6 +2084,10 @@ switch(@$_POST['op']) {
     case 'setup_ws_del':
         if(!VIEWER_ADMIN)
             jsonError();
+        $sql = "SELECT `viewer_id` FROM `vk_user` WHERE `ws_id`=".WS_ID;
+        $q = query($sql);
+        while($r = mysql_fetch_assoc($q))
+            xcache_unset('vkmobile_viewer_'.$r['viewer_id']);
         query("UPDATE `workshop` SET `status`=0,`dtime_del`=CURRENT_TIMESTAMP WHERE `id`=".WS_ID);
         query("UPDATE `vk_user` SET `ws_id`=0,`admin`=0 WHERE `ws_id`=".WS_ID);
         _cacheClear();
@@ -2102,8 +2106,36 @@ switch(@$_POST['op']) {
         }
         _vkUserUpdate($id);
         query("UPDATE `vk_user` SET `ws_id`=".WS_ID." WHERE `viewer_id`=".$id);
+        xcache_unset('vkmobile_viewer_'.$id);
         $send['html'] = utf8(setup_workers_spisok());
         jsonSuccess($send);
+        break;
+    case 'setup_worker_del':
+        if(!preg_match(REGEXP_NUMERIC, $_POST['viewer_id']))
+            jsonError();
+        $viewer_id = intval($_POST['viewer_id']);
+        query("UPDATE `vk_user` SET `ws_id`=0,`admin`=0 WHERE `viewer_id`=".$viewer_id);
+        xcache_unset('vkmobile_viewer_'.$viewer_id);
+        $send['html'] = utf8(setup_workers_spisok());
+        jsonSuccess($send);
+        break;
+    case 'setup_worker_admin_set':
+        if(!preg_match(REGEXP_NUMERIC, $_POST['viewer_id']))
+            jsonError();
+        $viewer_id = intval($_POST['viewer_id']);
+        query("UPDATE `vk_user` SET `admin`=1 WHERE `ws_id`=".WS_ID." AND`viewer_id`=".$viewer_id);
+        xcache_unset('vkmobile_viewer_'.$viewer_id);
+        jsonSuccess();
+        break;
+    case 'setup_worker_admin_cancel':
+        if(!preg_match(REGEXP_NUMERIC, $_POST['viewer_id']))
+            jsonError();
+        $viewer_id = intval($_POST['viewer_id']);
+        if(WS_ADMIN == $viewer_id)
+            jsonError();
+        query("UPDATE `vk_user` SET `admin`=0 WHERE `ws_id`=".WS_ID." AND`viewer_id`=".$viewer_id);
+        xcache_unset('vkmobile_viewer_'.$viewer_id);
+        jsonSuccess();
         break;
 
     case 'setup_rashod_category_add':

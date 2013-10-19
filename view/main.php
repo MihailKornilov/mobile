@@ -2886,14 +2886,16 @@ function setup_workers_spisok() {
     $send = '';
     while($r = mysql_fetch_assoc($q)) {
         $send .=
-        '<table class="unit">'.
+        '<table class="unit" val="'.$r['viewer_id'].'">'.
             '<tr><td class="photo"><img src="'.$r['photo'].'">'.
                 '<td>'.
                     (WS_ADMIN != $r['viewer_id'] ? '<div class="img_del"></div>' : '').
                     '<a class="name">'.$r['first_name'].' '.$r['last_name'].'</a>'.
-                    ($r['admin'] ?
-                        '<div class="adm">Администратор'.(WS_ADMIN != $r['viewer_id'] ? ' <a class="adm_cancel">отменить</a>' : '').'</div>'
-                        : '').
+                    '<div class="adm">'.
+                        ($r['admin'] ?
+                            'Администратор'.(WS_ADMIN != $r['viewer_id'] ? ' <a class="adm_cancel">отменить</a>' : '')
+                            : '<a class="adm_set">Назначить администратором</a>').
+                    '</div>'.
         '</table>';
     }
     return $send;

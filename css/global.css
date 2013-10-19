@@ -84,7 +84,6 @@ table{border:0;border-spacing:0}
 
 td.label{line-height:16px;color:#888}
 td.label EM{font-size:10px;color:#bbb;display:block}
-
 td.top{vertical-align:top;padding-top:3px}
 td.r{text-align:right}
 
@@ -220,7 +219,8 @@ input.money{font:bold 14px Tahoma;width:70px}
 #client .result.busy,
 #clientInfo #dopLinks.busy,
 .zpzakaz.busy,
-#mainLinks.busy{
+#mainLinks.busy,
+#setup_workers .adm.busy{
     background-image:url("data:image/gif;base64,R0lGODlhIAAIAKECAEVojoSctMHN2QAAACH/C05FVFNDQVBFMi4wAwEAAAAh+QQFCgADACwAAAAAIAAIAAACFZyPqcvtD6KMr445LcRUN9554kiSBQAh+QQFCgADACwCAAIAEgAEAAACD4xvM8DNiJRz8Mj5ari4AAAh+QQFCgADACwCAAIAHAAEAAACGJRvM8HNCqKMCCnn4JT1XPwMG9cJH6iNBQAh+QQFCgADACwMAAIAEgAEAAACD5RvM8HNiJRz8Mj5qri4AAAh+QQFCgADACwWAAIACAAEAAACBZSPqYsFACH5BAUUAAMALAAAAAAgAAgAAAIOnI+py+0Po5y02ouzPgUAOw==");
     background-repeat:no-repeat;
     background-position:center center;
@@ -1167,10 +1167,10 @@ table.zayavNomerTab td{vertical-align:top}
 #setup_workers .img_del{float:right;margin-top:2px}
 #setup_workers .name,#setup_worker_add .name{font-weight:bold;font-size:12px;color:#45688e}
 #setup_workers .adm{margin-top:5px;color:#555}
-#setup_workers .adm_cancel{font-size:10px}
+#setup_workers .adm a{font-size:10px}
 #setup_worker_add{margin:10px 0}
 #setup_worker_add h1{font-weight:bold;color:#31618C}
-#setup_worker_add input{width:250px;padding:5px;margin:7px 5px 0 0}
+#setup_worker_add input{width:240px;padding:5px;height:13px;margin:7px 5px 0 0}
 #setup_worker_add .res{margin:10px 0 0 20px}
 
 

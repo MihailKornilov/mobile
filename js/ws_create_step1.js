@@ -122,9 +122,10 @@ $('.vkButton').click(function () {
     else {
         t.addClass('busy');
         $.post(AJAX_MAIN, send, function(res) {
-            t.removeClass('busy');
             if(res.success)
                 location.href = URL;
+            else
+                t.removeClass('busy');
         }, 'json')
     }
     if(msg)
