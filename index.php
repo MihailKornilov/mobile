@@ -43,6 +43,7 @@ if(!WS_ID) {
 }
 
 if(WS_ID) {
+    require_once('view/ws.php');
     _mainLinks();
     switch($_GET['p']) {
         case 'client':
