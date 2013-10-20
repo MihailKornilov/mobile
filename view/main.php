@@ -172,9 +172,12 @@ function _header() {
 
 function _footer() {
     global $html, $sqlQuery, $sqls;
-    if(SA)
+    if(SA) {
+        $d = empty($_GET['d']) ? '' :'&pre_d='.$_GET['d'];
+        $d1 = empty($_GET['d1']) ? '' :'&pre_d1='.$_GET['d1'];
+        $id = empty($_GET['id']) ? '' :'&pre_id='.$_GET['id'];
         $html .= '<div id="admin">'.
-                '<a href="'.URL.'&my_page=superAdmin&pre_page='.@$_GET['my_page'].'&pre_id='.@$_GET['id'].'">Admin</a> :: '.
+                '<a href="'.URL.'&p=sa&pre_p='.$_GET['p'].$d.$d1.$id.'">Admin</a> :: '.
                 //'<a href="https://github.com/MihailKornilov/vkmobile/issues" target="_blank">Issues</a> :: '.
                 '<a href="http://vkmobile.reformal.ru" target="_blank">Reformal</a> :: '.
                 '<a class="debug_toggle'.(DEBUG ? ' on' : '').'">В'.(DEBUG ? 'ы' : '').'ключить Debug</a> :: '.
@@ -184,6 +187,7 @@ function _footer() {
                 'js <EM></EM>'.
             '</div>'
             .(DEBUG ? $sqls : '');
+    }
     $getArr = array(
         'start' => 1,
         'api_url' => 1,
@@ -539,7 +543,7 @@ function unescape($str){
     return implode($new_word);
 }
 
-function _viewerName($id=VIEWER_ID, $link=false) { //todo не сделано очищение кеша
+function _viewerName($id=VIEWER_ID, $link=false) {
     $key = 'vkmobile_viewer_name_'.$id;
     $name = xcache_get($key);
     if(empty($name)) {
