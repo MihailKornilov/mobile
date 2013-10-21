@@ -24,13 +24,6 @@ if(count($spisok) > 0) {
   }
 }
 ?>
-<LINK href='/superadmin/ws/ws.css?<?php echo $G->script_style; ?>' rel='stylesheet' type='text/css'>
-
-<DIV class=path>
-  <?php include('superadmin/incBack.php'); ?>
-  <A HREF="<?php echo $URL; ?>&my_page=superAdmin">Администрирование</A> » 
-  Мастерские
-</DIV>
 
 <DIV id=sa_ws>
   <DIV id=result></DIV>

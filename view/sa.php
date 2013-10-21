@@ -19,13 +19,13 @@ function sa_cookie_back() {
 function sa_index() {
     $userCount = query_value("SELECT COUNT(`viewer_id`) FROM `vk_user`");
     $wsCount = query_value("SELECT COUNT(`id`) FROM `workshop`");
-    return '<DIV class="path">'.sa_cookie_back().'Администрирование</DIV>'.
-    '<DIV class="sa-index">'.
-        '<DIV><B>Мастерские и сотрудники:</B></DIV>'.
+    return '<div class="path">'.sa_cookie_back().'Администрирование</div>'.
+    '<div class="sa-index">'.
+        '<div><B>Мастерские и сотрудники:</B></div>'.
         '<A href="'.URL.'&p=sa&d=vkuser">Пользователи ('.$userCount.')</A><BR>'.
         '<A href="'.URL.'&p=sa&d=ws">Мастерские ('.$wsCount.')</A><BR>'.
         '<BR>'.
-        '<DIV><B>Устройства и запчасти:</B></DIV>'.
+        '<div><B>Устройства и запчасти:</B></div>'.
         '<A href="'.URL.'&p=sa&d=fault">Виды неисправностей</A><BR>'.
         '<BR>'.
         '<A href="'.URL.'&p=sa&d=device">Устройства</A><BR>'.
@@ -36,5 +36,82 @@ function sa_index() {
         '<A href="'.URL.'&p=sa&d=color">Цвета для устройств и запчастей</A><BR>'.
         '<BR>'.
         '<A href="'.URL.'&p=sa&d=zp-name">Наименования запчастей</A><BR>'.
-    '</DIV>';
+    '</div>';
 }//end of sa_index()
+
+function sa_ws() {
+    $wsSpisok =
+        '<tr><th>id'.
+            '<th>Наименование'.
+            '<th>Админ'.
+            '<th>Дата';
+    $sql = "SELECT * FROM `workshop` ORDER BY `id`";
+    $q = query($sql);
+    $count = mysql_num_rows($q);
+    while($r = mysql_fetch_assoc($q))
+        $wsSpisok .=
+            '<tr><td class="id">'.$r['id'].
+                '<td class="name'.(!$r['status'] ? ' del' : '').'">'.
+                    '<a href="'.URL.'&p=sa&d=ws&id='.$r['id'].'">'.$r['org_name'].'</a>'.
+                    '<div class="city">'.$r['city_name'].($r['country_id'] != 1 ? ', '.$r['country_name'] : '').'</div>'.
+                '<td>'._viewerName($r['admin_id'], true).
+                '<td class="dtime">'.FullDataTime($r['dtime_add']);
+
+    return '<div class="path">'.sa_cookie_back().'<a href="'.URL.'&p=sa">Администрирование</a> » Мастерские</div>'.
+    '<div class="sa-ws">'.
+        '<div class="count">Всего <b>'.$count.'</b> мастерск'._end($count, 'ая', 'их').'.</div>'.
+        '<table class="_spisok">'.$wsSpisok.'</table>'.
+    '</div>';
+}//end of sa_ws()
+function sa_ws_info($id) {
+    $sql = "SELECT * FROM `workshop` WHERE `id`=".$id;
+    if(!$ws = mysql_fetch_assoc(query($sql)))
+        return sa_ws();
+
+    $tables = array(
+        'client' => 'Клиенты',
+        'zayavki' => 'Заявки',
+        'accrual' => 'Начисления',
+        'money' => 'Оплаты',
+        'zp_avai' => 'Наличие запчастей',
+        'zp_move' => 'Движения запчастей',
+        'zp_zakaz' => 'Заказ запчастей',
+        'history' => 'История действий',
+        'reminder' => 'Задания'
+    );
+    $counts = '';
+    foreach ($tables as $tab => $about) {
+        $c = query_value("select count(id) from ".$tab." where ws_id=".$ws['id']);
+        if($c)
+            $counts .= '<tr><td class="tb">'.$tab.':<td class="c">'.$c.'<td>'.$about;
+    }
+
+    if($ws['status']) {
+        $workers = '';
+        $sql = "SELECT * FROM `vk_user` WHERE `ws_id`=".$ws['id']." AND `viewer_id`!=".$ws['admin_id'];
+        $q = query($sql);
+        while($r = mysql_fetch_assoc($q))
+            $workers = _viewerName($r['viewer_id'], true).'<br />';
+    }
+
+    return
+    '<div class="path">'.
+        sa_cookie_back().
+        '<a href="'.URL.'&p=sa">Администрирование</a> » '.
+        '<a href="'.URL.'&p=sa&d=ws">Мастерские</a> » '.
+        $ws['org_name'].
+    '</div>'.
+    '<div class="sa-ws-info">'.
+        '<div class="headName">Информация о мастерской</div>'.
+        '<table class="tab">'.
+            '<tr><td class="label">Наименование:<td><b>'.$ws['org_name'].'</b>'.
+            '<tr><td class="label">Город:<td>'.$ws['city_name'].', '.$ws['country_name'].
+            '<tr><td class="label">Администратор:<td>'._viewerName($ws['admin_id'], true).
+            '<tr><td class="label">Дата создания:<td>'.FullDataTime($ws['dtime_add']).
+            (!$ws['status'] ? '<tr><td class="label">Дата удаления:<td>'.FullDataTime($ws['dtime_del']) : '').
+            ($ws['status'] && $workers ? '<tr><td class="label top">Сотрудники:<td>'.$workers : '').
+        '</table>'.
+        '<div class="headName">Записи в базе</div>'.
+        '<table class="counts">'.$counts.'</table>'.
+    '</div>';
+}//end of sa_ws_info()

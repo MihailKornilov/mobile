@@ -209,6 +209,11 @@ switch($_GET['p']) {
         require_once('view/sa.php');
         switch(@$_GET['d']) {
             case 'ws':
+                if(isset($_GET['id']) && preg_match(REGEXP_NUMERIC, $_GET['id'])) {
+                    $html .= sa_ws_info(intval($_GET['id']));
+                    break;
+                }
+                $html .= sa_ws();
                 break;
             default: $html .= sa_index();
         }
