@@ -33,8 +33,8 @@ switch(@$_POST['op']) {
         query($sql);
 
         GvaluesCreate();
-        xcache_unset('vkmobile_setup_global');
-        xcache_unset('vkmobile_workshop_'.WS_ID);
+        xcache_unset(CACHE_PREFIX.'setup_global');
+        xcache_unset(CACHE_PREFIX.'workshop_'.WS_ID);
         jsonSuccess($send);
         break;
     case 'base_vendor_add':
@@ -66,8 +66,8 @@ switch(@$_POST['op']) {
         $send['id'] = mysql_insert_id();
 
         GvaluesCreate();
-        xcache_unset('vkmobile_setup_global');
-        xcache_unset('vkmobile_workshop_'.WS_ID);
+        xcache_unset(CACHE_PREFIX.'setup_global');
+        xcache_unset(CACHE_PREFIX.'workshop_'.WS_ID);
         jsonSuccess($send);
         break;
     case 'base_model_add':
@@ -105,8 +105,8 @@ switch(@$_POST['op']) {
         $send['id'] = mysql_insert_id();
 
         GvaluesCreate();
-        xcache_unset('vkmobile_setup_global');
-        xcache_unset('vkmobile_workshop_'.WS_ID);
+        xcache_unset(CACHE_PREFIX.'setup_global');
+        xcache_unset(CACHE_PREFIX.'workshop_'.WS_ID);
         jsonSuccess($send);
         break;
 
@@ -306,9 +306,9 @@ switch(@$_POST['op']) {
                 )";
         query($sql);
         $send['id'] = mysql_insert_id();
-        xcache_unset('vkmobile_zayav_base_device'.WS_ID);
-        xcache_unset('vkmobile_zayav_base_vendor'.WS_ID);
-        xcache_unset('vkmobile_zayav_base_model'.WS_ID);
+        xcache_unset(CACHE_PREFIX.'zayav_base_device'.WS_ID);
+        xcache_unset(CACHE_PREFIX.'zayav_base_vendor'.WS_ID);
+        xcache_unset(CACHE_PREFIX.'zayav_base_model'.WS_ID);
 
         if($comm) {
             $sql = "INSERT INTO `vk_comment` (
@@ -408,9 +408,9 @@ switch(@$_POST['op']) {
                 WHERE `id`=".$zayav_id;
         query($sql);
 
-        xcache_unset('vkmobile_zayav_base_device'.WS_ID);
-        xcache_unset('vkmobile_zayav_base_vendor'.WS_ID);
-        xcache_unset('vkmobile_zayav_base_model'.WS_ID);
+        xcache_unset(CACHE_PREFIX.'zayav_base_device'.WS_ID);
+        xcache_unset(CACHE_PREFIX.'zayav_base_vendor'.WS_ID);
+        xcache_unset(CACHE_PREFIX.'zayav_base_model'.WS_ID);
 
         if($zayav['client_id'] != $client_id) {
             $sql = "UPDATE `accrual`
@@ -472,9 +472,9 @@ switch(@$_POST['op']) {
         $sql = "DELETE FROM `vk_comment` WHERE `table_name`='zayav' AND `table_id`=".$zayav_id;
         query($sql);
 
-        xcache_unset('vkmobile_zayav_base_device'.WS_ID);
-        xcache_unset('vkmobile_zayav_base_vendor'.WS_ID);
-        xcache_unset('vkmobile_zayav_base_model'.WS_ID);
+        xcache_unset(CACHE_PREFIX.'zayav_base_device'.WS_ID);
+        xcache_unset(CACHE_PREFIX.'zayav_base_vendor'.WS_ID);
+        xcache_unset(CACHE_PREFIX.'zayav_base_model'.WS_ID);
 
         history_insert(array(
             'type' => 2,
@@ -1490,7 +1490,7 @@ switch(@$_POST['op']) {
         if(isset($_POST['from_client']) && $client_id)
             $filter['client'] = $client_id;
         $send['html'] = utf8(report_remind_spisok(remind_data(1, $filter)));
-        xcache_unset('vkmobile_remind_active');
+        xcache_unset(CACHE_PREFIX.'remind_active');
         jsonSuccess($send);
         break;
     case 'report_remind_next':
@@ -1562,7 +1562,7 @@ switch(@$_POST['op']) {
         if(empty($data) && !isset($filter['zayav']))
             $html = '<div class="_empty">Заданий нет.</div>';
         $send['html'] = utf8($html);
-        xcache_unset('vkmobile_remind_active');
+        xcache_unset(CACHE_PREFIX.'remind_active');
         jsonSuccess($send);
         break;
     case 'report_prihod_load':
@@ -1795,7 +1795,7 @@ switch(@$_POST['op']) {
             'type' => 24,
             'value' => $set_sum
         ));
-        xcache_unset('vkmobile_workshop_'.WS_ID);
+        xcache_unset(CACHE_PREFIX.'workshop_'.WS_ID);
         jsonSuccess();
         break;
     case 'report_kassa_load':
@@ -1889,7 +1889,7 @@ switch(@$_POST['op']) {
         $sql = "SELECT `viewer_id` FROM `vk_user` WHERE `ws_id`=".WS_ID;
         $q = query($sql);
         while($r = mysql_fetch_assoc($q))
-            xcache_unset('vkmobile_viewer_'.$r['viewer_id']);
+            xcache_unset(CACHE_PREFIX.'viewer_'.$r['viewer_id']);
         query("UPDATE `workshop` SET `status`=0,`dtime_del`=CURRENT_TIMESTAMP WHERE `id`=".WS_ID);
         query("UPDATE `vk_user` SET `ws_id`=0,`admin`=0 WHERE `ws_id`=".WS_ID);
         _cacheClear();
@@ -1908,7 +1908,7 @@ switch(@$_POST['op']) {
         }
         _vkUserUpdate($id);
         query("UPDATE `vk_user` SET `ws_id`=".WS_ID." WHERE `viewer_id`=".$id);
-        xcache_unset('vkmobile_viewer_'.$id);
+        xcache_unset(CACHE_PREFIX.'viewer_'.$id);
         $send['html'] = utf8(setup_workers_spisok());
         jsonSuccess($send);
         break;
@@ -1917,7 +1917,7 @@ switch(@$_POST['op']) {
             jsonError();
         $viewer_id = intval($_POST['viewer_id']);
         query("UPDATE `vk_user` SET `ws_id`=0,`admin`=0 WHERE `viewer_id`=".$viewer_id);
-        xcache_unset('vkmobile_viewer_'.$viewer_id);
+        xcache_unset(CACHE_PREFIX.'viewer_'.$viewer_id);
         $send['html'] = utf8(setup_workers_spisok());
         jsonSuccess($send);
         break;
@@ -1926,7 +1926,7 @@ switch(@$_POST['op']) {
             jsonError();
         $viewer_id = intval($_POST['viewer_id']);
         query("UPDATE `vk_user` SET `admin`=1 WHERE `ws_id`=".WS_ID." AND`viewer_id`=".$viewer_id);
-        xcache_unset('vkmobile_viewer_'.$viewer_id);
+        xcache_unset(CACHE_PREFIX.'viewer_'.$viewer_id);
         jsonSuccess();
         break;
     case 'setup_worker_admin_cancel':
@@ -1936,7 +1936,7 @@ switch(@$_POST['op']) {
         if(WS_ADMIN == $viewer_id)
             jsonError();
         query("UPDATE `vk_user` SET `admin`=0 WHERE `ws_id`=".WS_ID." AND`viewer_id`=".$viewer_id);
-        xcache_unset('vkmobile_viewer_'.$viewer_id);
+        xcache_unset(CACHE_PREFIX.'viewer_'.$viewer_id);
         jsonSuccess();
         break;
 

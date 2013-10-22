@@ -63,12 +63,8 @@ function sa_ws() {
         '<table class="_spisok">'.$wsSpisok.'</table>'.
     '</div>';
 }//end of sa_ws()
-function sa_ws_info($id) {
-    $sql = "SELECT * FROM `workshop` WHERE `id`=".$id;
-    if(!$ws = mysql_fetch_assoc(query($sql)))
-        return sa_ws();
-
-    $tables = array(
+function sa_ws_tables() {//Таблицы, которые задействуются в мастерских
+    return array(
         'client' => 'Клиенты',
         'zayavki' => 'Заявки',
         'accrual' => 'Начисления',
@@ -79,15 +75,21 @@ function sa_ws_info($id) {
         'history' => 'История действий',
         'reminder' => 'Задания'
     );
+}//end of sa_ws_tables()
+function sa_ws_info($id) {
+    $sql = "SELECT * FROM `workshop` WHERE `id`=".$id;
+    if(!$ws = mysql_fetch_assoc(query($sql)))
+        return sa_ws();
+
     $counts = '';
-    foreach ($tables as $tab => $about) {
+    foreach(sa_ws_tables() as $tab => $about) {
         $c = query_value("select count(id) from ".$tab." where ws_id=".$ws['id']);
         if($c)
             $counts .= '<tr><td class="tb">'.$tab.':<td class="c">'.$c.'<td>'.$about;
     }
 
+    $workers = '';
     if($ws['status']) {
-        $workers = '';
         $sql = "SELECT * FROM `vk_user` WHERE `ws_id`=".$ws['id']." AND `viewer_id`!=".$ws['admin_id'];
         $q = query($sql);
         while($r = mysql_fetch_assoc($q))
@@ -106,11 +108,18 @@ function sa_ws_info($id) {
         '<table class="tab">'.
             '<tr><td class="label">Наименование:<td><b>'.$ws['org_name'].'</b>'.
             '<tr><td class="label">Город:<td>'.$ws['city_name'].', '.$ws['country_name'].
-            '<tr><td class="label">Администратор:<td>'._viewerName($ws['admin_id'], true).
             '<tr><td class="label">Дата создания:<td>'.FullDataTime($ws['dtime_add']).
+            '<tr><td class="label">Статус:<td><div class="status'.($ws['status'] ? '' : ' off').'">'.($ws['status'] ? '' : 'не ').'активна</div>'.
             (!$ws['status'] ? '<tr><td class="label">Дата удаления:<td>'.FullDataTime($ws['dtime_del']) : '').
+            '<tr><td class="label">Администратор:<td>'._viewerName($ws['admin_id'], true).
             ($ws['status'] && $workers ? '<tr><td class="label top">Сотрудники:<td>'.$workers : '').
         '</table>'.
+        '<div class="headName">Действия</div>'.
+        '<div class="vkButton ws_status_change" val="'.$ws['id'].'"><button>'.($ws['status'] ? 'Деактивировать' : 'Восстановить').' мастерскую</button></div>'.
+        '<br />'.
+        '<div class="vkButton ws_enter" val="'.$ws['admin_id'].'"><button>Выполнить вход в эту мастерскую</button></div>'.
+        '<br />'.
+        '<div class="vkCancel ws_del" val="'.$ws['id'].'"><button style="color:red">Физическое удаление мастерской</button></div>'.
         '<div class="headName">Записи в базе</div>'.
         '<table class="counts">'.$counts.'</table>'.
     '</div>';

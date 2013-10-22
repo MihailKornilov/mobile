@@ -1208,6 +1208,9 @@ table.zayavNomerTab td{vertical-align:top}
 
 
 /* Суперадмин */
+.sa_viewer_msg{padding:10px 20px;border:#c99 solid 1px;background-color:#fdd}
+.sa_viewer_msg .leave{float:right}
+
 .sa-index{padding:20px 0 100px 20px}
 
 .sa-ws{padding:10px 15px}
@@ -1220,9 +1223,13 @@ table.zayavNomerTab td{vertical-align:top}
 .sa-ws-info{padding:0 20px 20px 20px}
 .sa-ws-info .headName{margin:20px 0 0 0}
 .sa-ws-info .tab{border-spacing:6px}
+.sa-ws-info .ws_status_change,.sa-ws-info .ws_del,.sa-ws-info .ws_enter{margin-top:10px}
+.sa-ws-info .status{display:inline-block;color:green;background-color:#cfc;padding:3px 15px}
+.sa-ws-info .off{color:grey;background-color:#ddd}
 .sa-ws-info .counts{border-spacing:4px}
 .sa-ws-info .counts .tb{text-align:right}
 .sa-ws-info .counts .c{text-align:right;font-weight:700;padding:0 5px}
+
 
 
 

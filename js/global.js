@@ -89,6 +89,10 @@ $(document)
         setCookie('debug', d == 0 ? 1 : 0);
         vkMsgOk('Debug включен.');
         document.location.reload();
+    })
+    .on('click', '.sa_viewer_msg .leave', function() {
+        delCookie('sa_viewer_id');
+        document.location.href = URL + '&p=sa&d=ws';
     });
 
 $(document).ready(function() {

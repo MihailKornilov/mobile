@@ -113,22 +113,22 @@ function _hashCookieSet() {
     setcookie('d1', isset($_GET['d1']) ? $_GET['d1'] : '', time() + 2592000, '/');
     setcookie('id', isset($_GET['id']) ? $_GET['id'] : '', time() + 2592000, '/');
 }//end of _hashCookieSet()
-function _cacheClear() {
-    xcache_unset('vkmobile_setup_global');
-    xcache_unset('vkmobile_viewer_'.VIEWER_ID);
-    xcache_unset('vkmobile_remind_active');
-    xcache_unset('vkmobile_device_name');
-    xcache_unset('vkmobile_vendor_name');
-    xcache_unset('vkmobile_model_name_count');
-    xcache_unset('vkmobile_zp_name');
-    xcache_unset('vkmobile_color_name');
-    xcache_unset('vkmobile_device_place');
-    xcache_unset('vkmobile_device_status');
-    if(WS_ID) {
-        xcache_unset('vkmobile_workshop_'.WS_ID);
-        xcache_unset('vkmobile_zayav_base_device'.WS_ID);
-        xcache_unset('vkmobile_zayav_base_vendor'.WS_ID);
-        xcache_unset('vkmobile_zayav_base_model'.WS_ID);
+function _cacheClear($ws_id=WS_ID) {
+    xcache_unset(CACHE_PREFIX.'setup_global');
+    xcache_unset(CACHE_PREFIX.'viewer_'.VIEWER_ID);
+    xcache_unset(CACHE_PREFIX.'remind_active');
+    xcache_unset(CACHE_PREFIX.'device_name');
+    xcache_unset(CACHE_PREFIX.'vendor_name');
+    xcache_unset(CACHE_PREFIX.'model_name_count');
+    xcache_unset(CACHE_PREFIX.'zp_name');
+    xcache_unset(CACHE_PREFIX.'color_name');
+    xcache_unset(CACHE_PREFIX.'device_place');
+    xcache_unset(CACHE_PREFIX.'device_status');
+    if($ws_id) {
+        xcache_unset(CACHE_PREFIX.'workshop_'.$ws_id);
+        xcache_unset(CACHE_PREFIX.'zayav_base_device'.$ws_id);
+        xcache_unset(CACHE_PREFIX.'zayav_base_vendor'.$ws_id);
+        xcache_unset(CACHE_PREFIX.'zayav_base_model'.$ws_id);
     }
 }//ens of _cacheClear()
 
@@ -163,11 +163,13 @@ function _header() {
         '</script>'.
         '<script type="text/javascript" src="'.SITE.'/js/global.js?'.VERSION.'"></script>'.
         (WS_ID ? '<script type="text/javascript" src="'.SITE.'/js/ws.js?'.VERSION.'"></script>' : '').
+        (@$_GET['p'] == 'sa' ? '<script type="text/javascript" src="'.SITE.'/js/sa.js?'.VERSION.'"></script>' : '').
         '<script type="text/javascript" src="'.SITE.'/js/G_values.js?'.G_VALUES.'"></script>'.
         '</head>'.
         '<body>'.
         '<div id="frameBody">'.
-        '<iframe id="frameHidden" name="frameHidden"></iframe>';
+        '<iframe id="frameHidden" name="frameHidden"></iframe>'.
+        (SA_VIEWER_ID ? '<div class="sa_viewer_msg">Вы вошли под пользователем '._viewerName(SA_VIEWER_ID, true).'. <a class="leave">Выйти</a></div>' : '');
 }//end of _header()
 
 function _footer() {
@@ -177,8 +179,7 @@ function _footer() {
         $d1 = empty($_GET['d1']) ? '' :'&pre_d1='.$_GET['d1'];
         $id = empty($_GET['id']) ? '' :'&pre_id='.$_GET['id'];
         $html .= '<div id="admin">'.
-                ($_GET['p'] != 'sa' ? '<a href="'.URL.'&p=sa&pre_p='.$_GET['p'].$d.$d1.$id.'">Admin</a> :: ' : '').
-                //'<a href="https://github.com/MihailKornilov/vkmobile/issues" target="_blank">Issues</a> :: '.
+                ($_GET['p'] != 'sa' && !SA_VIEWER_ID ? '<a href="'.URL.'&p=sa&pre_p='.$_GET['p'].$d.$d1.$id.'">Admin</a> :: ' : '').
                 '<a href="http://vkmobile.reformal.ru" target="_blank">Reformal</a> :: '.
                 '<a class="debug_toggle'.(DEBUG ? ' on' : '').'">В'.(DEBUG ? 'ы' : '').'ключить Debug</a> :: '.
                 '<a id="cache_clear">Очисить кэш ('.VERSION.')</a> :: '.
@@ -544,7 +545,7 @@ function unescape($str){
 }
 
 function _viewerName($id=VIEWER_ID, $link=false) {
-    $key = 'vkmobile_viewer_name_'.$id;
+    $key = CACHE_PREFIX.'viewer_name_'.$id;
     $name = xcache_get($key);
     if(empty($name)) {
         $sql = "SELECT CONCAT(`first_name`,' ',`last_name`) AS `name` FROM `vk_user` WHERE `viewer_id`=".$id." LIMIT 1";
@@ -673,13 +674,14 @@ function _zpImg($zp_id, $size='small', $x_new=10000, $y_new=10000, $class=false)
 
 function _deviceName($device_id, $rod=false) {
     if(!defined('DEVICE_LOADED')) {
-        $device = xcache_get('vkmobile_device_name');
+        $key = CACHE_PREFIX.'device_name';
+        $device = xcache_get($key);
         if(empty($device)) {
             $sql = "SELECT `id`,`name`,`name_rod` FROM `base_device` ORDER BY `id`";
             $q = query($sql);
             while($r = mysql_fetch_assoc($q))
                 $device[$r['id']] = array($r['name'], $r['name_rod']);
-            xcache_set('vkmobile_device_name', $device, 86400);
+            xcache_set($key, $device, 86400);
         }
         foreach($device as $id => $r) {
             define('DEVICE_NAME_'.$id, $r[0]);
@@ -693,13 +695,14 @@ function _deviceName($device_id, $rod=false) {
 }//end of _deviceName()
 function _vendorName($vendor_id) {
     if(!defined('VENDOR_LOADED')) {
-        $vendor = xcache_get('vkmobile_vendor_name');
+        $key = CACHE_PREFIX.'vendor_name';
+        $vendor = xcache_get($key);
         if(empty($vendor)) {
             $sql = "SELECT `id`,`name` FROM `base_vendor`";
             $q = query($sql);
             while($r = mysql_fetch_assoc($q))
                 $vendor[$r['id']] = $r['name'];
-            xcache_set('vkmobile_vendor_name', $vendor, 86400);
+            xcache_set($key, $vendor, 86400);
         }
         foreach($vendor as $id => $name)
             define('VENDOR_NAME_'.$id, $name);
@@ -709,7 +712,7 @@ function _vendorName($vendor_id) {
 }//end of _vendorName()
 function _modelName($model_id) {
     if(!defined('MODEL_LOADED')) {
-        $count = xcache_get('vkmobile_model_name_count');
+        $count = xcache_get(CACHE_PREFIX.'model_name_count');
         if(empty($count)) {
             $sql = "SELECT `id`,`name` FROM `base_model` ORDER BY `id`";
             $q = query($sql);
@@ -720,18 +723,18 @@ function _modelName($model_id) {
                 $model[$r['id']] = $r['name'];
                 $rows++;
                 if($rows == 1000) {
-                    xcache_set('vkmobile_model_name'.$count, $model);
+                    xcache_set(CACHE_PREFIX.'model_name'.$count, $model);
                     $rows = 0;
                     $count++;
                     $model = array();
                 }
             }
             if(!empty($model))
-                xcache_set('vkmobile_model_name'.$count, $model, 86400);
-            xcache_set('vkmobile_model_name_count', $count, 86400);
+                xcache_set(CACHE_PREFIX.'model_name'.$count, $model, 86400);
+            xcache_set(CACHE_PREFIX.'model_name_count', $count, 86400);
         }
         for($n = 0; $n <= $count; $n++) {
-            $model = xcache_get('vkmobile_model_name'.$n);
+            $model = xcache_get(CACHE_PREFIX.'model_name'.$n);
             foreach($model as $id => $name)
                 define('MODEL_NAME_'.$id, $name);
         }
@@ -741,7 +744,7 @@ function _modelName($model_id) {
 }//end of _modelName()
 function _zpName($name_id) {
     if(!defined('ZP_NAME_LOADED')) {
-        $key = 'vkmobile_zp_name';
+        $key = CACHE_PREFIX.'zp_name';
         $zp = xcache_get($key);
         if(empty($zp)) {
             $sql = "SELECT `id`,`name` FROM `setup_zp_name` ORDER BY `id`";
@@ -771,7 +774,7 @@ function _zpAvaiSet($zp_id) { // Обновление количества наличия запчасти
 }//end of _zpAvaiSet()
 function _colorName($color_id) {
     if(!defined('COLOR_LOADED')) {
-        $key = 'vkmobile_color_name';
+        $key = CACHE_PREFIX.'color_name';
         $zp = xcache_get($key);
         if(empty($zp)) {
             $sql = "SELECT `id`,`name` FROM `setup_color_name` ORDER BY `id` ASC";
@@ -789,7 +792,7 @@ function _colorName($color_id) {
 }//end of _colorName()
 function _devPlace($place_id) {
     if(!defined('PLACE_LOADED')) {
-        $key = 'vkmobile_device_place';
+        $key = CACHE_PREFIX.'device_place';
         $zp = xcache_get($key);
         if(empty($zp)) {
             $sql = "SELECT `id`,`name` FROM `setup_device_place` ORDER BY `id` ASC";
@@ -807,7 +810,7 @@ function _devPlace($place_id) {
 }//end of _devPlace()
 function _devStatus($status_id) {
     if(!defined('DEV_STATUS_LOADED')) {
-        $key = 'vkmobile_device_status';
+        $key = CACHE_PREFIX.'device_status';
         $zp = xcache_get($key);
         if(empty($zp)) {
             $sql = "SELECT `id`,`name` FROM `setup_device_status` ORDER BY `id` ASC";

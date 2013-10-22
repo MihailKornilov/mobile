@@ -1,6 +1,6 @@
 <?php
 function _remindActiveSet() { //Получение количества активных напоминаний
-    $key = 'vkmobile_remind_active';
+    $key = CACHE_PREFIX.'remind_active';
     $count = xcache_get($key);
     if(!strlen($count)) {
         $sql = "SELECT COUNT(`id`) AS `count`
@@ -363,7 +363,7 @@ function _zayavNomerLink($arr, $noHint=false) { //Вывод номеров заявок с возможн
 function _zayavDeviveBaseIds($type='device', $client_id=0) { //список id устройств, производителей и моделей, которые используются в заявках
     if($type == 'vendor' && !ZAYAV_BASE_DEVICE || $type == 'model' && !ZAYAV_BASE_VENDOR)
         return '';
-    $key = 'vkmobile_zayav_base_'.$type.WS_ID;
+    $key = CACHE_PREFIX.'zayav_base_'.$type.WS_ID;
     if(!$client_id)
         $cache = xcache_get($key);
     if(empty($cache)) {

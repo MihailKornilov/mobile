@@ -204,7 +204,7 @@ switch($_GET['p']) {
         break;
 
     case 'sa':
-        if(!SA)
+        if(!SA || SA_VIEWER_ID)
             header('Location:'.URL.'&p=zayav');
         require_once('view/sa.php');
         switch(@$_GET['d']) {
