@@ -44,7 +44,7 @@ function sa_ws() {
         '<tr><th>id'.
             '<th>Наименование'.
             '<th>Админ'.
-            '<th>Дата';
+            '<th>Дата создания';
     $sql = "SELECT * FROM `workshop` ORDER BY `id`";
     $q = query($sql);
     $count = mysql_num_rows($q);
@@ -117,8 +117,7 @@ function sa_ws_info($id) {
         '<div class="headName">Действия</div>'.
         '<div class="vkButton ws_status_change" val="'.$ws['id'].'"><button>'.($ws['status'] ? 'Деактивировать' : 'Восстановить').' мастерскую</button></div>'.
         '<br />'.
-        '<div class="vkButton ws_enter" val="'.$ws['admin_id'].'"><button>Выполнить вход в эту мастерскую</button></div>'.
-        '<br />'.
+        ($ws['status'] ? '<div class="vkButton ws_enter" val="'.$ws['admin_id'].'"><button>Выполнить вход в эту мастерскую</button></div><br />' : '').
         '<div class="vkCancel ws_del" val="'.$ws['id'].'"><button style="color:red">Физическое удаление мастерской</button></div>'.
         '<div class="headName">Записи в базе</div>'.
         '<table class="counts">'.$counts.'</table>'.

@@ -1,0 +1,15 @@
+.org-name{text-align:right;font-size:18px}
+.org-adres{text-align:right;font-size:14px}
+.org-telefon{text-align:right;font-size:14px}
+.kvit-head{
+    border-top:#777 solid 1px;
+    margin:10px 0;
+    padding-top:10px;
+    text-align:center;
+    font-size:24px;
+    font-weight:700
+}
+.device-about{border-collapse:collapse;border:#FFF solid 0}
+.device-about td{border:#FFF solid 0;padding:5px 0}
+.label{width:170px}
+.hr-small{width:200px;border-top:#777 solid 1px;margin:10px 600px 0 0}

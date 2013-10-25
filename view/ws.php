@@ -698,7 +698,7 @@ function zayav_spisok($data) {
 }//end of zayav_spisok()
 
 function zayav_info($zayav_id) {
-    $sql = "SELECT * FROM `zayavki` WHERE `zayav_status`>0 AND `id`=".$zayav_id." LIMIT 1";
+    $sql = "SELECT * FROM `zayavki` WHERE `ws_id`=".WS_ID." AND `zayav_status`>0 AND `id`=".$zayav_id." LIMIT 1";
     if(!$zayav = mysql_fetch_assoc(query($sql)))
         return 'Заявки не существует.';
     $status = _zayavStatus($zayav['zayav_status']);
@@ -796,7 +796,10 @@ function zayav_info($zayav_id) {
         '</div>'.
         '<table class="itab">'.
             '<tr><td id="left">'.
-                '<div class="headName">Заявка №'.$zayav['nomer'].'</div>'.
+                '<div class="headName">'.
+                    'Заявка №'.$zayav['nomer'].
+                    '<a href="'.SITE.'/view/kvit.php?'.VALUES.'&id='.$zayav_id.'" class="img_word" title="Распечатать квитанцию в Microsoft Word"></a>'.
+                '</div>'.
                 '<table class="tabInfo">'.
                     '<tr><td class="label">Устройство: <td>'._deviceName($zayav['base_device_id']).'<a><b>'.$model.'</b></a>'.
                     '<tr><td class="label">Клиент:     <td>'._clientsLink($zayav['client_id']).
