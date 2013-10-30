@@ -32,6 +32,23 @@ var REGEXP_NUMERIC = /^\d+$/,
         }
         VK.callMethod('resizeWindow', 625, H);
     },
+    sortable = function() {
+        $('._sort').sortable({
+            axis:'y',
+            update:function () {
+                var dds = $(this).find('dd'),
+                    arr = [];
+                for(var n = 0; n < dds.length; n++)
+                    arr.push(dds.eq(n).attr('val'));
+                var send = {
+                    op:'sort',
+                    table:$(this).attr('val'),
+                    ids:arr.join()
+                };
+                $.post(AJAX_MAIN, send, function(res) {}, 'json');
+            }
+        });
+    },
     hashLoc,
     hashSet = function(hash) {
         if(!hash && !hash.p)
@@ -101,6 +118,8 @@ $(document).ready(function() {
     VK.callMethod('scrollWindow', 0);
     VK.callMethod('scrollSubscribe');
     VK.addCallback('onScroll', function(top) { G.vkScroll = top; });
+
+    sortable();
 
     frameBodyHeightSet();
 });

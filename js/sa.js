@@ -50,6 +50,13 @@ $(document)
     .on('click', '.sa-equip .rightLinks a', function() {
         $('.sa-equip .rightLinks a.sel').removeClass('sel');
         $(this).addClass('sel');
+        var send = {
+            op:'ws_equip_show',
+            device_id:$('.sa-equip .rightLinks .sel').attr('val')
+        };
+        $.post(AJAX_SA, send, function(res) {
+            $('#eq-spisok').html(res.html);
+        }, 'json');
     })
     .on('click', '.sa-equip .add', function() {
         var t = $(this),
@@ -70,7 +77,8 @@ $(document)
             var send = {
                 op:'ws_equip_add',
                 name:$('#name').val(),
-                title:$('#title').val()
+                title:$('#title').val(),
+                device_id:$('.sa-equip .rightLinks .sel').attr('val')
             };
             if(!send.name) {
                 dialog.bottom.vkHint({
@@ -89,11 +97,29 @@ $(document)
                         $('#eq-spisok').html(res.html);
                         dialog.close();
                         vkMsgOk('Внесено!');
+                        sortable();
                     } else
                         dialog.abort();
                 }, 'json');
             }
         }
+    })
+    .on('click', '.sa-equip .check0,.sa-equip .check1', function() {
+        var inp = $('.sa-equip ._sort input'),
+            arr = [];
+        for(var n = 0; n < inp.length; n++) {
+            var eq = inp.eq(n);
+            if(eq.val() == 1)
+                arr.push(eq.attr('id').split('_')[1]);
+        }
+        var send = {
+            op:'ws_equip_set',
+            device_id:$('.sa-equip .rightLinks .sel').attr('val'),
+            ids:arr.join()
+        };
+        $.post(AJAX_SA, send, function(res) {
+
+        }, 'json');
     });
 
 $(document).ready(function() {

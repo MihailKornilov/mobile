@@ -36,6 +36,9 @@ switch(@$_POST['op']) {
         jsonSuccess();
         break;
     case 'ws_equip_add':
+        if(!preg_match(REGEXP_NUMERIC, $_POST['device_id']))
+            jsonError();
+        $device_id = intval($_POST['device_id']);
         $name = win1251(htmlspecialchars(trim($_POST['name'])));
         $title = win1251(htmlspecialchars(trim($_POST['title'])));
         if(empty($name))
@@ -53,7 +56,30 @@ switch(@$_POST['op']) {
                     ".VIEWER_ID."
                 )";
         query($sql);
-        $send['html'] = utf8(sa_equip_spisok());
+        $send['html'] = utf8(sa_equip_spisok($device_id));
+        jsonSuccess($send);
+        break;
+    case 'ws_equip_set':
+        if(!preg_match(REGEXP_NUMERIC, $_POST['device_id']))
+            jsonError();
+        $device_id = intval($_POST['device_id']);
+
+        if(!empty($_POST['ids'])) {
+            $ids = explode(',', $_POST['ids']);
+            for($n = 0; $n < count($ids); $n++)
+                if(!preg_match(REGEXP_NUMERIC, $ids[$n]))
+                    jsonError();
+        }
+
+        $sql = "UPDATE `base_device` SET `equip`='".$_POST['ids']."' WHERE `id`=".$device_id;
+        query($sql);
+        jsonSuccess();
+        break;
+    case 'ws_equip_show':
+        if(!preg_match(REGEXP_NUMERIC, $_POST['device_id']))
+            jsonError();
+        $device_id = intval($_POST['device_id']);
+        $send['html'] = utf8(sa_equip_spisok($device_id));
         jsonSuccess($send);
         break;
 }

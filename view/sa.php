@@ -128,34 +128,45 @@ function sa_ws_info($id) {
 function sa_equip() {
     $sql = "SELECT `id`,`name` FROM `base_device` ORDER BY `sort`";
     $q = query($sql);
+    $default_id = 1;
     $dev = '';
     while($r = mysql_fetch_assoc($q))
-        $dev .= '<a'.($r['id'] == 1 ? ' class="sel"' : '').'>'.$r['name'].'</a>';
+        $dev .= '<a'.($r['id'] == $default_id ? ' class="sel"' : '').' val="'.$r['id'].'">'.$r['name'].'</a>';
     return '<div class="path">'.sa_cookie_back().'<a href="'.URL.'&p=sa">Администрирование</a> » Комплектация устройств</div>'.
     '<div class="sa-equip">'.
         '<div class="headName">Комплектация устройств<a class="add">Добавить новое наименование</add></div>'.
         '<table class="etab">'.
             '<tr><td><div class="rightLinks">'.$dev.'</dev>'.
-                '<td id="eq-spisok">'.sa_equip_spisok().
+                '<td id="eq-spisok">'.sa_equip_spisok($default_id).
         '</table>'.
     '</div>';
 }//end of sa_equip()
-function sa_equip_spisok() {
+function sa_equip_spisok($device_id) {
+    $equip = query_value("SELECT `equip` FROM `base_device` WHERE `id`=".$device_id);
+    $arr = explode(',', $equip);
+    $equip = array();
+    foreach($arr as $id)
+        $equip[$id] = 1;
+
     $sql = "SELECT * FROM `setup_device_equip` ORDER BY `sort`";
     $spisok = '';
     $q = query($sql);
     if(mysql_num_rows($q)) {
-        $spisok = '<table class="_spisok">'.
-            '<tr><th class="use">'.
-                '<th class="name">Наименование'.
-                '<th class="set">Настройки'.
-        '</table>';
+        $spisok =
+            '<table class="_spisok">'.
+                '<tr><th class="use">'.
+                    '<th class="name">Наименование'.
+                    '<th class="set">Настройки'.
+            '</table>'.
+            '<dl class="_sort" val="setup_device_equip">';
         while($r = mysql_fetch_assoc($q))
-            $spisok .= '<table class="_spisok">'.
-                '<tr><td class="use">'._checkbox('c'.$r['id']).
-                '<td class="name">'.($r['title'] ? '<span title="'.$r['title'].'">'.$r['name'].'</span>' : $r['name']).
-                    '<td class="set"><div class="img_edit"></div><div class="img_del"></div>'.
-            '</table>';
+            $spisok .= '<dd val="'.$r['id'].'">'.
+                '<table class="_spisok">'.
+                    '<tr><td class="use">'._checkbox('c_'.$r['id'], '', isset($equip[$r['id']]) ? 1 : 0).
+                    '<td class="name">'.($r['title'] ? '<span title="'.$r['title'].'">'.$r['name'].'</span>' : $r['name']).
+                        '<td class="set"><div class="img_edit"></div><div class="img_del"></div>'.
+                '</table>';
+        $spisok .= '</dl>';
     }
     return $spisok ? $spisok : 'Вариантов комплектаций нет';
 }

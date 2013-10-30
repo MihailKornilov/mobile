@@ -185,6 +185,26 @@ switch(@$_POST['op']) {
             );
         jsonSuccess($send);
         break;
+
+    case 'sort':
+        if(!preg_match(REGEXP_MYSQLTABLE, $_POST['table']))
+            jsonError();
+        $table = htmlspecialchars(trim($_POST['table']));
+        $sql = "SHOW TABLES LIKE '".$table."'";
+        if(!mysql_num_rows(query($sql)))
+            jsonError();
+
+        $sort = explode(',', $_POST['ids']);
+        if(empty($sort))
+            jsonError();
+        for($n = 0; $n < count($sort); $n++)
+            if(!preg_match(REGEXP_NUMERIC, $sort[$n]))
+                jsonError();
+
+        for($n = 0; $n < count($sort); $n++)
+            query("UPDATE `".$table."` SET `sort`=".$n." WHERE `id`=".intval($sort[$n]));
+        jsonSuccess();
+        break;
 }
 
 jsonError();
