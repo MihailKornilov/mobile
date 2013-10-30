@@ -35,6 +35,27 @@ switch(@$_POST['op']) {
         _cacheClear($ws_id);
         jsonSuccess();
         break;
+    case 'ws_equip_add':
+        $name = win1251(htmlspecialchars(trim($_POST['name'])));
+        $title = win1251(htmlspecialchars(trim($_POST['title'])));
+        if(empty($name))
+            jsonError();
+        $sort = query_value("SELECT IFNULL(MAX(`sort`)+1,0) FROM `setup_device_equip`");
+        $sql = "INSERT INTO `setup_device_equip` (
+                    `name`,
+                    `title`,
+                    `sort`,
+                    `viewer_id_add`
+                ) VALUES (
+                    '".addslashes($name)."',
+                    '".addslashes($title)."',
+                    ".$sort.",
+                    ".VIEWER_ID."
+                )";
+        query($sql);
+        $send['html'] = utf8(sa_equip_spisok());
+        jsonSuccess($send);
+        break;
 }
 
 jsonError();

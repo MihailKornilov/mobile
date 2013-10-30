@@ -215,6 +215,9 @@ switch($_GET['p']) {
                 }
                 $html .= sa_ws();
                 break;
+            case 'equip':
+                $html .= sa_equip();
+                break;
             default: $html .= sa_index();
         }
         break;

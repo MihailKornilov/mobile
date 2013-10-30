@@ -1236,8 +1236,25 @@ table.zayavNomerTab td{vertical-align:top}
 .sa-ws-info .counts .tb{text-align:right}
 .sa-ws-info .counts .c{text-align:right;font-weight:700;padding:0 5px}
 
-
-
+.sa-equip{margin-bottom:20px}
+.sa-equip .headName{margin-top:10px}
+.sa-equip .rightLinks{
+    width:180px;
+    background-color:#f7f7f7;
+    padding:10px;
+    margin:10px 0 0 15px;
+    border:#ddd solid 1px;
+}
+.sa-equip #eq-spisok{vertical-align:top;padding:10px 20px}
+.sa-equip .name{width:200px}
+.sa-equip td.name{cursor:move}
+.sa-equip .name span{cursor:help}
+.sa-equip .use{width:20px}
+.sa-equip .use div{margin-left:3px;padding:0}
+.sa-equip .set{width:65px;text-align:center}
+.sa-equip .set div{position:relative;top:2px}
+.ws-equip-add{border-spacing:8px}
+.ws-equip-add input{width:200px}
 
 
 

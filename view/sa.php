@@ -10,9 +10,9 @@ function sa_cookie_back() {
         setcookie('pre_d1', $_COOKIE['pre_d1'], time() + 2592000, '/');
         setcookie('pre_id', $_COOKIE['pre_id'], time() + 2592000, '/');
     }
-    $d = empty($_COOKIE['d']) ? '' :'&d='.$_COOKIE['d'];
-    $d1 = empty($_COOKIE['d1']) ? '' :'&d1='.$_COOKIE['d1'];
-    $id = empty($_COOKIE['id']) ? '' :'&id='.$_COOKIE['id'];
+    $d = empty($_COOKIE['pre_d']) ? '' :'&d='.$_COOKIE['pre_d'];
+    $d1 = empty($_COOKIE['pre_d1']) ? '' :'&d1='.$_COOKIE['pre_d1'];
+    $id = empty($_COOKIE['pre_id']) ? '' :'&id='.$_COOKIE['pre_id'];
     return '<a href="'.URL.'&p='.$_COOKIE['pre_p'].$d.$d1.$id.'">Назад</a> » ';
 }//end of sa_cookie_back()
 
@@ -22,20 +22,21 @@ function sa_index() {
     return '<div class="path">'.sa_cookie_back().'Администрирование</div>'.
     '<div class="sa-index">'.
         '<div><B>Мастерские и сотрудники:</B></div>'.
-        '<A href="'.URL.'&p=sa&d=vkuser">Пользователи ('.$userCount.')</A><BR>'.
+        //'<A href="'.URL.'&p=sa&d=vkuser">Пользователи ('.$userCount.')</A><BR>'.
         '<A href="'.URL.'&p=sa&d=ws">Мастерские ('.$wsCount.')</A><BR>'.
         '<BR>'.
         '<div><B>Устройства и запчасти:</B></div>'.
-        '<A href="'.URL.'&p=sa&d=fault">Виды неисправностей</A><BR>'.
+        '<A href="'.URL.'&p=sa&d=equip">Комплектация устройств</A><BR>'.
+        //'<A href="'.URL.'&p=sa&d=fault">Виды неисправностей</A><BR>'.
         '<BR>'.
-        '<A href="'.URL.'&p=sa&d=device">Устройства</A><BR>'.
-        '<A href="'.URL.'&p=sa&d=dev-spec">Характеристики устройств для информации</A><BR>'.
-        '<A href="'.URL.'&p=sa&d=dev-status">Статусы устройств в заявках</A><BR>'.
-        '<A href="'.URL.'&p=sa&d=dev-place">Местонахождения устройств в заявках</A><BR>'.
+        //'<A href="'.URL.'&p=sa&d=device">Устройства</A><BR>'.
+        //'<A href="'.URL.'&p=sa&d=dev-spec">Характеристики устройств для информации</A><BR>'.
+        //'<A href="'.URL.'&p=sa&d=dev-status">Статусы устройств в заявках</A><BR>'.
+        //'<A href="'.URL.'&p=sa&d=dev-place">Местонахождения устройств в заявках</A><BR>'.
         '<BR>'.
-        '<A href="'.URL.'&p=sa&d=color">Цвета для устройств и запчастей</A><BR>'.
+        //'<A href="'.URL.'&p=sa&d=color">Цвета для устройств и запчастей</A><BR>'.
         '<BR>'.
-        '<A href="'.URL.'&p=sa&d=zp-name">Наименования запчастей</A><BR>'.
+        //'<A href="'.URL.'&p=sa&d=zp-name">Наименования запчастей</A><BR>'.
     '</div>';
 }//end of sa_index()
 
@@ -123,3 +124,38 @@ function sa_ws_info($id) {
         '<table class="counts">'.$counts.'</table>'.
     '</div>';
 }//end of sa_ws_info()
+
+function sa_equip() {
+    $sql = "SELECT `id`,`name` FROM `base_device` ORDER BY `sort`";
+    $q = query($sql);
+    $dev = '';
+    while($r = mysql_fetch_assoc($q))
+        $dev .= '<a'.($r['id'] == 1 ? ' class="sel"' : '').'>'.$r['name'].'</a>';
+    return '<div class="path">'.sa_cookie_back().'<a href="'.URL.'&p=sa">Администрирование</a> » Комплектация устройств</div>'.
+    '<div class="sa-equip">'.
+        '<div class="headName">Комплектация устройств<a class="add">Добавить новое наименование</add></div>'.
+        '<table class="etab">'.
+            '<tr><td><div class="rightLinks">'.$dev.'</dev>'.
+                '<td id="eq-spisok">'.sa_equip_spisok().
+        '</table>'.
+    '</div>';
+}//end of sa_equip()
+function sa_equip_spisok() {
+    $sql = "SELECT * FROM `setup_device_equip` ORDER BY `sort`";
+    $spisok = '';
+    $q = query($sql);
+    if(mysql_num_rows($q)) {
+        $spisok = '<table class="_spisok">'.
+            '<tr><th class="use">'.
+                '<th class="name">Наименование'.
+                '<th class="set">Настройки'.
+        '</table>';
+        while($r = mysql_fetch_assoc($q))
+            $spisok .= '<table class="_spisok">'.
+                '<tr><td class="use">'._checkbox('c'.$r['id']).
+                '<td class="name">'.($r['title'] ? '<span title="'.$r['title'].'">'.$r['name'].'</span>' : $r['name']).
+                    '<td class="set"><div class="img_edit"></div><div class="img_del"></div>'.
+            '</table>';
+    }
+    return $spisok ? $spisok : 'Вариантов комплектаций нет';
+}

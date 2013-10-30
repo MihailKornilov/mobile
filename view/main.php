@@ -116,7 +116,6 @@ function _hashCookieSet() {
 function _cacheClear($ws_id=WS_ID) {
     xcache_unset(CACHE_PREFIX.'setup_global');
     xcache_unset(CACHE_PREFIX.'viewer_'.VIEWER_ID);
-    xcache_unset(CACHE_PREFIX.'remind_active');
     xcache_unset(CACHE_PREFIX.'device_name');
     xcache_unset(CACHE_PREFIX.'vendor_name');
     xcache_unset(CACHE_PREFIX.'model_name_count');
@@ -125,6 +124,7 @@ function _cacheClear($ws_id=WS_ID) {
     xcache_unset(CACHE_PREFIX.'device_place');
     xcache_unset(CACHE_PREFIX.'device_status');
     if($ws_id) {
+        xcache_unset(CACHE_PREFIX.'remind_active'.$ws_id);
         xcache_unset(CACHE_PREFIX.'workshop_'.$ws_id);
         xcache_unset(CACHE_PREFIX.'zayav_base_device'.$ws_id);
         xcache_unset(CACHE_PREFIX.'zayav_base_vendor'.$ws_id);

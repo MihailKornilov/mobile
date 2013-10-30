@@ -3316,7 +3316,7 @@ $(document).ready(function() {
                 if(val == 0) $('#place_other').val('').focus();
             }
         });
-        $('#color_id').vkSel({width:170, title0:'Цвет не указан', spisok:G.color_spisok});
+        $('#color_id').vkSel({width:120, title0:'Цвет не указан', spisok:G.color_spisok});
         $(document).on('click', '#fault', function() {
             var i = $(this).find('INPUT');
             var arr = [];

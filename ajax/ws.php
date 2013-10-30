@@ -1490,7 +1490,7 @@ switch(@$_POST['op']) {
         if(isset($_POST['from_client']) && $client_id)
             $filter['client'] = $client_id;
         $send['html'] = utf8(report_remind_spisok(remind_data(1, $filter)));
-        xcache_unset(CACHE_PREFIX.'remind_active');
+        xcache_unset(CACHE_PREFIX.'remind_active'.WS_ID);
         jsonSuccess($send);
         break;
     case 'report_remind_next':
@@ -1562,7 +1562,7 @@ switch(@$_POST['op']) {
         if(empty($data) && !isset($filter['zayav']))
             $html = '<div class="_empty">Заданий нет.</div>';
         $send['html'] = utf8($html);
-        xcache_unset(CACHE_PREFIX.'remind_active');
+        xcache_unset(CACHE_PREFIX.'remind_active'.WS_ID);
         jsonSuccess($send);
         break;
     case 'report_prihod_load':
