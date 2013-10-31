@@ -45,7 +45,10 @@ var REGEXP_NUMERIC = /^\d+$/,
                     table:$(this).attr('val'),
                     ids:arr.join()
                 };
-                $.post(AJAX_MAIN, send, function(res) {}, 'json');
+                $('.path').addClass('busy');
+                $.post(AJAX_MAIN, send, function(res) {
+                    $('.path').removeClass('busy');
+                }, 'json');
             }
         });
     },

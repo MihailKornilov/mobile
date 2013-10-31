@@ -55,7 +55,6 @@ function _mainLinks() {
 }//end of _mainLinks()
 
 
-
 // ---===! client !===--- Секция клиентов
 
 function _clientsLink($arr) {
@@ -410,7 +409,7 @@ function zayav_add() {
 			'<tr><td class="label">IMEI:          <td><INPUT type="text" id="imei" maxlength="20" />'.
 			'<tr><td class="label">Серийный номер:<td><INPUT type="text" id="serial" maxlength="30" />'.
 			'<tr><td class="label">Цвет:          <td><INPUT TYPE="hidden" id="color_id" value="0" />'.
-            '<tr><td class="label">Комплектация:  <td>'._checkbox('der', 'З/у').
+            '<tr class="tr_equip dn"><td class="label">Комплектация:<td class="equip_spisok">'.
             '<tr><td class="label top">Местонахождение устройства<br />после внесения заявки:<td><INPUT type="hidden" id="place" />'.
 			'<tr><td class="label top">Неисправности: <td id="fault">'.$fault.
 			'<tr><td class="label top">Заметка:       <td><textarea id="comm"></textarea>'.
@@ -1576,7 +1575,7 @@ function report_remind_spisok($data) {
 		$day_leave = (strtotime($r['day']) - $today) / 3600 / 24;
 		$leave = '';
 		if($day_leave < 0)
-			$leave = 'просрочен'._end($day_leave * -1, ' ', 'о ').($day_leave * -1)._end($day_leave * -1, ' день', ' дня', ' дней');
+			$leave = 'просрочен'._end($day_leave * -1, ' ', 'о ').round($day_leave * -1)._end($day_leave * -1, ' день', ' дня', ' дней');
 		elseif($day_leave > 2)
 			$leave = 'остал'._end($day_leave, 'ся ', 'ось ').$day_leave._end($day_leave, ' день', ' дня', ' дней');
 		else

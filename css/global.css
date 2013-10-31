@@ -45,13 +45,6 @@ table{border:0;border-spacing:0}
 }
 
 
-/* Путь в верхней строке */
-.path {background-color:#F7F7F7;border-bottom:#DAE2E8 solid 1px;font-weight:bold;padding:4px 10px  }
-.path a{font-weight:bold}
-.path span{float:right}
-.path SPAN a{font-weight:normal}
-
-
 .device-add-tab{border-spacing:10px}
 .device-add-tab input{width:170px}
 
@@ -227,7 +220,8 @@ input.money{font:bold 14px Tahoma;width:70px}
 #clientInfo #dopLinks.busy,
 .zpzakaz.busy,
 #mainLinks.busy,
-#setup_workers .adm.busy{
+#setup_workers .adm.busy,
+.path.busy{
     background-image:url("data:image/gif;base64,R0lGODlhIAAIAKECAEVojoSctMHN2QAAACH/C05FVFNDQVBFMi4wAwEAAAAh+QQFCgADACwAAAAAIAAIAAACFZyPqcvtD6KMr445LcRUN9554kiSBQAh+QQFCgADACwCAAIAEgAEAAACD4xvM8DNiJRz8Mj5ari4AAAh+QQFCgADACwCAAIAHAAEAAACGJRvM8HNCqKMCCnn4JT1XPwMG9cJH6iNBQAh+QQFCgADACwMAAIAEgAEAAACD5RvM8HNiJRz8Mj5qri4AAAh+QQFCgADACwWAAIACAAEAAACBZSPqYsFACH5BAUUAAMALAAAAAAgAAgAAAIOnI+py+0Po5y02ouzPgUAOw==");
     background-repeat:no-repeat;
     background-position:center center;
@@ -243,6 +237,16 @@ input.money{font:bold 14px Tahoma;width:70px}
 }
 .vkCancel button:hover{background-position:0 -46px}
 .vkCancel button:active{background:#DCDCDC;border:1px solid #DCDCDC}
+
+
+
+/* Путь в верхней строке */
+.path {background-color:#F7F7F7;border-bottom:#DAE2E8 solid 1px;font-weight:bold;padding:4px 10px  }
+.path a{font-weight:bold}
+.path span{float:right}
+.path SPAN a{font-weight:normal}
+.path.busy{background-position:586px center}
+
 
 
 /* контактовский селект */
@@ -807,6 +811,7 @@ input.money{font:bold 14px Tahoma;width:70px}
 #zayavAdd .label{width:190px;text-align:right}
 #device_image{padding-left:5px;vertical-align:top;min-width:50px}
 #device_image img{height:72px;display:none}
+#zayavAdd .equip_spisok div{margin-right:7px}
 #zayavAdd #place_radio{margin-bottom:10px}
 #place_other_div{position:absolute;display:none}
 #place_other{width:100px;position:relative;top:-3px;left:3px}
@@ -1255,8 +1260,9 @@ table.zayavNomerTab td{vertical-align:top}
 .sa-equip .use div{margin-left:3px;padding:0}
 .sa-equip .set{width:65px;text-align:center}
 .sa-equip .set div{position:relative;top:2px}
-.ws-equip-add{border-spacing:8px}
-.ws-equip-add input{width:200px}
+.sa-equip .eq-head{margin-bottom:10px}
+.sa-equip-add{border-spacing:8px}
+.sa-equip-add input{width:200px}
 
 
 

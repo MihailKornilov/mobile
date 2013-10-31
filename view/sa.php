@@ -148,10 +148,9 @@ function sa_equip_spisok($device_id) {
     foreach($arr as $id)
         $equip[$id] = 1;
 
-    $sql = "SELECT * FROM `setup_device_equip` ORDER BY `sort`";
+    $equipSpisok = equipSpisok();
     $spisok = '';
-    $q = query($sql);
-    if(mysql_num_rows($q)) {
+    if(!empty($equip)) {
         $spisok =
             '<table class="_spisok">'.
                 '<tr><th class="use">'.
@@ -159,14 +158,15 @@ function sa_equip_spisok($device_id) {
                     '<th class="set">Настройки'.
             '</table>'.
             '<dl class="_sort" val="setup_device_equip">';
-        while($r = mysql_fetch_assoc($q))
-            $spisok .= '<dd val="'.$r['id'].'">'.
+        foreach($equipSpisok as $id => $r)
+            $spisok .= '<dd val="'.$id.'">'.
                 '<table class="_spisok">'.
-                    '<tr><td class="use">'._checkbox('c_'.$r['id'], '', isset($equip[$r['id']]) ? 1 : 0).
+                    '<tr><td class="use">'._checkbox('c_'.$id, '', isset($equip[$id]) ? 1 : 0).
                     '<td class="name">'.($r['title'] ? '<span title="'.$r['title'].'">'.$r['name'].'</span>' : $r['name']).
                         '<td class="set"><div class="img_edit"></div><div class="img_del"></div>'.
                 '</table>';
         $spisok .= '</dl>';
     }
-    return $spisok ? $spisok : 'Вариантов комплектаций нет';
+    return '<div class="eq-head">Используемые комплектации для <b>'._deviceName($device_id).'</b>:</div>'.
+        ($spisok ? $spisok : 'Вариантов комплектаций нет');
 }

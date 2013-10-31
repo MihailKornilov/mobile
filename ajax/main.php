@@ -203,6 +203,7 @@ switch(@$_POST['op']) {
 
         for($n = 0; $n < count($sort); $n++)
             query("UPDATE `".$table."` SET `sort`=".$n." WHERE `id`=".intval($sort[$n]));
+        _cacheClear();
         jsonSuccess();
         break;
 }

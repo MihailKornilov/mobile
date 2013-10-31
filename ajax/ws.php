@@ -972,6 +972,13 @@ switch(@$_POST['op']) {
         $send['html'] = utf8($send['html']);
         jsonSuccess($send);
         break;
+    case 'equip_check_get':
+        if(!preg_match(REGEXP_NUMERIC, $_POST['device_id']) && $_POST['device_id'] == 0)
+            jsonError();
+        $device_id = intval($_POST['device_id']);
+        $send['spisok'] = utf8(devEquipCheck($device_id));
+        jsonSuccess($send);
+        break;
 
     case 'zp_add':
         if(!preg_match(REGEXP_NUMERIC, $_POST['name_id']) || $_POST['name_id'] == 0)

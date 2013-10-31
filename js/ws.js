@@ -3304,7 +3304,27 @@ $(document).ready(function() {
             width:190,
             add:1,
             device_ids:G.ws.devs,
-            func:modelImageGet
+            func:function(dev) {
+                modelImageGet(dev);
+                if(dev.device_id == 0) {
+                    $('.equip_spisok').html('');
+                    $('.tr_equip').addClass('dn');
+                } else if(dev.vendor_id == 0 && dev.model_id == 0) {
+                    var send = {
+                        op:'equip_check_get',
+                        device_id:dev.device_id
+                    };
+                    $.post(AJAX_WS, send, function(res) {
+                        if(res.spisok) {
+                            $('.equip_spisok').html(res.spisok);
+                            $('.tr_equip').removeClass('dn');
+                        } else {
+                            $('.equip_spisok').html('');
+                            $('.tr_equip').addClass('dn');
+                        }
+                    }, 'json');
+                }
+            }
         });
         G.device_place_spisok.push({uid:0, title:'другое: <DIV id="place_other_div"><INPUT type="text" id="place_other" maxlength="20"></DIV>'});
         $('#place').vkRadio({
