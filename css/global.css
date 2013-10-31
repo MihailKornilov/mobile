@@ -834,6 +834,8 @@ input.money{font:bold 14px Tahoma;width:70px}
 #zayavInfo .tabInfo{margin:2px 10px 15px 10px;border-spacing:4px}
 #zayavInfo .label{width:85px}
 #zayavInfo .dtime_add{cursor:help}
+.zayav-info-edit{border-spacing:8px}
+.zayav-info-edit .equip_spisok div{margin-right:7px}
 #zayavInfo #status {
     display:inline-block;
     border:#DDD solid 1px;

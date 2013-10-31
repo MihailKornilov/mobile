@@ -54,6 +54,25 @@ function _mainLinks() {
 	$html .= $send;
 }//end of _mainLinks()
 
+function devEquipCheck($device_id, $ids='') {//Получение списка комплектаций в виде чекбоксов для внесения или редактирования заявки
+    $equip = query_value("SELECT `equip` FROM `base_device` WHERE `id`=".$device_id);
+    $arr = explode(',', $equip);
+    $equip = array();
+    foreach($arr as $id)
+        $equip[$id] = 1;
+    $send = '';
+    $sel = array();
+    if($ids) {
+        $arr = explode(',', $ids);
+        foreach($arr as $id)
+            $sel[$id] = 1;
+    }
+    foreach(equipCache() as $id => $r)
+        if(isset($equip[$id]))
+            $send .= _checkbox('eq_'.$id, $r['name'], isset($sel[$id]) ? 1 : 0);
+    return $send;
+}//end of devEquipCheck()
+
 
 // ---===! client !===--- Секция клиентов
 
@@ -697,6 +716,19 @@ function zayav_spisok($data) {
 	return $send;
 }//end of zayav_spisok()
 
+function zayavEquipSpisok($ids) {//Список комплектации через запятую
+    if(empty($ids))
+        return '';
+    $arr = explode(',', $ids);
+    $equip = array();
+    foreach($arr as $id)
+        $equip[$id] = 1;
+    $send = array();
+    foreach(equipCache() as $id => $r)
+        if(isset($equip[$id]))
+            $send[] = $r['name'];
+    return implode(', ', $send);
+}//end of zayavEquipSpisok()
 function zayav_info($zayav_id) {
 	$sql = "SELECT * FROM `zayavki` WHERE `ws_id`=".WS_ID." AND `zayav_status`>0 AND `id`=".$zayav_id." LIMIT 1";
 	if(!$zayav = mysql_fetch_assoc(query($sql)))
@@ -771,7 +803,7 @@ function zayav_info($zayav_id) {
 
 	return '<script type="text/javascript">'.
 		'G.zayavInfo = {'.
-			'id:'.$zayav['id'].','.
+			'id:'.$zayav_id.','.
 			'nomer:'.$zayav['nomer'].','.
 			'client_id:'.$zayav['client_id'].','.
 			'device:'.$zayav['base_device_id'].','.
@@ -783,7 +815,8 @@ function zayav_info($zayav_id) {
 			'place_other:"'.$zayav['device_place_other'].'",'.
 			'imei:"'.$zayav['imei'].'",'.
 			'serial:"'.$zayav['serial'].'",'.
-			'color_id:'.$zayav['color_id'].
+			'color_id:'.$zayav['color_id'].','.
+			'equip:\''.devEquipCheck($zayav['base_device_id'], $zayav['equip']).'\''.
 		'};'.
 	'</script>'.
 	'<div id="zayavInfo">'.
@@ -829,8 +862,9 @@ function zayav_info($zayav_id) {
 				'<div class="devContent">'.
 					'<div class="devName">'._deviceName($zayav['base_device_id']).'<br />'.'<a>'.$model.'</a></div>'.
 					'<table class="devInfo">'.
-						($zayav['imei'] ? '<tr><th>imei:      <td>'.$zayav['imei'] : '').
-						($zayav['serial'] ? '<tr><th>serial:  <td>'.$zayav['serial'] : '').
+						($zayav['imei'] ? '<tr><th>imei:         <td>'.$zayav['imei'] : '').
+						($zayav['serial'] ? '<tr><th>serial:     <td>'.$zayav['serial'] : '').
+						($zayav['equip'] ? '<tr><th valign="top">Комплект:<td>'.zayavEquipSpisok($zayav['equip']) : '').
 						($zayav['color_id'] ? '<tr><th>Цвет:  <td>'._colorName($zayav['color_id']) : '').
 						'<tr><th>Нахождение:<td><a class="dev_place status_place">'.($zayav['device_place'] ? @_devPlace($zayav['device_place']) : $zayav['device_place_other']).'</a>'.
 						'<tr><th>Состояние: <td><a class="dev_status status_place">'._devStatus($zayav['device_status']).'</a>'.

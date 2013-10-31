@@ -672,7 +672,6 @@ function _zpImg($zp_id, $size='small', $x_new=10000, $y_new=10000, $class=false)
     return $res['img'];
 }//end of _modelImg()
 
-
 function _deviceName($device_id, $rod=false) {
     if(!defined('DEVICE_LOADED')) {
         $key = CACHE_PREFIX.'device_name';
@@ -828,41 +827,22 @@ function _devStatus($status_id) {
     return constant('DEV_STATUS_'.$status_id);
 }//end of _devStatus()
 
-
-function equipSpisok($id=false) {
-    if(!defined('DEVICE_EQUIP_LOADED') || !$id) {
-        $key = CACHE_PREFIX.'device_equip';
-        $spisok = xcache_get($key);
-        if(empty($spisok)) {
-            $sql = "SELECT * FROM `setup_device_equip` ORDER BY `sort`";
-            $q = query($sql);
-            while($r = mysql_fetch_assoc($q))
-                $spisok[$r['id']] = array(
-                    'name' => $r['name'],
-                    'title' => $r['title']
-                );
-            xcache_set($key, $spisok, 86400);
-        }
-        foreach($spisok as $uid => $r)
-            define('DEVICE_EQUIP_'.$uid, $r['name']);
-        define('DEVICE_EQUIP_LOADED', true);
-        if(!$id)
-            return $spisok;
+function equipCache() {
+    $key = CACHE_PREFIX.'device_equip';
+    $spisok = xcache_get($key);
+    if(empty($spisok)) {
+        $sql = "SELECT * FROM `setup_device_equip` ORDER BY `sort`";
+        $q = query($sql);
+        while($r = mysql_fetch_assoc($q))
+            $spisok[$r['id']] = array(
+                'name' => $r['name'],
+                'title' => $r['title']
+            );
+        xcache_set($key, $spisok, 86400);
     }
-    return constant('DEVICE_EQUIP_'.$id);
-}//end of equipSpisok()
-function devEquipCheck($device_id) {//Получение списка комплектаций в виде чекбоксов для внесения заявки
-    $equip = query_value("SELECT `equip` FROM `base_device` WHERE `id`=".$device_id);
-    $arr = explode(',', $equip);
-    $equip = array();
-    foreach($arr as $id)
-        $equip[$id] = 1;
-    $send = '';
-    foreach(equipSpisok() as $id => $r)
-        if(isset($equip[$id]))
-            $send .= _checkbox('eq_'.$id, $r['name']);
-    return $send;
-}//end of devEquipCheck()
+    return $spisok;
+}//end of equipCache()
+
 
 
 // ---===! ws_create !===--- Секция создания мастерской

@@ -148,7 +148,6 @@ function sa_equip_spisok($device_id) {
     foreach($arr as $id)
         $equip[$id] = 1;
 
-    $equipSpisok = equipSpisok();
     $spisok = '';
     if(!empty($equip)) {
         $spisok =
@@ -158,7 +157,7 @@ function sa_equip_spisok($device_id) {
                     '<th class="set">Настройки'.
             '</table>'.
             '<dl class="_sort" val="setup_device_equip">';
-        foreach($equipSpisok as $id => $r)
+        foreach(equipCache() as $id => $r)
             $spisok .= '<dd val="'.$id.'">'.
                 '<table class="_spisok">'.
                     '<tr><td class="use">'._checkbox('c_'.$id, '', isset($equip[$id]) ? 1 : 0).

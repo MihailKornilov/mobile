@@ -1,6 +1,7 @@
 <?php
 require_once('../config.php');
 require_once(DOCUMENT_ROOT.'/include/clsMsDocGenerator.php');
+require_once(DOCUMENT_ROOT.'/view/ws.php');
 
 if(!preg_match(REGEXP_NUMERIC, $_GET['id'])) {
     echo 'Неверный id заявки';
@@ -22,9 +23,10 @@ $kvit =
     '<table class="device-about">'.
         '<tr><td class="label">Дата приёма:<td>'.FullData($zayav['dtime_add']).
         '<tr><td class="label">Устройство:<td>'._deviceName($zayav['base_device_id'])._vendorName($zayav['base_vendor_id'])._modelName($zayav['base_model_id']).
-        '<tr><td class="label">Цвет:<td>'._colorName($zayav['color_id']).
+        ($zayav['color_id'] ? '<tr><td class="label">Цвет:<td>'._colorName($zayav['color_id']) : '').
         ($zayav['imei'] ? '<tr><td class="label">IMEI:<td>'.$zayav['imei'] : '').
         ($zayav['serial'] ? '<tr><td class="label">Serial:<td>'.$zayav['serial'] : '').
+        ($zayav['equip'] ? '<tr><td class="label">Комплектация:<td>'.zayavEquipSpisok($zayav['equip']) : '').
     '</table>'.
 
     '<div class="hr-small">&nbsp;</div>'.

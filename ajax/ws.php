@@ -234,6 +234,12 @@ switch(@$_POST['op']) {
         $device = intval($_POST['device']);
         $vendor = intval($_POST['vendor']);
         $model = intval($_POST['model']);
+        if(!empty($_POST['equip'])) {
+            $ids = explode(',', $_POST['equip']);
+            for($n = 0; $n < count($ids); $n++)
+                if(!preg_match(REGEXP_NUMERIC, $ids[$n]))
+                    jsonError();
+        }
         $place = intval($_POST['place']);
         $place_other = $place == 0 ? win1251(htmlspecialchars(trim($_POST['place_other']))) : '';
         $imei = win1251(htmlspecialchars(trim($_POST['imei'])));
@@ -268,6 +274,7 @@ switch(@$_POST['op']) {
                     `base_vendor_id`,
                     `base_model_id`,
 
+                    `equip`,
                     `imei`,
                     `serial`,
                     `color_id`,
@@ -290,6 +297,7 @@ switch(@$_POST['op']) {
                     ".$vendor.",
                     ".$model.",
 
+                    '".$_POST['equip']."',
                     '".$imei."',
                     '".$serial."',
                     ".$color.",
@@ -356,6 +364,13 @@ switch(@$_POST['op']) {
         $send['img'] = _modelImg(intval($_POST['model_id']), 'small', 80, 80, 'fotoView');
         jsonSuccess($send);
         break;
+    case 'equip_check_get':
+        if(!preg_match(REGEXP_NUMERIC, $_POST['device_id']) && $_POST['device_id'] == 0)
+            jsonError();
+        $device_id = intval($_POST['device_id']);
+        $send['spisok'] = utf8(devEquipCheck($device_id));
+        jsonSuccess($send);
+        break;
     case 'zayav_spisok_load':
         $_POST['find'] = win1251($_POST['find']);
         $data = zayav_data(1, zayavfilter($_POST));
@@ -391,6 +406,13 @@ switch(@$_POST['op']) {
         $imei = win1251(htmlspecialchars(trim($_POST['imei'])));
         $serial = win1251(htmlspecialchars(trim($_POST['serial'])));
         $color_id = intval($_POST['color_id']);
+        if(!empty($_POST['equip'])) {
+            $ids = explode(',', $_POST['equip']);
+            for($n = 0; $n < count($ids); $n++)
+                if(!preg_match(REGEXP_NUMERIC, $ids[$n]))
+                    jsonError();
+        }
+
 
         $sql = "SELECT * FROM `zayavki` WHERE `ws_id`=".WS_ID." AND `id`=".$zayav_id." LIMIT 1";
         if(!$zayav = mysql_fetch_assoc(query($sql)))
@@ -404,6 +426,7 @@ switch(@$_POST['op']) {
                     `imei`='".$imei."',
                     `serial`='".$serial."',
                     `color_id`=".$color_id.",
+                    `equip`='".$_POST['equip']."',
                     `find`='"._modelName($model)." ".$imei." ".$serial."'
                 WHERE `id`=".$zayav_id;
         query($sql);
@@ -970,13 +993,6 @@ switch(@$_POST['op']) {
             '</table>'.
             '<input type="hidden" id="zayavNomerId" value="'.$zayav['id'].'" />';
         $send['html'] = utf8($send['html']);
-        jsonSuccess($send);
-        break;
-    case 'equip_check_get':
-        if(!preg_match(REGEXP_NUMERIC, $_POST['device_id']) && $_POST['device_id'] == 0)
-            jsonError();
-        $device_id = intval($_POST['device_id']);
-        $send['spisok'] = utf8(devEquipCheck($device_id));
         jsonSuccess($send);
         break;
 

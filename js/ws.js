@@ -188,6 +188,27 @@ var AJAX_WS= 'http://' + G.domain + '/ajax/ws.php?' + G.values,
             }
         }, 'json');
     },
+    zayavDevSelect = function(dev) {
+        modelImageGet(dev);
+        if(dev.device_id == 0) {
+            $('.equip_spisok').html('');
+            $('.tr_equip').addClass('dn');
+        } else if(dev.vendor_id == 0 && dev.model_id == 0) {
+            var send = {
+                op:'equip_check_get',
+                device_id:dev.device_id
+            };
+            $.post(AJAX_WS, send, function(res) {
+                if(res.spisok) {
+                    $('.equip_spisok').html(res.spisok);
+                    $('.tr_equip').removeClass('dn');
+                } else {
+                    $('.equip_spisok').html('');
+                    $('.tr_equip').addClass('dn');
+                }
+            }, 'json');
+        }
+    },
 
     zpFilter = function() {
         var v = {
@@ -1038,12 +1059,14 @@ $(document)
     })
 
     .on('click', '#zayavInfo .zedit', function() {
-        var html = '<TABLE style="border-spacing:8px">' +
-            '<tr><td class="label r">Клиент:        <TD><INPUT type="hidden" id="client_id" value=' + G.zayavInfo.client_id + '>' +
+        var html = '<TABLE class="zayav-info-edit">' +
+            '<tr><td class="label r">Клиент:        <TD><INPUT type="hidden" id="client_id" value="' + G.zayavInfo.client_id + '">' +
             '<tr><td class="label r top">Устройство:<TD><TABLE><TD id="dev"><TD id="device_image"></TABLE>' +
-            '<tr><td class="label r">IMEI:          <TD><INPUT type=text id="imei" maxlength="20" value="' + G.zayavInfo.imei + '">' +
-            '<tr><td class="label r">Серийный номер:<TD><INPUT type=text id="serial" maxlength="30" value="' + G.zayavInfo.serial + '">' +
-            '<tr><td class="label r">Цвет:          <TD><INPUT type="hidden" id=color_id value=' + G.zayavInfo.color_id + '>' +
+            '<tr><td class="label r">IMEI:          <TD><INPUT type="text" id="imei" maxlength="20" value="' + G.zayavInfo.imei + '">' +
+            '<tr><td class="label r">Серийный номер:<TD><INPUT type="text" id="serial" maxlength="30" value="' + G.zayavInfo.serial + '">' +
+            '<tr><td class="label r">Цвет:          <TD><INPUT type="hidden" id="color_id" value="' + G.zayavInfo.color_id + '">' +
+            '<tr class="tr_equip' + (G.zayavInfo.equip ? '' : ' dn') + '">' +
+                '<td class="label r">Комплектация:  <TD class="equip_spisok">' + G.zayavInfo.equip +
         '</TABLE>',
             dialog = vkDialog({
                 width:410,
@@ -1069,7 +1092,7 @@ $(document)
             model_id:G.zayavInfo.model,
             device_ids:G.device_ids,
             add:1,
-            func:modelImageGet
+            func:zayavDevSelect
         });
         modelImageGet();
         $('#color_id').vkSel({width:170, title0:'Цвет не указан', spisok:G.color_spisok});
@@ -1085,8 +1108,19 @@ $(document)
                     model:$('#dev_model').val(),
                     imei: $.trim($('#imei').val()),
                     serial:$.trim($('#serial').val()),
-                    color_id:$('#color_id').val()
+                    color_id:$('#color_id').val(),
+                    equip:''
                 };
+            if(!$('.tr_equip').hasClass('dn')) {
+                var inp = $('.equip_spisok input'),
+                    arr = [];
+                for(var n = 0; n < inp.length; n++) {
+                    var eq = inp.eq(n);
+                    if(eq.val() == 1)
+                        arr.push(eq.attr('id').split('_')[1]);
+                }
+                send.equip = arr.join();
+            }
             if(send.deivce == 0) msg = 'Не выбрано устройство';
             else if(send.client_id == 0) msg = 'Не выбран клиент';
             else {
@@ -3304,27 +3338,7 @@ $(document).ready(function() {
             width:190,
             add:1,
             device_ids:G.ws.devs,
-            func:function(dev) {
-                modelImageGet(dev);
-                if(dev.device_id == 0) {
-                    $('.equip_spisok').html('');
-                    $('.tr_equip').addClass('dn');
-                } else if(dev.vendor_id == 0 && dev.model_id == 0) {
-                    var send = {
-                        op:'equip_check_get',
-                        device_id:dev.device_id
-                    };
-                    $.post(AJAX_WS, send, function(res) {
-                        if(res.spisok) {
-                            $('.equip_spisok').html(res.spisok);
-                            $('.tr_equip').removeClass('dn');
-                        } else {
-                            $('.equip_spisok').html('');
-                            $('.tr_equip').addClass('dn');
-                        }
-                    }, 'json');
-                }
-            }
+            func:zayavDevSelect
         });
         G.device_place_spisok.push({uid:0, title:'другое: <DIV id="place_other_div"><INPUT type="text" id="place_other" maxlength="20"></DIV>'});
         $('#place').vkRadio({
@@ -3364,6 +3378,7 @@ $(document).ready(function() {
                 device:$('#dev_device').val(),
                 vendor:$('#dev_vendor').val(),
                 model:$('#dev_model').val(),
+                equip:'',
                 place:$('#place').val(),
                 place_other:$('#place_other').val(),
                 imei:$('#imei').val(),
@@ -3372,6 +3387,16 @@ $(document).ready(function() {
                 comm:$('#comm').val(),
                 reminder:$('#reminder').val()
             };
+            if(!$('.tr_equip').hasClass('dn')) {
+                var inp = $('.equip_spisok input'),
+                    arr = [];
+                for(var n = 0; n < inp.length; n++) {
+                    var eq = inp.eq(n);
+                    if(eq.val() == 1)
+                        arr.push(eq.attr('id').split('_')[1]);
+                }
+                send.equip = arr.join();
+            }
             send.reminder_txt = send.reminder == 1 ? $('#reminder_txt').val() : '';
             send.reminder_day = send.reminder == 1 ? $('#reminder_day').val() : '';
 
