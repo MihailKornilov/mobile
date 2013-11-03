@@ -26,10 +26,9 @@ function sa_index() {
         '<A href="'.URL.'&p=sa&d=ws">Мастерские ('.$wsCount.')</A><BR>'.
         '<BR>'.
         '<div><B>Устройства и запчасти:</B></div>'.
+        '<A href="'.URL.'&p=sa&d=device">Устройства / Производители / Модели</A><BR>'.
         '<A href="'.URL.'&p=sa&d=equip">Комплектация устройств</A><BR>'.
         //'<A href="'.URL.'&p=sa&d=fault">Виды неисправностей</A><BR>'.
-        '<BR>'.
-        //'<A href="'.URL.'&p=sa&d=device">Устройства</A><BR>'.
         //'<A href="'.URL.'&p=sa&d=dev-spec">Характеристики устройств для информации</A><BR>'.
         //'<A href="'.URL.'&p=sa&d=dev-status">Статусы устройств в заявках</A><BR>'.
         //'<A href="'.URL.'&p=sa&d=dev-place">Местонахождения устройств в заявках</A><BR>'.
@@ -125,6 +124,77 @@ function sa_ws_info($id) {
     '</div>';
 }//end of sa_ws_info()
 
+function sa_device() {
+    return '<div class="path">'.sa_cookie_back().'<a href="'.URL.'&p=sa">Администрирование</a> » Устройства</div>'.
+    '<script type="text/javascript">var devEquip = \''.devEquipCheck().'\';</script>'.
+    '<div class="sa-device">'.
+        '<div class="headName">Список устройств<a class="add">Добавить новое наименование</a></div>'.
+        '<div class="spisok">'.sa_device_spisok().'</div>'.
+    '</div>';
+}//end of sa_device()
+function sa_device_spisok() {
+    $sql = "SELECT
+                `bd`.`id` AS `id`,
+                `bd`.`name` AS `name`,
+                COUNT(`bv`.`id`) AS `vendor_count`
+            FROM `base_device` AS `bd`
+                LEFT JOIN `base_vendor` AS `bv`
+                ON `bd`.`id`=`bv`.`device_id`
+            GROUP BY `bd`.`id`
+            ORDER BY `bd`.`sort`";
+    $q = query($sql);
+    if(!mysql_num_rows($q))
+        return 'Устройств нет.';
+    $devs = array();
+    while($r = mysql_fetch_assoc($q))
+        $devs[$r['id']] = $r;
+
+    $sql = "SELECT
+                `bd`.`id` AS `id`,
+                COUNT(`bm`.`id`) AS `count`
+            FROM `base_device` AS `bd`,
+                 `base_model` AS `bm`
+            WHERE `bd`.`id`=`bm`.`device_id`
+            GROUP BY `bd`.`id`";
+    $q = query($sql);
+    while($r = mysql_fetch_assoc($q))
+        $devs[$r['id']]['model_count'] = $r['count'];
+
+    $sql = "SELECT
+                `bd`.`id` AS `id`,
+                COUNT(`z`.`id`) AS `count`
+            FROM `base_device` AS `bd`,`zayavki` AS `z`
+            WHERE `bd`.`id`=`z`.`base_device_id` AND `z`.`zayav_status`>0
+            GROUP BY `bd`.`id`";
+    $q = query($sql);
+    while($r = mysql_fetch_assoc($q))
+        $devs[$r['id']]['zayav_count'] = $r['count'];
+
+    $spisok =
+        '<table class="_spisok">'.
+            '<tr><th class="name">Наименование устройства'.
+                '<th class="ven">Кол-во<BR>производителей'.
+                '<th class="mod">Кол-во<BR>моделей'.
+                '<th class="zayav">Кол-во<BR>заявок'.
+                '<th class="edit">'.
+        '</table>'.
+        '<dl class="_sort" val="base_device">';
+    foreach($devs as $id => $r)
+        $spisok .= '<dd val="'.$id.'">'.
+            '<table class="_spisok">'.
+                '<tr><td class="name"><a>'.$r['name'].'</a>'.
+                    '<td class="ven">'.($r['vendor_count'] ? $r['vendor_count'] : '').
+                    '<td class="mod">'.(isset($r['model_count']) ? $r['model_count'] : '').
+                    '<td class="zayav">'.(isset($r['zayav_count']) ? $r['zayav_count'] : '').
+                    '<td class="edit">'.
+                        '<div class="img_edit"></div>'.
+                        ($r['vendor_count'] || isset($r['model_count'])  || isset($r['zayav_count']) ? '' : '<div class="img_del"></div>').
+            '</table>';
+    $spisok .= '</dl>';
+    return $spisok;
+}//end of sa_device_spisok()
+
+
 function sa_equip() {
     $sql = "SELECT `id`,`name` FROM `base_device` ORDER BY `sort`";
     $q = query($sql);
@@ -134,7 +204,7 @@ function sa_equip() {
         $dev .= '<a'.($r['id'] == $default_id ? ' class="sel"' : '').' val="'.$r['id'].'">'.$r['name'].'</a>';
     return '<div class="path">'.sa_cookie_back().'<a href="'.URL.'&p=sa">Администрирование</a> » Комплектация устройств</div>'.
     '<div class="sa-equip">'.
-        '<div class="headName">Комплектация устройств<a class="add">Добавить новое наименование</add></div>'.
+        '<div class="headName">Комплектация устройств<a class="add">Добавить новое наименование</a></div>'.
         '<table class="etab">'.
             '<tr><td><div class="rightLinks">'.$dev.'</dev>'.
                 '<td id="eq-spisok">'.sa_equip_spisok($default_id).

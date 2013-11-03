@@ -831,7 +831,7 @@ $.fn.topSearch = function (obj) {
   input.bind({
     focus:function () { DIV.css('color','#CCC'); },
     blur:function () { DIV.css('color','#777'); },
-    keyup:function () {
+    keyup:function() {
       if (!$(this).val()) {
         DIV.show();
         $(this).prev().hide();
@@ -839,7 +839,7 @@ $.fn.topSearch = function (obj) {
         DIV.hide();
         $(this).prev().show();
       }
-      if (obj.func && obj.enter == 0) { obj.func($(this).val()); }
+      if(obj.func && obj.enter == 0) { obj.func($(this).val()); }
     }
   });
 

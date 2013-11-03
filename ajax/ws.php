@@ -3,6 +3,26 @@ require_once('config.php');
 require_once(DOCUMENT_ROOT.'/view/ws.php');
 
 switch(@$_POST['op']) {
+    case 'scanner_word':
+        $word = win1251(htmlspecialchars(trim($_POST['word'])));
+        if(empty($word))
+            jsonError();
+        if(!preg_match(REGEXP_WORD, $word))
+            jsonError();
+        $sql = "SELECT `id`
+                FROM `zayavki`
+                WHERE `ws_id`=".WS_ID."
+                  AND (`imei`='".$word."'
+                   OR `serial`='".$word."')";
+        $id = query_value($sql);
+        $send = array();
+        if($id)
+            $send['zayav_id'] = $id;
+        elseif(preg_match(REGEXP_NUMERIC, $word) && strlen($word) == 15)
+            $send['imei'] = 1;
+        jsonSuccess($send);
+        break;
+
     case 'base_device_add':
         $name = win1251(htmlspecialchars(trim($_POST['name'])));
         if(empty($name))

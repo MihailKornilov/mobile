@@ -47,6 +47,170 @@ $(document)
         }
     })
 
+    .on('click', '.sa-device .add', function() {
+        var t = $(this),
+            html = '<table class="sa-device-add">' +
+                '<tr><td class="label r">Наименование:<td><input id="name" type="text" maxlength="100" />' +
+                '<tr><td class="label r">Родительный падеж (кого?):<td><input id="name_rod" type="text" maxlength="100" />' +
+                '<tr><td class="label r">Множественное число:<td><input id="name_mn" type="text" maxlength="100" />' +
+                '<tr><td class="label r top">Возможная комплектация:<td class="equip">' + devEquip +
+                '</table>',
+            dialog = vkDialog({
+                top:60,
+                width:460,
+                head:'Добавление нового наименования устройства',
+                content:html,
+                submit:submit
+            });
+        $('#name,#name_rod,#name_mn').keyEnter(submit);
+        $('#name').focus();
+        function submit() {
+            var inp = $('.equip input'),
+                arr = [];
+            for(var n = 0; n < inp.length; n++) {
+                var eq = inp.eq(n);
+                if(eq.val() == 1)
+                    arr.push(eq.attr('id').split('_')[1]);
+            }
+            var send = {
+                op:'device_add',
+                name:$('#name').val(),
+                rod:$('#name_rod').val(),
+                mn:$('#name_mn').val(),
+                equip:arr.join()
+            };
+            if(!send.name || !send.rod || !send.mn) {
+                dialog.bottom.vkHint({
+                    msg:'<SPAN class=red>Необходимо заполнить все поля</SPAN>',
+                    top:-47,
+                    left:131,
+                    indent:50,
+                    show:1,
+                    remove:1
+                });
+                if(!send.name)
+                    $('#name').focus();
+                else if(!send.rod)
+                    $('#name_rod').focus();
+                else if(!send.mn)
+                    $('#name_mn').focus();
+            } else {
+                dialog.process();
+                $.post(AJAX_SA, send, function(res) {
+                    if(res.success) {
+                        $('.spisok').html(res.html);
+                        dialog.close();
+                        vkMsgOk('Внесено!');
+                        sortable();
+                    } else
+                        dialog.abort();
+                }, 'json');
+            }
+        }
+    })
+    .on('click', '.sa-device .img_edit', function() {
+        var t = $(this),
+            id = t,
+            dialog = vkDialog({
+                top:60,
+                width:460,
+                head:'Изменение данных устройства',
+                content:'<center><img src="/img/upload.gif"></center>',
+                submit:submit
+            });
+        while(id[0].tagName != 'DD')
+            id = id.parent();
+        id = id.attr('val');
+        var send = {
+            op:'device_get',
+            id:id
+        };
+        $.post(AJAX_SA, send, function(res) {
+            var html = '<table class="sa-device-add">' +
+                '<tr><td class="label r">Наименование:<td><input id="name" type="text" maxlength="100" value="' + res.name + '" />' +
+                '<tr><td class="label r">Родительный падеж (кого?):<td><input id="name_rod" type="text" maxlength="100" value="' + res.name_rod + '" />' +
+                '<tr><td class="label r">Множественное число:<td><input id="name_mn" type="text" maxlength="100" value="' + res.name_mn + '" />' +
+                '<tr><td class="label r top">Возможная комплектация:<td class="equip">' + res.equip +
+            '</table>';
+            dialog.content.html(html);
+            $('#name,#name_rod,#name_mn').keyEnter(submit);
+            $('#name').focus();
+        }, 'json');
+        function submit() {
+            var inp = $('.equip input'),
+                arr = [];
+            for(var n = 0; n < inp.length; n++) {
+                var eq = inp.eq(n);
+                if(eq.val() == 1)
+                    arr.push(eq.attr('id').split('_')[1]);
+            }
+            var send = {
+                op:'device_edit',
+                id:id,
+                name:$('#name').val(),
+                rod:$('#name_rod').val(),
+                mn:$('#name_mn').val(),
+                equip:arr.join()
+            };
+            if(!send.name || !send.rod || !send.mn) {
+                dialog.bottom.vkHint({
+                    msg:'<SPAN class=red>Необходимо заполнить все поля</SPAN>',
+                    top:-47,
+                    left:131,
+                    indent:50,
+                    show:1,
+                    remove:1
+                });
+                if(!send.name)
+                    $('#name').focus();
+                else if(!send.rod)
+                    $('#name_rod').focus();
+                else if(!send.mn)
+                    $('#name_mn').focus();
+            } else {
+                dialog.process();
+                $.post(AJAX_SA, send, function(res) {
+                    if(res.success) {
+                        $('.spisok').html(res.html);
+                        dialog.close();
+                        vkMsgOk('Изменено!');
+                        sortable();
+                    } else
+                        dialog.abort();
+                }, 'json');
+            }
+        }
+    })
+    .on('click', '.sa-device .img_del', function() {
+        var t = $(this),
+            dialog = vkDialog({
+                top:90,
+                width:300,
+                head:'Удаление устройства',
+                content:'<center><b>Подтвердите удаление устройства.</b></center>',
+                butSubmit:'Удалить',
+                submit:submit
+            });
+        function submit() {
+            while(t[0].tagName != 'DD')
+                t = t.parent();
+            var send = {
+                op:'device_del',
+                id:t.attr('val')
+            };
+            dialog.process();
+            $.post(AJAX_SA, send, function(res) {
+                if(res.success) {
+                    $('.spisok').html(res.html);
+                    dialog.close();
+                    vkMsgOk('Удалено!');
+                    sortable();
+                } else
+                    dialog.abort();
+            }, 'json');
+        }
+    })
+
     .on('click', '.sa-equip .rightLinks a', function() {
         $('.sa-equip .rightLinks a.sel').removeClass('sel');
         $(this).addClass('sel');

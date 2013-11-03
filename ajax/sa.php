@@ -36,6 +36,95 @@ switch(@$_POST['op']) {
         jsonSuccess();
         break;
 
+    case 'device_add':
+        $name = win1251(htmlspecialchars(trim($_POST['name'])));
+        $name_rod = win1251(htmlspecialchars(trim($_POST['rod'])));
+        $name_mn = win1251(htmlspecialchars(trim($_POST['mn'])));
+        if(empty($name) || empty($name_rod) || empty($name_mn))
+            jsonError();
+        if(!empty($_POST['equip'])) {
+            $ids = explode(',', $_POST['equip']);
+            for($n = 0; $n < count($ids); $n++)
+                if(!preg_match(REGEXP_NUMERIC, $ids[$n]))
+                    jsonError();
+        }
+        $sort = query_value("SELECT IFNULL(MAX(`sort`)+1,0) FROM `base_device`");
+        $sql = "INSERT INTO `base_device` (
+                    `name`,
+                    `name_rod`,
+                    `name_mn`,
+                    `equip`,
+                    `sort`,
+                    `viewer_id_add`
+                ) VALUES (
+                    '".addslashes($name)."',
+                    '".addslashes($name_rod)."',
+                    '".addslashes($name_mn)."',
+                    '".$_POST['equip']."',
+                    ".$sort.",
+                    ".VIEWER_ID."
+                )";
+        query($sql);
+        xcache_unset(CACHE_PREFIX.'device_name');
+        $send['html'] = utf8(sa_device_spisok());
+        jsonSuccess($send);
+        break;
+    case 'device_get':
+        if(!preg_match(REGEXP_NUMERIC, $_POST['id']))
+            jsonError();
+        $id = intval($_POST['id']);
+        $sql = "SELECT * FROM `base_device` WHERE `id`=".$id." LIMIT 1";
+        if(!$r = mysql_fetch_assoc(query($sql)))
+            jsonError();
+        $send['name'] = utf8($r['name']);
+        $send['name_rod'] = utf8($r['name_rod']);
+        $send['name_mn'] = utf8($r['name_mn']);
+        $send['equip'] = utf8(devEquipCheck(0, $r['equip']));
+        jsonSuccess($send);
+        break;
+    case 'device_edit':
+        if(!preg_match(REGEXP_NUMERIC, $_POST['id']))
+            jsonError();
+        $id = intval($_POST['id']);
+        $name = win1251(htmlspecialchars(trim($_POST['name'])));
+        $name_rod = win1251(htmlspecialchars(trim($_POST['rod'])));
+        $name_mn = win1251(htmlspecialchars(trim($_POST['mn'])));
+        if(empty($name) || empty($name_rod) || empty($name_mn))
+            jsonError();
+        if(!empty($_POST['equip'])) {
+            $ids = explode(',', $_POST['equip']);
+            for($n = 0; $n < count($ids); $n++)
+                if(!preg_match(REGEXP_NUMERIC, $ids[$n]))
+                    jsonError();
+        }
+        $sql = "UPDATE `base_device` SET
+                    `name`='".addslashes($name)."',
+                    `name_rod`='".addslashes($name_rod)."',
+                    `name_mn`='".addslashes($name_mn)."',
+                    `equip`='".$_POST['equip']."'
+                WHERE `id`=".$id;
+        query($sql);
+        xcache_unset(CACHE_PREFIX.'device_name');
+        $send['html'] = utf8(sa_device_spisok());
+        jsonSuccess($send);
+        break;
+    case 'device_del':
+        if(!preg_match(REGEXP_NUMERIC, $_POST['id']))
+            jsonError();
+        $id = intval($_POST['id']);
+        if(query_value("SELECT COUNT(`id`) FROM `base_vendor` WHERE `device_id`=".$id))
+            jsonError();
+        if(query_value("SELECT COUNT(`id`) FROM `base_model` WHERE `device_id`=".$id))
+            jsonError();
+        if(query_value("SELECT COUNT(`id`) FROM `zayavki` WHERE `base_device_id`=".$id))
+            jsonError();
+        $sql = "DELETE FROM `base_device` WHERE `id`=".$id;
+        query($sql);
+        xcache_unset(CACHE_PREFIX.'device_name');
+        $send['html'] = utf8(sa_device_spisok());
+        jsonSuccess($send);
+        break;
+
     case 'equip_add':
         if(!preg_match(REGEXP_NUMERIC, $_POST['device_id']))
             jsonError();

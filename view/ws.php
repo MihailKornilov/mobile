@@ -54,26 +54,6 @@ function _mainLinks() {
 	$html .= $send;
 }//end of _mainLinks()
 
-function devEquipCheck($device_id, $ids='') {//Получение списка комплектаций в виде чекбоксов для внесения или редактирования заявки
-    $equip = query_value("SELECT `equip` FROM `base_device` WHERE `id`=".$device_id);
-    $arr = explode(',', $equip);
-    $equip = array();
-    foreach($arr as $id)
-        $equip[$id] = 1;
-    $send = '';
-    $sel = array();
-    if($ids) {
-        $arr = explode(',', $ids);
-        foreach($arr as $id)
-            $sel[$id] = 1;
-    }
-    foreach(equipCache() as $id => $r)
-        if(isset($equip[$id]))
-            $send .= _checkbox('eq_'.$id, $r['name'], isset($sel[$id]) ? 1 : 0);
-    return $send;
-}//end of devEquipCheck()
-
-
 // ---===! client !===--- Секция клиентов
 
 function _clientsLink($arr) {
@@ -405,7 +385,7 @@ function _zayavDeviveBaseIds($type='device', $client_id=0) { //список id устройс
 	return $cache;
 }//end of _zayavDeviveBaseIds()
 
-function zayav_add() {
+function zayav_add($v=array()) {
 	$sql = "SELECT `id`,`name` FROM `setup_fault` ORDER BY SORT";
 	$q = query($sql);
 	$fault = '<table>';
@@ -425,8 +405,8 @@ function zayav_add() {
 		'<table style="border-spacing:8px">'.
 			'<tr><td class="label">Клиент:        <td><INPUT TYPE="hidden" id="client_id" value="'.$client_id.'" />'.
 			'<tr><td class="label top">Устройство:<td><table><td id="dev"><td id="device_image"></table>'.
-			'<tr><td class="label">IMEI:          <td><INPUT type="text" id="imei" maxlength="20" />'.
-			'<tr><td class="label">Серийный номер:<td><INPUT type="text" id="serial" maxlength="30" />'.
+			'<tr><td class="label">IMEI:          <td><INPUT type="text" id="imei" maxlength="20"'.(isset($v['imei']) ? ' value="'.$v['imei'].'"' : '').' />'.
+			'<tr><td class="label">Серийный номер:<td><INPUT type="text" id="serial" maxlength="30"'.(isset($v['serial']) ? ' value="'.$v['serial'].'"' : '').' />'.
 			'<tr><td class="label">Цвет:          <td><INPUT TYPE="hidden" id="color_id" value="0" />'.
             '<tr class="tr_equip dn"><td class="label">Комплектация:<td class="equip_spisok">'.
             '<tr><td class="label top">Местонахождение устройства<br />после внесения заявки:<td><INPUT type="hidden" id="place" />'.

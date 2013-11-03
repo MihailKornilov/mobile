@@ -36,7 +36,14 @@ switch($_GET['p']) {
             header('Location:'.URL.'&p=wscreate');
         _mainLinks();
         switch(@$_GET['d']) {
-            case 'add': $html .= zayav_add(); break;
+            case 'add':
+                $v = array();
+                if(isset($_GET['imei']) && preg_match(REGEXP_WORD, $_GET['imei']))
+                    $v['imei'] = strtoupper(htmlspecialchars(trim($_GET['imei'])));
+                if(isset($_GET['serial']) && preg_match(REGEXP_WORD, $_GET['serial']))
+                    $v['serial'] = strtoupper(htmlspecialchars(trim($_GET['serial'])));
+                $html .= zayav_add($v);
+                break;
             case 'info':
                 if(!preg_match(REGEXP_NUMERIC, $_GET['id'])) {
                     $html .= 'Страницы не существует';
@@ -214,6 +221,9 @@ switch($_GET['p']) {
                     break;
                 }
                 $html .= sa_ws();
+                break;
+            case 'device':
+                $html .= sa_device();
                 break;
             case 'equip':
                 $html .= sa_equip();

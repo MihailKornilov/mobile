@@ -143,6 +143,7 @@ function _header() {
         '<meta http-equiv="content-type" content="text/html; charset=windows-1251" />'.
         '<title> Приложение 2031819 Hi-tech Service </title>'.
         '<link href="'.SITE.'/css/global.css?'.VERSION.'" rel="stylesheet" type="text/css" />'.
+        (@$_GET['p'] == 'sa' ? '<link href="'.SITE.'/css/sa.css?'.VERSION.'" rel="stylesheet" type="text/css" />' : '').
         (SA ? '<script type="text/javascript" src="http://nyandoma'.(LOCAL ? '' : '.ru').'/js/errors.js?'.VERSION.'"></script>' : '').
         '<script type="text/javascript" src="'.SITE.'/js/jquery-2.0.3.min.js"></script>'.
         '<script type="text/javascript" src="'.SITE.'/js/xd_connection.js"></script>'.
@@ -833,6 +834,7 @@ function equipCache() {
     if(empty($spisok)) {
         $sql = "SELECT * FROM `setup_device_equip` ORDER BY `sort`";
         $q = query($sql);
+        $spisok = array();
         while($r = mysql_fetch_assoc($q))
             $spisok[$r['id']] = array(
                 'name' => $r['name'],
@@ -842,6 +844,26 @@ function equipCache() {
     }
     return $spisok;
 }//end of equipCache()
+function devEquipCheck($device_id=0, $ids='') {//Получение списка комплектаций в виде чекбоксов для внесения или редактирования заявки
+    if($device_id) {
+        $v = query_value("SELECT `equip` FROM `base_device` WHERE `id`=".$device_id);
+        $arr = explode(',', $v);
+        $equip = array();
+        foreach($arr as $id)
+            $equip[$id] = 1;
+    }
+    $sel = array();
+    if($ids) {
+        $arr = explode(',', $ids);
+        foreach($arr as $id)
+            $sel[$id] = 1;
+    }
+    $send = '';
+    foreach(equipCache() as $id => $r)
+        if(isset($equip[$id]) || !$device_id)
+            $send .= _checkbox('eq_'.$id, $r['name'], isset($sel[$id]) ? 1 : 0);
+    return $send;
+}//end of devEquipCheck()
 
 
 
