@@ -271,6 +271,16 @@ function _checkbox($id, $txt='', $value=0) {
     return '<input type="hidden" id="'.$id.'" value="'.$value.'" />'.
         '<div class="check'.$value.'" id="'.$id.'_check">'.$txt.'</div>';
 }//end of _checkbox()
+function _radio($id, $list, $value=0, $light=false) {
+    $spisok = '';
+    foreach($list as $uid => $title)
+        $spisok .= '<div class="'.($uid == $value ? 'on' : 'off').($light ? ' l' : '').'" val="'.$uid.'">'.$title.'</div>';
+    return
+    '<div class="_radio" id="'.$id.'_radio">'.
+        '<input type="hidden" id="'.$id.'" value="'.$value.'">'.
+        $spisok.
+    '</div>';
+}//end of _radio()
 
 function _end($count, $o1, $o2, $o5=false) {
     if($o5 === false) $o5 = $o2;
@@ -348,7 +358,7 @@ function GvaluesCreate() {//—оставление файла G_values.js
     query("UPDATE `setup_global` SET `g_values`=`g_values`+1");
 }//end of GvaluesCreate()
 
-function _monthFull($n) {
+function _monthFull($n=0) {
     $mon = array(
         1 => '€нвар€',
         2 => 'феврал€',
@@ -363,7 +373,24 @@ function _monthFull($n) {
         11 => 'но€бр€',
         12 => 'декабр€'
     );
-    return $mon[intval($n)];
+    return $n ? $mon[intval($n)] : $mon;
+}//end of _monthFull
+function _monthDef($n=0) {
+    $mon = array(
+        1 => '€нварь',
+        2 => 'февраль',
+        3 => 'март',
+        4 => 'апрель',
+        5 => 'май',
+        6 => 'июнь',
+        7 => 'июль',
+        8 => 'август',
+        9 => 'сент€брь',
+        10 => 'окт€брь',
+        11 => 'но€брь',
+        12 => 'декабрь'
+    );
+    return $n ? $mon[intval($n)] : $mon;
 }//end of _monthFull
 function _monthCut($n) {
     $mon = array(
@@ -524,7 +551,17 @@ function _engRusChar($word) { //ѕеревод символов раскладки с английского на русс
         'n' => 'т',
         'm' => 'ь',
         ',' => 'б',
-        '.' => 'ю'
+        '.' => 'ю',
+        '0' => '0',
+        '1' => '1',
+        '2' => '2',
+        '3' => '3',
+        '4' => '4',
+        '5' => '5',
+        '6' => '6',
+        '7' => '7',
+        '8' => '8',
+        '9' => '9'
     );
     $send = '';
     for($n = 0; $n < strlen($word); $n++)

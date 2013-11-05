@@ -1,9 +1,3 @@
-Highcharts.setOptions({
-    lang: {
-        months: ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь']
-    }
-});
-
 var G = {
     T:(new Date()).getTime(),
     vkScroll:0,
@@ -32,31 +26,9 @@ var G = {
         }
     }
 };
-/*
- * Формирование окончаний
- * Пример: 1 день
- * G.end(count, ['ень', 'ня', 'ей']);
-*/
-G.end = function(count, arr) {
-    if(arr.length == 2)
-        arr.push(arr[1]); // если в массиве всего 2 элемента, то увеличение его, копируя второй элемент в третий
-    var send = arr[2];
-    if(Math.floor(count / 10 % 10) != 1)
-        switch(count % 10) {
-            case 1: send = arr[0]; break;
-            case 2: send = arr[1]; break;
-            case 3: send = arr[1]; break;
-            case 4: send = arr[1]; break;
-        }
-    return send;
-};
-
-
-
-
 
 // контактовский селект 2013-02-14 23:19
-$.fn.vkSel = function (obj) {
+$.fn.vkSel = function(obj) {
   var t = $(this);
   var id = t.attr('id');
 
@@ -441,23 +413,6 @@ $.fn.vkSel = function (obj) {
 }; // end of vkSel
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // Календарь
 G.months_ass = {1:'Январь',2:'Февраль',3:'Март',4:'Апрель',5:'Май',6:'Июнь',7:'Июль',8:'Август',9:'Сентябрь',10:'Октябрь',11:'Ноябрь',12:'Декабрь'};
 G.months_sel_ass = {1:'января',2:'февраля',3:'марта',4:'апреля',5:'мая',6:'июня',7:'июля',8:'августа',9:'сентября',10:'октября',11:'ноября',12:'декабря'};
@@ -667,14 +622,10 @@ G.months_sel_ass = {1:'января',2:'февраля',3:'марта',4:'апреля',5:'мая',6:'июня'
   $.fn.vkCalendar = function (obj) { new Calendar(obj, $(this)); };
 })();
 
-
-
-
-/* Выпадающее меню по ссылке
- *
- * id указывается из INPUT hidden
-*/
 $.fn.linkMenu = function (obj) {
+    /* Выпадающее меню по ссылке
+     * id указывается из INPUT hidden
+     */
   var obj = $.extend({
     head:'',    // если указано, то ставится в название ссылки, а список из spisok
     spisok:[],
@@ -765,13 +716,7 @@ $.fn.linkMenu = function (obj) {
   }
 };
 
-
-
-
-
-
-/* меню - список  */
-$.fn.infoLink = function(obj) {
+$.fn.infoLink = function(obj) {/* меню - список  */
   var obj = $.extend({
     spisok:[],
     func:''
@@ -802,182 +747,3 @@ $.fn.infoLinkSet = function(id) {
     }
   }
 };
-
-
-
-
-
-
-/* ПОИСКОВАЯ СТРОКА */
-$.fn.topSearch = function (obj) {
-  var obj = $.extend({
-    width:126,
-    focus:0,
-    txt:'',
-    func:'',
-    enter:0    // если 1 - функция выполняется после нажатия Enter
-    },obj);
-
-  var TS = $(this);
-
-  TS.addClass('topSearch').html("<H5><DIV>"+obj.txt+"</DIV></H5><H6><DIV class=img_del></DIV><INPUT TYPE=text></H6>");
-  TS.find("H6:first").css('width', obj.width + 'px');
-  var DIV = TS.find("H5 DIV:first");
-  var input = TS.find("INPUT:first");
-  input.css('width', (obj.width - 20) + 'px');
-
-  DIV.click(function(){ input.focus(); });
-
-  input.bind({
-    focus:function () { DIV.css('color','#CCC'); },
-    blur:function () { DIV.css('color','#777'); },
-    keyup:function() {
-      if (!$(this).val()) {
-        DIV.show();
-        $(this).prev().hide();
-      } else {
-        DIV.hide();
-        $(this).prev().show();
-      }
-      if(obj.func && obj.enter == 0) { obj.func($(this).val()); }
-    }
-  });
-
-  TS.find(".img_del").click(function () {
-    $(this).hide().next().val('');
-    DIV.show();
-    if(obj.func) obj.func($(this).next().val());
-  });
-
-  if (obj.enter == 1) {
-    input.keydown(function (e) {
-      if(e.which==13 && obj.func)
-        obj.func($(this).val());
-      });
-  }
-
-  if(obj.focus == 1) { input.focus(); }
-
-  return TS;
-}
-
-$.fn.topSearchClear = function () {
-  this.find(".img_del").hide().next().val('');
-  this.find("H5 DIV:first").show();
-}
-
-$.fn.topSearchSet = function (VAL) {
-  if(!VAL) {
-    this.find(".img_del").hide().next().val('');
-    this.find("H5 DIV:first").show();
-  } else {
-    this.find(".img_del").show().next().val(VAL);
-    this.find("H5 DIV:first").hide();
-  }
-    return $(this);
-}
-
-
-
-
-
-
-// радио
-$.fn.vkRadio = function (obj) {
-  var t = $(this);
-  var id = t.attr('id');
-  var value = t.val(); // текщее значение
-
-  if (!obj) { var obj = {}; }
-  obj.spisok = obj.spisok || [];
-  obj.value = /\d$/.test(value) ? value : (obj.value || -1); // установленное значение. Можно установить либо в INPUT, либо через объект
-  obj.display = "display:" + (obj.display || "block") +";";
-  obj.top = obj.top ? "margin-top:" + obj.top + "px;" : '';
-  obj.bottom = obj.bottom ? "margin-bottom:" + obj.bottom + "px;" : '';
-  obj.right = obj.right ? "margin-right:" + obj.right + "px;" : '';
-  obj.light = obj.light || 0; // подсветка выбранного значения
-  obj.func = obj.func || function () {};
-
-    $('#' + id + '_radio').remove();
-  var html = "<DIV class=radio id=" + id + "_radio val=end_>";
-  for(var n = 0; n < obj.spisok.length; n++) {
-    var sp = obj.spisok[n];
-    html += "<DIV class=" + (sp.uid == obj.value ? 'on' : 'off') + " val=radio_" + obj.spisok[n].uid + " style=" + obj.display + obj.bottom + obj.top + obj.right + ">" + sp.title + "</DIV>";
-  }
-  html += "</DIV>";
-  t.after(html);
-
-  if (obj.light) { $("#" + id +"_radio .off").css('color', '#888'); }
-
-  $("#" + id +"_radio").click(function (e) {
-    var target = $(e.target);
-    var n = 1;
-    while (target.attr('val') == undefined) {
-      target = target.parent();
-      n--;
-      if (n < 0) break;
-    }
-    var val = target.attr('val').split('_');
-    if (val[0] == 'radio') {
-      if (obj.value != val[1]) {
-        obj.value = val[1];
-        $(this).find(".on").attr('class', 'off').css('color', obj.light ? '#888' : '#000');
-        target.attr('class', 'on').css('color', '#000');
-        t.val(obj.value);
-        obj.func(obj.value);
-      }
-    }
-  });
-};
-
-
-
-
-
-
-
-
-
-
-// КНОПКА РАДИО
-$.fn.myRadio = function(obj){
-  var obj = $.extend({
-    spisok:[{uid:0,title:'radio'}],
-    bottom:0,
-    func:''
-  },obj);
-
-  var INP = this;
-  var ID = INP.attr('id');
-  var VAL = INP.val();
-  if (VAL.length == 0) VAL = -1;
-  var HTML = "<DIV class=radio id="+ID+"_radio>";
-  for(var n = 0; n < obj.spisok.length; n++) {
-    HTML+="<DIV class=" + (obj.spisok[n].uid == VAL ? 'on' : 'off') + " val=" + obj.spisok[n].uid + ">" + obj.spisok[n].title + "</DIV>";
-  }
-  HTML += "</DIV>";
-  INP.after(HTML);
-
-  if(obj.bottom > 0) { $("#" + ID + "_radio DIV").css('margin-bottom',obj.bottom+'px'); }
-
-  $("#"+ID+"_radio").click(function (e) {
-    var target = $(e.target);
-    while (target.attr('val') == undefined) { target = target.parent(); }
-    var val = target.attr('val');
-    $(this).find(".on").attr('class','off');
-    target.attr('class','on');
-    INP.val(val);
-    if(obj.func) obj.func(val);
-  });
-};
-$.fn.myRadioSet = function (VAL) {
-  this.val(VAL);
-  var ID=this.attr('id');
-  var DIVS=$("#"+ID+"_radio DIV");
-  DIVS.attr('class','off');
-  var LEN=DIVS.length;
-  for(var n=0;n<LEN;n++)
-    if(VAL==DIVS.eq(n).attr('val'))
-      DIVS.eq(n).attr('class','on');
-};
-

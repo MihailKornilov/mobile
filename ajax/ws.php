@@ -1716,8 +1716,11 @@ switch(@$_POST['op']) {
         if(!preg_match(REGEXP_NUMERIC, $_POST['worker']))
             jsonError();
         $year = intval($_POST['year']);
-        $send['summ'] = report_rashod_monthSum($year, intval($_POST['category']), intval($_POST['worker']));
-        $send['html'] = utf8(report_rashod_spisok(1, $year.'-'.$_POST['month'], intval($_POST['category']), intval($_POST['worker'])));
+        $mon = $_POST['month'];
+        $cat = intval($_POST['category']);
+        $worker = intval($_POST['worker']);
+        $send['mon'] = utf8(report_rashod_monthSum($year, intval($mon), $cat, $worker));
+        $send['html'] = utf8(report_rashod_spisok(1, $year.'-'.$mon, $cat, $worker));
         jsonSuccess($send);
         break;
     case 'report_rashod_add':

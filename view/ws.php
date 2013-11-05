@@ -409,7 +409,7 @@ function zayav_add($v=array()) {
 			'<tr><td class="label">Серийный номер:<td><INPUT type="text" id="serial" maxlength="30"'.(isset($v['serial']) ? ' value="'.$v['serial'].'"' : '').' />'.
 			'<tr><td class="label">Цвет:          <td><INPUT TYPE="hidden" id="color_id" value="0" />'.
             '<tr class="tr_equip dn"><td class="label">Комплектация:<td class="equip_spisok">'.
-            '<tr><td class="label top">Местонахождение устройства<br />после внесения заявки:<td><INPUT type="hidden" id="place" />'.
+            '<tr><td class="label top">Местонахождение устройства<br />после внесения заявки:<td><INPUT type="hidden" id="place" value="-1" />'.
 			'<tr><td class="label top">Неисправности: <td id="fault">'.$fault.
 			'<tr><td class="label top">Заметка:       <td><textarea id="comm"></textarea>'.
 			'<tr><td class="label">Добавить напоминание:<td>'._checkbox('reminder').
@@ -646,11 +646,12 @@ function zayav_list($data, $values) {
 					'<div id="buttonCreate"><a HREF="'.URL.'&p=zayav&d=add&back=zayav">Новая заявка</a></div>'.
 					'<div id="find"></div>'.
 					'<div class="findHead">Порядок</div>'.
-					'<INPUT TYPE="hidden" id="sort" value="'.$values['sort'].'">'.
+                    _radio('sort', array(1=>'По дате добавления',2=>'По обновлению статуса'), $values['sort']).
 					_checkbox('desc', 'Обратный порядок', $values['desc']).
 					'<div class="condLost'.(!empty($values['find']) ? ' hide' : '').'">'.
 						'<div class="findHead">Статус заявки</div><div id="status"></div>'.
-						'<div class="findHead">Заказаны запчасти</div><INPUT type="hidden" id="zpzakaz" value="'.$values['zpzakaz'].'" />'.
+						'<div class="findHead">Заказаны запчасти</div>'.
+                        _radio('zpzakaz', array(0=>'Все заявки',1=>'Да',2=>'Нет'), $values['zpzakaz'], 1).
 						'<div class="findHead">Устройство</div><div id="dev"></div>'.
 						'<div class="findHead">Нахождение устройства</div><INPUT TYPE="hidden" id="device_place" value="'.$values['place'].'">'.
 						'<div class="findHead">Состояние устройства</div><INPUT TYPE="hidden" id="devstatus" value="'.$values['devstatus'].'">'.
@@ -1532,7 +1533,7 @@ function report_remind() {
 }//end of report_remind()
 function report_remind_right() {
 	return '<div class=findHead>Категории заданий</div>'.
-		'<INPUT type="hidden" id="remind_status" value="1">'.
+        _radio('remind_status', array(1=>'Активные',2=>'Выполнены',0=>'Отменены'), 1, 1).
 		_checkbox('remind_private', 'Личное');
 }//end of report_remind_right()
 function remind_data($page=1, $filter=array()) {
@@ -1729,11 +1730,11 @@ function report_rashod_right() {
 		'<div class="findHead">Сотрудник</div>'.
 		'<input type="hidden" id="rashod_worker">'.
 		'<input type="hidden" id="rashod_year">'.
-		'<input type="hidden" id="rashod_monthSum" value="'.intval(strftime('%m', time())).'">'.
-		'<script type="text/javascript">var monthSum = ['.report_rashod_monthSum().'];</script>';
+        '<div id="monthList">'.report_rashod_monthSum().'</div>';
 }//end of report_rashod_right()
-function report_rashod_monthSum($year=false, $category=0, $worker=0) {
+function report_rashod_monthSum($year=0, $month=0, $category=0, $worker=0) {
 	if(!$year) $year = strftime('%Y', time());
+	if(!$month) $month = intval(strftime('%m', time()));
 	$sql = "SELECT
 				DISTINCT(DATE_FORMAT(`dtime_add`,'%m')) AS `month`,
 				SUM(`summa`) AS `sum`
@@ -1750,10 +1751,10 @@ function report_rashod_monthSum($year=false, $category=0, $worker=0) {
 	$res = array();
 	while($r = mysql_fetch_assoc($q))
 		$res[intval($r['month'])] = abs($r['sum']);
-	$send = array();
+	$mon = array();
 	for($n = 1; $n <= 12; $n++)
-		$send[] = isset($res[$n]) ? $res[$n] : 0;
-	return implode(',', $send);
+		$mon[$n] = _monthDef($n).(isset($res[$n]) ? '<span class="sum">'.$res[$n].'</span>' : '');
+    return _radio('monthSum', $mon, $month, 1);
 }//end of report_rashod_monthSum()
 function report_rashod() {
 	$sql = "SELECT

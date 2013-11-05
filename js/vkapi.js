@@ -1,7 +1,7 @@
 $(document).ready(function() {
     if($('.vkComment').length > 0) {
         $(document)
-            .on('click focus', '.vkComment .add TEXTAREA,.vkComment .cadd TEXTAREA', function() {
+            .on('click focus', '.vkComment .add textarea,.vkComment .cadd textarea', function() {
                 var t = $(this),
                     but = t.next(),
                     val = t.val();
@@ -155,8 +155,8 @@ $(document).ready(function() {
 });
 
 
-// диалог 2013-09-25 21:03
-function vkDialog(obj) {
+
+function vkDialog(obj) {// диалог 2013-09-25 21:03
     var t = $(this);
     var id = t.attr('id');
     obj = $.extend({
@@ -218,8 +218,7 @@ function vkDialog(obj) {
     }
 }
 
-//Сообщение о результе выполненных действий
-function vkMsgOk(txt) {
+function vkMsgOk(txt) {//Сообщение о результе выполненных действий
     var obj = $('#vkMsgOk');
     if(obj.length > 0)
         obj.remove();
@@ -232,13 +231,6 @@ function vkMsgOk(txt) {
         });
 }
 
-$(document).on('click', '.check0,.check1', function() {
-    var t = $(this),
-        cl = Math.abs(t.attr('class').split('check')[1] - 1),
-        inp = $('#' + t.attr('id').split('_check')[0]);
-    t.attr('class', 'check' + cl);
-    inp.val(cl);
-});
 
 $(document).on('click', '.fotoView', function() {
     $('#foto_view').remove();
@@ -528,16 +520,77 @@ $.fn.fotoUpload = function(obj) {
     }
 };
 
-$.fn.vkCheck = function() {
-    var t = $(this),
-        id = t.attr('id'),
+$.fn._check = function(o) {
+    var t = $(this);
+    if(typeof o == 'number' || typeof o == 'string') {
+        t.val(o).next().attr('class', 'check' + o);
+        return t;
+    }
+    var id = t.attr('id'),
         val = t.val() == 1 ? 1 : 0;
     t.val(val);
     t.after('<div class="check' + val + '" id="' + id + '_check"></div>');
+    return t;
 };
+$(document).on('click', '.check0,.check1', function() {
+    var t = $(this),
+        cl = Math.abs(t.attr('class').split('check')[1] - 1),
+        inp = $('#' + t.attr('id').split('_check')[0]);
+    t.attr('class', 'check' + cl);
+    inp.val(cl);
+});
 
-// перелистывание годов
-$.fn.years = function(obj) {
+$.fn._radio = function(o) {
+    var t = $(this);
+    if(typeof o == 'number' || typeof o == 'string') {
+        var p = t.parent();
+        if(p.hasClass('_radio')) {
+            p.find('div.on').removeClass('on').addClass('off');
+            var div = p.find('div');
+            for(var n = 0; n < div.length; n++) {
+                var eq = div.eq(n);
+                if(o == eq.attr('val')) {
+                    eq.removeClass('of').addClass('on');
+                    p.find('input').val(o);
+                    break;
+                }
+            }
+        }
+        return t;
+    }
+
+    o = $.extend({
+        spisok:[],
+        light:0,
+        func:function() {}
+    }, o);
+    var id = t.attr('id'),
+        list = '',
+        val = t.val();
+    for(var n = 0; n < o.spisok.length; n++) {
+        var sp = o.spisok[n];
+        list += '<div class="' + (val == sp.uid ? 'on' : 'off') + (o.light ? ' l' : '') + '" ' +
+                     'val="' + sp.uid + '">' +
+                        sp.title +
+                '</div>';
+    }
+    t.wrap('<div class="_radio" id="' + id + '_radio">');
+    t.after(list);
+    t.parent().find('.on,.off').click(function() {
+        o.func($(this).attr('val'));
+    });
+    return t;
+};
+$(document).on('click', '._radio .on,._radio .off', function() {
+    var t = $(this),
+        p = t.parent(),
+        v = t.attr('val');
+    p.find('div.on').removeClass('on').addClass('off');
+    t.removeClass('off').addClass('on');
+    p.find('input:first').val(v);
+});
+
+$.fn.years = function(obj) {// перелистывание годов
     obj = $.extend({
         year:(new Date()).getFullYear(),
         start:function () {},
@@ -597,8 +650,7 @@ $.fn.years = function(obj) {
 
     $("#years_" + id + " .but:first").mousedown(function () { allmon = 1; years.next(-1); });
     $("#years_" + id + " .but:eq(1)").mousedown(function () { allmon = 1; years.next(1); });
-};//end of years
-
+};
 $.fn.keyEnter = function(func) {
     $(this).keydown(function(e) {
         if(e.keyCode == 13)
@@ -607,8 +659,78 @@ $.fn.keyEnter = function(func) {
     return $(this);
 };
 
-// Подсказки vkHint 2013-02-14 14:43
-(function () {
+$.fn._search = function(o) {
+    o = $.extend({
+        width:126,
+        focus:0,
+        txt:'',
+        func:function(){},
+        enter:0
+    }, o);
+    var t = $(this),
+        html = '<div class="_search" style="width:' + o.width + 'px">' +
+            '<div class="img_del dn"></div>' +
+            '<div class="hold">' + o.txt + '</div>' +
+            '<input type="text" style="width:' + (o.width - 45) + 'px" />' +
+        '</div>';
+    t.html(html);
+    var _s = t.find('._search'),
+        inp = t.find('input'),
+        hold = t.find('.hold'),
+        del = t.find('.img_del');
+
+    if(o.focus) {
+        inp.focus();
+        holdFocus()
+    }
+
+    inp .focus(holdFocus)
+        .blur(holdBlur)
+        .keyup(function() {
+            var c = $(this).val().length > 0;
+            hold[(c ? 'add' : 'remove') + 'Class']('dn');
+            del[(c ? 'remove' : 'add') + 'Class']('dn');
+            if(!o.enter)
+                o.func(inp.val());
+        });
+
+    if(o.enter)
+        inp.keydown(function(e) {
+            if(e.which == 13)
+                o.func($(this).val());
+        });
+
+    t.clear = function() {
+        inp.val('');
+        del.addClass('dn');
+        hold.removeClass('dn');
+    };
+
+    del.click(function() {
+        t.clear();
+        o.func('');
+    });
+
+    _s.click(function() {
+        inp.focus();
+        holdFocus();
+    });
+
+    function holdFocus() { hold.css('color', '#ccc'); }
+    function holdBlur() { hold.css('color', '#777'); }
+
+    t.inp = function(v) {
+        if(!v)
+            return $.trim(inp.val());
+        inp.val(v);
+        del.removeClass('dn');
+        hold.addClass('dn');
+        return $(this);
+    };
+    return t;
+};
+
+(function () {// Подсказки vkHint 2013-02-14 14:43
     var Hint = function (t, o) { this.create(t, o); return t; };
 
     Hint.prototype.create = function (t, o) {

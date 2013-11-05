@@ -52,6 +52,23 @@ var REGEXP_NUMERIC = /^\d+$/,
             }
         });
     },
+    _end = function(count, arr) {
+        /* Формирование окончаний
+         * Пример: 1 день
+         * G.end(count, ['ень', 'ня', 'ей']);
+         */
+        if(arr.length == 2)
+            arr.push(arr[1]); // если в массиве всего 2 элемента, то увеличение его, копируя второй элемент в третий
+        var send = arr[2];
+        if(Math.floor(count / 10 % 10) != 1)
+            switch(count % 10) {
+                case 1: send = arr[0]; break;
+                case 2: send = arr[1]; break;
+                case 3: send = arr[1]; break;
+                case 4: send = arr[1]; break;
+            }
+        return send;
+    },
     hashLoc,
     hashSet = function(hash) {
         if(!hash && !hash.p)
@@ -88,6 +105,13 @@ var REGEXP_NUMERIC = /^\d+$/,
             VK.callMethod('setLocation', hashLoc);
     };
 
+Highcharts.setOptions({
+    lang: {
+        months: ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь']
+    }
+});
+
+
 $(document)
     .ajaxError(function(event, request, settings) {
         if(!request.responseText)
@@ -123,6 +147,5 @@ $(document).ready(function() {
     VK.addCallback('onScroll', function(top) { G.vkScroll = top; });
 
     sortable();
-
     frameBodyHeightSet();
 });

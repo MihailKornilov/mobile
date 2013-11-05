@@ -108,7 +108,7 @@ var AJAX_WS= 'http://' + G.domain + '/ajax/ws.php?' + G.values,
     },
     clientFilter = function() {
         var v = {
-            fast:$.trim($('#find input').val()),
+            fast:cFind.inp(),
             dolg:$('#dolg').val(),
             active:$('#active').val()
         };
@@ -164,8 +164,8 @@ var AJAX_WS= 'http://' + G.domain + '/ajax/ws.php?' + G.values,
                 devstatus:$('#devstatus').val()
             },
             loc = '';
-        if(v.sort != 1) loc += '.sort=' + v.sort;
-        if(v.desc != 0) loc += '.desc=' + v.desc;
+        if(v.sort != '1') loc += '.sort=' + v.sort;
+        if(v.desc != '0') loc += '.desc=' + v.desc;
         if(v.find) loc += '.find=' + escape(v.find);
         else {
             if(v.status > 0) loc += '.status=' + v.status;
@@ -426,27 +426,15 @@ var AJAX_WS= 'http://' + G.domain + '/ajax/ws.php?' + G.values,
             category:$('#rashod_category').val(),
             worker:$('#rashod_worker').val(),
             year:$('#rashod_year').val(),
-            month:$('#rashod_monthSum').val()
+            month:$('#monthSum').val()
         };
         if(send.month < 10) send.month = '0' + send.month;
         $('#mainLinks').addClass('busy');
         $.post(AJAX_WS, send, function (res) {
-            monthSum = res.summ.split(',');
-            reportRashodMonthPrint();
             $('#report_rashod #spisok').html(res.html);
+            $('#monthList').html(res.mon);
             $('#mainLinks').removeClass('busy');
         }, 'json');
-    },
-    reportRashodMonthPrint = function() {
-        var spisok = [];
-        for(var n = 1; n <= 12; n++)
-            spisok.push({uid:n, title:G.months_ass[n] + (monthSum[n - 1] > 0 ? '<div class="sum">' + monthSum[n - 1] + '</div>' : '')});
-        $('#rashod_monthSum').vkRadio({
-            top:5,
-            light:1,
-            spisok:spisok,
-            func:reportRashodLoad
-        });
     },
     rashodCategoryAdd = function(spisok, obj) {
         var html = '<TABLE>' +
@@ -966,7 +954,7 @@ $(document)
             submit:submit
         });
         $('#fio,#telefon').keyEnter(submit);
-        $('#join').vkCheck();
+        $('#join')._check();
         $('#join_check')
             .click(function() {
                 $('.tr_join').toggle();
@@ -1063,7 +1051,7 @@ $(document)
             priv = $('.remind_add_tab #private');
         txt.autosize().focus();
         day.vkCalendar();
-        priv.vkCheck();
+        priv._check();
         $('.remind_add_tab #private_check').vkHint({
             msg:'Задание сможете<br />видеть только Вы.',
             top:-71,
@@ -1139,13 +1127,15 @@ $(document)
                 delayShow:500
             });
     })
+    .on('click', '#zayav #sort_radio div', zayavSpisokLoad)
     .on('click', '#zayav #desc_check', zayavSpisokLoad)
+    .on('click', '#zayav #zpzakaz_radio div', zayavSpisokLoad)
     .on('click', '#zayav #filter_break', function() {
-        $('#find').topSearchClear();
-        $('#sort').myRadioSet(1);
-        $('#desc').val(0).next().attr('class', 'check0');
+        zFind.clear();
+        $('#sort')._radio(1);
+        $('#desc')._check(0);
         $('#status').infoLinkSet(0);
-        $('#zpzakaz').myRadioSet(0);
+        $('#zpzakaz')._radio(0);
         $('#dev').device({
             width:155,
             type_no:1,
@@ -1282,7 +1272,7 @@ $(document)
             priv = $('.remind_add_tab #private');
         txt.autosize().focus();
         day.vkCalendar();
-        priv.vkCheck();
+        priv._check();
         $('.remind_add_tab #private_check').vkHint({
             msg:'Задание сможете<br />видеть только Вы.',
             top:-71,
@@ -1349,7 +1339,7 @@ $(document)
         $('#sum,#prim,#reminder_txt').keyEnter(submit);
         $('#acc_status').linkMenu({spisok:G.status_spisok});
         $('#acc_dev_status').linkMenu({spisok:G.device_status_spisok});
-        $('#acc_remind').vkCheck();
+        $('#acc_remind')._check();
         $('#acc_remind_check').click(function(id) {
             $('.zayav_accrual_add.remind').toggle();
         });
@@ -1419,9 +1409,7 @@ $(document)
         });
         $('#sum').focus();
         $('#sum,#prim').keyEnter(submit);
-        $('#kassa').vkRadio({
-            display:'inline-block',
-            right:15,
+        $('#kassa')._radio({
             spisok:[
                 {uid:1, title:'да'},
                 {uid:0, title:'нет'}
@@ -1531,7 +1519,7 @@ $(document)
     .on('click', '#zayavInfo .status_place', function() {
         var html = '<TABLE style="border-spacing:8px">' +
             '<TR><TD class="label r top">Статус заявки:<TD><input type="hidden" id="z_status" value="' + G.zayavInfo.z_status + '">' +
-            '<TR><TD class="label r top">Местонахождение устройства:<TD><input type="hidden" id="dev_place" value="' + G.zayavInfo.dev_place + '">' +
+            '<TR><TD class="label r top">Местонахождение устройства:<TD><input type="hidden" id="place" value="' + G.zayavInfo.dev_place + '">' +
             '<TR><TD class="label r top">Состояние устройства:<TD><input type="hidden" id="dev_status" value="' + G.zayavInfo.dev_status + '">' +
             '</TABLE>',
             dialog = vkDialog({
@@ -1542,32 +1530,33 @@ $(document)
                 butSubmit:'Сохранить',
                 submit:submit
             });
-        $('#z_status').vkRadio({
+        $('#z_status')._radio({
             spisok:G.status_spisok,
-            top:5,
             light:1
         });
 
         var spisok = [];
-        for(var n = 0; n < G.device_place_spisok.length; spisok.push(G.device_place_spisok[n]), n++);
-        spisok.push({uid:0, title:'другое: <DIV id="place_other_div"><INPUT type="text" id="place_other" maxlength="20" value="' + G.zayavInfo.place_other + '"></DIV>'});
-        $('#dev_place').vkRadio({
+        for(var n = 0; n < G.device_place_spisok.length; n++)
+            spisok.push(G.device_place_spisok[n]);
+        spisok.push({
+            uid:0,
+            title:'другое: <INPUT type="text" ' +
+                                 'id="place_other" ' + (!G.zayavInfo.place_other ? 'class="dn" ' : '') +
+                                 'maxlength="20" ' +
+                                 'value="' + G.zayavInfo.place_other + '">'
+        });
+        $('#place')._radio({
             spisok:spisok,
-            top:5,
             light:1,
             func:function(val) {
-                $('#place_other_div').css('display', val == 0 ? 'inline' : 'none');
+                $('#place_other')[(val == 0 ? 'remove' : 'add') + 'Class']('dn');
                 if(val == 0)
                     $('#place_other').val('').focus();
             }
         });
-        if(G.zayavInfo.dev_place == 0)
-            $('#place_other_div').css('display', 'inline');
-
         G.device_status_spisok.splice(0, 1);
-        $('#dev_status').vkRadio({
+        $('#dev_status')._radio({
             spisok:G.device_status_spisok,
-            top:5,
             light:1
         });
 
@@ -1578,7 +1567,7 @@ $(document)
                 zayav_id:G.zayavInfo.id,
                 zayav_status:$('#z_status').val(),
                 dev_status:$('#dev_status').val(),
-                dev_place:$('#dev_place').val(),
+                dev_place:$('#place').val(),
                 place_other:$('#place_other').val()
             };
             if(send.dev_place > 0)
@@ -1670,7 +1659,7 @@ $(document)
             title0:'Цвет не указан',
             spisok:G.color_spisok
         });
-        $('#bu').vkCheck();
+        $('#bu')._check();
         function submit() {
             var send = {
                 op:'zayav_zp_add',
@@ -1839,7 +1828,7 @@ $(document)
             title0:'Цвет не указан',
             spisok:G.color_spisok
         });
-        $('#add_bu').vkCheck();
+        $('#add_bu')._check();
         $('#add_dev').device({
             width:200
         });
@@ -1928,7 +1917,7 @@ $(document)
             title0:'Цвет не указан',
             spisok:G.color_spisok
         });
-        $('#add_bu').vkCheck();
+        $('#add_bu')._check();
         $('#add_dev').device({
             width:200,
             device_id:G.zpInfo.device,
@@ -2050,10 +2039,11 @@ $(document)
 
         $('#count').focus().select();
         $('#client_id').clientSel({add:1});
-        $('#kassa').vkRadio({
-            display:'inline-block',
-            right:15,
-            spisok:[{uid:1, title:'да'},{uid:0, title:'нет'}]
+        $('#kassa')._radio({
+            spisok:[
+                {uid:1, title:'да'},
+                {uid:0, title:'нет'}
+            ]
         });
 
         function submit() {
@@ -2393,7 +2383,7 @@ $(document)
 
         $('#tab_content #txt').autosize();
         $('#tab_content #data').vkCalendar();
-        $('#tab_content #private').vkCheck();
+        $('#tab_content #private')._check();
         $('#tab_content #private_check').vkHint({
             msg:'Задание сможете<br />видеть только Вы.',
             top:-71,
@@ -2507,14 +2497,13 @@ $(document)
                 '</TABLE>';
             dialog.content.html(html);
 
-            $('#action').vkRadio({
-                top:5,
+            $('#action')._radio({
                 spisok:[
                     {uid:1, title:'Перенести на другую дату'},
                     {uid:2, title:'Выполнено'},
                     {uid:3, title:'Отменить'}
                 ],
-                func:function (id) {
+                func:function(id) {
                     $('#new_action').show();
                     $('#comment').val('');
                     $('#new_about').html('');
@@ -2575,6 +2564,7 @@ $(document)
                 });
         }
     })
+    .on('click', '#remind_status_radio div', reportRemindLoad)
     .on('click', '#remind_private_check', reportRemindLoad)
 
     .on('click', '#report_prihod_next', function() {
@@ -2613,9 +2603,7 @@ $(document)
             sum = $('#report_prihod_add #sum'),
             about = $('#report_prihod_add #about');
 
-        kassa.vkRadio({
-            display:'inline-block',
-            right:15,
+        kassa._radio({
             spisok:[{uid:1, title:'да'},{uid:0, title:'нет'}]
         });
         about.focus();
@@ -2742,9 +2730,7 @@ $(document)
             spisok:rashodViewers
         });
 
-        kassa.vkRadio({
-            display:'inline-block',
-            right:15,
+        kassa._radio({
             spisok:[{uid:1, title:'да'},{uid:0, title:'нет'}]
         });
         about.focus();
@@ -2844,9 +2830,7 @@ $(document)
                 spisok:rashodViewers
             });
 
-            kassa.vkRadio({
-                display:'inline-block',
-                right:15,
+            kassa._radio({
                 spisok:[{uid:1, title:'да'},{uid:0, title:'нет'}]
             });
             about.focus();
@@ -2888,6 +2872,7 @@ $(document)
                 });
         }
     })
+    .on('click', '#monthSum_radio div', reportRashodLoad)
 
     .on('click', '#report_kassa #set_go', function() {
         if($(this).hasClass('busy'))
@@ -3301,9 +3286,10 @@ $(document)
 
 $(document).ready(function() {
     if($('#client').length > 0) {
-        $('#find').topSearch({
-            width:585,
+        window.cFind = $('#find')._search({
+            width:602,
             focus:1,
+            enter:1,
             txt:'Начните вводить данные клиента',
             func:clientSpisokLoad
         });
@@ -3359,15 +3345,7 @@ $(document).ready(function() {
     }
 
     if($('#zayav').length > 0) {
-        $('#find')
-            .topSearch({
-                width:134,
-                focus:1,
-                txt:'Быстрый поиск...',
-                enter:1,
-                func:zayavSpisokLoad
-            })
-            .topSearchSet(G.zayav_find)
+        window.zFind = $('#find')
             .vkHint({
                 msg:'Поиск производится по<br />совпадению в названии<br />модели, imei и серийном<br />номере.',
                 ugol:'right',
@@ -3375,30 +3353,20 @@ $(document).ready(function() {
                 left:-178,
                 delayShow:800,
                 correct:0
+            })
+            ._search({
+                width:153,
+                focus:1,
+                txt:'Быстрый поиск...',
+                enter:1,
+                func:zayavSpisokLoad
             });
-        $('#sort').myRadio({
-            spisok:[
-                {uid:1,title:'По дате добавления'},
-                {uid:2,title:'По обновлению статуса'}
-            ],
-            bottom:5,
-            func:zayavSpisokLoad
-        });
+        zFind.inp(G.zayav_find);
         G.status_spisok.unshift({uid:0, title:'Любой статус'});
         $('#status').infoLink({
             spisok:G.status_spisok,
             func:zayavSpisokLoad
         }).infoLinkSet(G.zayav_status);
-        $('#zpzakaz').vkRadio({
-            spisok:[
-                {uid:0, title:'Все заявки'},
-                {uid:1, title:'Да'},
-                {uid:2, title:'Нет'}
-            ],
-            top:6,
-            light:1,
-            func:zayavSpisokLoad
-        });
         $('#dev').device({
             width:155,
             type_no:1,
@@ -3441,14 +3409,13 @@ $(document).ready(function() {
             device_ids:G.ws.devs,
             func:zayavDevSelect
         });
-        G.device_place_spisok.push({uid:0, title:'другое: <DIV id="place_other_div"><INPUT type="text" id="place_other" maxlength="20"></DIV>'});
-        $('#place').vkRadio({
+        G.device_place_spisok.push({uid:0, title:'другое: <input type="text" id="place_other" class="dn" maxlength="20" />'});
+        $('#place')._radio({
             spisok:G.device_place_spisok,
-            top:4,
-            bottom:6,
             func:function(val) {
-                $('#place_other_div').css('display', val == 0 ? 'inline-block' : 'none');
-                if(val == 0) $('#place_other').val('').focus();
+                $('#place_other')[(val == 0 ? 'remove' : 'add') + 'Class']('dn');
+                if(val == 0)
+                    $('#place_other').val('').focus();
             }
         });
         $('#color_id').vkSel({width:120, title0:'Цвет не указан', spisok:G.color_spisok});
@@ -3504,7 +3471,7 @@ $(document).ready(function() {
             var msg = '';
             if(send.client == 0) msg = 'Не выбран клиент';
             else if(send.device == 0) msg = 'Не выбрано устройство';
-            else if(send.place == '' || send.place == 0 && !send.place_other) msg = 'Не указано местонахождение устройства';
+            else if(send.place == '-1' || send.place == 0 && !send.place_other) msg = 'Не указано местонахождение устройства';
             else if(send.reminder == 1 && !send.reminder_txt) msg = 'Не указан текст напоминания';
             else {
                 if(send.place > 0) send.place_other = '';
@@ -3544,14 +3511,14 @@ $(document).ready(function() {
 
     if($('#zp').length > 0) {
         $('#find')
-            .topSearch({
-                width:134,
+            ._search({
+                width:153,
                 focus:1,
                 txt:'Быстрый поиск...',
                 enter:1,
                 func:zpSpisokLoad
             })
-            .topSearchSet(G.zp_find);
+            .inp(G.zp_find);
         $("#menu")
             .infoLink({
             spisok:[
@@ -3585,6 +3552,7 @@ $(document).ready(function() {
             func:zpImgUpdate
         });
     }
+
     if($('#report_history').length > 0) {
         $('#report_history_worker').vkSel({
             width:140,
@@ -3602,18 +3570,6 @@ $(document).ready(function() {
                 {uid:4, title:'Платежи'}
             ],
             func:reportHistoryLoad
-        });
-    }
-    if($('#report_remind').length > 0) {
-        $('#remind_status').vkRadio({
-            top:6,
-            light:1,
-            spisok:[
-                {uid:1, title:'Активные'},
-                {uid:2, title:'Выполнены'},
-                {uid:0, title:'Отменены'}
-            ],
-            func:reportRemindLoad
         });
     }
     if($('#report_prihod').length > 0) {
@@ -3634,7 +3590,6 @@ $(document).ready(function() {
             func:reportRashodLoad
         });
         $('#rashod_year').years({func:reportRashodLoad});
-        reportRashodMonthPrint();
     }
 
     frameBodyHeightSet();

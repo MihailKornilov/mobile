@@ -83,7 +83,6 @@ td.r{text-align:right}
 input.money{font:bold 14px Tahoma;width:70px}
 
 .red{color:#E22}
-.dn{display:none}
 
 ._sort dd{background-color:#fff}
 
@@ -156,6 +155,9 @@ input.money{font:bold 14px Tahoma;width:70px}
     height:16px;
     width:16px;
 }
+
+
+.dn{display:none}
 
 /* Кнопка создания */
 #buttonCreate{border:#39659C solid 1px}
@@ -435,6 +437,16 @@ input.money{font:bold 14px Tahoma;width:70px}
 #vkMsgOk B{font-size:12px}
 
 
+._search{
+    border:#CCC solid 1px;
+    background:#fff no-repeat 6px 7px url("data:image/gif;base64,R0lGODlhCwALANUAAAAAAP////z8/ert8+ns8vj5+/f4+unt8+Xp7+Pn7ejr7+ru8+nt8tPb5Nrh6dng6Njf59fe5t/l7N3j6tjg6Nbe5tXd5dTc5N3k69vi6eXq7+Tp7uLn7OHm6/Hz9fr7/Pn6+/j5+s3X4NTd5dPc5NLb49Ha4tnh6Njg59be5d7l687Y4NXe5dTd5N3l6+7y9dLc49jh5+Dn7N/m693l6urv8v3///z9/f39/fv7+wAAAAAAAAAAAAAAAAAAAAAAACwAAAAACwALAAAGWsCA8DM4ORwZRU54Y1xasg6LdBCGGpaX0JOqCA0rmVCYMH1Fs3GAYw6AKK6a8MXyulWVCU3VuiwCCCgRGBgPJxAEHxsjMDEFIJAgAgESJS0aakI4AhIbNplCQQA7");
+    position:relative;
+}
+._search input{border:0;margin-left:22px;padding:6px 0 5px 0}
+._search .img_del{float:right;margin:7px 4px 0 0}
+._search .hold{position:absolute;left:24px;top:6px;color:#777}
+
+
 /* чекбокс */
 .check0,.check1{
     display:inline-block;
@@ -451,20 +463,20 @@ input.money{font:bold 14px Tahoma;width:70px}
 .check1:hover{background-position:0 -42px}
 
 
-.radio .off,.radio .on{
+._radio .off,._radio .on{
+    display:block;
     background-image:url("data:image/gif;base64,R0lGODlhDgA4AMQAAAAAAP///7fAy9/k6sDK1a22wMPL1M/W3rvJ19rh6F+DpZyyxq/B0sfT3tfg6LDBz9/l6u/y9Ozv8efq7P///wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACH5BAEAABQALAAAAAAOADgAAAX/ICVSEmES0jiWRBQEkZmK5fDewYCKhI3fOhLh90O1iLjYEIkzMZvHZ6z0DOx6zKDQh9PNhFHld3XaqcinMc3kgsnIXKAZiwxSXw4Gw3Ezth0KgQp8bksBDIIKDH2GiIIMEC9seIkNkVOGeQyWkil0LxCROQRrcS9eaG1iZ2BvrBQTBbIFE6yxBQcJCQeytSKxBrrCCQa0IgXBw8LFsAXKyrS4z8O8ztPDstfY0tq8sdoJxsjXzM3Jw8W+zdzV6iO3va/r8We3ubv05s/px+fKzN90IViwAIGwaPcQJDKIz1qCBYkWHHQIUdACAbpkJUz0AKM3hwMXdMxYa5wwARiJDxX4ZRKdMZbs8r2b9VJECAA7");
     background-repeat:no-repeat;
     height:14px;
     cursor:pointer;
     padding-left:18px;
-    display:inline-block;
+    margin:5px 0;
 }
-.radio .off{background-position:0 0}
-.radio .off:hover{background-position:0 -28px}
-.radio .on{background-position:0 -14px}
-.radio .on:hover{background-position:0 -42px}
-
-
+._radio .off{background-position:0 0}
+._radio .off:hover{background-position:0 -28px}
+._radio .on{background-position:0 -14px}
+._radio .on:hover{background-position:0 -42px}
+._radio .off.l{color:#888}
 
 /* Задний фон при открытии поверхностных окон */
 .backfon {
@@ -740,9 +752,6 @@ input.money{font:bold 14px Tahoma;width:70px}
 #client .ajaxNext{margin:0 10px}
 
 
-
-
-
 /* Информация о клиенте */
 #clientInfo .left{padding-bottom:10px}
 #clientInfo .fio{color:#31618C;font-size:12px;font-weight:bold;margin:15px 5px 5px 30px}
@@ -813,8 +822,8 @@ input.money{font:bold 14px Tahoma;width:70px}
 #device_image img{height:72px;display:none}
 #zayavAdd .equip_spisok div{margin-right:7px}
 #zayavAdd #place_radio{margin-bottom:10px}
-#place_other_div{position:absolute;display:none}
-#place_other{width:100px;position:relative;top:-3px;left:3px}
+#place_radio{position:relative}
+#place_other{width:100px;position:absolute;top:34px;left:60px}
 #zayavAdd #imei{width:130px}
 #zayavAdd #serial{width:200px}
 #zayavAdd #fault .check0,#zayavAdd #fault .check1{white-space:nowrap;margin:4px 15px 0 0}
@@ -860,6 +869,7 @@ input.money{font:bold 14px Tahoma;width:70px}
 .zayav_accrual_add #prim,.zayav_accrual_add #reminder_txt { width:200px; }
 .zayav_accrual_add.remind{display:none;margin-top:-8px;}
 .zayav_oplata_add{border-spacing:8px}
+.zayav_oplata_add #kassa_radio div{display:inline-block;margin-right:15px}
 .zayav_oplata_add .label{width:165px;text-align:right}
 .zayav_oplata_add #prim{width:200px}
 #zayavInfo .deleting{text-align:center;color:#555}
@@ -985,6 +995,7 @@ input.money{font:bold 14px Tahoma;width:70px}
 .zp_dec_dialog #count{width:45px;font:bold 12px Tahoma;text-align:right}
 .zp_dec_dialog span{margin-left:5px;color:#888}
 .zp_dec_dialog #cena{width:45px;text-align:right}
+.zp_dec_dialog #kassa_radio div{display:inline-block;margin-right:15px}
 .zp_dec_dialog textarea{width:200px;height:40px;resize:none}
 #zayavNomer{width:60px;margin-right:5px}
 span.zayavNomerTab{color:#955}
@@ -1091,6 +1102,7 @@ table.zayavNomerTab td{vertical-align:top}
 #report_prihod .summa{margin-bottom:7px}
 #report_prihod .summa_add{float:right}
 #report_prihod_add{border-spacing:8px}
+#report_prihod_add #kassa_radio div{display:inline-block;margin-right:15px}
 #report_prihod_add #about{width:170px}
 .report_prihod_rl .label{display:inline-block;width:20px}
 .report_prihod_rl .cal{margin-top:5px}
@@ -1110,9 +1122,10 @@ table.zayavNomerTab td{vertical-align:top}
 #report_rashod .deleting{text-align:center;color:#555}
 #report_rashod em{margin-right:5px;color:#770}
 #years_rashod_year{margin-top:20px}
-#rashod_monthSum_radio .sum{float:right}
-#rashod_monthSum_radio .off .sum{color:#888}
+#monthSum_radio .sum{float:right}
+#monthSum_radio .off .sum{color:#888}
 #report_rashod_add{border-spacing:8px}
+#report_rashod_add #kassa_radio div{display:inline-block;margin-right:15px}
 #report_rashod_add #about{width:190px}
 #rashod_category_name{width:190px}
 
@@ -1244,47 +1257,6 @@ table.zayavNomerTab td{vertical-align:top}
 
 
 
-
-
-
-/* СТРОКА ПОИСКА  */
-.topSearch H5{position:absolute}
-.topSearch H5 DIV {
-    position:relative;
-    top:6px;
-    left:6px;
-    padding-left:16px;
-    color:#777;
-    z-index:1;
-}
-.topSearch H6 {
-    border:#CCC solid 1px;
-    background:#FFF no-repeat 5px 6px url("data:image/gif;base64,R0lGODlhCwALANUAAAAAAP////z8/ert8+ns8vj5+/f4+unt8+Xp7+Pn7ejr7+ru8+nt8tPb5Nrh6dng6Njf59fe5t/l7N3j6tjg6Nbe5tXd5dTc5N3k69vi6eXq7+Tp7uLn7OHm6/Hz9fr7/Pn6+/j5+s3X4NTd5dPc5NLb49Ha4tnh6Njg59be5d7l687Y4NXe5dTd5N3l6+7y9dLc49jh5+Dn7N/m693l6urv8v3///z9/f39/fv7+wAAAAAAAAAAAAAAAAAAAAAAACwAAAAACwALAAAGWsCA8DM4ORwZRU54Y1xasg6LdBCGGpaX0JOqCA0rmVCYMH1Fs3GAYw6AKK6a8MXyulWVCU3VuiwCCCgRGBgPJxAEHxsjMDEFIJAgAgESJS0aakI4AhIbNplCQQA7");
-    padding:3px 0 0 19px;
-    height:20px;
-}
-.topSearch .img_del {
-    float:right;
-    margin-top:3px;
-    display:none;
-}
-.topSearch INPUT {
-    width:100%;
-    border:none;
-    padding:0;
-    position:relative;
-    top:2px;
-    left:1px;
-    background-color:transparent;
-    z-index:100;
-}
-
-
-
-
-
-
-
 /* Выпадающее меню по ссылке */
 .linkMenu .fordl {
     position:absolute;
@@ -1325,46 +1297,3 @@ table.zayavNomerTab td{vertical-align:top}
     padding:2px 5px 3px 5px;
     border:#476D96 solid 1px;
 }
-
-
-
-
-
-#workCount {
-    padding:12px 10px 2px 10px;
-    font:bold 11px Tahoma;
-    color:#47688D;
-    border-bottom:#DAE1E8 solid 1px;
-}
-#workCount A{float:right}
-.myWork {
-    margin:10px;
-    padding:0 0 5px 10px;
-    border-bottom:#DAE1E8 solid 1px;
-}
-
-#wTestOk {
-    height:50px;
-    margin:10px 20px 5px 20px;
-    background-color:#FFF;
-    border:#DDD solid 1px;
-    padding:10px;
-}
-#wTestOk IMG {
-    float:left;
-    margin-right:10px;
-}
-#wTestOk H1 {
-    float:right;
-    margin-right:10px;
-}
-#wTestOk H2 {
-    color:#999;
-    font-size:10px;
-}
-#wTestOk H3 {
-    color:#555;
-    font-weight:bold;
-}
-#wTestOk H4{margin-bottom:15px}
-#wTestOk .vkButton{margin: 0 8px 0 260px }
