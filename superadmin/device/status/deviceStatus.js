@@ -24,7 +24,7 @@ $("#drag").sortable({
     if (uids.length > 1) {
       var arr = [];
       for(var n = 0; n < uids.length; n++) { arr.push(uids.eq(n).html()); }
-      $.getJSON("/superadmin/device/status/AjaxDeviceStatusSort.php?" + G.values + "&val=" + arr.join(','), function () {  });
+      $.getJSON("/superadmin/device/status/AjaxDeviceStatusSort.php?" + VALUES + "&val=" + arr.join(','), function () {  });
     }
   }
 });
@@ -41,62 +41,62 @@ $("#setup_device_status").click(function (e) {
     }
   }
 
-  // редактирование наименования
+  // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
   function edit(id) {
-    var dialog = $("#device_status_dialog").vkDialog({
+    var dialog = $("#device_status_dialog")._dialog({
       width:240,
-      head:'Изменение наименования',
-      content:"Наименование: <INPUT type=text id=status_name value='" + $("#table_" + id + " .name:first").html() + "'>",
-      butSubmit:'Сохранить',
+      head:'пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ',
+      content:"пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ: <INPUT type=text id=status_name value='" + $("#table_" + id + " .name:first").html() + "'>",
+      butSubmit:'пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ',
       submit:function () {
         var send = {
           id:id,
           name:$("#status_name").val()
         };
         dialog.process();
-        $.post("/superadmin/device/status/AjaxDeviceStatusEdit.php?" + G.values, send, function (res) {
+        $.post("/superadmin/device/status/AjaxDeviceStatusEdit.php?" + G.VALUESsend, function (res) {
           dialog.close();
-          vkMsgOk("Изменено!");
+          _msg("пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ!");
           $("#table_" + id + " .name:first").html(send.name)
         }, 'json');
       }
     }).o;
   } // end edit
 
-  // Внесение нового статуса
+  // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
   function add() {
-    var dialog = $("#device_status_dialog").vkDialog({
+    var dialog = $("#device_status_dialog")._dialog({
       width:240,
-      head:'Внесение нового статуса',
-      content:"Наименование: <INPUT type=text id=status_name>",
+      head:'пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ',
+      content:"пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ: <INPUT type=text id=status_name>",
       submit:function () {
         var send = {
           name:$("#status_name").val()
         };
         dialog.process();
-        $.post("/superadmin/device/status/AjaxDeviceStatusAdd.php?" + G.values, send, function (res) {
+        $.post("/superadmin/device/status/AjaxDeviceStatusAdd.php?" + G.vaVALUESnd, function (res) {
           G.zayav_count.push(0);
           G.device_status_spisok.push({uid:res.id, title:send.name});
           deviceStatusPrint();
           dialog.close();
-          vkMsgOk("Внесено!");
+          vkM_msgпїЅпїЅпїЅпїЅпїЅпїЅ!");
         }, 'json');
       }
     }).o;
   } // end edit
 
-  // удаление статуса
+  // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
   function del(id) {
-    var dialog = $("#device_status_dialog").vkDialog({
+    var dialog = $("#device_status_dialog")._dialog({
       width:240,
-      head:'Удаление статуса',
-      content:"<B>Подтвердите удаление</B><BR>'" + $("#table_" + id + " .name:first").html() + "'",
-      butSubmit:'Удалить',
+      head:'пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ',
+      content:"<B>пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ</B><BR>'" + $("#table_" + id + " .name:first").html() + "'",
+      butSubmit:'пїЅпїЅпїЅпїЅпїЅпїЅпїЅ',
       submit:function () {
         dialog.process();
         $.post("/superadmin/device/status/AjaxDeviceStatusDel.php?" + G.values, {id:id}, function (res) {
           dialog.close();
-          vkMsgOk("Удалено!");
+          vkMsgOk("пїЅпїЅпїЅпїЅпїЅпїЅпїЅ!");
           $("#table_" + id).remove();
         }, 'json');
       }

@@ -34,7 +34,7 @@ $('#statistic').highcharts('StockChart', {
 });
 
 $(document).ready(function() {
-    if(G.vku.viewer_id != 982006)
+    if(VIEWER_ID != 982006)
         return;
     $('#statistic').after('<div id="stamina"></div>');
     var data = [
@@ -758,7 +758,13 @@ $(document).ready(function() {
 
         ['2013-11-04', 10630, 288, 3.3],
 
-        ['2013-11-05', 10343, 306, 3.4]
+        ['2013-11-05', 10343, 306, 3.4],
+
+        ['2013-11-06', 10181, 298, 3.7],
+        ['2013-11-06', 12971, 292, 3.8],
+        ['2013-11-06', 13186, 290, 3.9],
+
+        ['2013-11-07', 10945, 301, 3.6]
     ];
     var symbols = [],
         speed = [],

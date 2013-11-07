@@ -18,25 +18,25 @@ include('incHeader.php');
 ?>
 <DIV class=path>
   <?php include('superadmin/incBack.php'); ?>
-  <A HREF="<?php echo $URL; ?>&my_page=superAdmin">Администрирование</A> » 
-  <A HREF="<?php echo $URL; ?>&my_page=saDevice">Устройства</A> » 
+  <A HREF="<?php echo $URL; ?>&my_page=superAdmin">пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ</A> пїЅ 
+  <A HREF="<?php echo $URL; ?>&my_page=saDevice">пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ</A> пїЅ 
   <?php echo $dev->name; ?>
 </DIV>
 
 <DIV id=setupZpName>
-  <DIV class=headName>Настройка наименования устройства</DIV>
+  <DIV class=headName>пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ</DIV>
   <TABLE cellpadding=0 cellspacing=7 style="margin:0px 0px 20px 40px;">
-  <TR><TD class=tdAbout>Наименование:<TD><INPUT type=text id=name value='<?php echo $dev->name; ?>'>
-  <TR><TD class=tdAbout>Родительный падеж (кого?):<TD><INPUT type=text id=name_rod value='<?php echo $dev->name_rod; ?>'>
-  <TR><TD class=tdAbout>Множественное число:<TD><INPUT type=text id=name_mn value='<?php echo $dev->name_mn; ?>'>
-  <TR><TD><TD id=ds><DIV class=vkButton ><BUTTON onclick=devSave(this);>Сохранить</BUTTON></DIV>
+  <TR><TD class=tdAbout>пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ:<TD><INPUT type=text id=name value='<?php echo $dev->name; ?>'>
+  <TR><TD class=tdAbout>пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ (пїЅпїЅпїЅпїЅ?):<TD><INPUT type=text id=name_rod value='<?php echo $dev->name_rod; ?>'>
+  <TR><TD class=tdAbout>пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ:<TD><INPUT type=text id=name_mn value='<?php echo $dev->name_mn; ?>'>
+  <TR><TD><TD id=ds><DIV class=vkButton ><BUTTON onclick=devSave(this);>пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ</BUTTON></DIV>
   </TABLE>
 
-  <DIV class=headName id=hTab>Список производителей<EM onclick=setupVendorAdd();>Новый производитель</EM></DIV>
+  <DIV class=headName id=hTab>пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ<EM onclick=setupVendorAdd();>пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ</EM></DIV>
   <TABLE cellpadding=0 cellspacing=0 class=tabSpisok>
-    <TR><TH class=vendor>Производитель
-             <TH class=model>Кол-во<BR>моделей
-             <TH class=zayav>Кол-во<BR>заявок
+    <TR><TH class=vendor>пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+             <TH class=model>пїЅпїЅпїЅ-пїЅпїЅ<BR>пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+             <TH class=zayav>пїЅпїЅпїЅ-пїЅпїЅ<BR>пїЅпїЅпїЅпїЅпїЅпїЅ
              <TH class=edit>
   </TABLE>
   <DL id=drag></DL>
@@ -63,34 +63,34 @@ $("#drag").sortable({
     if (LEN>1) {
       $("#hTab").find("IMG").remove().end().append("<IMG src=/img/upload.gif>");
       for(var n=1; n < LEN; n++) { VAL += "," + DD.eq(n).attr('id').split('dd')[1]; }
-     $.getJSON("/superadmin/vendor/AjaxVendorSort.php?" + G.values + "&val=" + VAL,function(){ $("#hTab IMG").remove(); });
+     $.getJSON("/superadmin/vendor/AjaxVendorSort.php?" + VALUES + "&val=" + VAL,function(){ $("#hTab IMG").remove(); });
     }
   }
 });
 
 
 
-// сохранение склонений наименования устройства
+// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 function devSave(OBJ) {
   if(!$("#name").val()) {
-    $("#ds").alertShow({txt:'<SPAN class=red>Не указано наименование устройства</SPAN>',top:-42,left:-55,otstup:90});
+    $("#ds").alertShow({txt:'<SPAN class=red>пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ</SPAN>',top:-42,left:-55,otstup:90});
   } else {
     $(OBJ).butProcess();
-    $.post("/superadmin/device/AjaxDeviceNameSave.php?"+G.values,{
+    $.post("/superadmin/device/AjaxDeviceNameSave.php?"+VALUES,{
       id:<?php echo $dev->id; ?>,
       name:$("#name").val(),
       name_rod:$("#name_rod").val(),
       name_mn:$("#name_mn").val()
       },
       function (res) {
-        vkMsgOk("Сохранено!");
+        _msg("пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ!");
         $(OBJ).butRestore();
     });
   }
 }
 
 
-// формирование элемента данных производителя
+// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 function tableInsert(obj) {
   if (!obj.model) { obj.model = 0; }
   if (!obj.zayav) { obj.zayav = 0; }
@@ -110,15 +110,15 @@ function tableInsert(obj) {
 
 
 
-// внесение нового производителя
+// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 function setupVendorAdd() {
   var HTML = "<TABLE cellpadding=0 cellspacing=10>";
-  HTML += "<TR><TD class=tdAbout>Наименование:<TD><INPUT type=text id=vendor_name style=width:200px;>";
-  HTML += "<TR><TD class=tdAbout>Выделить:<TD id=ms><INPUT type=hidden id=vendor_bold value=0>";
+  HTML += "<TR><TD class=tdAbout>пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ:<TD><INPUT type=text id=vendor_name style=width:200px;>";
+  HTML += "<TR><TD class=tdAbout>пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ:<TD id=ms><INPUT type=hidden id=vendor_bold value=0>";
   HTML += "</TABLE>";
   dialogShow({
     top:110,
-    head:'Внесение нового производителя',
+    head:'пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ',
     content:HTML,
     submit:function () {
       var obj = {
@@ -127,15 +127,15 @@ function setupVendorAdd() {
         bold:$("#vendor_bold").val()
       };
       if (!obj.name) {
-        $("#ms").alertShow({txt:'<SPAN class=red>Не указано наименование.</SPAN>',top:8,left:-3});
+        $("#ms").alertShow({txt:'<SPAN class=red>пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ.</SPAN>',top:8,left:-3});
       } else {
         $("#butDialog").butProcess();
-        $.post("/superadmin/vendor/AjaxVendorAdd.php?"+G.values,obj,function(res){
+        $.post("/superadmin/vendor/AjaxVendorAdd.php?"+VALUES,obj,function(res){
           dialogHide();
           obj.id = res.id;
           obj.insert = 1;
           tableInsert(obj);
-          vkMsgOk("Новый производитель внесён!");
+          vkM_msgпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ!");
           frameBodyHeightSet();
           },'json');
       }
@@ -148,17 +148,17 @@ function setupVendorAdd() {
 
 
 
-// редактирование данных производителя
+// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 function setupVendorEdit(id) {
   var HTML = "<TABLE cellpadding=0 cellspacing=10>";
-  HTML += "<TR><TD class=tdAbout>Наименование:<TD><INPUT type=text id=vendor_name style=width:200px; value='" + $("#dd" + id + " A:first").html() + "'>";
-  HTML += "<TR><TD class=tdAbout>Выделить:<TD id=ms><INPUT type=hidden id=vendor_bold value=" + $("#dd" + id + " A:first").attr('val') + ">";
+  HTML += "<TR><TD class=tdAbout>пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ:<TD><INPUT type=text id=vendor_name style=width:200px; value='" + $("#dd" + id + " A:first").html() + "'>";
+  HTML += "<TR><TD class=tdAbout>пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ:<TD id=ms><INPUT type=hidden id=vendor_bold value=" + $("#dd" + id + " A:first").attr('val') + ">";
   HTML += "</TABLE>";
   dialogShow({
     top:110,
-    head:'Редактирование названия производителя',
+    head:'пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ',
     content:HTML,
-    butSubmit:'Сохранить',
+    butSubmit:'пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ',
     submit:function () {
       var obj = {
         id:id,
@@ -168,13 +168,13 @@ function setupVendorEdit(id) {
         zayav:$("#dd" + id + " .zayav").html()
       };
       if (!obj.name) {
-        $("#ms").alertShow({txt:'<SPAN class=red>Не указано наименование.</SPAN>',top:8,left:-3});
+        $("#ms").alertShow({txt:'<SPAN class=red>пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ.</SPAN>',top:8,left:-3});
       } else {
         $("#butDialog").butProcess();
-        $.post("/superadmin/vendor/AjaxVendorEdit.php?"+G.values,obj,function(res){
+        $.post("/superadmin/vendor/AjaxVendorEdit.php?"+VALUES,obj,function(res){
           dialogHide();
           tableInsert(obj);
-          vkMsgOk("Данные изменены!");
+          vkMsgO_msgпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ!");
           },'json');
       }
     }
@@ -185,24 +185,24 @@ function setupVendorEdit(id) {
 
 
 
-// удаление производителя
+// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 function setupVendorDel(id) {
   dialogShow({
     top:110,
     width:250,
-    head:'Удаление',
-    content:"<CENTER>Подтвердите удаление производителя<BR><B>" + $("#dd" + id + " A:first").html() + "</B>.</CENTER>",
-    butSubmit:'Удалить',
+    head:'пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ',
+    content:"<CENTER>пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ<BR><B>" + $("#dd" + id + " A:first").html() + "</B>.</CENTER>",
+    butSubmit:'пїЅпїЅпїЅпїЅпїЅпїЅпїЅ',
     submit:function () {
       $("#butDialog").butProcess();
-      $.post("/superadmin/vendor/AjaxVendorDel.php?"+G.values,{id:id},function(res){
+      $.post("/superadmin/vendor/AjaxVendorDel.php?"+VALUES,{id:id},function(res){
         dialogHide();
         if(res.result == 0) {
           tableInsert(res);
-          vkMsgOk("Удаление невозможно!");
+          vkMsgOk("_msgпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ!");
         } else {
           $("#dd" + id).remove();
-          vkMsgOk("Удалено!");
+          vkMsgOk("пїЅпїЅпїЅпїЅпїЅпїЅпїЅ!");
           frameBodyHeightSet();
         }
       },'json');

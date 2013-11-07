@@ -1,7 +1,9 @@
 var REGEXP_NUMERIC = /^\d+$/,
     REGEXP_CENA = /^[\d]+(.[\d]{1,2})?$/,
-    URL = 'http://' + G.domain + '/index.php?' + G.values,
-    AJAX_MAIN = 'http://' + G.domain + '/ajax/main.php?' + G.values,
+    SITE = 'http://' + DOMAIN,
+    URL = SITE + '/index.php?' + VALUES,
+    AJAX_MAIN = SITE + '/ajax/main.php?' + VALUES,
+    IMAGE_UPLOAD_PATH = SITE + '/include/imageUpload.php',
     setCookie = function(name, value) {
         var exdate = new Date();
         exdate.setDate(exdate.getDate() + 1);
@@ -20,17 +22,6 @@ var REGEXP_NUMERIC = /^\d+$/,
         var exdate = new Date();
         exdate.setDate(exdate.getDate()-1);
         document.cookie = name + '=; path=/; expires=' + exdate.toGMTString();
-    },
-    frameBodyHeightSet = function(y) {
-        var FB = document.getElementById('frameBody');
-        if(!y)
-            FB.style.height = 'auto';
-        var H = FB.offsetHeight-1;
-        if(y && y > H) {
-            H = y;
-            FB.style.height = (H + 1) + 'px';
-        }
-        VK.callMethod('resizeWindow', 625, H);
     },
     sortable = function() {
         $('._sort').sortable({
@@ -123,7 +114,7 @@ $(document)
     .on('click', '#cache_clear', function() {
         $.post(AJAX_MAIN, {'op':'cache_clear'}, function(res) {
             if(res.success) {
-                vkMsgOk('Кэш очищен.');
+                _msg('Кэш очищен.');
                 document.location.reload();
             }
         }, 'json');
@@ -131,7 +122,7 @@ $(document)
     .on('click', '.debug_toggle', function() {
         var d = getCookie('debug');
         setCookie('debug', d == 0 ? 1 : 0);
-        vkMsgOk('Debug включен.');
+        _msg('Debug включен.');
         document.location.reload();
     })
     .on('click', '.sa_viewer_msg .leave', function() {
@@ -140,12 +131,12 @@ $(document)
     });
 
 $(document).ready(function() {
-    frameHidden.onresize = frameBodyHeightSet;
+    frameHidden.onresize = _fbhs;
 
     VK.callMethod('scrollWindow', 0);
     VK.callMethod('scrollSubscribe');
-    VK.addCallback('onScroll', function(top) { G.vkScroll = top; });
+    VK.addCallback('onScroll', function(top) { VK_SCROLL = top; });
 
     sortable();
-    frameBodyHeightSet();
+    _fbhs();
 });

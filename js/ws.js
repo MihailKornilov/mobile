@@ -1,4 +1,4 @@
-var AJAX_WS= 'http://' + G.domain + '/ajax/ws.php?' + G.values,
+var AJAX_WS= SITE + '/ajax/ws.php?' + VALUES,
     scannerWord = '',
     scannerTime = 0,
     scannerTimer,
@@ -68,7 +68,7 @@ var AJAX_WS= 'http://' + G.domain + '/ajax/ws.php?' + G.values,
                 '<tr><td class="label">Имя:<TD><input type="text" id="fio" style="width:220px;">' +
                 '<tr><td class="label">Телефон:<TD><input type="text" id="telefon" style=width:220px;>' +
             '</TABLE>',
-            dialog = vkDialog({
+            dialog = _dialog({
                 width:340,
                 head:'Добавление нoвого клиента',
                 content:html,
@@ -96,7 +96,7 @@ var AJAX_WS= 'http://' + G.domain + '/ajax/ws.php?' + G.values,
                 dialog.process();
                 $.post(AJAX_WS, send, function(res) {
                     dialog.close();
-                    vkMsgOk('Новый клиент внесён.');
+                    _msg('Новый клиент внесён.');
                     if(res.success)
                         if(typeof callback == 'function')
                             callback(res);
@@ -309,7 +309,7 @@ var AJAX_WS= 'http://' + G.domain + '/ajax/ws.php?' + G.values,
                             '</table>' +
                             '<td valign="top">' + obj.img +
                     '</table>',
-            dialog = vkDialog({
+            dialog = _dialog({
                 head:'Внесение наличия запчасти',
                 content:html,
                 submit:submit
@@ -338,7 +338,7 @@ var AJAX_WS= 'http://' + G.domain + '/ajax/ws.php?' + G.values,
                     if(res.success) {
                         obj.callback(res);
                         dialog.close();
-                        vkMsgOk('Внесение наличия запчасти произведено.');
+                        _msg('Внесение наличия запчасти произведено.');
                     }
                 }, 'json');
             }
@@ -355,7 +355,7 @@ var AJAX_WS= 'http://' + G.domain + '/ajax/ws.php?' + G.values,
     },
     zpAvaiNo = function(c) {
         if(c == 0) {
-            vkDialog({
+            _dialog({
                 top:100,
                 width:300,
                 head:'Нет наличия',
@@ -440,7 +440,7 @@ var AJAX_WS= 'http://' + G.domain + '/ajax/ws.php?' + G.values,
         var html = '<TABLE>' +
             '<tr><td class="label">Наименование:<TD><INPUT type="text" id="rashod_category_name">' +
             '</TABLE>',
-            dialog = vkDialog({
+            dialog = _dialog({
                 width:320,
                 head:'Новая категория для расходов',
                 content:html,
@@ -470,7 +470,7 @@ var AJAX_WS= 'http://' + G.domain + '/ajax/ws.php?' + G.values,
                 $.post(AJAX_WS, send, function (res) {
                     if(res.success) {
                         dialog.close();
-                        vkMsgOk('Новая категория внесена.');
+                        _msg('Новая категория внесена.');
                         obj.add({uid:res.id,title:send.name}).val(res.id);
                     }
                 }, 'json');
@@ -612,7 +612,7 @@ $.fn.device = function(obj) {
             var html = '<table class="device-add-tab">' +
                 '<tr><td class="label">Название:<TD><input type="text" id="daname">' +
                 '</table>';
-            dialog = vkDialog({
+            dialog = _dialog({
                 width:300,
                 head:'Добавление нoвого устройства',
                 content:html,
@@ -626,7 +626,7 @@ $.fn.device = function(obj) {
             var html ='<TABLE class="device-add-tab">' +
                 '<TR><TD class="label">Название:<TD><input type="text" id="vaname">' +
                 '</TABLE>';
-            dialog = vkDialog({
+            dialog = _dialog({
                 width:300,
                 head:'Добавление нoвого производителя',
                 content:html,
@@ -640,7 +640,7 @@ $.fn.device = function(obj) {
             var html = '<TABLE class="device-add-tab">' +
                 '<TR><TD class="label">Название:<TD><input type="text" id="maname">' +
                 '</TABLE>';
-            dialog = vkDialog({
+            dialog = _dialog({
                 width:300,
                 head:'Добавление нoвой модели',
                 content:html,
@@ -838,7 +838,7 @@ $(document)
             if(scannerWord.length > 5 && time < 300) {
                 scannerDialogShow = true;
                 scannerTimer = setTimeout(timeStop, 500);
-                scannerDialog = vkDialog({
+                scannerDialog = _dialog({
                     head:'Сканер штрих-кода',
                     top:60,
                     width:250,
@@ -945,7 +945,7 @@ $(document)
             '<tr><td class="label">Объединить:<TD><input type="hidden" id="join">' +
             '<TR class=tr_join><TD class="label">с клиентом:<TD><input type="hidden" id="client2">' +
             '</TABLE>';
-        var dialog = vkDialog({
+        var dialog = _dialog({
             head:'Редактирование данных клиента',
             top:60,
             width:400,
@@ -1002,7 +1002,7 @@ $(document)
                         if(send.client2 > 0)
                             document.location.reload();
                         dialog.close();
-                        vkMsgOk('Данные клиента изменены.');
+                        _msg('Данные клиента изменены.');
                     }
                 }, 'json');
             }
@@ -1039,7 +1039,7 @@ $(document)
             '<tr><td class="label">Крайний день выполнения:<TD><INPUT type="hidden" id="data">' +
             '<tr><td class="label">Личное:<TD><INPUT type="hidden" id="private">' +
             '</TABLE>';
-        var dialog = vkDialog({
+        var dialog = _dialog({
                 top:60,
                 width:480,
                 head:'Добавление нового задания',
@@ -1086,7 +1086,7 @@ $(document)
                     dialog.abort();
                     if(res.success) {
                         dialog.close();
-                        vkMsgOk('Новое задание успешно добавлено.');
+                        _msg('Новое задание успешно добавлено.');
                         $('#remind_spisok').html(res.html);
                     }
                 }, 'json');
@@ -1159,7 +1159,7 @@ $(document)
             '<tr class="tr_equip' + (G.zayavInfo.equip ? '' : ' dn') + '">' +
                 '<td class="label r">Комплектация:  <TD class="equip_spisok">' + G.zayavInfo.equip +
         '</TABLE>',
-            dialog = vkDialog({
+            dialog = _dialog({
                 width:410,
                 top:30,
                 head:'Заявка №' + G.zayavInfo.nomer + ' - Редактирование',
@@ -1218,7 +1218,7 @@ $(document)
                 dialog.process();
                 $.post(AJAX_WS, send, function (res) {
                     dialog.close();
-                    vkMsgOk('Данные изменены!');
+                    _msg('Данные изменены!');
                     document.location.reload();
                 }, 'json');
             }
@@ -1234,7 +1234,7 @@ $(document)
         }
     })
     .on('click', '#zayavInfo .delete', function() {
-        var dialog = vkDialog({
+        var dialog = _dialog({
             top:110,
             width:250,
             head:'Удаление заявки',
@@ -1260,7 +1260,7 @@ $(document)
             '<tr><td class="label">Крайний день выполнения:<TD><INPUT type="hidden" id="data">' +
             '<tr><td class="label">Личное:<TD><INPUT type="hidden" id="private">' +
         '</TABLE>';
-        var dialog = vkDialog({
+        var dialog = _dialog({
                 top:60,
                 width:480,
                 head:'Добавление нового задания',
@@ -1306,7 +1306,7 @@ $(document)
                 $.post(AJAX_WS, send, function(res) {
                     if(res.success) {
                         dialog.close();
-                        vkMsgOk('Новое задание успешно добавлено.');
+                        _msg('Новое задание успешно добавлено.');
                         $('#remind_spisok').html(res.html);
                     } else {
                         dialog.abort();
@@ -1328,7 +1328,7 @@ $(document)
                 '<tr><td class="label">Содержание:<TD><input type="text" id="reminder_txt" value="Позвонить и сообщить о готовности.">' +
                 '<tr><td class="label">Дата:<TD><INPUT type="hidden" id="reminder_day">' +
             '</TABLE>';
-        var dialog = vkDialog({
+        var dialog = _dialog({
             top:60,
             width:420,
             head:'Заявка №' + G.zayavInfo.nomer + ' - Начисление за выполненную работу',
@@ -1366,7 +1366,7 @@ $(document)
                     dialog.abort();
                     if(res.success) {
                         dialog.close();
-                        vkMsgOk('Начисление успешно произведено!');
+                        _msg('Начисление успешно произведено!');
                         $('._spisok._money').append(res.html);
                         zayavInfoMoneyUpdate();
                         if(res.status) {
@@ -1400,7 +1400,7 @@ $(document)
             '<TR><TD class="label">Местонахождение устройства:<TD><input type="hidden" id="dev_place" value="2">' +
             '<TR><TD class="label">Примечание:<em>(не обязательно)</em><TD><input type="text" id="prim">' +
         '</TABLE>';
-        var dialog = vkDialog({
+        var dialog = _dialog({
             top:60,
             width:440,
             head:'Заявка №' + G.zayavInfo.nomer + ' - Внесение платежа',
@@ -1440,7 +1440,7 @@ $(document)
                     dialog.abort();
                     if(res.success) {
                         dialog.close();
-                        vkMsgOk('Платёж успешно внесён!');
+                        _msg('Платёж успешно внесён!');
                         $('._spisok._money').append(res.html);
                         zayavInfoMoneyUpdate();
                     }
@@ -1522,7 +1522,7 @@ $(document)
             '<TR><TD class="label r top">Местонахождение устройства:<TD><input type="hidden" id="place" value="' + G.zayavInfo.dev_place + '">' +
             '<TR><TD class="label r top">Состояние устройства:<TD><input type="hidden" id="dev_status" value="' + G.zayavInfo.dev_status + '">' +
             '</TABLE>',
-            dialog = vkDialog({
+            dialog = _dialog({
                 width:400,
                 top:30,
                 head:'Изменение статуса заявки и состояния устройства',
@@ -1582,7 +1582,7 @@ $(document)
                 $.post(AJAX_WS, send, function(res) {
                     if(res.success) {
                         dialog.close();
-                        vkMsgOk('Изменения сохранены.');
+                        _msg('Изменения сохранены.');
                         $('#status')
                             .html(res.z_status.name)
                             .css('background-color', '#' + res.z_status.color);
@@ -1618,7 +1618,7 @@ $(document)
         $.post(AJAX_WS, send, function(res) {
             if(res.success) {
                 t.html('Заказано!').attr('class', 'zakaz_ok');
-                vkMsgOk(res.msg);
+                _msg(res.msg);
             }
         }, 'json');
     })
@@ -1641,7 +1641,7 @@ $(document)
                     '<TR><TD class="label r">Б/у:<TD><input type="hidden" id="bu">' +
                 '</TABLE>' +
             '</div>',
-            dialog = vkDialog({
+            dialog = _dialog({
                 top:40,
                 width:380,
                 head:'Внесение новой запчасти',
@@ -1681,7 +1681,7 @@ $(document)
                 dialog.process();
                 $.post(AJAX_WS, send, function(res) {
                     if(res.success) {
-                        vkMsgOk('Внесение запчасти произведено.');
+                        _msg('Внесение запчасти произведено.');
                         dialog.close();
                         $('#zpSpisok')
                             .append(res.html)
@@ -1698,7 +1698,7 @@ $(document)
             (unit.find('.color').length > 0 ? unit.find('.color').html() + '.<br />' : '') +
             '<br />Информация об установке также<br />будет добавлена в заметки к заявке.' +
         '</CENTER>',
-        dialog = vkDialog({
+        dialog = _dialog({
             top:150,
             width:400,
             head:'Установка запчасти',
@@ -1716,7 +1716,7 @@ $(document)
             $.post(AJAX_WS, send, function(res) {
                 if(res.success) {
                     dialog.close();
-                    vkMsgOk('Установка запчасти произведена.');
+                    _msg('Установка запчасти произведена.');
                     unit.after(res.zp_unit).remove();
                     $('.vkComment').after(res.comment).remove();
                 }
@@ -1811,7 +1811,7 @@ $(document)
             '<tr><td class="label">Б/у:<td><input type="hidden" id="add_bu">' +
             '<tr><td class="label">Цвет:<td><input type="hidden" id="color_id">' +
             '</table>',
-            dialog = vkDialog({
+            dialog = _dialog({
                 top:70,
                 width:380,
                 head:'Внесение новой запчасти в каталог',
@@ -1859,7 +1859,7 @@ $(document)
                         $("#dev").device({
                             width:153,
                             type_no:1,
-                            device_ids:G.ws.devs,
+                            device_ids:WS_DEVS,
                             device_id:send.device_id,
                             vendor_id:send.vendor_id,
                             model_id:send.model_id,
@@ -1899,7 +1899,7 @@ $(document)
                 '<tr><td class="label">Б/у:<td><input type="hidden" id="add_bu" value="' + G.zpInfo.bu + '">' +
                 '<tr><td class="label">Цвет:<td><input type="hidden" id="color_id" value="' + G.zpInfo.color_id + '">' +
             '</table>',
-            dialog = vkDialog({
+            dialog = _dialog({
                 top:30,
                 width:380,
                 head:'Редактирование запчасти',
@@ -1948,7 +1948,7 @@ $(document)
                     dialog.abort();
                     if(res.success) {
                         dialog.close();
-                        vkMsgOk('Редактирование данных произведено.');
+                        _msg('Редактирование данных произведено.');
                         window.location.reload();
                     }
                 },'json');
@@ -1973,7 +1973,7 @@ $(document)
                 '<tr><td class="label r top">Номер заявки:<td><input type="text" id="zayavNomer">' +
                 '<tr><td class="label r top">Примечание:<td><textarea id="prim"></textarea>' +
             '</table>',
-            dialog = vkDialog({
+            dialog = _dialog({
                 width:340,
                 head:'Установка запчасти',
                 content:html,
@@ -2003,7 +2003,7 @@ $(document)
                     if(res.success) {
                         zpAvaiUpdate();
                         dialog.close();
-                        vkMsgOk('Установка запчасти произведена.');
+                        _msg('Установка запчасти произведена.');
                     }
                 },'json');
             }
@@ -2029,7 +2029,7 @@ $(document)
                 '<tr><td class="label r">Клиент:<td><input type="hidden" id="client_id">' +
                 '<tr><td class="label r top">Примечание:<td><textarea id="prim"></textarea>' +
                 '</table>',
-            dialog = vkDialog({
+            dialog = _dialog({
                 top:40,
                 width:440,
                 head:'Продажа запчасти',
@@ -2071,7 +2071,7 @@ $(document)
                     if(res.success) {
                         zpAvaiUpdate();
                         dialog.close();
-                        vkMsgOk('Продажа запчасти произведена.');
+                        _msg('Продажа запчасти произведена.');
                     }
                 },'json');
             }
@@ -2097,7 +2097,7 @@ $(document)
                 '<tr><td class="label r">Количество:<td><input type="text" id="count" value="1"><span>(max: <b>' + G.zpInfo.count + '</b>)</span>' +
                 '<tr><td class="label r top">Примечание:<td><textarea id="prim"></textarea>' +
                 '</table>',
-            dialog = vkDialog({
+            dialog = _dialog({
                 top:60,
                 width:340,
                 head:rus[type] + ' запчасти',
@@ -2132,7 +2132,7 @@ $(document)
                     if(res.success) {
                         zpAvaiUpdate();
                         dialog.close();
-                        vkMsgOk(rus[type] + ' запчасти произвед' + end[type] + '.');
+                        _msg(rus[type] + ' запчасти произвед' + end[type] + '.');
                     }
                 },'json');
             }
@@ -2140,7 +2140,7 @@ $(document)
     })
     .on('click', '#zpInfo .move .img_del', function() {
         var id = $(this).attr('val');
-        var dialog = vkDialog({
+        var dialog = _dialog({
             top:110,
             width:250,
             head:'Удаление заявки',
@@ -2157,7 +2157,7 @@ $(document)
                     if(res.success) {
                         zpAvaiUpdate();
                         dialog.close();
-                        vkMsgOk('Запись удалена.');
+                        _msg('Запись удалена.');
                     }
                 }, 'json');
             }
@@ -2196,7 +2196,7 @@ $(document)
                 '<div id="dev"></div>' +
                 '<div id="cres"></div>' +
             '</div>',
-            dialog = vkDialog({
+            dialog = _dialog({
                 top:90,
                 width:400,
                 head:'Добавление совместимости с другими устройствами',
@@ -2287,7 +2287,7 @@ $(document)
                 dialog.abort();
                 if(res.success) {
                     dialog.close();
-                    vkMsgOk('Совместимость создана.');
+                    _msg('Совместимость создана.');
                     window.location.reload();
                 }
             }, 'json');
@@ -2295,7 +2295,7 @@ $(document)
     })
     .on('click', '#zpInfo .compatSpisok .img_del', function() {
         var id = $(this).attr('val');
-        var dialog = vkDialog({
+        var dialog = _dialog({
             top:110,
             width:250,
             head:'Удаление совместимости',
@@ -2312,7 +2312,7 @@ $(document)
                     dialog.abort();
                     if(res.success) {
                         dialog.close();
-                        vkMsgOk('Совместимость удалена.');
+                        _msg('Совместимость удалена.');
                         $('.compatCount').html(res.count);
                         $('.compatSpisok').html(res.spisok);
                     }
@@ -2361,7 +2361,7 @@ $(document)
             '<tr><td class="label">Крайний день выполнения:<TD><INPUT type="hidden" id="data" />' +
             '<tr><td class="label">Личное:<TD><INPUT type="hidden" id="private" />' +
             '</TABLE>';
-        var dialog = vkDialog({
+        var dialog = _dialog({
             top:30,
             width:480,
             head:'Добавление нового задания',
@@ -2432,7 +2432,7 @@ $(document)
                 $.post(AJAX_WS, send, function(res) {
                     if(res.success) {
                         dialog.close();
-                        vkMsgOk('Новое задание успешно добавлено.');
+                        _msg('Новое задание успешно добавлено.');
                         $('#remind_spisok').html(res.html);
                     }
                 }, 'json');
@@ -2467,7 +2467,7 @@ $(document)
         }, 'json');
     })
     .on('click', '.remind_unit .edit', function() {
-        var dialog = vkDialog({
+        var dialog = _dialog({
                 top:30,
                 width:400,
                 head:'Новое действие для напоминания',
@@ -2548,7 +2548,7 @@ $(document)
                 $.post(AJAX_WS, send, function(res) {
                     if(res.success) {
                         dialog.close();
-                        vkMsgOk('Задание отредактировано.');
+                        _msg('Задание отредактировано.');
                         $('#remind_spisok').html(res.html);
                     }
                 }, 'json');
@@ -2593,7 +2593,7 @@ $(document)
             '<tr><td class="label">Сумма:<TD><INPUT type="text" id="sum" class="money" maxlength="8"> руб.' +
             '<tr><td class="label">Деньги поступили в кассу?:<TD><INPUT type="hidden" id="kassa" value="-1">' +
             '</TABLE>';
-        var dialog = vkDialog({
+        var dialog = _dialog({
                 width:380,
                 head:'Внесение поступления средств',
                 content:html,
@@ -2624,7 +2624,7 @@ $(document)
                 $.post(AJAX_WS, send, function (res) {
                     if(res.success) {
                         dialog.close();
-                        vkMsgOk('Новое поступление внесено.');
+                        _msg('Новое поступление внесено.');
                         reportPrihodLoad();
                     }
                 }, 'json');
@@ -2651,7 +2651,7 @@ $(document)
         tr.html('<td colspan="4" class="deleting">Удаление... <img src=/img/upload.gif></td>');
         $.post(AJAX_WS, send, function (res) {
             if(res.success) {
-                vkMsgOk('Удаление произведено.');
+                _msg('Удаление произведено.');
                 if($('#prihodShowDel').val() == 1)
                     tr.addClass('deleted')
                       .html(trSave)
@@ -2671,7 +2671,7 @@ $(document)
         tr.html('<td colspan="4" class="deleting">Восстановление... <img src=/img/upload.gif></td>');
         $.post(AJAX_WS, send, function (res) {
             if(res.success) {
-                vkMsgOk('Восстановление произведено.');
+                _msg('Восстановление произведено.');
                 tr.removeClass('deleted')
                   .html(trSave)
                   .find('.img_rest').attr('class', 'img_del').attr('title', 'Удалить платёж');
@@ -2705,7 +2705,7 @@ $(document)
                 '<tr><td class="label">Сумма:<TD><INPUT type="text" id="sum" class="money" maxlength="8"> руб.' +
                 '<tr><td class="label">Деньги взяты из кассы?:<TD><INPUT type="hidden" id="kassa" value="-1">' +
             '</TABLE>',
-            dialog = vkDialog({
+            dialog = _dialog({
                 top:60,
                 width:380,
                 head:'Внесение расхода',
@@ -2753,7 +2753,7 @@ $(document)
                 $.post(AJAX_WS, send, function (res) {
                     if(res.success) {
                         dialog.close();
-                        vkMsgOk('Новый расход внесён.');
+                        _msg('Новый расход внесён.');
                         reportRashodLoad();
                     }
                 }, 'json');
@@ -2779,13 +2779,13 @@ $(document)
         tr.html('<td colspan="4" class="deleting">Удаление... <img src=/img/upload.gif></td>');
         $.post(AJAX_WS, send, function (res) {
             if(res.success) {
-                vkMsgOk('Удаление произведено.');
+                _msg('Удаление произведено.');
                 tr.remove();
             }
         }, 'json');
     })
     .on('click', '#report_rashod .img_edit', function() {
-        var dialog = vkDialog({
+        var dialog = _dialog({
                 top:60,
                 width:380,
                 head:'Редактирование расхода',
@@ -2855,7 +2855,7 @@ $(document)
                 $.post(AJAX_WS, send, function (res) {
                     if(res.success) {
                         dialog.close();
-                        vkMsgOk('Расход изменён.');
+                        _msg('Расход изменён.');
                         reportRashodLoad();
                     }
                 }, 'json');
@@ -2928,7 +2928,7 @@ $(document)
                 '<tr><td class="label r">Сумма:<TD><INPUT type="text" class="money" id="kassa_down_sum" maxlength="8" />' +
                 '<tr><td class="label r">Комментарий:<TD><INPUT type="text" id="kassa_down_txt" />' +
                 '</TABLE>',
-            dialog = vkDialog({
+            dialog = _dialog({
                 head:'Внесение денег в кассу',
                 content:html,
                 submit:submit
@@ -2953,7 +2953,7 @@ $(document)
                 $.post(AJAX_WS, send, function (res) {
                     if(res.success) {
                         dialog.close();
-                        vkMsgOk('Новая запись внесёна.');
+                        _msg('Новая запись внесёна.');
                         kassa.html(kassa_sum += parseInt(send.sum));
                         reportKassaLoad();
                     }
@@ -2979,7 +2979,7 @@ $(document)
                     '<TD><INPUT type="text" class="money" id="kassa_down_sum" maxlength="8" /> max: ' + kassa_sum +
                 '<tr><td class="label r">Комментарий:<TD><INPUT type="text" id="kassa_down_txt" />' +
                 '</TABLE>',
-            dialog = vkDialog({
+            dialog = _dialog({
                 head:'Взятие денег из кассы',
                 content:html,
                 submit:submit
@@ -3005,7 +3005,7 @@ $(document)
                 $.post(AJAX_WS, send, function (res) {
                     if(res.success) {
                         dialog.close();
-                        vkMsgOk('Новая запись внесёна.');
+                        _msg('Новая запись внесёна.');
                         kassa.html(kassa_sum -= send.sum);
                         reportKassaLoad();
                     }
@@ -3033,7 +3033,7 @@ $(document)
         tr.html('<td colspan="4" class="deleting">Удаление... <img src=/img/upload.gif></td>');
         $.post(AJAX_WS, send, function(res) {
             if(res.success) {
-                vkMsgOk('Удаление произведено.');
+                _msg('Удаление произведено.');
                 if($('#kassaShowDel').val() == 1)
                     tr.addClass('deleted')
                         .html(trSave)
@@ -3054,7 +3054,7 @@ $(document)
         tr.html('<td colspan="4" class="deleting">Восстановление... <img src=/img/upload.gif></td>');
         $.post(AJAX_WS, send, function(res) {
             if(res.success) {
-                vkMsgOk('Восстановление произведено.');
+                _msg('Восстановление произведено.');
                 tr.removeClass('deleted')
                     .html(trSave)
                     .find('.img_rest').attr('class', 'img_del').attr('title', 'Удалить платёж');
@@ -3121,7 +3121,7 @@ $(document)
         }
     })
     .on('click', '#setup_main #ws_del', function() {
-        var dialog = vkDialog({
+        var dialog = _dialog({
             top:150,
             width:300,
             head:'Удаление мастерской',
@@ -3145,7 +3145,7 @@ $(document)
                 '<input type="text" />' +
                 '<DIV class="vkButton"><BUTTON>Найти</BUTTON></DIV>' +
             '</div>',
-            dialog = vkDialog({
+            dialog = _dialog({
                 top:50,
                 width:360,
                 head:'Добавление нового сотрудника',
@@ -3205,7 +3205,7 @@ $(document)
                 dialog.abort();
                 if(res.success) {
                     dialog.close();
-                    vkMsgOk('Новый сотрудник успешно добавлен.');
+                    _msg('Новый сотрудник успешно добавлен.');
                     $('#spisok').html(res.html);
                 } else
                     dialog.bottom.vkHint({
@@ -3223,7 +3223,7 @@ $(document)
         var u = $(this);
         while(!u.hasClass('unit'))
             u = u.parent();
-        var dialog = vkDialog({
+        var dialog = _dialog({
             top:110,
             width:250,
             head:'Удаление сотрудника',
@@ -3240,7 +3240,7 @@ $(document)
             $.post(AJAX_WS, send, function(res) {
                 if(res.success) {
                     dialog.close();
-                    vkMsgOk('Сотрудник удален.');
+                    _msg('Сотрудник удален.');
                     $('#spisok').html(res.html);
                 } else
                     dialog.abort();
@@ -3406,7 +3406,7 @@ $(document).ready(function() {
         $('#dev').device({
             width:190,
             add:1,
-            device_ids:G.ws.devs,
+            device_ids:WS_DEVS,
             func:zayavDevSelect
         });
         G.device_place_spisok.push({uid:0, title:'другое: <input type="text" id="place_other" class="dn" maxlength="20" />'});
@@ -3538,7 +3538,7 @@ $(document).ready(function() {
         $("#dev").device({
             width:153,
             type_no:1,
-            device_ids:G.ws.devs,
+            device_ids:WS_DEVS,
             device_id:G.zp_device,
             vendor_id:G.zp_vendor,
             model_id:G.zp_model,
@@ -3591,6 +3591,4 @@ $(document).ready(function() {
         });
         $('#rashod_year').years({func:reportRashodLoad});
     }
-
-    frameBodyHeightSet();
 });

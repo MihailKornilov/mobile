@@ -9,7 +9,7 @@ $(document).ready(function(){
 	$("#device").vkSel({
 		width:220,
 		spisok:<?php echo $VK->vkSelJson("select id,name from base_device order by name"); ?>,
-		title:'Выберите устройство',
+		title:'пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ',
 		func:function(id){
 			if(id>0)
 				{
@@ -21,13 +21,13 @@ $(document).ready(function(){
 			}
 		});
 
-	/* ВНЕСЕНИЕ НОВОГО РАЗДЕЛА ХАРАКТЕРИСТИК */
+	/* пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ */
 	$("#razdelAdd").click(function(){
 		var HTML="	<TABLE cellpadding=0 cellspacing=8>";
-		HTML+="<TR><TD class=tdAbout>Наименование:<TD><INPUT type=text id=name maxlength=100 onkeydown='if(event.keyCode==13)specRazdelAdd();' style=width:200px;>";
+		HTML+="<TR><TD class=tdAbout>пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ:<TD><INPUT type=text id=name maxlength=100 onkeydown='if(event.keyCode==13)specRazdelAdd();' style=width:200px;>";
 		HTML+="</TABLE>";
 		dialogShow({
-			head:"Добавление нового раздела характеристик",
+			head:"пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ",
 			content:HTML,
 			submit:specRazdelAdd,
 			focus:'#name'
@@ -37,7 +37,7 @@ $(document).ready(function(){
 	frameBodyHeightSet(350);
 	});
 
-/* ДОБАВЛЕНИЕ РАЗДЕЛА ДЛЯ ХАРАКТЕРИСТИК */
+/* пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ */
 function specRazdelAdd()
 	{
 	NAME=$("#name").val();
@@ -47,26 +47,26 @@ function specRazdelAdd()
 		{
 		var DEVID=$("#device").val();
 		$("#butDialog").butProcess();
-		$.post("/superadmin/device/specific/AjaxSpecRazdelAdd.php?"+G.values,{device_id:DEVID,name:NAME},function(res){
+		$.post("/superadmin/device/specific/AjaxSpecRazdelAdd.php?"+VALUES,{device_id:DEVID,name:NAME},function(res){
 			dialogHide();
-			vkMsgOk("Добавление нового раздела успешно произведено!");
+			_msg("пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ!");
 			specSpisokGet(DEVID);
 			},'json');
 		}
 	}
 
 
-/* ДОБАВЛЕНИЕ НОВОЙ ХАРАКТЕРИСТИКИ В ОПРЕДЕЛЁННЫЙ РАЗДЕЛ */
+/* пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅЛЁпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ */
 function specificAdd(ID,OBJ)
 	{
 	var HTML="	<TABLE cellpadding=0 cellspacing=8>";
-	HTML+="<TR><TD class=tdAbout>Раздел:<TD>"+$(OBJ).next().html();
-	HTML+="<TR><TD class=tdAbout>Наименование:<TD><INPUT type=text id=name maxlength=100 onkeydown='if(event.keyCode==13)specificAddGo();' style=width:250px;>";
-	HTML+="<TR><TD class=tdAbout>Описание:<TD><TEXTAREA id=info onkeydown='if(event.keyCode==13)specificAddGo();' style=width:250px;height:60px;></TEXTAREA>";
+	HTML+="<TR><TD class=tdAbout>пїЅпїЅпїЅпїЅпїЅпїЅ:<TD>"+$(OBJ).next().html();
+	HTML+="<TR><TD class=tdAbout>пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ:<TD><INPUT type=text id=name maxlength=100 onkeydown='if(event.keyCode==13)specificAddGo();' style=width:250px;>";
+	HTML+="<TR><TD class=tdAbout>пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ:<TD><TEXTAREA id=info onkeydown='if(event.keyCode==13)specificAddGo();' style=width:250px;height:60px;></TEXTAREA>";
 	HTML+="</TABLE>";
 	dialogShow({
 		width:400,
-		head:"Добавление новой характеристики",
+		head:"пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ",
 		content:HTML,
 		submit:function(){ specificAddGo(ID); },
 		focus:'#name'
@@ -81,41 +81,41 @@ function specificAddGo(RAZID)
 		{
 		$("#butDialog").butProcess();
 		var DEVID=$("#device").val();
-		$.post("/superadmin/device/specific/AjaxSpecificAdd.php?"+G.values,{device_id:DEVID,razdel_id:RAZID,name:NAME,info:$("#info").val()},function(res){
+		$.post("/superadmin/device/specific/AjaxSpecificAdd.php?"+VALUES,{device_id:DEVID,razdel_id:RAZID,name:NAME,info:$("#info").val()},function(res){
 			dialogHide();
-			vkMsgOk("Внесение новой характеристики успешно произведено!");
+			vkM_msgпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ!");
 			specSpisokGet(DEVID);
 			},'json');
 		}
 	}
 
 
-/* ВЫВОД СПИСКА РАЗДЕЛОВ */
+/* пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ */
 function specSpisokGet(ID)
 	{
-	$("#specificSpisok").load("/superadmin/device/specific/AjaxSpecSpisok.php?"+G.values+"&id="+ID,function(){
+	$("#specificSpisok").load("/superadmin/device/specific/AjaxSpecSpisok.php?"+VALUES+"&id="+ID,function(){
 		var H=document.getElementById('specificSpisok').offsetHeight+100;
 		if(H<350) H=350;
 		frameBodyHeightSet(H);
 		});
 	}
 
-/* УДАЛЕНИЕ РАЗДЕЛОВ */
+/* пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ */
 function specRazdelDel(ID,OBJ)
 	{
 	dialogShow({
-		head:"Удаление раздела",
-		content:"	<CENTER>Удалить раздел <B>"+$(OBJ).next().next().html()+"</B>?</CENTER>",
+		head:"пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ",
+		content:"	<CENTER>пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ <B>"+$(OBJ).next().next().html()+"</B>?</CENTER>",
 		submit:function(){ specRazdelDelGo(ID); },
 		butSubmit:'OK'
 		});
 	}
 function specRazdelDelGo(ID)
 	{
-	$.getJSON("/superadmin/device/specific/AjaxSpecRazdelDel.php?"+G.values+"&id="+ID,function(){
+	$.getJSON("/superadmin/device/specific/AjaxSpecRazdelDel.php?"+VALUES+"&id="+ID,function(){
 		dialogHide();
 		specSpisokGet($("#device").val());
-		vkMsgOk("Раздел удалён!");
+		vkMsgOk("пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ!");
 		});
 	}
 
@@ -123,8 +123,8 @@ function specRazdelDelGo(ID)
 
 <DIV class=path>
   <?php include('superadmin/incBack.php'); ?>
-  <A HREF="<?php echo $URL; ?>&my_page=superAdmin">Администрирование</A> » 
-  Характеристики устройств
+  <A HREF="<?php echo $URL; ?>&my_page=superAdmin">пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ</A> пїЅ 
+  пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 </DIV>
 
 <DIV id=devSpecific>
@@ -132,7 +132,7 @@ function specRazdelDelGo(ID)
 	<TABLE cellspacing=10 cellpadding=0>
 	<TR>
 		<TD><INPUT type=hidden id=device>
-		<TD><A href="#" id=razdelAdd>Добавить новый раздел</A>
+		<TD><A href="#" id=razdelAdd>пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ</A>
 	</TABLE> 
 	
 	<DIV id=specificSpisok></DIV>

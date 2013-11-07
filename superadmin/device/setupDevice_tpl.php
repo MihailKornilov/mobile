@@ -52,7 +52,7 @@ $("#drag").sortable({
     if (LEN>1) {
       $("#hTab").find("IMG").remove().end().append("<IMG src=/img/upload.gif>");
       for(var n=1; n < LEN; n++) { VAL += "," + DD.eq(n).attr('id').split('dd')[1]; }
-     $.getJSON("/superadmin/device/AjaxDeviceSort.php?" + G.values + "&val=" + VAL,function(){ $("#hTab IMG").remove(); });
+     $.getJSON("/superadmin/device/AjaxDeviceSort.php?" + VALUES + "&val=" + VAL,function(){ $("#hTab IMG").remove(); });
     }
   }
 });
@@ -106,11 +106,11 @@ function setupDeviceAdd() {
         $("#ms").alertShow({txt:'<SPAN class=red>Не указано наименование.</SPAN>',top:13,left:125});
       } else {
         $("#butDialog").butProcess();
-        $.post("/superadmin/device/AjaxDeviceAdd.php?"+G.values,obj,function(res){
+        $.post("/superadmin/device/AjaxDeviceAdd.php?"+VALUES,obj,function(res){
           dialogHide();
           obj.id = res.id;
           tableInsert(obj);
-          vkMsgOk("Новое устройство внесёно!");
+          _msg("Новое устройство внесёно!");
           frameBodyHeightSet();
           },'json');
       }
@@ -149,7 +149,7 @@ function setupDeviceEdit(id) {
         $("#ms").alertShow({txt:'<SPAN class=red>Не указано наименование.</SPAN>',top:13,left:125});
       } else {
         $("#butDialog").butProcess();
-        $.post("/superadmin/device/AjaxDeviceNameSave.php?"+G.values,obj,function(res){
+        $.post("/superadmin/device/AjaxDeviceNameSave.php?"+VALUES,obj,function(res){
           dialogHide();
           spisok[n].name = obj.name;
           spisok[n].name_rod = obj.name_rod;
@@ -158,7 +158,7 @@ function setupDeviceEdit(id) {
           obj.model = spisok[n].model;
           obj.zayav = spisok[n].zayav;
           tableInsert(obj);
-          vkMsgOk("Данные изменены!");
+          vkM_msgанные изменены!");
           },'json');
       }
     }
@@ -178,11 +178,11 @@ function setupDeviceDel(id) {
     butSubmit:'Удалить',
     submit:function () {
       $("#butDialog").butProcess();
-      $.post("/superadmin/device/AjaxDeviceDel.php?"+G.values,{id:id},function(res){
+      $.post("/superadmin/device/AjaxDeviceDel.php?"+VALUES,{id:id},function(res){
         dialogHide();
         if(res.result == 0) {
           tableInsert(res);
-          vkMsgOk("Удаление невозможно!");
+          vkMsgO_msgение невозможно!");
         } else {
           $("#dd" + id).remove();
           vkMsgOk("Удалено!");

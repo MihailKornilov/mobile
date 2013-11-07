@@ -48,7 +48,7 @@ var COUNTRIES = $('#countries'),
     city,
     ok = 0;
 for(var n = 0; n < G.countries_spisok.length; n++)
-    if(G.countries_spisok[n].uid == G.vku.country_id) {
+    if(G.countries_spisok[n].uid == COUNTRY_ID) {
         ok = 1;
         break;
     }

@@ -30,7 +30,7 @@ define('REGEXP_DATE', '/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/');
 define('REGEXP_YEAR', '/^[0-9]{4}$/');
 define('REGEXP_WORD', '/^[a-z0-9]{1,20}$/i');
 define('REGEXP_MYSQLTABLE', '/^[a-z0-9_]{1,20}$/i');
-define('REGEXP_WORDFIND', '/^[a-zа-я0-9,.;]{1,}$/i');
+define('REGEXP_WORDFIND', '/^[a-zA-Zа-яА-Я0-9,.;]{1,}$/i');
 
 //Включает работу куков в IE через фрейм
 header('P3P: CP="IDC DSP COR ADM DEVi TAIi PSA PSD IVAi IVDi CONi HIS OUR IND CNT"');
@@ -77,11 +77,12 @@ function query_ptpJson($sql) {//Ассоциативный массив
 }
 
 function _getSetupGlobal() {//Получение глобальных данных
-    $g = xcache_get(CACHE_PREFIX.'setup_global');
+    $key = CACHE_PREFIX.'setup_global';
+    $g = xcache_get($key);
     if(empty($g)) {
         $sql = "SELECT * FROM `setup_global` LIMIT 1";
         $g = mysql_fetch_assoc(query($sql));
-        xcache_set(CACHE_PREFIX.'setup_global', $g, 86400);
+        xcache_set($key, $g, 86400);
     }
     define('VERSION', $g['script_style']);
     define('G_VALUES', $g['g_values']);

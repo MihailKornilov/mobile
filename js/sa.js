@@ -1,4 +1,4 @@
-var AJAX_SA = 'http://' + G.domain + '/ajax/sa.php?' + G.values;
+var AJAX_SA = SITE + '/ajax/sa.php?' + VALUES;
 
 $(document)
     .on('click', '.sa-ws-info .ws_status_change', function() {
@@ -27,7 +27,7 @@ $(document)
     })
     .on('click', '.sa-ws-info .ws_del', function() {
         var t = $(this);
-        var dialog = vkDialog({
+        var dialog = _dialog({
             top:110,
             width:250,
             head:'Удаление мастерской',
@@ -55,7 +55,7 @@ $(document)
                 '<tr><td class="label r">Множественное число:<td><input id="name_mn" type="text" maxlength="100" />' +
                 '<tr><td class="label r top">Возможная комплектация:<td class="equip">' + devEquip +
                 '</table>',
-            dialog = vkDialog({
+            dialog = _dialog({
                 top:60,
                 width:460,
                 head:'Добавление нового наименования устройства',
@@ -100,7 +100,7 @@ $(document)
                     if(res.success) {
                         $('.spisok').html(res.html);
                         dialog.close();
-                        vkMsgOk('Внесено!');
+                        _msg('Внесено!');
                         sortable();
                     } else
                         dialog.abort();
@@ -111,7 +111,7 @@ $(document)
     .on('click', '.sa-device .img_edit', function() {
         var t = $(this),
             id = t,
-            dialog = vkDialog({
+            dialog = _dialog({
                 top:60,
                 width:460,
                 head:'Изменение данных устройства',
@@ -173,7 +173,7 @@ $(document)
                     if(res.success) {
                         $('.spisok').html(res.html);
                         dialog.close();
-                        vkMsgOk('Изменено!');
+                        _msg('Изменено!');
                         sortable();
                     } else
                         dialog.abort();
@@ -183,7 +183,7 @@ $(document)
     })
     .on('click', '.sa-device .img_del', function() {
         var t = $(this),
-            dialog = vkDialog({
+            dialog = _dialog({
                 top:90,
                 width:300,
                 head:'Удаление устройства',
@@ -203,7 +203,7 @@ $(document)
                 if(res.success) {
                     $('.spisok').html(res.html);
                     dialog.close();
-                    vkMsgOk('Удалено!');
+                    _msg('Удалено!');
                     sortable();
                 } else
                     dialog.abort();
@@ -231,7 +231,7 @@ $(document)
                 '<tr><td class="label">Наименование:<td><input id="name" type="text" maxlength="100" />' +
                 '<tr><td class="label">Описание:<td><input id="title" type="text" maxlength="200" />' +
             '</table>',
-            dialog = vkDialog({
+            dialog = _dialog({
                 top:90,
                 width:350,
                 head:'Добавление новой комплектации',
@@ -263,7 +263,7 @@ $(document)
                     if(res.success) {
                         $('#eq-spisok').html(res.html);
                         dialog.close();
-                        vkMsgOk('Внесено!');
+                        _msg('Внесено!');
                         sortable();
                     } else
                         dialog.abort();
@@ -274,7 +274,7 @@ $(document)
     .on('click', '.sa-equip .img_edit', function() {
         var t = $(this),
             id = t,
-            dialog = vkDialog({
+            dialog = _dialog({
                 top:90,
                 width:350,
                 head:'Редактирование комплектации',
@@ -323,7 +323,7 @@ $(document)
                     if(res.success) {
                         $('#eq-spisok').html(res.html);
                         dialog.close();
-                        vkMsgOk('Сохранено!');
+                        _msg('Сохранено!');
                         sortable();
                     } else
                         dialog.abort();
@@ -333,7 +333,7 @@ $(document)
     })
     .on('click', '.sa-equip .img_del', function() {
         var t = $(this),
-            dialog = vkDialog({
+            dialog = _dialog({
                 top:90,
                 width:300,
                 head:'Удаление комплектации',
@@ -354,7 +354,7 @@ $(document)
                 if(res.success) {
                     $('#eq-spisok').html(res.html);
                     dialog.close();
-                    vkMsgOk('Удалено!');
+                    _msg('Удалено!');
                     sortable();
                 } else
                     dialog.abort();

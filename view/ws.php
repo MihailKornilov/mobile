@@ -82,7 +82,7 @@ function clientFilter($v) {
 	if(!preg_match(REGEXP_BOOL, $v['active']))
 		$v['active'] = 0;
 	$filter = array(
-		'fast' => htmlspecialchars(trim($v['fast'])),
+		'fast' => win1251(htmlspecialchars(trim($v['fast']))),
 		'dolg' => intval($v['dolg']),
 		'active' => intval($v['active'])
 	);
@@ -93,16 +93,15 @@ function client_data($page=1, $filter=array()) {
 	$reg = '';
 	$regEngRus = '';
 	if(!empty($filter['fast'])) {
-		$fast = win1251($filter['fast']);
-		$engRus = _engRusChar($fast);
-		$cond .= " AND (`fio` LIKE '%".$fast."%'
-					 OR `telefon` LIKE '%".$fast."%'
+		$engRus = _engRusChar($filter['fast']);
+		$cond .= " AND (`fio` LIKE '%".$filter['fast']."%'
+					 OR `telefon` LIKE '%".$filter['fast']."%'
 					 ".($engRus ?
 						   "OR `fio` LIKE '%".$engRus."%'
 							OR `telefon` LIKE '%".$engRus."%'"
 						: '')."
 					 )";
-		$reg = '/('.$fast.')/i';
+		$reg = '/('.$filter['fast'].')/i';
 		if($engRus)
 			$regEngRus = '/('.$engRus.')/i';
 	} else {

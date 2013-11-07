@@ -142,30 +142,42 @@ function _header() {
         '<head>'.
         '<meta http-equiv="content-type" content="text/html; charset=windows-1251" />'.
         '<title> Приложение 2031819 Hi-tech Service </title>'.
-        '<link href="'.SITE.'/css/global.css?'.VERSION.'" rel="stylesheet" type="text/css" />'.
-        (@$_GET['p'] == 'sa' ? '<link href="'.SITE.'/css/sa.css?'.VERSION.'" rel="stylesheet" type="text/css" />' : '').
+
+        //Отслеживание ошибок в скриптах
         (SA ? '<script type="text/javascript" src="http://nyandoma'.(LOCAL ? '' : '.ru').'/js/errors.js?'.VERSION.'"></script>' : '').
-        '<script type="text/javascript" src="'.SITE.'/js/jquery-2.0.3.min.js"></script>'.
-        '<script type="text/javascript" src="'.SITE.'/js/xd_connection.js"></script>'.
-        '<script type="text/javascript" src="'.SITE.'/js/highstock.js"></script>'.
-        '<script type="text/javascript" src="'.SITE.'/js/vkapi.js?'.VERSION.'"></script>'.
-        '<script type="text/javascript" src="'.SITE.'/include/globalScript.js?'.VERSION.'"></script>'.
+
+        //Стороние скрипты
+        '<script type="text/javascript" src="http://nyandoma'.(LOCAL ? '' : '.ru').'/js/jquery-2.0.3.min.js"></script>'.
+        '<script type="text/javascript" src="http://nyandoma'.(LOCAL ? '' : '.ru').'/js/highstock.js"></script>'.
+        '<script type="text/javascript" src="http://nyandoma'.(LOCAL ? '' : '.ru').'/vk/'.(DEBUG ? '' : 'min/').'xd_connection.js"></script>'.
+
+        //Установка начального значения таймера.
+        (SA ? '<script type="text/javascript">var TIME=(new Date()).getTime();</script>' : '').
+
         '<script type="text/javascript">'.
             (LOCAL ? 'for(var i in VK)if(typeof VK[i]=="function")VK[i]=function(){return false};' : '').
-            'G.domain="'.DOMAIN.'";'.
-            'G.values="'.VALUES.'";'.
-            'G.vku={'.
-                'viewer_id:'.VIEWER_ID.','.
-                'name:"'.VIEWER_NAME.'",'.
-                (WS_ID ? 'ws_id:'.WS_ID.',' : '').
-                'country_id:'.VIEWER_COUNTRY_ID.','.
-                'city_id:'.VIEWER_CITY_ID.
-            '};'.
-            (defined('WS_DEVS') ? 'G.ws={devs:['.WS_DEVS.']};' : '').
+            'var G={},'.
+                'DOMAIN="'.DOMAIN.'",'.
+                'VALUES="'.VALUES.'",'.
+                (defined('WS_DEVS') ? 'WS_DEVS=['.WS_DEVS.'],' : '').
+                'VIEWER_ID='.VIEWER_ID.';'.
         '</script>'.
-        '<script type="text/javascript" src="'.SITE.'/js/global.js?'.VERSION.'"></script>'.
+
+        //Подключение стилей VK. Должны стоять до основных стилей сайта
+        '<link href="http://nyandoma'.(LOCAL ? '' : '.ru').'/vk/'.(DEBUG ? '' : 'min/').'vk.css?'.VERSION.'" rel="stylesheet" type="text/css" />'.
+
+        '<link href="'.SITE.'/css/main.css?'.VERSION.'" rel="stylesheet" type="text/css" />'.
+        '<script type="text/javascript" src="'.SITE.'/js/main.js?'.VERSION.'"></script>'.
+
+        //Подключение API VK
+        '<script type="text/javascript" src="http://nyandoma'.(LOCAL ? '' : '.ru').'/vk/'.(DEBUG ? '' : 'min/').'vk.js?'.VERSION.'"></script>'.
+
         (WS_ID ? '<script type="text/javascript" src="'.SITE.'/js/ws.js?'.VERSION.'"></script>' : '').
+
+        //Скрипты и стили для суперадминистратора
+        (@$_GET['p'] == 'sa' ? '<link href="'.SITE.'/css/sa.css?'.VERSION.'" rel="stylesheet" type="text/css" />' : '').
         (@$_GET['p'] == 'sa' ? '<script type="text/javascript" src="'.SITE.'/js/sa.js?'.VERSION.'"></script>' : '').
+
         '<script type="text/javascript" src="'.SITE.'/js/G_values.js?'.G_VALUES.'"></script>'.
         '</head>'.
         '<body>'.
@@ -211,8 +223,7 @@ function _footer() {
         'is_secure' => 1,
         'referrer' => 1,
         'lc_name' => 1,
-        'hash' => 1,
-        'my_page' => 1
+        'hash' => 1
     );
     $gValues = array();
     foreach($_GET as $k => $val) {
@@ -221,7 +232,7 @@ function _footer() {
     }
     $html .= '<script type="text/javascript">'.
                 'hashSet({'.implode(',', $gValues).'});'.
-                (SA ? '$("#admin EM").html(((new Date().getTime())-G.T)/1000);' : '').
+                (SA ? '$("#admin EM").html(((new Date().getTime())-TIME)/1000);' : '').
              '</script>'.
          '</div></BODY></HTML>';
 }//end of _footer()
@@ -750,7 +761,9 @@ function _vendorName($vendor_id) {
 }//end of _vendorName()
 function _modelName($model_id) {
     if(!defined('MODEL_LOADED')) {
-        $count = xcache_get(CACHE_PREFIX.'model_name_count');
+        $keyCount = CACHE_PREFIX.'model_name_count';
+        $keyName = CACHE_PREFIX.'model_name';
+        $count = xcache_get($keyCount);
         if(empty($count)) {
             $sql = "SELECT `id`,`name` FROM `base_model` ORDER BY `id`";
             $q = query($sql);
@@ -761,20 +774,21 @@ function _modelName($model_id) {
                 $model[$r['id']] = $r['name'];
                 $rows++;
                 if($rows == 1000) {
-                    xcache_set(CACHE_PREFIX.'model_name'.$count, $model);
+                    xcache_set($keyName.$count, $model);
                     $rows = 0;
                     $count++;
                     $model = array();
                 }
             }
             if(!empty($model))
-                xcache_set(CACHE_PREFIX.'model_name'.$count, $model, 86400);
-            xcache_set(CACHE_PREFIX.'model_name_count', $count, 86400);
+                xcache_set($keyName.$count, $model, 86400);
+            xcache_set($keyCount, $count, 86400);
         }
         for($n = 0; $n <= $count; $n++) {
-            $model = xcache_get(CACHE_PREFIX.'model_name'.$n);
-            foreach($model as $id => $name)
-                define('MODEL_NAME_'.$id, $name);
+            $model = xcache_get($keyName.$n);
+            if(!empty($model))
+                foreach($model as $id => $name)
+                    define('MODEL_NAME_'.$id, $name);
         }
         define('MODEL_LOADED', true);
     }
@@ -934,6 +948,7 @@ function ws_create_step1() {
         $checkDevs .= _checkbox($r['id'], $r['name_mn']);
 
     return
+    '<script type="text/javascript">var COUNTRY_ID='.VIEWER_COUNTRY_ID.';</script>'.
     '<div class="ws-create-step1">'.
         '<div class="txt">'.
             'Для начала необходимо указать название Вашей мастерской и город, в котором Вы находитесь.<br />'.

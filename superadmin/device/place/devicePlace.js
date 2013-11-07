@@ -24,7 +24,7 @@ $("#drag").sortable({
     if (uids.length > 1) {
       var arr = [];
       for(var n = 0; n < uids.length; n++) { arr.push(uids.eq(n).html()); }
-      $.getJSON("/superadmin/device/place/AjaxDevicePlaceSort.php?" + G.values + "&val=" + arr.join(','), function () {  });
+      $.getJSON("/superadmin/device/place/AjaxDevicePlaceSort.php?" + VALUES + "&val=" + arr.join(','), function () {  });
     }
   }
 });
@@ -41,62 +41,62 @@ $("#setup_device_place").click(function (e) {
     }
   }
 
-  // редактирование наименования
+  // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
   function edit(id) {
-    var dialog = $("#device_place_dialog").vkDialog({
+    var dialog = $("#device_place_dialog")._dialog({
       width:240,
-      head:'Изменение наименования',
-      content:"Наименование: <INPUT type=text id=status_name value='" + $("#table_" + id + " .name:first").html() + "'>",
-      butSubmit:'Сохранить',
+      head:'пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ',
+      content:"пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ: <INPUT type=text id=status_name value='" + $("#table_" + id + " .name:first").html() + "'>",
+      butSubmit:'пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ',
       submit:function () {
         var send = {
           id:id,
           name:$("#status_name").val()
         };
         dialog.process();
-        $.post("/superadmin/device/place/AjaxDevicePlaceEdit.php?" + G.values, send, function (res) {
+        $.post("/superadmin/device/place/AjaxDevicePlaceEdit.php?" + G.VALUESsend, function (res) {
           dialog.close();
-          vkMsgOk("Изменено!");
+          _msg("пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ!");
           $("#table_" + id + " .name:first").html(send.name)
         }, 'json');
       }
     }).o;
   } // end edit
 
-  // Внесение нового местонахождения
+  // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
   function add() {
-    var dialog = $("#device_place_dialog").vkDialog({
+    var dialog = $("#device_place_dialog")._dialog({
       width:300,
-      head:'Внесение нового местонахождения',
-      content:"Наименование: <INPUT type=text id=place_name>",
+      head:'пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ',
+      content:"пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ: <INPUT type=text id=place_name>",
       submit:function () {
         var send = {
           name:$("#place_name").val()
         };
         dialog.process();
-        $.post("/superadmin/device/place/AjaxDevicePlaceAdd.php?" + G.values, send, function (res) {
+        $.post("/superadmin/device/place/AjaxDevicePlaceAdd.php?" + G.vaVALUESnd, function (res) {
           G.zayav_count.push(0);
           G.device_place_spisok.push({uid:res.id, title:send.name});
           devicePlacePrint();
           dialog.close();
-          vkMsgOk("Внесено!");
+          _msg("пїЅпїЅпїЅпїЅпїЅпїЅпїЅ!");
         }, 'json');
       }
     }).o;
   } // end edit
 
-  // удаление местоположения
+  // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
   function del(id) {
-    var dialog = $("#device_place_dialog").vkDialog({
+    var dialog = $("#device_place_dialog")._dialog({
       width:240,
-      head:'Удаление местоположения',
-      content:"<B>Подтвердите удаление</B><BR>'" + $("#table_" + id + " .name:first").html() + "'",
-      butSubmit:'Удалить',
+      head:'пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ',
+      content:"<B>пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ</B><BR>'" + $("#table_" + id + " .name:first").html() + "'",
+      butSubmit:'пїЅпїЅпїЅпїЅпїЅпїЅпїЅ',
       submit:function () {
         dialog.process();
         $.post("/superadmin/device/place/AjaxDevicePlaceDel.php?" + G.values, {id:id}, function (res) {
           dialog.close();
-          vkMsgOk("Удалено!");
+          _msg("пїЅпїЅпїЅпїЅпїЅпїЅпїЅ!");
           $("#table_" + id).remove();
         }, 'json');
       }

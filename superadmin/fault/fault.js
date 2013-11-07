@@ -23,7 +23,7 @@ $("#drag").sortable({
     if (uids.length > 1) {
       var arr = [];
       for(var n = 0; n < uids.length; n++) { arr.push(uids.eq(n).html()); }
-      $.getJSON("/superadmin/fault/AjaxFaultSort.php?" + G.values + "&val=" + arr.join(','), function () {  });
+      $.getJSON("/superadmin/fault/AjaxFaultSort.php?" + VALUES + "&val=" + arr.join(','), function () {  });
     }
   }
 });
@@ -40,61 +40,61 @@ $("#setup_fault").click(function (e) {
     }
   }
 
-  // редактирование наименования
+  // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
   function edit(id) {
-    var dialog = $("#fault_dialog").vkDialog({
+    var dialog = $("#fault_dialog")._dialog({
       width:240,
-      head:'Изменение наименования',
-      content:"Наименование: <INPUT type=text id=fault_name value='" + $("#table_" + id + " .name:first").html() + "'>",
-      butSubmit:'Сохранить',
+      head:'пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ',
+      content:"пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ: <INPUT type=text id=fault_name value='" + $("#table_" + id + " .name:first").html() + "'>",
+      butSubmit:'пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ',
       submit:function () {
         var send = {
           id:id,
           name:$("#fault_name").val()
         };
         dialog.process();
-        $.post("/superadmin/fault/AjaxFaultEdit.php?" + G.values, send, function (res) {
+        $.post("/superadmin/fault/AjaxFaultEdit.php?" + G.VALUESsend, function (res) {
           dialog.close();
-          vkMsgOk("Изменено!");
+          _msg("пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ!");
           $("#table_" + id + " .name:first").html(send.name)
         }, 'json');
       }
     }).o;
   } // end edit
 
-  // Внесение новой неисправности
+  // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
   function add() {
-    var dialog = $("#fault_dialog").vkDialog({
+    var dialog = $("#fault_dialog")._dialog({
       width:300,
-      head:'Внесение новой неисправности',
-      content:"Наименование: <INPUT type=text id=fault_name>",
+      head:'пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ',
+      content:"пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ: <INPUT type=text id=fault_name>",
       submit:function () {
         var send = {
           name:$("#fault_name").val()
         };
         dialog.process();
-        $.post("/superadmin/fault/AjaxFaultAdd.php?" + G.values, send, function (res) {
+        $.post("/superadmin/fault/AjaxFaultAdd.php?" + G.vaVALUESnd, function (res) {
           G.fault_spisok.push({uid:res.id, title:send.name});
           faultPrint();
           dialog.close();
-          vkMsgOk("Внесено!");
+          _msg("пїЅпїЅпїЅпїЅпїЅпїЅпїЅ!");
         }, 'json');
       }
     }).o;
   } // end edit
 
-  // удаление неисправности
+  // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
   function del(id) {
-    var dialog = $("#fault_dialog").vkDialog({
+    var dialog = $("#fault_dialog")._dialog({
       width:240,
-      head:'Удаление неисправности',
-      content:"<B>Подтвердите удаление</B><BR>'" + $("#table_" + id + " .name:first").html() + "'",
-      butSubmit:'Удалить',
+      head:'пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ',
+      content:"<B>пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ</B><BR>'" + $("#table_" + id + " .name:first").html() + "'",
+      butSubmit:'пїЅпїЅпїЅпїЅпїЅпїЅпїЅ',
       submit:function () {
         dialog.process();
         $.post("/superadmin/fault/AjaxFaultDel.php?" + G.values, {id:id}, function (res) {
           dialog.close();
-          vkMsgOk("Удалено!");
+          _msg("пїЅпїЅпїЅпїЅпїЅпїЅпїЅ!");
           $("#table_" + id).remove();
         }, 'json');
       }
