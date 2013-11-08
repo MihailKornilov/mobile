@@ -56,7 +56,7 @@ function _mainLinks() {
 
 // ---===! client !===--- Секция клиентов
 
-function _clientsLink($arr) {
+function _clientLink($arr) {
 	if(empty($arr))
 		return array();
 	$id = false;
@@ -72,7 +72,7 @@ function _clientsLink($arr) {
 	if($id)
 		return $send[$id];
 	return $send;
-}//end of _clientsLink()
+}//end of _clientLink()
 
 function clientFilter($v) {
 	if(!preg_match(REGEXP_WORDFIND, win1251($v['fast'])))
@@ -541,7 +541,7 @@ function zayav_data($page=1, $filter=array(), $limit=20) {
 	}
 
 	if(empty($filter['client']))
-		$client = _clientsLink($client);
+		$client = _clientLink($client);
 	$status = _zayavStatus();
 
 	$sql = "SELECT `owner`,`link` FROM `images` WHERE `status`=1 AND `sort`=0 AND `owner` IN (".implode(',', $images).")";
@@ -815,7 +815,7 @@ function zayav_info($zayav_id) {
 				'</div>'.
 				'<table class="tabInfo">'.
 					'<tr><td class="label">Устройство: <td>'._deviceName($zayav['base_device_id']).'<a><b>'.$model.'</b></a>'.
-					'<tr><td class="label">Клиент:     <td>'._clientsLink($zayav['client_id']).
+					'<tr><td class="label">Клиент:     <td>'._clientLink($zayav['client_id']).
 					'<tr><td class="label">Дата приёма:'.
 						'<td class="dtime_add" title="Заявку внёс '._viewerName($zayav['viewer_id_add']).'">'.FullDataTime($zayav['dtime_add']).
 					'<tr><td class="label">Статус:'.
@@ -1263,7 +1263,7 @@ function zp_move($zp_id, $page=1) {
 	}
 	$viewer = _viewersInfo($viewer);
 	_zayavNomerLink($zayav);
-	$client = _clientsLink($client);
+	$client = _clientLink($client);
 	$move = '';
 	$type = array(
 		'' => 'Приход',
@@ -1478,7 +1478,7 @@ function report_history_spisok($worker=0, $action=0, $page=1) {
 		$history[] = $r;
 	}
 	$viewer = _viewersInfo($viewer);
-	$client = _clientsLink($client);
+	$client = _clientLink($client);
 	_zayavNomerLink($zayav);
 	$zp = _zpLink($zp);
 	$send = '';
@@ -1573,7 +1573,7 @@ function remind_data($page=1, $filter=array()) {
 			$zayav[$r['zayav_id']] = $r['zayav_id'];
 		$send['spisok'][] = $r;
 	}
-	$send['client'] = _clientsLink($client);
+	$send['client'] = _clientLink($client);
 	_zayavNomerLink($zayav);
 	if($start + $limit < $send['all'])
 		$send['page'] = ++$page;

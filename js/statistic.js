@@ -34,7 +34,7 @@ $('#statistic').highcharts('StockChart', {
 });
 
 $(document).ready(function() {
-    if(VIEWER_ID != 982006)
+    if(VIEWER_ID != 982006 || DOMAIN != 'vkmobile')
         return;
     $('#statistic').after('<div id="stamina"></div>');
     var data = [
@@ -764,7 +764,11 @@ $(document).ready(function() {
         ['2013-11-06', 12971, 292, 3.8],
         ['2013-11-06', 13186, 290, 3.9],
 
-        ['2013-11-07', 10945, 301, 3.6]
+        ['2013-11-07', 10945, 301, 3.6],
+        ['2013-11-07', 10238, 303, 3.6],
+        ['2013-11-07', 12743, 292, 3.8],
+
+        ['2013-11-08', 10198, 301, 3.8]
     ];
     var symbols = [],
         speed = [],

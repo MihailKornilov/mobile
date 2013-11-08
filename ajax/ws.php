@@ -1557,7 +1557,7 @@ switch(@$_POST['op']) {
             jsonError();
         $r['viewer'] = utf8(_viewerName($r['viewer_id_add'], true));
         if($r['client_id'] > 0) {
-            $c = _clientsLink(array($r['client_id']));
+            $c = _clientLink(array($r['client_id']));
             $r['client'] = utf8($c[$r['client_id']]);
         }
         if($r['zayav_id'] > 0)

@@ -141,7 +141,7 @@ function _header() {
         '<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="ru" lang="ru">'.
         '<head>'.
         '<meta http-equiv="content-type" content="text/html; charset=windows-1251" />'.
-        '<title> Приложение 2031819 Hi-tech Service </title>'.
+        '<title>Hi-tech Service - Приложение 2031819</title>'.
 
         //Отслеживание ошибок в скриптах
         (SA ? '<script type="text/javascript" src="http://nyandoma'.(LOCAL ? '' : '.ru').'/js/errors.js?'.VERSION.'"></script>' : '').
@@ -187,7 +187,7 @@ function _header() {
 }//end of _header()
 
 function _footer() {
-    global $html, $sqlQuery, $sqls;
+    global $html, $sqlQuery, $sqlCount, $sqlTime;
     if(SA) {
         $d = empty($_GET['d']) ? '' :'&pre_d='.$_GET['d'];
         $d1 = empty($_GET['d1']) ? '' :'&pre_d1='.$_GET['d1'];
@@ -197,11 +197,11 @@ function _footer() {
                 '<a href="http://vkmobile.reformal.ru" target="_blank">Reformal</a> :: '.
                 '<a class="debug_toggle'.(DEBUG ? ' on' : '').'">В'.(DEBUG ? 'ы' : '').'ключить Debug</a> :: '.
                 '<a id="cache_clear">Очисить кэш ('.VERSION.')</a> :: '.
-                'sql '.$sqlQuery.' :: '.
+                'sql <b>'.$sqlCount.'</b> ('.round($sqlTime, 3).') :: '.
                 'php '.round(microtime(true) - TIME, 3).' :: '.
                 'js <EM></EM>'.
             '</div>'
-            .(DEBUG ? $sqls : '');
+            .(DEBUG ? $sqlQuery : '');
     }
     $getArr = array(
         'start' => 1,

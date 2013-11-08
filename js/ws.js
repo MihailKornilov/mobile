@@ -95,13 +95,14 @@ var AJAX_WS= SITE + '/ajax/ws.php?' + VALUES,
             } else {
                 dialog.process();
                 $.post(AJAX_WS, send, function(res) {
-                    dialog.close();
-                    _msg('Новый клиент внесён.');
-                    if(res.success)
+                    if(res.success) {
+                        dialog.close();
+                        _msg('Новый клиент внесён.');
                         if(typeof callback == 'function')
                             callback(res);
                         else
                             document.location.href = URL + '&p=client&d=info&id=' + res.uid;
+                    } else dialog.abort();
                 }, 'json');
             }
         }
@@ -918,7 +919,6 @@ $(document)
         }, 'json');
     })
 
-    .on('click', '#client #buttonCreate', clientAdd)
     .on('click', '#client #dolg_check', clientSpisokLoad)
     .on('click', '#client #active_check', clientSpisokLoad)
     .on('click', '#client .ajaxNext', function() {
@@ -3304,7 +3304,7 @@ $(document).ready(function() {
             indent:40,
             delayShow:1000,
             correct:0
-        });
+        }).click(clientAdd);
         $('#dolg_check').vkHint({
             msg:'<b>Список должников.</b><br /><br />' +
                 'Выводятся клиенты, у которых баланс менее 0. Также в результате отображается общая сумма долга.',
