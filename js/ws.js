@@ -134,7 +134,7 @@ var AJAX_WS= SITE + '/ajax/ws.php?' + VALUES,
     clientZayavFilter = function() {
         return {
             client:G.clientInfo.id,
-            status:$('#zayav_status .sel').attr('val'),
+            status:$('#status').val(),
             device:$('#dev_device').val(),
             vendor:$('#dev_vendor').val(),
             model:$('#dev_model').val()
@@ -156,7 +156,7 @@ var AJAX_WS= SITE + '/ajax/ws.php?' + VALUES,
                 find:$.trim($('#find input').val()),
                 sort:$('#sort').val(),
                 desc:$('#desc').val(),
-                status:$('#status .sel').attr('val'),
+                status:$('#status').val(),
                 zpzakaz:$('#zpzakaz').val(),
                 device:$('#dev_device').val(),
                 vendor:$('#dev_vendor').val(),
@@ -259,7 +259,7 @@ var AJAX_WS= SITE + '/ajax/ws.php?' + VALUES,
     zpFilter = function() {
         var v = {
                 find:$.trim($('#find input').val()),
-                menu:$('#menu .sel').attr('val'),
+                menu:$('#menu').val(),
                 name:$('#zp_name').val(),
                 device:$('#dev_device').val(),
                 vendor:$('#dev_vendor').val(),
@@ -415,10 +415,10 @@ var AJAX_WS= SITE + '/ajax/ws.php?' + VALUES,
             day_end:$('#report_prihod_day_end').val(),
             del_show:$('#prihodShowDel').val() == 1 ? 1 : 0
         };
-        $('.rightLinks a.sel').append('<img src="/img/upload.gif">');
+        $('.rightLink a.sel').append('<img src="/img/upload.gif">');
         $.post(AJAX_WS, send, function (res) {
             $('#report_prihod').html(res.html);
-            $('.rightLinks a.sel img').remove();
+            $('.rightLink a.sel img').remove();
         }, 'json');
     },
     reportRashodLoad = function() {
@@ -1134,7 +1134,7 @@ $(document)
         zFind.clear();
         $('#sort')._radio(1);
         $('#desc')._check(0);
-        $('#status').infoLinkSet(0);
+        $('#status').rightLink(0);
         $('#zpzakaz')._radio(0);
         $('#dev').device({
             width:155,
@@ -1337,7 +1337,7 @@ $(document)
         });
         $('#sum').focus();
         $('#sum,#prim,#reminder_txt').keyEnter(submit);
-        $('#acc_status').linkMenu({spisok:G.status_spisok});
+        $('#acc_status').linkMenu({spisok:STATUS});
         $('#acc_dev_status').linkMenu({spisok:G.device_status_spisok});
         $('#acc_remind')._check();
         $('#acc_remind_check').click(function(id) {
@@ -1531,7 +1531,7 @@ $(document)
                 submit:submit
             });
         $('#z_status')._radio({
-            spisok:G.status_spisok,
+            spisok:STATUS,
             light:1
         });
 
@@ -3329,10 +3329,9 @@ $(document).ready(function() {
             $('#remind_spisok').css('display', val == 'remind' ? 'block' : 'none');
             $('#comments').css('display', val == 'comm' ? 'block' : 'none');
         });
-        G.status_spisok.unshift({uid:0, title:'Любой статус'});
-        $('#zayav_status').infoLink({
-            spisok:G.status_spisok,
-            func:clientZayavSpisokLoad
+        $('#status_rightLink a').click(function() {
+            $('#status').rightLink($(this).attr('val'));
+            clientZayavSpisokLoad();
         });
         $('#dev').device({
             width:145,
@@ -3362,11 +3361,10 @@ $(document).ready(function() {
                 func:zayavSpisokLoad
             });
         zFind.inp(G.zayav_find);
-        G.status_spisok.unshift({uid:0, title:'Любой статус'});
-        $('#status').infoLink({
-            spisok:G.status_spisok,
-            func:zayavSpisokLoad
-        }).infoLinkSet(G.zayav_status);
+        $('.rightLink a').click(function() {
+            $('#status').rightLink($(this).attr('val'));
+            zayavSpisokLoad();
+        });
         $('#dev').device({
             width:155,
             type_no:1,
@@ -3519,16 +3517,10 @@ $(document).ready(function() {
                 func:zpSpisokLoad
             })
             .inp(G.zp_find);
-        $("#menu")
-            .infoLink({
-            spisok:[
-                {uid:0,title:'Общий каталог'},
-                {uid:1,title:'Наличие'},
-                {uid:2,title:'Нет в наличии'},
-                {uid:3,title:'Заказ'}],
-            func:zpSpisokLoad
-        })
-            .infoLinkSet(G.zp_menu);
+        $('#menu_rightLink a').click(function() {
+            $('#menu').rightLink($(this).attr('val'));
+            zpSpisokLoad();
+        });
         window.zp_name = $("#zp_name").vkSel({
             width:153,
             title0:'Любое наименование',

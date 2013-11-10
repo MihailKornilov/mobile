@@ -285,15 +285,16 @@ function client_info($client_id) {
 					'<div id="remind_spisok">'.(!empty($remindData) ? report_remind_spisok($remindData) : '<div class="_empty">Заданий нет.</div>').'</div>'.
 					'<div id="comments">'._vkComment('client', $client_id).'</div>'.
 				'<td class="right">'.
-					'<div class="rightLinks">'.
+					'<div class="rightLink">'.
 						'<a class="sel">Информация</a>'.
 						'<a class="cedit">Редактировать</a>'.
-						'<a href="'.URL.'&p=zayav&d=add&back=client&id='.$client_id.'">Новая заявка</a>'.
+						'<a href="'.URL.'&p=zayav&d=add&back=client&id='.$client_id.'"><b>Новая заявка</b></a>'.
 						'<a class="remind_add">Новое задание</a>'.
 					'</div>'.
 					'<div id="zayav_filter">'.
 						'<div id="zayav_result">'.zayav_count($zayavData['all'], 0).'</div>'.
-						'<div class="findHead">Статус заявки</div><div id="zayav_status"></div>'.
+						'<div class="findHead">Статус заявки</div>'.
+                        _rightLink('status', _zayavStatusName()).
 						'<div class="findHead">Устройство</div><div id="dev"></div>'.
 					'</div>'.
 			'</table>'.
@@ -315,6 +316,10 @@ function clientBalansUpdate($client_id) {//Обновление баланса клиента
 
 function _zayavStatus($id=false) {
 	$arr = array(
+        '0' => array(
+            'name' => 'Любой статус',
+            'color' => 'ffffff'
+        ),
 		'1' => array(
 			'name' => 'Ожидает выполнения',
 			'color' => 'E8E8FF'
@@ -330,6 +335,24 @@ function _zayavStatus($id=false) {
 	);
 	return $id ? $arr[$id] : $arr;
 }//end of _zayavStatus()
+function _zayavStatusName($id=false) {
+    $status = _zayavStatus();
+    if($id)
+        return $status[$id]['name'];
+    $send = array();
+    foreach($status as $id => $r)
+        $send[$id] = $r['name'];
+    return $send;
+}//end of _zayavStatusName()
+function _zayavStatusColor($id=false) {
+    $status = _zayavStatus();
+    if($id)
+        return $status[$id]['color'];
+    $send = array();
+    foreach($status as $id => $r)
+        $send[$id] = $r['color'];
+    return $send;
+}//end of _zayavStatusName()
 function _zayavNomerLink($arr, $noHint=false) { //Вывод номеров заявок с возможностью отображения дополнительной информации при наведении
 	if(empty($arr))
 		return true;
@@ -648,7 +671,8 @@ function zayav_list($data, $values) {
                     _radio('sort', array(1=>'По дате добавления',2=>'По обновлению статуса'), $values['sort']).
 					_checkbox('desc', 'Обратный порядок', $values['desc']).
 					'<div class="condLost'.(!empty($values['find']) ? ' hide' : '').'">'.
-						'<div class="findHead">Статус заявки</div><div id="status"></div>'.
+						'<div class="findHead">Статус заявки</div>'.
+                        _rightLink('status', _zayavStatusName(), $values['status']).
 						'<div class="findHead">Заказаны запчасти</div>'.
                         _radio('zpzakaz', array(0=>'Все заявки',1=>'Да',2=>'Нет'), $values['zpzakaz'], 1).
 						'<div class="findHead">Устройство</div><div id="dev"></div>'.
@@ -662,7 +686,6 @@ function zayav_list($data, $values) {
 			'G.model_ids = ['._zayavDeviveBaseIds('model').'];'.
 			'G.place_other = ['.implode(',', $place_other).'];'.
 			'G.zayav_find = "'.unescape($values['find']).'";'.
-			'G.zayav_status = '.$values['status'].';'.
 			'G.zayav_device = '.$values['device'].';'.
 			'G.zayav_vendor = '.$values['vendor'].';'.
 			'G.zayav_model = '.$values['model'].';'.
@@ -713,7 +736,6 @@ function zayav_info($zayav_id) {
 	$sql = "SELECT * FROM `zayavki` WHERE `ws_id`=".WS_ID." AND `zayav_status`>0 AND `id`=".$zayav_id." LIMIT 1";
 	if(!$zayav = mysql_fetch_assoc(query($sql)))
 		return 'Заявки не существует.';
-	$status = _zayavStatus($zayav['zayav_status']);
 	$model = _vendorName($zayav['base_vendor_id'])._modelName($zayav['base_model_id']);
 	$sql = "SELECT *
 		FROM `accrual`
@@ -781,7 +803,10 @@ function zayav_info($zayav_id) {
 			$zpSpisok .= zayav_zp_unit($r, $model);
 	}
 
+    $status = _zayavStatusName();
+    unset($status[0]);
 	return '<script type="text/javascript">'.
+        'var STATUS='._selJson($status).';'.
 		'G.zayavInfo = {'.
 			'id:'.$zayav_id.','.
 			'nomer:'.$zayav['nomer'].','.
@@ -819,7 +844,9 @@ function zayav_info($zayav_id) {
 					'<tr><td class="label">Дата приёма:'.
 						'<td class="dtime_add" title="Заявку внёс '._viewerName($zayav['viewer_id_add']).'">'.FullDataTime($zayav['dtime_add']).
 					'<tr><td class="label">Статус:'.
-						'<td><div id="status" style="background-color:#'.$status['color'].'" class="status_place">'.$status['name'].'</div>'.
+						'<td><div id="status" style="background-color:#'._zayavStatusColor($zayav['zayav_status']).'" class="status_place">'.
+                                _zayavStatusName($zayav['zayav_status']).
+                            '</div>'.
 							'<div id="status_dtime">от '.FullDataTime($zayav['zayav_status_dtime'], 1).'</div>'.
 					'<tr class="acc_tr'.($accSum > 0 ? '' : ' dn').'"><td class="label">Начислено: <td><b class="acc">'.$accSum.'</b> руб.'.
 					'<tr class="op_tr'.($opSum > 0 ? '' : ' dn').'"><td class="label">Оплачено:    <td><b class="op">'.$opSum.'</b> руб.'.
@@ -1121,20 +1148,25 @@ function zp_data($page=1, $filter=array(), $limit=20) {
 }//end of zp_data()
 function zp_list($data) {
 	$filter = $data['filter'];
+    $menu = array(
+        0 => 'Общий каталог',
+        1 => 'Наличие',
+        2 => 'Нет в наличии',
+        3 => 'Заказ'
+    );
 	return '<div id="zp">'.
 		'<div class="result">'.zp_count($data).'</div>'.
 		'<table class="tabLR">'.
 			'<tr><td class="left">'.$data['spisok'].
 				'<td class="right">'.
 					'<div id="find"></div>'.
-					'<div id="menu"></div>'.
+                    _rightLink('menu', $menu, $filter['menu']).
 					'<div class="findHead">Наименование</div><INPUT type="hidden" id="zp_name" value="'.$filter['name'].'" />'.
 					'<div class="findHead">Устройство</div><div id="dev"></div>'.
 					_checkbox('bu', 'Б/у', $filter['bu']).
 		'</table>'.
 		'<script type="text/javascript">'.
 			'G.zp_find = "'.$filter['find'].'";'.
-			'G.zp_menu = "'.$filter['menu'].'";'.
 			'G.zp_device = '.$filter['device'].';'.
 			'G.zp_vendor = '.$filter['vendor'].';'.
 			'G.zp_model = '.$filter['model'].';'.
@@ -1215,7 +1247,7 @@ function zp_info($zp_id) {
 					'<div class="move">'.zp_move($compat_id).'</div>'.
 				'<td class="right">'.
 					'<div id="foto">'._zpImg($compat_id).'</div>'.
-					'<div class="rightLinks">'.
+					'<div class="rightLink">'.
 						'<a class="fotoUpload">Добавить изображение</a>'.
 						'<a class="edit">Редактировать</a>'.
 						'<a class="avai_add">Внести наличие</a>'.
@@ -1322,6 +1354,15 @@ function zp_compat_count($c) {
 
 
 // ---===! report !===--- Секция отчётов
+function reportMenu($g) {
+    return '<div class="rightLink">'.
+        '<a href="'.URL.'&p=report&d=history"'.($g == 'history' ? ' class="sel"' : '').'>История действий</a>'.
+        '<a href="'.URL.'&p=report&d=remind"'.($g == 'remind' ? ' class="sel"' : '').'>'.
+            'Задания'.REMIND_ACTIVE.'<div class="img_add report_remind_add"></div>'.
+        '</a>'.
+        '<a href="'.URL.'&p=report&d=money"'.($g == 'money' ? ' class="sel"' : '').'>Деньги</a>'.
+    '</div>';
+}//end of
 
 function history_insert($arr) {
 	$sql = "INSERT INTO `history` (

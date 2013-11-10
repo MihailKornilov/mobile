@@ -206,7 +206,7 @@ function sa_equip() {
     '<div class="sa-equip">'.
         '<div class="headName">Комплектация устройств<a class="add">Добавить новое наименование</a></div>'.
         '<table class="etab">'.
-            '<tr><td><div class="rightLinks">'.$dev.'</dev>'.
+            '<tr><td><div class="rightLink">'.$dev.'</dev>'.
                 '<td id="eq-spisok">'.sa_equip_spisok($default_id).
         '</table>'.
     '</div>';

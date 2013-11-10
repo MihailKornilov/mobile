@@ -113,22 +113,7 @@ switch($_GET['p']) {
         if(!WS_ID)
             header('Location:'.URL.'&p=wscreate');
         _mainLinks();
-        $links = array(
-            array(
-                'name' => 'История действий',
-                'd' => 'history',
-                'sel' => 1
-            ),
-            array(
-                'name' => 'Задания'.REMIND_ACTIVE.'<div class="img_add report_remind_add"></div>',
-                'd' => 'remind'
-            ),
-            array(
-                'name' => 'Деньги',
-                'd' => 'money'
-            )
-        );
-        $rl = _rightLinks('report', $links, @$_GET['d']);
+        $rl = reportMenu(@$_GET['d']);
         $dl = '';
         switch(@$_GET['d']) {
             case 'remind':

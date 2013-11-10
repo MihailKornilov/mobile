@@ -53,7 +53,7 @@
 #clientInfo #comments,#clientInfo #remind_spisok{margin:0 10px;display:none}
 #clientInfo #remind_spisok ._empty{margin:10px 0;padding:60px 10px}
 #clientInfo .right{width:145px}
-#clientInfo .rightLinks{margin-bottom:30px}
+#clientInfo .rightLink{margin-bottom:30px}
 
 /* список заявок */
 #zayav #filter_break{float:right}
@@ -227,7 +227,7 @@
 .avaiAddTab #count{width:40px;margin-left:25px}
 .avaiAddTab #cena{width:65px}
 .avaiAddTab span{color:#aaa;margin-left:5px}
-#zp #menu{margin-top:10px}
+#zp #find{margin-bottom:10px}
 #zp .ajaxNext{margin:0 8px 10px 8px}
 
 
@@ -332,7 +332,7 @@ table.zayavNomerTab td{vertical-align:top}
 #report_remind .ajaxNext{margin-bottom:10px}
 #report_remind ._empty{margin:0}
 /* плюсик добавления напоминания */
-.rightLinks a:not(.sel) .report_remind_add{display:none}
+.rightLink a:not(.sel) .report_remind_add{display:none}
 .report_remind_add{float:right;margin:1px 0}
 /* таблица внесения нового напоминания */
 .remind_add_tab{border-spacing:6px}

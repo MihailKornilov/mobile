@@ -211,12 +211,12 @@ $(document)
         }
     })
 
-    .on('click', '.sa-equip .rightLinks a', function() {
-        $('.sa-equip .rightLinks a.sel').removeClass('sel');
+    .on('click', '.sa-equip .rightLink a', function() {
+        $('.sa-equip .rightLink a.sel').removeClass('sel');
         $(this).addClass('sel');
         var send = {
             op:'equip_show',
-            device_id:$('.sa-equip .rightLinks .sel').attr('val')
+            device_id:$('.sa-equip .rightLink .sel').attr('val')
         };
         $('.path').addClass('busy');
         $.post(AJAX_SA, send, function(res) {
@@ -245,7 +245,7 @@ $(document)
                 op:'equip_add',
                 name:$('#name').val(),
                 title:$('#title').val(),
-                device_id:$('.sa-equip .rightLinks .sel').attr('val')
+                device_id:$('.sa-equip .rightLink .sel').attr('val')
             };
             if(!send.name) {
                 dialog.bottom.vkHint({
@@ -305,7 +305,7 @@ $(document)
                 id:id,
                 name:$('#name').val(),
                 title:$('#title').val(),
-                device_id:$('.sa-equip .rightLinks .sel').attr('val')
+                device_id:$('.sa-equip .rightLink .sel').attr('val')
             };
             if(!send.name) {
                 dialog.bottom.vkHint({
@@ -347,7 +347,7 @@ $(document)
             var send = {
                 op:'equip_del',
                 id:t.attr('val'),
-                device_id:$('.sa-equip .rightLinks .sel').attr('val')
+                device_id:$('.sa-equip .rightLink .sel').attr('val')
             };
             dialog.process();
             $.post(AJAX_SA, send, function(res) {
@@ -371,7 +371,7 @@ $(document)
         }
         var send = {
             op:'equip_set',
-            device_id:$('.sa-equip .rightLinks .sel').attr('val'),
+            device_id:$('.sa-equip .rightLink .sel').attr('val'),
             ids:arr.join()
         };
         $('.path').addClass('busy');

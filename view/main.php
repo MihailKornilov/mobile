@@ -237,25 +237,16 @@ function _footer() {
          '</div></BODY></HTML>';
 }//end of _footer()
 
-function _rightLinks($p, $data, $d='') {
-    $page = false;
-    foreach($data as $link) {
-        if($d == $link['d']) {
-            $page = true;
-            break;
-        }
-    }
-    $send =  '<div class="rightLinks">';
-    foreach($data as $link) {
-        if($page)
-            $sel = $d == $link['d'] ?  ' class="sel"' : '';
-        else
-            $sel = isset($link['sel']) ? ' class="sel"' : '';
-        $send .= '<a href="'.URL.'&p='.$p.'&d='.$link['d'].'"'.$sel.'>'.$link['name'].'</a>';
-    }
-    $send .= '</div>';
-    return $send;
-}//end of _rightLinks()
+function _rightLink($id, $spisok, $val=0) {
+    $a = '';
+    foreach($spisok as $uid => $title)
+        $a .= '<a'.($val == $uid ? ' class="sel"' : '').' val="'.$uid.'">'.$title.'</a>';
+    return
+    '<div class="rightLink" id="'.$id.'_rightLink">'.
+        '<input type="hidden" id="'.$id.'" value="'.$val.'">'.
+        $a.
+    '</div>';
+}//end of _rightLink()
 function _dopLinks($p, $data, $d=false, $d1=false) {//Дополнительное меню на сером фоне
     $s = $d1 ? $d1 : $d;
     $page = false;
@@ -313,8 +304,6 @@ function curTime() { return strftime('%Y-%m-%d %H:%M:%S',time()); }
 
 function GvaluesCreate() {//Составление файла G_values.js
     $save = 'function SpisokToAss(s){var a=[];for(var n=0;n<s.length;a[s[n].uid]=s[n].title,n++);return a}'.
-        'G.status_spisok='.query_selJson("SELECT `id`,`name` FROM `setup_zayavki_status` ORDER BY id").';G.status_ass=SpisokToAss(G.status_spisok);'.
-        'G.status_color_ass='.query_ptpJson("SELECT `id`,`bg` FROM setup_zayavki_status").';'.
         'G.color_spisok='.query_selJson("SELECT `id`,`name` FROM setup_color_name ORDER BY name").';G.color_ass=SpisokToAss(G.color_spisok);'.
         'G.fault_spisok='.query_selJson("SELECT `id`,`name` FROM setup_fault ORDER BY sort").';G.fault_ass=SpisokToAss(G.fault_spisok);'.
         'G.zp_name_spisok='.query_selJson("SELECT `id`,`name` FROM setup_zp_name ORDER BY name").';G.zp_name_ass=SpisokToAss(G.zp_name_spisok);'.
@@ -368,6 +357,13 @@ function GvaluesCreate() {//Составление файла G_values.js
 
     query("UPDATE `setup_global` SET `g_values`=`g_values`+1");
 }//end of GvaluesCreate()
+
+function _selJson($arr) {
+    $send = array();
+    foreach($arr as $uid => $title)
+        $send[] = '{uid:'.$uid.',title:"'.$title.'"}';
+    return '['.implode(',',$send).']';
+}//end of _json()
 
 function _monthFull($n=0) {
     $mon = array(
