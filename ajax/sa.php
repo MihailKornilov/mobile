@@ -66,6 +66,7 @@ switch(@$_POST['op']) {
                 )";
         query($sql);
         xcache_unset(CACHE_PREFIX.'device_name');
+        GvaluesCreate();
         $send['html'] = utf8(sa_device_spisok());
         jsonSuccess($send);
         break;
@@ -105,6 +106,7 @@ switch(@$_POST['op']) {
                 WHERE `id`=".$id;
         query($sql);
         xcache_unset(CACHE_PREFIX.'device_name');
+        GvaluesCreate();
         $send['html'] = utf8(sa_device_spisok());
         jsonSuccess($send);
         break;
@@ -121,6 +123,7 @@ switch(@$_POST['op']) {
         $sql = "DELETE FROM `base_device` WHERE `id`=".$id;
         query($sql);
         xcache_unset(CACHE_PREFIX.'device_name');
+        GvaluesCreate();
         $send['html'] = utf8(sa_device_spisok());
         jsonSuccess($send);
         break;

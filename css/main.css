@@ -359,7 +359,8 @@ table.zayavNomerTab td{vertical-align:top}
 
 
 
-#report_prihod{padding:10px 15px 20px 15px}
+#report_prihod{margin:12px}
+#report_prihod .headName{margin:10px 0}
 #report_prihod ._spisok{width:100%}
 #report_prihod .sum{width:30px;text-align:right;white-space:nowrap}
 #report_prihod .dtime{width:70px;color:#666;font-size:10px;text-align:right;white-space:nowrap;cursor:help}
@@ -369,7 +370,6 @@ table.zayavNomerTab td{vertical-align:top}
 #report_prihod .deleted{background-color:#eee}
 #report_prihod .deleted *{color:#999}
 #report_prihod .summa{margin-bottom:7px}
-#report_prihod .summa_add{float:right}
 #report_prihod_add{border-spacing:8px}
 #report_prihod_add #kassa_radio div{display:inline-block;margin-right:15px}
 #report_prihod_add #about{width:170px}
@@ -380,8 +380,6 @@ table.zayavNomerTab td{vertical-align:top}
 
 #report_rashod{margin:12px}
 #report_rashod .headName{margin:10px 0}
-#report_rashod .headName a{float:right;color:#9fb7c9}
-#report_rashod .headName a:hover{color:#2B587A}
 #report_rashod ._spisok{width:100%;margin-top:5px}
 #report_rashod .sum{width:30px;text-align:right;white-space:nowrap}
 #report_rashod .dtime{width:70px;color:#666;font-size:10px;text-align:right;white-space:nowrap;cursor:help}

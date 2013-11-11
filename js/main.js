@@ -121,7 +121,7 @@ $(document)
     })
     .on('click', '.debug_toggle', function() {
         var d = getCookie('debug');
-        setCookie('debug', d == 0 ? 1 : 0);
+        setCookie('debug', d == 1 ? 0 : 1);
         _msg('Debug включен.');
         document.location.reload();
     })

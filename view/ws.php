@@ -245,7 +245,7 @@ function client_info($client_id) {
 			if($r['zp_id'] > 0)
 				$about = 'Продажа запчасти '.$r['zp_id'].'. ';
 			$about .= $r['prim'];
-			$money .= '<tr><td class="sum"><b>'.$r['summa'].'</b>'.
+			$money .= '<tr><td class="sum"><b>'.$r['sum'].'</b>'.
 						  '<td>'.$about.
 						  '<td class="dtime" title="Внёс: '._viewerName($r['viewer_id_add']).'">'.FullDataTime($r['dtime_add']);
 		}
@@ -301,8 +301,8 @@ function client_info($client_id) {
 		'</div>';
 }//end of client_info()
 function clientBalansUpdate($client_id) {//Обновление баланса клиента
-	$prihod = query_value("SELECT SUM(`summa`) FROM `money` WHERE `status`=1 AND `client_id`=".$client_id." AND `summa`>0");
-	$acc = query_value("SELECT SUM(`summa`) FROM `accrual` WHERE `status`=1 AND `client_id`=".$client_id);
+	$prihod = query_value("SELECT SUM(`sum`) FROM `money` WHERE `status`=1 AND `client_id`=".$client_id." AND `sum`>0");
+	$acc = query_value("SELECT SUM(`sum`) FROM `accrual` WHERE `status`=1 AND `client_id`=".$client_id);
 	$balans = $prihod - $acc;
 	query("UPDATE `client` SET `balans`=".$balans." WHERE `id`=".$client_id);
 	return $balans;
@@ -352,7 +352,7 @@ function _zayavStatusColor($id=false) {
     foreach($status as $id => $r)
         $send[$id] = $r['color'];
     return $send;
-}//end of _zayavStatusName()
+}//end of _zayavStatusColor()
 function _zayavNomerLink($arr, $noHint=false) { //Вывод номеров заявок с возможностью отображения дополнительной информации при наведении
 	if(empty($arr))
 		return true;
@@ -748,21 +748,21 @@ function zayav_info($zayav_id) {
 	$accSum = 0;
 	while($acc = mysql_fetch_assoc($q)) {
 		$money[strtotime($acc['dtime_add'])] = zayav_accrual_unit($acc);
-		$accSum += $acc['summa'];
+		$accSum += $acc['sum'];
 	}
 
 	$sql = "SELECT *
 		FROM `money`
 		WHERE `ws_id`=".WS_ID."
 		  AND `status`=1
-		  AND `summa`>0
+		  AND `sum`>0
 		  AND `zayav_id`=".$zayav['id']."
 		ORDER BY `dtime_add` ASC";
 	$q = query($sql);
 	$opSum = 0;
 	while($op = mysql_fetch_assoc($q)) {
 		$money[strtotime($op['dtime_add'])] = zayav_oplata_unit($op);
-		$opSum += $op['summa'];
+		$opSum += $op['sum'];
 	}
 	$dopl = $accSum - $opSum;
 	ksort($money);
@@ -887,7 +887,7 @@ function zayav_info($zayav_id) {
 	'</div>';
 }//end of zayav_info()
 function zayav_accrual_unit($acc) {
-	return '<tr><td class="sum acc" title="Начисление">'.$acc['summa'].'</td>'.
+	return '<tr><td class="sum acc" title="Начисление">'.$acc['sum'].'</td>'.
 		'<td>'.$acc['prim'].'</td>'.
 		'<td class="dtime" title="Начислил '._viewerName(isset($acc['viewer_id_add']) ? $acc['viewer_id_add'] : VIEWER_ID).'">'.
 			FullDataTime(isset($acc['dtime_add']) ? $acc['dtime_add'] : curTime()).
@@ -896,7 +896,7 @@ function zayav_accrual_unit($acc) {
 	'</tr>';
 }//end of zayav_accrual_unit()
 function zayav_oplata_unit($op) {
-	return '<tr><td class="sum op" title="Платёж">'.$op['summa'].'</td>'.
+	return '<tr><td class="sum op" title="Платёж">'.$op['sum'].'</td>'.
 		'<td>'.$op['prim'].'</td>'.
 		'<td class="dtime" title="Платёж внёс '._viewerName(isset($op['viewer_id_add']) ? $op['viewer_id_add'] : VIEWER_ID).'">'.
 			FullDataTime(isset($op['dtime_add']) ? $op['dtime_add'] : curTime()).
@@ -1686,18 +1686,22 @@ function report_prihod_right() { //Условия поиска справа для отчётов
 		'</div>';
 }//end of report_prihod_right()
 function report_prihod() {
-	return '<div id="report_prihod">'.report_prihod_spisok(_curMonday(), _curSunday(), 0).'</div>';
+	return
+    '<div id="report_prihod">'.
+        '<div class="headName">Список поступлений<a class="add">Внести платёж</a></div>'.
+        '<div class="spisok">'.report_prihod_spisok(_curMonday(), _curSunday(), 0).'</div>'.
+    '</div>';
 }//end of report_prihod()
 function report_prihod_spisok($day_begin, $day_end, $del_show=0, $page=1) {
 	$limit = 30;
 	$cond = "`ws_id`=".WS_ID."
-		AND `summa`>0
+		AND `sum`>0
 		AND `dtime_add`>='".$day_begin." 00:00:00'
 		AND `dtime_add`<='".$day_end." 23:59:59'
 		".($del_show && VIEWER_ADMIN ? '' : ' AND `status`=1');
 	$sql = "SELECT
 				COUNT(`id`) AS `all`,
-				SUM(`summa`) AS `sum`
+				SUM(`sum`) AS `sum`
 			FROM `money`
 			WHERE ".$cond;
 	$r = mysql_fetch_assoc(query($sql));
@@ -1708,10 +1712,8 @@ function report_prihod_spisok($day_begin, $day_end, $del_show=0, $page=1) {
 
 	$send = '';
 	if($page == 1)
-		$send = '<div class="summa">'.
-				'<a class="summa_add">Внести произвольную сумму</a>'.
-				'Показан'._end($all, '', 'о').' <b>'.$all.'</b> платеж'._end($all, '', 'а', 'ей').' на сумму <b>'.$r['sum'].'</b> руб.'.
-			'</div>'.
+		$send =
+            '<div class="summa">Показан'._end($all, '', 'о').' <b>'.$all.'</b> платеж'._end($all, '', 'а', 'ей').' на сумму <b>'.$r['sum'].'</b> руб.</div>'.
 			'<table class="_spisok">'.
 				'<tr><th class="sum">Сумма'.
 					'<th>Описание'.
@@ -1751,7 +1753,7 @@ function report_prihod_spisok($day_begin, $day_end, $del_show=0, $page=1) {
 			$dtimeTitle .= "\n".'Удалил: '.$viewer[$r['viewer_id_del']]['name'].
 				"\n".FullDataTime($r['dtime_del']);
 		$send .= '<tr'.($r['status'] == 0 ? ' class="deleted"' : '').'>'.
-			'<td class="sum"><b>'.$r['summa'].'</b>'.
+			'<td class="sum"><b>'.$r['sum'].'</b>'.
 			'<td>'.$about.
 			'<td class="dtime" title="'.$dtimeTitle.'">'.FullDataTime($r['dtime_add']).
 			'<td class="edit">'.($r['status'] == 1 ?
@@ -1777,11 +1779,11 @@ function report_rashod_monthSum($year=0, $month=0, $category=0, $worker=0) {
 	if(!$month) $month = intval(strftime('%m', time()));
 	$sql = "SELECT
 				DISTINCT(DATE_FORMAT(`dtime_add`,'%m')) AS `month`,
-				SUM(`summa`) AS `sum`
+				SUM(`sum`) AS `sum`
 			FROM `money`
 			WHERE `ws_id`=".WS_ID."
 			  AND `status`=1
-			  AND `summa`<0
+			  AND `sum`<0
 			  AND `dtime_add` LIKE '".$year."-%'
 			  ".($worker ? " AND `worker_id`=".$worker : '')."
 			  ".($category ? " AND `rashod_category`=".$category : '')."
@@ -1819,7 +1821,7 @@ function report_rashod() {
 				'var rashodCaregory = ['.implode(',', $cat).'];'.
 			'</script>'.
 		'<div id="report_rashod">'.
-			'<div class="headName">Список расходов мастерской<a id="add">Внести новый расход</a></div>'.
+			'<div class="headName">Список расходов мастерской<a class="add">Внести новый расход</a></div>'.
 			'<div id="spisok">'.report_rashod_spisok().'</div>'.
 		'</div>';
 }//end of report_rashod()
@@ -1828,13 +1830,13 @@ function report_rashod_spisok($page=1, $month=false, $category=0, $worker=0) {
 	$limit = 30;
 	$cond = "`ws_id`=".WS_ID."
 		AND `status`=1
-		AND `summa`<0
+		AND `sum`<0
 		AND `dtime_add` LIKE '".$month."-%'
 		".($worker ? " AND `worker_id`=".$worker : '')."
 		".($category ? ' AND `rashod_category`='.$category : '');
 	$sql = "SELECT
 				COUNT(`id`) AS `all`,
-				SUM(`summa`) AS `sum`
+				SUM(`sum`) AS `sum`
 			FROM `money`
 			WHERE ".$cond;
 	$r = mysql_fetch_assoc(query($sql));
@@ -1855,7 +1857,7 @@ function report_rashod_spisok($page=1, $month=false, $category=0, $worker=0) {
 		$send = '<div class="summa">'.
 				'Показан'._end($all, 'а', 'о').' <b>'.$all.'</b> запис'._end($all, 'ь', 'и', 'ей').
 				' на сумму <b>'.abs($r['sum']).'</b> руб.'.
-				' за '._monthFull($ex[1]).' '.$ex[0].' г.'.
+				' за '._monthDef($ex[1]).' '.$ex[0].' г.'.
 			'</div>'.
 			'<table class="_spisok">'.
 				'<tr><th class="sum">Сумма'.
@@ -1884,7 +1886,7 @@ function report_rashod_spisok($page=1, $month=false, $category=0, $worker=0) {
 			$dtimeTitle .= "\n".'Удалил: '.$viewer[$r['viewer_id_del']]['name'].
 				"\n".FullDataTime($r['dtime_del']);
 		$send .= '<tr'.($r['status'] == 0 ? ' class="deleted"' : '').'>'.
-			'<td class="sum"><b>'.abs($r['summa']).'</b>'.
+			'<td class="sum"><b>'.abs($r['sum']).'</b>'.
 			'<td>'.($r['rashod_category'] ? '<em>'.$rashodCat[$r['rashod_category']].($r['prim'] || $r['worker_id'] ? ':' : '').'</em>' : '').
 				   ($r['worker_id'] ? $viewer[$r['worker_id']]['link'].($r['prim'] ? ', ' : '') : '').
 				   $r['prim'].
@@ -1905,7 +1907,7 @@ function kassa_sum() {
 	$sql = "SELECT SUM(`sum`) AS `sum` FROM `kassa` WHERE `ws_id`=".WS_ID." AND `status`=1 LIMIT 1";
 	$r = mysql_fetch_assoc(query($sql));
 	$kassa_sum = $r['sum'];
-	$sql = "SELECT SUM(`summa`) AS `sum` FROM `money` WHERE `ws_id`=".WS_ID." AND `status`=1 AND `kassa`=1 LIMIT 1";
+	$sql = "SELECT SUM(`sum`) AS `sum` FROM `money` WHERE `ws_id`=".WS_ID." AND `status`=1 AND `kassa`=1 LIMIT 1";
 	$r = mysql_fetch_assoc(query($sql));
 	return KASSA_START + $kassa_sum + $r['sum'];
 }//end of kassa_sum()
@@ -1981,29 +1983,29 @@ function report_kassa_spisok($page=1, $del_show=0) {
 
 function statistic() {
 	$sql = "SELECT
-				SUM(`summa`) AS `summa`,
+				SUM(`sum`) AS `sum`,
 				DATE_FORMAT(`dtime_add`, '%Y-%m-15') AS `dtime`
 			FROM `money`
 			WHERE `status`=1
-			  AND `summa`>0
+			  AND `sum`>0
 			GROUP BY DATE_FORMAT(`dtime_add`, '%Y-%m')
 			ORDER BY `dtime_add`";
 	$q = query($sql);
 	$prihod = array();
 	while($r = mysql_fetch_assoc($q))
-		$prihod[] = array(strtotime($r['dtime']) * 1000, intval($r['summa']));
+		$prihod[] = array(strtotime($r['dtime']) * 1000, intval($r['sum']));
 	$sql = "SELECT
-				SUM(`summa`)*-1 AS `summa`,
+				SUM(`sum`)*-1 AS `sum`,
 				DATE_FORMAT(`dtime_add`, '%Y-%m-15') AS `dtime`
 			FROM `money`
 			WHERE `status`=1
-			  AND `summa`<0
+			  AND `sum`<0
 			GROUP BY DATE_FORMAT(`dtime_add`, '%Y-%m')
 			ORDER BY `dtime_add`";
 	$q = query($sql);
 	$rashod = array();
 	while($r = mysql_fetch_assoc($q))
-		$rashod[] = array(strtotime($r['dtime']) * 1000, intval($r['summa']));
+		$rashod[] = array(strtotime($r['dtime']) * 1000, intval($r['sum']));
 
 	return '<div id="statistic"></div>'.
 		'<script type="text/javascript">'.

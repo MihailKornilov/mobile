@@ -417,7 +417,7 @@ var AJAX_WS= SITE + '/ajax/ws.php?' + VALUES,
         };
         $('.rightLink a.sel').append('<img src="/img/upload.gif">');
         $.post(AJAX_WS, send, function (res) {
-            $('#report_prihod').html(res.html);
+            $('.spisok').html(res.html);
             $('.rightLink a.sel img').remove();
         }, 'json');
     },
@@ -1393,6 +1393,35 @@ $(document)
                 });
         }
     })
+    .on('click', '#zayavInfo .acc_del', function() {
+        var send = {
+            op:'zayav_accrual_del',
+            id:$(this).attr('val')
+        };
+        var tr = $(this).parent().parent();
+        tr.html('<td colspan="4" class="deleting">Удаление... <img src=/img/upload.gif></td>');
+        $.post(AJAX_WS, send, function(res) {
+            if(res.success) {
+                tr.find('.deleting').html('Начисление удалено. <a class="acc_rest" val="' + send.id + '">Восстановить</a>');
+                zayavInfoMoneyUpdate();
+            }
+        }, 'json');
+    })
+    .on('click', '#zayavInfo .acc_rest', function() {
+        var send = {
+                op:'zayav_accrual_rest',
+                id:$(this).attr('val')
+            },
+            t = $(this),
+            tr = t.parent().parent();
+        t.after('<img src=/img/upload.gif>').remove();
+        $.post(AJAX_WS, send, function(res) {
+            if(res.success) {
+                tr.after(res.html).remove();
+                zayavInfoMoneyUpdate();
+            }
+        }, 'json');
+    })
     .on('click', '#zayavInfo .op_add', function() {
         var html = '<TABLE class="zayav_oplata_add">' +
             '<TR><TD class="label">Сумма:<TD><input type="text" id="sum" class="money" maxlength="5"> руб.' +
@@ -1458,20 +1487,6 @@ $(document)
                 });
         }
     })
-    .on('click', '#zayavInfo .acc_del', function() {
-        var send = {
-            op:'zayav_accrual_del',
-            id:$(this).attr('val')
-        };
-        var tr = $(this).parent().parent();
-        tr.html('<td colspan="4" class="deleting">Удаление... <img src=/img/upload.gif></td>');
-        $.post(AJAX_WS, send, function(res) {
-            if(res.success) {
-                tr.find('.deleting').html('Начисление удалено. <a class="acc_rest" val="' + send.id + '">Восстановить</a>');
-                zayavInfoMoneyUpdate();
-            }
-        }, 'json');
-    })
     .on('click', '#zayavInfo .op_del', function() {
         var send = {
             op:'zayav_oplata_del',
@@ -1482,21 +1497,6 @@ $(document)
         $.post(AJAX_WS, send, function (res) {
             if(res.success) {
                 tr.find('.deleting').html('Платёж удалён. <a class="op_rest" val="' + send.id + '">Восстановить</a>');
-                zayavInfoMoneyUpdate();
-            }
-        }, 'json');
-    })
-    .on('click', '#zayavInfo .acc_rest', function() {
-        var send = {
-                op:'zayav_accrual_rest',
-                id:$(this).attr('val')
-            },
-            t = $(this),
-            tr = t.parent().parent();
-        t.after('<img src=/img/upload.gif>').remove();
-        $.post(AJAX_WS, send, function(res) {
-            if(res.success) {
-                tr.after(res.html).remove();
                 zayavInfoMoneyUpdate();
             }
         }, 'json');
@@ -2587,7 +2587,7 @@ $(document)
                 next.removeClass('busy');
         }, 'json');
     })
-    .on('click', '#report_prihod .summa_add', function() {
+    .on('click', '#report_prihod .add', function() {
         var html = '<TABLE id="report_prihod_add">' +
             '<tr><td class="label">Содержание:<TD><INPUT type="text" id="about" maxlength="100">' +
             '<tr><td class="label">Сумма:<TD><INPUT type="text" id="sum" class="money" maxlength="8"> руб.' +
@@ -2599,9 +2599,9 @@ $(document)
                 content:html,
                 submit:submit
             }),
-            kassa = $('#report_prihod_add #kassa'),
-            sum = $('#report_prihod_add #sum'),
-            about = $('#report_prihod_add #about');
+            kassa = $('#kassa'),
+            sum = $('#sum'),
+            about = $('#about');
 
         kassa._radio({
             spisok:[{uid:1, title:'да'},{uid:0, title:'нет'}]
@@ -2697,7 +2697,7 @@ $(document)
                 next.removeClass('busy');
         }, 'json');
     })
-    .on('click', '#report_rashod #add', function() {
+    .on('click', '#report_rashod .add', function() {
         var html = '<TABLE id="report_rashod_add">' +
                 '<tr><td class="label">Категория:<TD><INPUT type="hidden" id="category" value="0">' +
                 '<tr><td class="label">Описание:<TD><INPUT type="text" id="about" maxlength="100">' +
@@ -3361,10 +3361,7 @@ $(document).ready(function() {
                 func:zayavSpisokLoad
             });
         zFind.inp(G.zayav_find);
-        $('.rightLink a').click(function() {
-            $('#status').rightLink($(this).attr('val'));
-            zayavSpisokLoad();
-        });
+        $('#status').rightLink(zayavSpisokLoad);
         $('#dev').device({
             width:155,
             type_no:1,

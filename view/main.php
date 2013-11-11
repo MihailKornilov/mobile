@@ -814,7 +814,7 @@ function _zpCompatId($zp_id) {
 }//end of _zpCompatId()
 function _zpAvaiSet($zp_id) { // Обновление количества наличия запчасти
     $zp_id = _zpCompatId($zp_id);
-    $count = query_value("SELECT SUM(`count`) FROM `zp_move` WHERE `ws_id`=".WS_ID." AND `zp_id`=".$zp_id." LIMIT 1");
+    $count = query_value("SELECT IFNULL(SUM(`count`),0) FROM `zp_move` WHERE `ws_id`=".WS_ID." AND `zp_id`=".$zp_id." LIMIT 1");
     query("DELETE FROM `zp_avai` WHERE `ws_id`=".WS_ID." AND `zp_id`=".$zp_id);
     if($count > 0)
         query("INSERT INTO `zp_avai` (`ws_id`,`zp_id`,`count`) VALUES (".WS_ID.",".$zp_id.",".$count.")");
