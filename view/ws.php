@@ -184,8 +184,8 @@ function client_list($data) {
 				'<td class="right">'.
 					'<div id="buttonCreate"><a>Новый клиент</a></div>'.
 					'<div class="filter">'.
-					   _checkbox('dolg', 'Должники').
-					   _checkbox('active', 'С активными заявками').
+					   _check('dolg', 'Должники').
+					   _check('active', 'С активными заявками').
 					'</div>'.
 		  '</table>'.
 		'</div>';
@@ -300,9 +300,18 @@ function client_info($client_id) {
 			'</table>'.
 		'</div>';
 }//end of client_info()
-function clientBalansUpdate($client_id) {//Обновление баланса клиента
-	$prihod = query_value("SELECT SUM(`sum`) FROM `money` WHERE `status`=1 AND `client_id`=".$client_id." AND `sum`>0");
-	$acc = query_value("SELECT SUM(`sum`) FROM `accrual` WHERE `status`=1 AND `client_id`=".$client_id);
+function clientBalansUpdate($client_id, $ws_id=WS_ID) {//Обновление баланса клиента
+	$prihod = query_value("SELECT IFNULL(SUM(`sum`),0)
+	                       FROM `money`
+	                       WHERE `ws_id`=".$ws_id."
+	                         AND `status`=1
+	                         AND `client_id`=".$client_id."
+	                         AND `sum`>0");
+	$acc = query_value("SELECT IFNULL(SUM(`sum`),0)
+	                    FROM `accrual`
+	                    WHERE `ws_id`=".$ws_id."
+	                      AND `status`=1
+	                      AND `client_id`=".$client_id);
 	$balans = $prihod - $acc;
 	query("UPDATE `client` SET `balans`=".$balans." WHERE `id`=".$client_id);
 	return $balans;
@@ -413,7 +422,7 @@ function zayav_add($v=array()) {
 	$fault = '<table>';
 	$k = 0;
 	while($r = mysql_fetch_assoc($q))
-		$fault .= (++$k%2 ? '<tr>' : '').'<td>'._checkbox('f_'.$r['id'], $r['name']);
+		$fault .= (++$k%2 ? '<tr>' : '').'<td>'._check('f_'.$r['id'], $r['name']);
 	$fault .= '</table>';
 
 	$client_id = empty($_GET['id']) ? 0 : intval($_GET['id']);
@@ -434,7 +443,7 @@ function zayav_add($v=array()) {
             '<tr><td class="label top">Местонахождение устройства<br />после внесения заявки:<td><INPUT type="hidden" id="place" value="-1" />'.
 			'<tr><td class="label top">Неисправности: <td id="fault">'.$fault.
 			'<tr><td class="label top">Заметка:       <td><textarea id="comm"></textarea>'.
-			'<tr><td class="label">Добавить напоминание:<td>'._checkbox('reminder').
+			'<tr><td class="label">Добавить напоминание:<td>'._check('reminder').
 		'</table>'.
 
 		'<table id="reminder_tab">'.
@@ -669,7 +678,7 @@ function zayav_list($data, $values) {
 					'<div id="find"></div>'.
 					'<div class="findHead">Порядок</div>'.
                     _radio('sort', array(1=>'По дате добавления',2=>'По обновлению статуса'), $values['sort']).
-					_checkbox('desc', 'Обратный порядок', $values['desc']).
+					_check('desc', 'Обратный порядок', $values['desc']).
 					'<div class="condLost'.(!empty($values['find']) ? ' hide' : '').'">'.
 						'<div class="findHead">Статус заявки</div>'.
                         _rightLink('status', _zayavStatusName(), $values['status']).
@@ -1163,7 +1172,7 @@ function zp_list($data) {
                     _rightLink('menu', $menu, $filter['menu']).
 					'<div class="findHead">Наименование</div><INPUT type="hidden" id="zp_name" value="'.$filter['name'].'" />'.
 					'<div class="findHead">Устройство</div><div id="dev"></div>'.
-					_checkbox('bu', 'Б/у', $filter['bu']).
+					_check('bu', 'Б/у', $filter['bu']).
 		'</table>'.
 		'<script type="text/javascript">'.
 			'G.zp_find = "'.$filter['find'].'";'.
@@ -1354,6 +1363,7 @@ function zp_compat_count($c) {
 
 
 // ---===! report !===--- Секция отчётов
+
 function reportMenu($g) {
     return '<div class="rightLink">'.
         '<a href="'.URL.'&p=report&d=history"'.($g == 'history' ? ' class="sel"' : '').'>История действий</a>'.
@@ -1574,7 +1584,7 @@ function report_remind() {
 function report_remind_right() {
 	return '<div class=findHead>Категории заданий</div>'.
         _radio('remind_status', array(1=>'Активные',2=>'Выполнены',0=>'Отменены'), 1, 1).
-		_checkbox('remind_private', 'Личное');
+		_check('remind_private', 'Личное');
 }//end of report_remind_right()
 function remind_data($page=1, $filter=array()) {
 	$cond = "`ws_id`=".WS_ID." AND `status`=".(isset($filter['status']) ? intval($filter['status']) : 1);
@@ -1682,7 +1692,7 @@ function report_prihod_right() { //Условия поиска справа для отчётов
 		'<div class="findHead">Период</div>'.
 		'<div class="cal"><EM class="label">от:</EM><INPUT type="hidden" id="report_prihod_day_begin" value="'._curMonday().'"></div>'.
 		'<div class="cal"><EM class="label">до:</EM><INPUT type="hidden" id="report_prihod_day_end" value="'._curSunday().'"></div>'.
-		(VIEWER_ADMIN ? _checkbox('prihodShowDel', 'Показывать удалённые платежи') : '').
+		(VIEWER_ADMIN ? _check('prihodShowDel', 'Показывать удалённые платежи') : '').
 		'</div>';
 }//end of report_prihod_right()
 function report_prihod() {
@@ -1929,7 +1939,7 @@ function report_kassa() {
 	return '<div id="report_kassa">'.$send.'</div>';
 }//end of report_kassa()
 function report_kassa_right() {
-	return KASSA_START == -1 ? '' : _checkbox('kassaShowDel', 'Показывать удалённые записи');
+	return KASSA_START == -1 ? '' : _check('kassaShowDel', 'Показывать удалённые записи');
 }//end of report_kassa_right()
 function report_kassa_spisok($page=1, $del_show=0) {
 	$limit = 30;
@@ -2007,12 +2017,14 @@ function statistic() {
 	while($r = mysql_fetch_assoc($q))
 		$rashod[] = array(strtotime($r['dtime']) * 1000, intval($r['sum']));
 
-	return '<div id="statistic"></div>'.
-		'<script type="text/javascript">'.
+	return
+    '<script type="text/javascript" src="http://nyandoma'.(LOCAL ? '' : '.ru').'/js/highstock.js"></script>'.
+    '<div id="statistic"></div>'.
+    '<script type="text/javascript">'.
 		'var statPrihod = '.json_encode($prihod).';'.
 		'var statRashod = '.json_encode($rashod).';'.
-		'</script>'.
-		'<script type="text/javascript" src="'.SITE.'/js/statistic.js"></script>';
+	'</script>'.
+	'<script type="text/javascript" src="'.SITE.'/js/statistic.js"></script>';
 }//end of statistic()
 
 
@@ -2035,7 +2047,7 @@ function setup_main() {
 	$q = query($sql);
 	$checkDevs = '';
 	while($r = mysql_fetch_assoc($q))
-		$checkDevs .= _checkbox($r['id'], $r['name_mn'], isset($devs[$r['id']]) ? 1 : 0);
+		$checkDevs .= _check($r['id'], $r['name_mn'], isset($devs[$r['id']]) ? 1 : 0);
 
 	return
 	'<script type="text/javascript">'.

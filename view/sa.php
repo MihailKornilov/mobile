@@ -121,6 +121,8 @@ function sa_ws_info($id) {
         '<div class="vkCancel ws_del" val="'.$ws['id'].'"><button style="color:red">Физическое удаление мастерской</button></div>'.
         '<div class="headName">Записи в базе</div>'.
         '<table class="counts">'.$counts.'</table>'.
+        '<div class="headName">Счётчики</div>'.
+        '<div class="vkButton ws_client_balans" val="'.$ws['id'].'"><button>Обновить балансы клиентов</button></div>'.
     '</div>';
 }//end of sa_ws_info()
 
@@ -230,7 +232,7 @@ function sa_equip_spisok($device_id) {
         foreach(equipCache() as $id => $r)
             $spisok .= '<dd val="'.$id.'">'.
                 '<table class="_spisok">'.
-                    '<tr><td class="use">'._checkbox('c_'.$id, '', isset($equip[$id]) ? 1 : 0).
+                    '<tr><td class="use">'._check('c_'.$id, '', isset($equip[$id]) ? 1 : 0).
                     '<td class="name">'.($r['title'] ? '<span title="'.$r['title'].'">'.$r['name'].'</span>' : $r['name']).
                         '<td class="set"><div class="img_edit"></div><div class="img_del"></div>'.
                 '</table>';

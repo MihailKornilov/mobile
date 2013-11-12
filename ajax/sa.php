@@ -1,6 +1,7 @@
 <?php
 require_once('config.php');
 if(!SA) jsonError();
+require_once(DOCUMENT_ROOT.'/view/ws.php');
 require_once(DOCUMENT_ROOT.'/view/sa.php');
 
 switch(@$_POST['op']) {
@@ -34,6 +35,19 @@ switch(@$_POST['op']) {
         query("UPDATE `vk_user` SET `ws_id`=0,`admin`=0 WHERE `ws_id`=".$ws_id);
         _cacheClear($ws_id);
         jsonSuccess();
+        break;
+    case 'ws_client_balans':
+        if(!preg_match(REGEXP_NUMERIC, $_POST['ws_id']))
+            jsonError();
+        $ws_id = intval($_POST['ws_id']);
+        $sql = "SELECT `id`,`balans` FROM `client` WHERE `ws_id`=".$ws_id." ORDER BY `id`";
+        $q = query($sql);
+        $send['count'] = 0;
+        while($r = mysql_fetch_assoc($q))
+            if(clientBalansUpdate($r['id'], $ws_id) != $r['balans'])
+                $send['count']++;
+        $send['time'] = round(microtime(true) - TIME, 3);
+        jsonSuccess($send);
         break;
 
     case 'device_add':

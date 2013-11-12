@@ -96,13 +96,6 @@ var REGEXP_NUMERIC = /^\d+$/,
             VK.callMethod('setLocation', hashLoc);
     };
 
-Highcharts.setOptions({
-    lang: {
-        months: ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь']
-    }
-});
-
-
 $(document)
     .ajaxError(function(event, request, settings) {
         if(!request.responseText)
@@ -128,15 +121,15 @@ $(document)
     .on('click', '.sa_viewer_msg .leave', function() {
         delCookie('sa_viewer_id');
         document.location.href = URL + '&p=sa&d=ws';
+    })
+
+    .ready(function() {
+        frameHidden.onresize = _fbhs;
+
+        VK.callMethod('scrollWindow', 0);
+        VK.callMethod('scrollSubscribe');
+        VK.addCallback('onScroll', function(top) { VK_SCROLL = top; });
+
+        sortable();
+        _fbhs();
     });
-
-$(document).ready(function() {
-    frameHidden.onresize = _fbhs;
-
-    VK.callMethod('scrollWindow', 0);
-    VK.callMethod('scrollSubscribe');
-    VK.addCallback('onScroll', function(top) { VK_SCROLL = top; });
-
-    sortable();
-    _fbhs();
-});

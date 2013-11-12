@@ -46,6 +46,19 @@ $(document)
             }, 'json');
         }
     })
+    .on('click', '.sa-ws-info .ws_client_balans', function() {
+        var t = $(this),
+            send = {
+                op:'ws_client_balans',
+                ws_id:t.attr('val')
+            };
+        t.addClass('busy');
+        $.post(AJAX_SA, send, function(res) {
+            t.removeClass('busy');
+            if(res.success)
+                t.after(' Изменено: ' + res.count + '. Время: ' + res.time);
+        }, 'json');
+    })
 
     .on('click', '.sa-device .add', function() {
         var t = $(this),

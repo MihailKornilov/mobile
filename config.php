@@ -21,6 +21,7 @@ define('SITE', 'http://'.DOMAIN);
 define('URL', SITE.'/index.php?'.VALUES);
 
 require_once(DOCUMENT_ROOT.'/syncro.php');
+require_once(VKPATH.'/vk.php');
 require_once(DOCUMENT_ROOT.'/view/main.php');
 
 define('REGEXP_NUMERIC', '/^[0-9]{1,20}$/i');
@@ -39,46 +40,6 @@ _dbConnect();
 _getSetupGlobal();
 _getVkUser();
 
-
-
-
-function _dbConnect() {
-    global $mysql, $sqlQuery;
-    $dbConnect = mysql_connect($mysql['host'], $mysql['user'], $mysql['pass'], 1) or die("Can't connect to database");
-    mysql_select_db($mysql['database'], $dbConnect) or die("Can't select database");
-    $sqlQuery = 0;
-    query('SET NAMES `'.NAMES.'`', $dbConnect);
-}//end of _dbConnect()
-function query($sql) {
-    global $sqlQuery, $sqlCount, $sqlTime;
-    $t = microtime(true);
-    $res = mysql_query($sql) or die($sql);
-    $t = microtime(true) - $t;
-    $sqlTime += $t;
-    $t = round($t, 3);
-    $sqlQuery .= $sql.' = <b style="color:#'.($t < 0.05 ? '999' : 'd22').'">'.$t.'</b><br /><br />';
-    $sqlCount++;
-    return $res;
-}
-function query_value($sql) {
-    if(!$r = mysql_fetch_row(query($sql)))
-        return false;
-    return $r[0];
-}
-function query_selJson($sql) {
-    $send = array();
-    $q = query($sql);
-    while($sp = mysql_fetch_row($q))
-        $send[] = '{uid:'.$sp[0].',title:"'.$sp[1].'"}';
-    return '['.implode(',',$send).']';
-}
-function query_ptpJson($sql) {//Ассоциативный массив
-    $q = query($sql);
-    $send = array();
-    while($sp = mysql_fetch_row($q))
-        $send[] = $sp[0].':'.(preg_match(REGEXP_NUMERIC, $sp[1]) ? $sp[1] : '"'.$sp[1].'"');
-    return '{'.implode(',', $send).'}';
-}
 
 function _getSetupGlobal() {//Получение глобальных данных
     $key = CACHE_PREFIX.'setup_global';

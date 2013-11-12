@@ -7,6 +7,7 @@ $mysql = array(
     'names' => 'cp1251'
 );
 
+define('VKPATH', 'c:/www/nyandoma/vk/');
 define('PATH_FILES', 'c:/www/vkmobile/files/');
 define('CACHE_PREFIX', 'vkmobile_');
 

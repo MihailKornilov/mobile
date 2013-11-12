@@ -1,6 +1,3 @@
-.sa_viewer_msg{padding:10px 20px;border:#c99 solid 1px;background-color:#fdd}
-.sa_viewer_msg .leave{float:right}
-
 .sa-index{padding:20px 0 100px 20px}
 
 .sa-ws{padding:10px 15px}
@@ -19,6 +16,7 @@
 .sa-ws-info .counts{border-spacing:4px}
 .sa-ws-info .counts .tb{text-align:right}
 .sa-ws-info .counts .c{text-align:right;font-weight:700;padding:0 5px}
+.sa-ws-info .ws_client_balans{margin-top:10px}
 
 .sa-device .spisok{margin:10px 20px}
 .sa-device .name{width:220px;cursor:move}

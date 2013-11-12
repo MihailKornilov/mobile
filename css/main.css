@@ -470,6 +470,11 @@ table.zayavNomerTab td{vertical-align:top}
 
 
 
+.sa_viewer_msg{padding:10px 20px;border:#c99 solid 1px;background-color:#fdd}
+.sa_viewer_msg .leave{float:right}
+
+
+
 .ws-create-info{background-color:#F7F7F7;padding:10px}
 .ws-create-info .txt,.ws-create-step1 .txt{
     margin:10px;

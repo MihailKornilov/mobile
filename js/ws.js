@@ -1,4 +1,5 @@
-var AJAX_WS= SITE + '/ajax/ws.php?' + VALUES,
+
+var AJAX_WS = SITE + '/ajax/ws.php?' + VALUES,
     scannerWord = '',
     scannerTime = 0,
     scannerTimer,
@@ -885,6 +886,7 @@ $(document)
 //            sc.append('<br /> - Clear<br />');
         }
     })
+
     .on('mouseenter', '.zayav_link', function(e) {
         var t = $(this),
             tooltip = t.find('.tooltip');
@@ -919,8 +921,6 @@ $(document)
         }, 'json');
     })
 
-    .on('click', '#client #dolg_check', clientSpisokLoad)
-    .on('click', '#client #active_check', clientSpisokLoad)
     .on('click', '#client .ajaxNext', function() {
         if($(this).hasClass('busy'))
             return;
@@ -1128,7 +1128,6 @@ $(document)
             });
     })
     .on('click', '#zayav #sort_radio div', zayavSpisokLoad)
-    .on('click', '#zayav #desc_check', zayavSpisokLoad)
     .on('click', '#zayav #zpzakaz_radio div', zayavSpisokLoad)
     .on('click', '#zayav #filter_break', function() {
         zFind.clear();
@@ -3282,302 +3281,302 @@ $(document)
             if(res.success)
                 adm.html('<a class="adm_set">Назначить администратором</a>');
         }, 'json');
-    });
+    })
 
-$(document).ready(function() {
-    if($('#client').length > 0) {
-        window.cFind = $('#find')._search({
-            width:602,
-            focus:1,
-            enter:1,
-            txt:'Начните вводить данные клиента',
-            func:clientSpisokLoad
-        });
-        $('#buttonCreate').vkHint({
-            msg:'<B>Внесение нового клиента в базу.</B><br /><br />' +
-                'После внесения Вы попадаете на страницу с информацией о клиенте для дальнейших действий.<br /><br />' +
-                'Клиентов также можно добавлять при <A href="' + URL + '&p=zayav&d=add&back=client">создании новой заявки</A>.',
-            ugol:'right',
-            width:215,
-            top:-38,
-            left:-250,
-            indent:40,
-            delayShow:1000,
-            correct:0
-        }).click(clientAdd);
-        $('#dolg_check').vkHint({
-            msg:'<b>Список должников.</b><br /><br />' +
-                'Выводятся клиенты, у которых баланс менее 0. Также в результате отображается общая сумма долга.',
-            ugol:'right',
-            width:150,
-            top:-6,
-            left:-185,
-            indent:20,
-            delayShow:1000,
-            correct:0
-        });
-    }
-    if($('#clientInfo').length > 0) {
-        $('#dopLinks .link').click(function() {
-            $('#dopLinks .link').removeClass('sel');
-            $(this).addClass('sel');
-            var val = $(this).attr('val');
-            $('.res').css('display', val == 'zayav' ? 'block' : 'none');
-            $('#zayav_filter').css('display', val == 'zayav' ? 'block' : 'none');
-            $('#zayav_spisok').css('display', val == 'zayav' ? 'block' : 'none');
-            $('#money_spisok').css('display', val == 'money' ? 'block' : 'none');
-            $('#remind_spisok').css('display', val == 'remind' ? 'block' : 'none');
-            $('#comments').css('display', val == 'comm' ? 'block' : 'none');
-        });
-        $('#status_rightLink a').click(function() {
-            $('#status').rightLink($(this).attr('val'));
-            clientZayavSpisokLoad();
-        });
-        $('#dev').device({
-            width:145,
-            type_no:1,
-            device_ids:G.device_ids,
-            vendor_ids:G.vendor_ids,
-            model_ids:G.model_ids,
-            func:clientZayavSpisokLoad
-        });
-    }
-
-    if($('#zayav').length > 0) {
-        window.zFind = $('#find')
-            .vkHint({
-                msg:'Поиск производится по<br />совпадению в названии<br />модели, imei и серийном<br />номере.',
-                ugol:'right',
-                top:-9,
-                left:-178,
-                delayShow:800,
-                correct:0
-            })
-            ._search({
-                width:153,
+    .ready(function() {
+        if($('#client').length > 0) {
+            window.cFind = $('#find')._search({
+                width:602,
                 focus:1,
-                txt:'Быстрый поиск...',
                 enter:1,
+                txt:'Начните вводить данные клиента',
+                func:clientSpisokLoad
+            });
+            $('#buttonCreate').vkHint({
+                msg:'<B>Внесение нового клиента в базу.</B><br /><br />' +
+                    'После внесения Вы попадаете на страницу с информацией о клиенте для дальнейших действий.<br /><br />' +
+                    'Клиентов также можно добавлять при <A href="' + URL + '&p=zayav&d=add&back=client">создании новой заявки</A>.',
+                ugol:'right',
+                width:215,
+                top:-38,
+                left:-250,
+                indent:40,
+                delayShow:1000,
+                correct:0
+            }).click(clientAdd);
+            $('#dolg')._check(clientSpisokLoad)
+            $('#active')._check(clientSpisokLoad)
+            $('#dolg_check').vkHint({
+                msg:'<b>Список должников.</b><br /><br />' +
+                    'Выводятся клиенты, у которых баланс менее 0. Также в результате отображается общая сумма долга.',
+                ugol:'right',
+                width:150,
+                top:-6,
+                left:-185,
+                indent:20,
+                delayShow:1000,
+                correct:0
+            });
+        }
+        if($('#clientInfo').length > 0) {
+            $('#dopLinks .link').click(function() {
+                $('#dopLinks .link').removeClass('sel');
+                $(this).addClass('sel');
+                var val = $(this).attr('val');
+                $('.res').css('display', val == 'zayav' ? 'block' : 'none');
+                $('#zayav_filter').css('display', val == 'zayav' ? 'block' : 'none');
+                $('#zayav_spisok').css('display', val == 'zayav' ? 'block' : 'none');
+                $('#money_spisok').css('display', val == 'money' ? 'block' : 'none');
+                $('#remind_spisok').css('display', val == 'remind' ? 'block' : 'none');
+                $('#comments').css('display', val == 'comm' ? 'block' : 'none');
+            });
+            $('#status').rightLink(clientZayavSpisokLoad);
+            $('#dev').device({
+                width:145,
+                type_no:1,
+                device_ids:G.device_ids,
+                vendor_ids:G.vendor_ids,
+                model_ids:G.model_ids,
+                func:clientZayavSpisokLoad
+            });
+        }
+
+        if($('#zayav').length > 0) {
+            window.zFind = $('#find')
+                .vkHint({
+                    msg:'Поиск производится по<br />совпадению в названии<br />модели, imei и серийном<br />номере.',
+                    ugol:'right',
+                    top:-9,
+                    left:-178,
+                    delayShow:800,
+                    correct:0
+                })
+                ._search({
+                    width:153,
+                    focus:1,
+                    txt:'Быстрый поиск...',
+                    enter:1,
+                    func:zayavSpisokLoad
+                });
+            zFind.inp(G.zayav_find);
+            $('#desc')._check(zayavSpisokLoad);
+            $('#status').rightLink(zayavSpisokLoad);
+            $('#dev').device({
+                width:155,
+                type_no:1,
+                device_id:G.zayav_device,
+                vendor_id:G.zayav_vendor,
+                model_id:G.zayav_model,
+                device_ids:G.device_ids,
+                vendor_ids:G.vendor_ids,
+                model_ids:G.model_ids,
                 func:zayavSpisokLoad
             });
-        zFind.inp(G.zayav_find);
-        $('#status').rightLink(zayavSpisokLoad);
-        $('#dev').device({
-            width:155,
-            type_no:1,
-            device_id:G.zayav_device,
-            vendor_id:G.zayav_vendor,
-            model_id:G.zayav_model,
-            device_ids:G.device_ids,
-            vendor_ids:G.vendor_ids,
-            model_ids:G.model_ids,
-            func:zayavSpisokLoad
-        });
-        // Нахождение устройства
-        for(n = 0; n < G.place_other.length; n++) {
-            var sp = G.place_other[n];
-            G.device_place_spisok.push({uid:encodeURI(sp), title:sp});
+            // Нахождение устройства
+            for(n = 0; n < G.place_other.length; n++) {
+                var sp = G.place_other[n];
+                G.device_place_spisok.push({uid:encodeURI(sp), title:sp});
+            }
+            G.device_place_spisok.push({uid:-1, title:'не известно', content:'<B>не известно</B>'});
+            G.vkSel_device_place = $('#device_place').vkSel({
+                width:155,
+                title0:'Любое местонахождение',
+                spisok:G.device_place_spisok,
+                func:zayavSpisokLoad
+            }).o;
+            // Состояние устройства
+            G.device_status_spisok.splice(0, 1);
+            G.device_status_spisok.push({uid:-1, title:'не известно', content:'<B>не известно</B>'});
+            G.vkSel_device_status = $('#devstatus').vkSel({
+                width:155,
+                title0:'Любое состояние',
+                spisok:G.device_status_spisok,
+                func:zayavSpisokLoad
+            }).o;
+            zayavFilter();
         }
-        G.device_place_spisok.push({uid:-1, title:'не известно', content:'<B>не известно</B>'});
-        G.vkSel_device_place = $('#device_place').vkSel({
-            width:155,
-            title0:'Любое местонахождение',
-            spisok:G.device_place_spisok,
-            func:zayavSpisokLoad
-        }).o;
-        // Состояние устройства
-        G.device_status_spisok.splice(0, 1);
-        G.device_status_spisok.push({uid:-1, title:'не известно', content:'<B>не известно</B>'});
-        G.vkSel_device_status = $('#devstatus').vkSel({
-            width:155,
-            title0:'Любое состояние',
-            spisok:G.device_status_spisok,
-            func:zayavSpisokLoad
-        }).o;
-        zayavFilter();
-    }
-    if($('#zayavAdd').length > 0) {
-        $('#client_id').clientSel({add:1});
-        $('#dev').device({
-            width:190,
-            add:1,
-            device_ids:WS_DEVS,
-            func:zayavDevSelect
-        });
-        G.device_place_spisok.push({uid:0, title:'другое: <input type="text" id="place_other" class="dn" maxlength="20" />'});
-        $('#place')._radio({
-            spisok:G.device_place_spisok,
-            func:function(val) {
-                $('#place_other')[(val == 0 ? 'remove' : 'add') + 'Class']('dn');
-                if(val == 0)
-                    $('#place_other').val('').focus();
-            }
-        });
-        $('#color_id').vkSel({width:120, title0:'Цвет не указан', spisok:G.color_spisok});
-        $(document).on('click', '#fault', function() {
-            var i = $(this).find('INPUT');
-            var arr = [];
-            for(var n = 0; n < i.length; n++) {
-                if(i.eq(n).val() == 1) {
-                    var uid = i.eq(n).attr('id').split('_')[1];
-                    arr.push(G.fault_ass[uid]);
+        if($('#zayavAdd').length > 0) {
+            $('#client_id').clientSel({add:1});
+            $('#dev').device({
+                width:190,
+                add:1,
+                device_ids:WS_DEVS,
+                func:zayavDevSelect
+            });
+            G.device_place_spisok.push({uid:0, title:'другое: <input type="text" id="place_other" class="dn" maxlength="20" />'});
+            $('#place')._radio({
+                spisok:G.device_place_spisok,
+                func:function(val) {
+                    $('#place_other')[(val == 0 ? 'remove' : 'add') + 'Class']('dn');
+                    if(val == 0)
+                        $('#place_other').val('').focus();
                 }
-            }
-            $('#comm').val(arr.join(', '));
-        });
-        $('#comm').autosize();
-        $('#reminder_check').click(function(id) {
-            $('#reminder_tab').toggle();
-            $('#reminder_txt').focus();
-        });
-        $('#reminder_day').vkCalendar();
-        $('.vkCancel').click(function() {
-            location.href = URL + '&p=' + $(this).attr('val');
-        });
-        $('.vkButton').click(function () {
-            var send = {
-                op:'zayav_add',
-                client:$('#client_id').val(),
-                device:$('#dev_device').val(),
-                vendor:$('#dev_vendor').val(),
-                model:$('#dev_model').val(),
-                equip:'',
-                place:$('#place').val(),
-                place_other:$('#place_other').val(),
-                imei:$('#imei').val(),
-                serial:$('#serial').val(),
-                color:$('#color_id').val(),
-                comm:$('#comm').val(),
-                reminder:$('#reminder').val()
-            };
-            if(!$('.tr_equip').hasClass('dn')) {
-                var inp = $('.equip_spisok input'),
-                    arr = [];
-                for(var n = 0; n < inp.length; n++) {
-                    var eq = inp.eq(n);
-                    if(eq.val() == 1)
-                        arr.push(eq.attr('id').split('_')[1]);
+            });
+            $('#color_id').vkSel({width:120, title0:'Цвет не указан', spisok:G.color_spisok});
+            $(document).on('click', '#fault', function() {
+                var i = $(this).find('INPUT');
+                var arr = [];
+                for(var n = 0; n < i.length; n++) {
+                    if(i.eq(n).val() == 1) {
+                        var uid = i.eq(n).attr('id').split('_')[1];
+                        arr.push(G.fault_ass[uid]);
+                    }
                 }
-                send.equip = arr.join();
-            }
-            send.reminder_txt = send.reminder == 1 ? $('#reminder_txt').val() : '';
-            send.reminder_day = send.reminder == 1 ? $('#reminder_day').val() : '';
+                $('#comm').val(arr.join(', '));
+            });
+            $('#comm').autosize();
+            $('#reminder_check').click(function(id) {
+                $('#reminder_tab').toggle();
+                $('#reminder_txt').focus();
+            });
+            $('#reminder_day').vkCalendar();
+            $('.vkCancel').click(function() {
+                location.href = URL + '&p=' + $(this).attr('val');
+            });
+            $('.vkButton').click(function () {
+                var send = {
+                    op:'zayav_add',
+                    client:$('#client_id').val(),
+                    device:$('#dev_device').val(),
+                    vendor:$('#dev_vendor').val(),
+                    model:$('#dev_model').val(),
+                    equip:'',
+                    place:$('#place').val(),
+                    place_other:$('#place_other').val(),
+                    imei:$('#imei').val(),
+                    serial:$('#serial').val(),
+                    color:$('#color_id').val(),
+                    comm:$('#comm').val(),
+                    reminder:$('#reminder').val()
+                };
+                if(!$('.tr_equip').hasClass('dn')) {
+                    var inp = $('.equip_spisok input'),
+                        arr = [];
+                    for(var n = 0; n < inp.length; n++) {
+                        var eq = inp.eq(n);
+                        if(eq.val() == 1)
+                            arr.push(eq.attr('id').split('_')[1]);
+                    }
+                    send.equip = arr.join();
+                }
+                send.reminder_txt = send.reminder == 1 ? $('#reminder_txt').val() : '';
+                send.reminder_day = send.reminder == 1 ? $('#reminder_day').val() : '';
 
-            var msg = '';
-            if(send.client == 0) msg = 'Не выбран клиент';
-            else if(send.device == 0) msg = 'Не выбрано устройство';
-            else if(send.place == '-1' || send.place == 0 && !send.place_other) msg = 'Не указано местонахождение устройства';
-            else if(send.reminder == 1 && !send.reminder_txt) msg = 'Не указан текст напоминания';
-            else {
-                if(send.place > 0) send.place_other = '';
-                $(this).addClass('busy');
-                $.post(AJAX_WS, send, function(res) {
-                    location.href = URL + '&p=zayav&d=info&id=' + res.id;
-                }, 'json');
-            }
+                var msg = '';
+                if(send.client == 0) msg = 'Не выбран клиент';
+                else if(send.device == 0) msg = 'Не выбрано устройство';
+                else if(send.place == '-1' || send.place == 0 && !send.place_other) msg = 'Не указано местонахождение устройства';
+                else if(send.reminder == 1 && !send.reminder_txt) msg = 'Не указан текст напоминания';
+                else {
+                    if(send.place > 0) send.place_other = '';
+                    $(this).addClass('busy');
+                    $.post(AJAX_WS, send, function(res) {
+                        location.href = URL + '&p=zayav&d=info&id=' + res.id;
+                    }, 'json');
+                }
 
-            if(msg)
-                $(this).vkHint({
-                    msg:'<SPAN class="red">' + msg + '</SPAN>',
-                    top:-48,
-                    left:201,
-                    indent:30,
-                    remove:1,
-                    show:1,
-                    correct:0
-                });
-        });
-    }
-    if($('#zayavInfo').length > 0) {
-        $('.delete').vkHint({
-            msg:'Заявку можно удалить при отсутствии платежей и начислений. Также удаляются все задачи к этой заявке.',
-            width:150,
-            ugol:'top',
-            top:40,
-            left:456,
-            indent:90,
-            correct:0
-        });
-        $('.fotoUpload').fotoUpload({
-            owner:'zayav' + G.zayavInfo.id,
-            func:zayavImgUpdate
-        });
-    }
+                if(msg)
+                    $(this).vkHint({
+                        msg:'<SPAN class="red">' + msg + '</SPAN>',
+                        top:-48,
+                        left:201,
+                        indent:30,
+                        remove:1,
+                        show:1,
+                        correct:0
+                    });
+            });
+        }
+        if($('#zayavInfo').length > 0) {
+            $('.delete').vkHint({
+                msg:'Заявку можно удалить при отсутствии платежей и начислений. Также удаляются все задачи к этой заявке.',
+                width:150,
+                ugol:'top',
+                top:40,
+                left:456,
+                indent:90,
+                correct:0
+            });
+            $('.fotoUpload').fotoUpload({
+                owner:'zayav' + G.zayavInfo.id,
+                func:zayavImgUpdate
+            });
+        }
 
-    if($('#zp').length > 0) {
-        $('#find')
-            ._search({
+        if($('#zp').length > 0) {
+            $('#find')
+                ._search({
+                    width:153,
+                    focus:1,
+                    txt:'Быстрый поиск...',
+                    enter:1,
+                    func:zpSpisokLoad
+                })
+                .inp(G.zp_find);
+            $('#menu_rightLink a').click(function() {
+                $('#menu').rightLink($(this).attr('val'));
+                zpSpisokLoad();
+            });
+            window.zp_name = $("#zp_name").vkSel({
                 width:153,
-                focus:1,
-                txt:'Быстрый поиск...',
-                enter:1,
+                title0:'Любое наименование',
+                spisok:G.zp_name_spisok,
                 func:zpSpisokLoad
-            })
-            .inp(G.zp_find);
-        $('#menu_rightLink a').click(function() {
-            $('#menu').rightLink($(this).attr('val'));
-            zpSpisokLoad();
-        });
-        window.zp_name = $("#zp_name").vkSel({
-            width:153,
-            title0:'Любое наименование',
-            spisok:G.zp_name_spisok,
-            func:zpSpisokLoad
-        }).o;
-        $("#dev").device({
-            width:153,
-            type_no:1,
-            device_ids:WS_DEVS,
-            device_id:G.zp_device,
-            vendor_id:G.zp_vendor,
-            model_id:G.zp_model,
-            func:zpSpisokLoad
-        });
-        zpFilter();
-    }
-    if($('#zpInfo').length > 0) {
-        $('.fotoUpload').fotoUpload({
-            owner:'zp' + G.zpInfo.compat_id,
-            func:zpImgUpdate
-        });
-    }
+            }).o;
+            $("#dev").device({
+                width:153,
+                type_no:1,
+                device_ids:WS_DEVS,
+                device_id:G.zp_device,
+                vendor_id:G.zp_vendor,
+                model_id:G.zp_model,
+                func:zpSpisokLoad
+            });
+            zpFilter();
+        }
+        if($('#zpInfo').length > 0) {
+            $('.fotoUpload').fotoUpload({
+                owner:'zp' + G.zpInfo.compat_id,
+                func:zpImgUpdate
+            });
+        }
 
-    if($('#report_history').length > 0) {
-        $('#report_history_worker').vkSel({
-            width:140,
-            title0:'Не указан',
-            spisok:workers,
-            func:reportHistoryLoad
-        });
-        $('#report_history_action').vkSel({
-            width:140,
-            title0:'Не выбрано',
-            spisok:[
-                {uid:1, title:'Клиенты'},
-                {uid:2, title:'Заявки'},
-                {uid:3, title:'Запчасти'},
-                {uid:4, title:'Платежи'}
-            ],
-            func:reportHistoryLoad
-        });
-    }
-    if($('#report_prihod').length > 0) {
-        $('#report_prihod_day_begin').vkCalendar({lost:1, place:'left', func:reportPrihodLoad});
-        $('#report_prihod_day_end').vkCalendar({lost:1, place:'left', func:reportPrihodLoad});
-    }
-    if($('#report_rashod').length > 0) {
-        $('#rashod_category').vkSel({
-            width:140,
-            title0:'Любая категория',
-            spisok:rashodCaregory,
-            func:reportRashodLoad
-        });
-        $('#rashod_worker').vkSel({
-            width:140,
-            title0:'Все сотрудники',
-            spisok:rashodViewers,
-            func:reportRashodLoad
-        });
-        $('#rashod_year').years({func:reportRashodLoad});
-    }
-});
+        if($('#report_history').length > 0) {
+            $('#report_history_worker').vkSel({
+                width:140,
+                title0:'Не указан',
+                spisok:workers,
+                func:reportHistoryLoad
+            });
+            $('#report_history_action').vkSel({
+                width:140,
+                title0:'Не выбрано',
+                spisok:[
+                    {uid:1, title:'Клиенты'},
+                    {uid:2, title:'Заявки'},
+                    {uid:3, title:'Запчасти'},
+                    {uid:4, title:'Платежи'}
+                ],
+                func:reportHistoryLoad
+            });
+        }
+        if($('#report_prihod').length > 0) {
+            $('#report_prihod_day_begin').vkCalendar({lost:1, place:'left', func:reportPrihodLoad});
+            $('#report_prihod_day_end').vkCalendar({lost:1, place:'left', func:reportPrihodLoad});
+        }
+        if($('#report_rashod').length > 0) {
+            $('#rashod_category').vkSel({
+                width:140,
+                title0:'Любая категория',
+                spisok:rashodCaregory,
+                func:reportRashodLoad
+            });
+            $('#rashod_worker').vkSel({
+                width:140,
+                title0:'Все сотрудники',
+                spisok:rashodViewers,
+                func:reportRashodLoad
+            });
+            $('#rashod_year').years({func:reportRashodLoad});
+        }
+    });
