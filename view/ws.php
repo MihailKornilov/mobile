@@ -1365,6 +1365,12 @@ function zp_compat_count($c) {
 // ---===! report !===--- Секция отчётов
 
 function reportMenu($g) {
+    switch($g) {
+        case 'history': break;
+        case 'remind': break;
+        case 'money': break;
+        default: $g = 'history';
+    }
     return '<div class="rightLink">'.
         '<a href="'.URL.'&p=report&d=history"'.($g == 'history' ? ' class="sel"' : '').'>История действий</a>'.
         '<a href="'.URL.'&p=report&d=remind"'.($g == 'remind' ? ' class="sel"' : '').'>'.

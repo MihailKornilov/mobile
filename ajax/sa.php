@@ -40,12 +40,49 @@ switch(@$_POST['op']) {
         if(!preg_match(REGEXP_NUMERIC, $_POST['ws_id']))
             jsonError();
         $ws_id = intval($_POST['ws_id']);
-        $sql = "SELECT `id`,`balans` FROM `client` WHERE `ws_id`=".$ws_id." ORDER BY `id`";
+        $sql = "SELECT
+                  `c`.`id`,
+                  `c`.`balans`,
+                  IFNULL(SUM(`m`.`sum`),0) AS `money`
+                FROM `client` AS `c`
+                  LEFT JOIN `money` AS `m`
+	              ON `m`.`status`=1
+	                AND `c`.`id`=`m`.`client_id`
+	                AND `m`.`sum`>0
+	            WHERE `c`.`ws_id`=".$ws_id."
+                GROUP BY `c`.`id`
+                ORDER BY `c`.`id`";
+        $q = query($sql);
+        $client = array();
+        while($r = mysql_fetch_assoc($q))
+            $client[$r['id']] = $r;
+        $sql = "SELECT
+                  `c`.`id`,
+                  IFNULL(SUM(`a`.`sum`),0) AS `acc`
+                FROM `client` AS `c`
+                  LEFT JOIN `accrual` AS `a`
+	              ON `a`.`status`=1
+	                AND `c`.`id`=`a`.`client_id`
+	            WHERE `c`.`ws_id`=".$ws_id."
+                GROUP BY `c`.`id`
+                ORDER BY `c`.`id`";
         $q = query($sql);
         $send['count'] = 0;
-        while($r = mysql_fetch_assoc($q))
-            if(clientBalansUpdate($r['id'], $ws_id) != $r['balans'])
+        $upd = array();
+        while($r = mysql_fetch_assoc($q)) {
+            $balans = $client[$r['id']]['money'] - $r['acc'];
+            if($client[$r['id']]['balans'] != $balans) {
+                $upd[] = '('.$r['id'].','.$balans.')';
                 $send['count']++;
+            }
+        }
+        if(!empty($upd)) {
+            $sql = "INSERT INTO `client`
+                        (`id`,`balans`)
+                    VALUES ".implode(',', $upd)."
+                    ON DUPLICATE KEY UPDATE `balans`=VALUES(`balans`)";
+            query($sql);
+        }
         $send['time'] = round(microtime(true) - TIME, 3);
         jsonSuccess($send);
         break;

@@ -55,8 +55,10 @@ $(document)
         t.addClass('busy');
         $.post(AJAX_SA, send, function(res) {
             t.removeClass('busy');
-            if(res.success)
-                t.after(' Изменено: ' + res.count + '. Время: ' + res.time);
+            if(res.success) {
+                t.next().remove('span');
+                t.after('<span> Изменено: ' + res.count + '. Время: ' + res.time + '</span>');
+            }
         }, 'json');
     })
 
