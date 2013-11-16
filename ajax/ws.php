@@ -366,7 +366,7 @@ switch(@$_POST['op']) {
                 ".$send['id'].",
                 '".$reminder_txt."',
                 '".$reminder_day."',
-                '".FullDataTime(curTime())." "._viewerName()." добавил напоминание для заявки.',
+                '".FullDataTime(curTime())." "._viewer(VIEWER_ID, 'name')." добавил напоминание для заявки.',
                 ".VIEWER_ID."
             )";
             query($sql);
@@ -695,7 +695,7 @@ switch(@$_POST['op']) {
                 ".$zayav_id.",
                 '".$remind_txt."',
                 '".$remind_day."',
-                '".FullDataTime(curTime())." "._viewerName()." добавил напоминание при внесении начисления.',
+                '".FullDataTime(curTime())." "._viewer(VIEWER_ID, 'name')." добавил напоминание при внесении начисления.',
                 ".VIEWER_ID."
             )";
             query($sql);
@@ -1528,7 +1528,7 @@ switch(@$_POST['op']) {
                     '".$txt."',
                     '".$_POST['day']."',
                     ".$private.",
-                    '".FullDataTime(curTime())." "._viewerName()." создал задание.',
+                    '".FullDataTime(curTime())." "._viewer(VIEWER_ID, 'name')." создал задание.',
                     ".VIEWER_ID."
                 )";
         query($sql);
@@ -1565,7 +1565,7 @@ switch(@$_POST['op']) {
                 FROM `reminder` WHERE `id`=".intval($_POST['id'])." AND `status`=1";
         if(!$r = mysql_fetch_assoc(query($sql)))
             jsonError();
-        $r['viewer'] = utf8(_viewerName($r['viewer_id_add'], true));
+        $r['viewer'] = utf8(_viewer($r['viewer_id_add'], 'link'));
         if($r['client_id'] > 0) {
             $c = _clientLink(array($r['client_id']));
             $r['client'] = utf8($c[$r['client_id']]);
@@ -1602,7 +1602,7 @@ switch(@$_POST['op']) {
         $sql = "UPDATE `reminder`
                 SET `day`='".$_POST['day']."',
                     `status`=".$_POST['status'].",
-                    `history`=CONCAT(`history`,'<BR>".FullDataTime(curTime())." "._viewerName().$action."')
+                    `history`=CONCAT(`history`,'<BR>".FullDataTime(curTime())." "._viewer(VIEWER_ID, 'name').$action."')
                 WHERE `id`=".intval($_POST['id']);
         query($sql);
         $filter = array();

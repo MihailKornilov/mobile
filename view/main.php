@@ -1,56 +1,4 @@
 <?php
-function _vkUserUpdate($uid=VIEWER_ID) {//Обновление пользователя из Контакта
-    require_once(DOCUMENT_ROOT.'/include/vkapi.class.php');
-    $VKAPI = new vkapi($_GET['api_id'], SECRET);
-    $res = $VKAPI->api('users.get',array('uids' => $uid, 'fields' => 'photo,sex,country,city'));
-    $u = $res['response'][0];
-    $u['first_name'] = win1251($u['first_name']);
-    $u['last_name'] = win1251($u['last_name']);
-    $u['country_id'] = isset($u['country']) ? $u['country'] : 0;
-    $u['city_id'] = isset($u['city']) ? $u['city'] : 0;
-    $u['menu_left_set'] = 0;
-
-    // установил ли приложение
-    $app = $VKAPI->api('isAppUser', array('uid'=>$uid));
-    $u['app_setup'] = $app['response'];
-
-    // поместил ли в левое меню
-    //$mls = $VKAPI->api('getUserSettings', array('uid'=>$uid));
-    $u['menu_left_set'] = 0;//($mls['response']&256) > 0 ? 1 : 0;
-
-    $sql = 'INSERT INTO `vk_user` (
-                `viewer_id`,
-                `first_name`,
-                `last_name`,
-                `sex`,
-                `photo`,
-                `app_setup`,
-                `menu_left_set`,
-                `country_id`,
-                `city_id`
-            ) VALUES (
-                '.$uid.',
-                "'.$u['first_name'].'",
-                "'.$u['last_name'].'",
-                '.$u['sex'].',
-                "'.$u['photo'].'",
-                '.$u['app_setup'].',
-                '.$u['menu_left_set'].',
-                '.$u['country_id'].',
-                '.$u['city_id'].'
-            ) ON DUPLICATE KEY UPDATE
-                `first_name`="'.$u['first_name'].'",
-                `last_name`="'.$u['last_name'].'",
-                `sex`='.$u['sex'].',
-                `photo`="'.$u['photo'].'",
-                `app_setup`='.$u['app_setup'].',
-                `menu_left_set`='.$u['menu_left_set'].',
-                `country_id`='.$u['country_id'].',
-                `city_id`='.$u['city_id'];
-    query($sql);
-    return $u;
-}//end of _vkUserUpdate()
-
 function _hashRead() {
     $_GET['p'] = isset($_GET['p']) ? $_GET['p'] : 'zayav';
     if(empty($_GET['hash'])) {
@@ -182,7 +130,7 @@ function _header() {
         '<body>'.
         '<div id="frameBody">'.
         '<iframe id="frameHidden" name="frameHidden"></iframe>'.
-        (SA_VIEWER_ID ? '<div class="sa_viewer_msg">Вы вошли под пользователем '._viewerName(SA_VIEWER_ID, true).'. <a class="leave">Выйти</a></div>' : '');
+        (SA_VIEWER_ID ? '<div class="sa_viewer_msg">Вы вошли под пользователем '._viewer(SA_VIEWER_ID, 'link').'. <a class="leave">Выйти</a></div>' : '');
 }//end of _header()
 
 function _footer() {
@@ -319,39 +267,7 @@ function _selJson($arr) {
     foreach($arr as $uid => $title)
         $send[] = '{uid:'.$uid.',title:"'.$title.'"}';
     return '['.implode(',',$send).']';
-}//end of _json()
-
-function _viewerName($id=VIEWER_ID, $link=false) {
-    $key = CACHE_PREFIX.'viewer_name_'.$id;
-    $name = xcache_get($key);
-    if(empty($name)) {
-        $sql = "SELECT CONCAT(`first_name`,' ',`last_name`) AS `name` FROM `vk_user` WHERE `viewer_id`=".$id." LIMIT 1";
-        $r = mysql_fetch_assoc(query($sql));
-        $name = $r['name'];
-        xcache_set($key, $name, 86400);
-    }
-    return $link ? '<a href="http://vk.com/id'.$id.'" target="_blank">'.$name.'</a>' : $name;
-}//end of _viewerName()
-function _viewersInfo($arr=VIEWER_ID) {
-    if(empty($arr))
-        return array();
-    $id = false;
-    if(!is_array($arr)) {
-        $id = $arr;
-        $arr = array($arr);
-    }
-    $sql = "SELECT * FROM `vk_user` WHERE `viewer_id` IN (".implode(',', $arr).")";
-    $q = query($sql);
-    $send = array();
-    while($r = mysql_fetch_assoc($q))
-        $send[$r['viewer_id']] = array(
-            'id' => $r['viewer_id'],
-            'name' => $r['first_name'].' '.$r['last_name'],
-            'link' => '<a href="http://vk.com/id'.$r['viewer_id'].'" target="_blank" class="vlink">'.$r['first_name'].' '.$r['last_name'].'</a>',
-            'photo' => '<img src="'.$r['photo'].'">'
-        );
-    return $id ? $send[$id] : $send;
-}//end of _viewersInfo()
+}//end of _selJson()
 
 function _imageResize($x_cur, $y_cur, $x_new, $y_new) { // изменение размера изображения
     $x = $x_new;

@@ -71,7 +71,7 @@ $send =
     '</div>'.
     '<div class="sign-client">С условиями ремонта согласен(а). Подпись Заказчика: ________________________________________________</div>'.
     '<table class="sign-master">'.
-        '<tr><td>Аппарат принял: <span>________________________________</span> ('._viewerName().')'.
+        '<tr><td>Аппарат принял: <span>________________________________</span> ('._viewer(VIEWER_ID, 'name').')'.
             '<td class="cur-data">'.FullData(curTime()).
 '</table>';
 

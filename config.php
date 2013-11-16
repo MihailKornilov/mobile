@@ -53,25 +53,12 @@ function _getSetupGlobal() {//Получение глобальных данных
     define('G_VALUES', $g['g_values']);
 }//end of _getSetupGlobal()
 function _getVkUser() {//Получение данных о пользователе
-    global $sqls;
-    $key = CACHE_PREFIX.'viewer_'.VIEWER_ID;
-    $u = xcache_get($key);
-    $from = 'Данные пользователя получены из кеша.';
-    if(empty($u)) {
-        $from = 'Данные пользователя получены из базы.';
-        $sql = "SELECT * FROM `vk_user` WHERE `viewer_id`='".VIEWER_ID."' LIMIT 1";
-        if(!$u = mysql_fetch_assoc(query($sql))) {
-            $from = 'Данные пользователя получены из Контакта.';
-            $u = _vkUserUpdate();
-        }
-        xcache_set($key, $u, 86400);
-    }
-    $sqls .= '<b>'.$from.'</b><br /><br />';
+    $u = _viewer();
     define('WS_ID', $u['ws_id'] && _getWorkshop($u['ws_id']) ? $u['ws_id'] : 0);
-    define('VIEWER_NAME', $u['first_name'].' '.$u['last_name']);
+    define('VIEWER_NAME', $u['name']);
     define('VIEWER_COUNTRY_ID', $u['country_id']);
     define('VIEWER_CITY_ID', $u['city_id']);
-    define('VIEWER_ADMIN', ($u['admin'] == 1));
+    define('VIEWER_ADMIN', $u['admin']);
 }//end of _getVkUser()
 function _getWorkshop($ws_id) {//Получение данных о мастерской
     $ws = xcache_get(CACHE_PREFIX.'workshop_'.$ws_id);

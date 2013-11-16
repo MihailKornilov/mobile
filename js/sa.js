@@ -131,6 +131,7 @@ $(document)
                 width:460,
                 head:'Изменение данных устройства',
                 content:'<center><img src="/img/upload.gif"></center>',
+                butSubmit:'Сохранить',
                 submit:submit
             });
         while(id[0].tagName != 'DD')
@@ -393,8 +394,8 @@ $(document)
         $.post(AJAX_SA, send, function(res) {
             $('.path').removeClass('busy');
         }, 'json');
+    })
+
+    .ready(function() {
+
     });
-
-$(document).ready(function() {
-
-});

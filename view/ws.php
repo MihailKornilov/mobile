@@ -247,7 +247,7 @@ function client_info($client_id) {
 			$about .= $r['prim'];
 			$money .= '<tr><td class="sum"><b>'.$r['sum'].'</b>'.
 						  '<td>'.$about.
-						  '<td class="dtime" title="Внёс: '._viewerName($r['viewer_id_add']).'">'.FullDataTime($r['dtime_add']);
+						  '<td class="dtime" title="Внёс: '._viewer($r['viewer_id_add'], 'name').'">'.FullDataTime($r['dtime_add']);
 		}
 		$money .= '</table>';
 	}
@@ -272,7 +272,7 @@ function client_info($client_id) {
 							'<tr><td class="label">Телефон:  <td class="telefon">'.$client['telefon'].'</TD>'.
 							'<tr><td class="label">Баланс:   <td><b style=color:#'.($client['balans'] < 0 ? 'A00' : '090').'>'.$client['balans'].'</b>'.
 						'</table>'.
-						'<div class="dtime">Клиента внёс '._viewerName($client['viewer_id_add']).' '.FullData($client['dtime_add'], 1).'</div>'.
+						'<div class="dtime">Клиента внёс '._viewer($client['viewer_id_add'], 'name').' '.FullData($client['dtime_add'], 1).'</div>'.
 					'</div>'.
 					'<div id="dopLinks">'.
 						'<a class="link sel" val="zayav">Заявки'.($zayavData['all'] ? ' ('.$zayavData['all'].')' : '').'</a>'.
@@ -851,7 +851,7 @@ function zayav_info($zayav_id) {
 					'<tr><td class="label">Устройство: <td>'._deviceName($zayav['base_device_id']).'<a><b>'.$model.'</b></a>'.
 					'<tr><td class="label">Клиент:     <td>'._clientLink($zayav['client_id']).
 					'<tr><td class="label">Дата приёма:'.
-						'<td class="dtime_add" title="Заявку внёс '._viewerName($zayav['viewer_id_add']).'">'.FullDataTime($zayav['dtime_add']).
+						'<td class="dtime_add" title="Заявку внёс '._viewer($zayav['viewer_id_add'], 'name').'">'.FullDataTime($zayav['dtime_add']).
 					'<tr><td class="label">Статус:'.
 						'<td><div id="status" style="background-color:#'._zayavStatusColor($zayav['zayav_status']).'" class="status_place">'.
                                 _zayavStatusName($zayav['zayav_status']).
@@ -898,7 +898,7 @@ function zayav_info($zayav_id) {
 function zayav_accrual_unit($acc) {
 	return '<tr><td class="sum acc" title="Начисление">'.$acc['sum'].'</td>'.
 		'<td>'.$acc['prim'].'</td>'.
-		'<td class="dtime" title="Начислил '._viewerName(isset($acc['viewer_id_add']) ? $acc['viewer_id_add'] : VIEWER_ID).'">'.
+		'<td class="dtime" title="Начислил '._viewer(isset($acc['viewer_id_add']) ? $acc['viewer_id_add'] : VIEWER_ID, 'name').'">'.
 			FullDataTime(isset($acc['dtime_add']) ? $acc['dtime_add'] : curTime()).
 		'</td>'.
 		'<td class="del"><div class="img_del acc_del" title="Удалить начисление" val="'.$acc['id'].'"></div></td>'.
@@ -907,7 +907,7 @@ function zayav_accrual_unit($acc) {
 function zayav_oplata_unit($op) {
 	return '<tr><td class="sum op" title="Платёж">'.$op['sum'].'</td>'.
 		'<td>'.$op['prim'].'</td>'.
-		'<td class="dtime" title="Платёж внёс '._viewerName(isset($op['viewer_id_add']) ? $op['viewer_id_add'] : VIEWER_ID).'">'.
+		'<td class="dtime" title="Платёж внёс '._viewer(isset($op['viewer_id_add']) ? $op['viewer_id_add'] : VIEWER_ID, 'name').'">'.
 			FullDataTime(isset($op['dtime_add']) ? $op['dtime_add'] : curTime()).
 		'</td>'.
 		'<td class="del"><div class="img_del op_del" title="Удалить платёж" val="'.$op['id'].'"></div></td>'.
@@ -1302,7 +1302,7 @@ function zp_move($zp_id, $page=1) {
 		if($r['client_id'] > 0)
 			$client[$r['client_id']] = $r['client_id'];
 	}
-	$viewer = _viewersInfo($viewer);
+	$viewer = _viewer($viewer);
 	_zayavNomerLink($zayav);
 	$client = _clientLink($client);
 	$move = '';
@@ -1378,7 +1378,7 @@ function reportMenu($g) {
         '</a>'.
         '<a href="'.URL.'&p=report&d=money"'.($g == 'money' ? ' class="sel"' : '').'>Деньги</a>'.
     '</div>';
-}//end of
+}//end of reportMenu()
 
 function history_insert($arr) {
 	$sql = "INSERT INTO `history` (
@@ -1484,7 +1484,7 @@ function report_history_right() {
 	$q = query($sql);
 	while($r = mysql_fetch_assoc($q))
 		$viewer[$r['id']] = $r['id'];
-	$viewer = _viewersInfo($viewer);
+	$viewer = _viewer($viewer);
 	$workers = array();
 	foreach($viewer as $id => $w)
 		$workers[] = '{uid:'.$id.',title:"'.$w['name'].'"}';
@@ -1534,7 +1534,7 @@ function report_history_spisok($worker=0, $action=0, $page=1) {
 			$zp[$r['zp_id']] = $r['zp_id'];
 		$history[] = $r;
 	}
-	$viewer = _viewersInfo($viewer);
+	$viewer = _viewer($viewer);
 	$client = _clientLink($client);
 	_zayavNomerLink($zayav);
 	$zp = _zpLink($zp);
@@ -1755,7 +1755,7 @@ function report_prihod_spisok($day_begin, $day_end, $del_show=0, $page=1) {
 			$zp[$r['zp_id']] = $r['zp_id'];
 		$money[] = $r;
 	}
-	$viewer = _viewersInfo($viewer);
+	$viewer = _viewer($viewer);
 	_zayavNomerLink($zayav);
 	$zp = _zpLink($zp);
 	foreach($money as $r) {
@@ -1895,7 +1895,7 @@ function report_rashod_spisok($page=1, $month=false, $category=0, $worker=0) {
 		$viewer[$r['worker_id']] = $r['worker_id'];
 		$rashod[] = $r;
 	}
-	$viewer = _viewersInfo($viewer);
+	$viewer = _viewer($viewer);
 	foreach($rashod as $r) {
 		$dtimeTitle = 'Внёс: '.$viewer[$r['viewer_id_add']]['name'];
 		if($r['status'] == 0)
@@ -1981,7 +1981,7 @@ function report_kassa_spisok($page=1, $del_show=0) {
 			$viewer[$r['viewer_id_add']] = $r['viewer_id_add'];
 		$money[] = $r;
 	}
-	$viewer = _viewersInfo($viewer);
+	$viewer = _viewer($viewer);
 	foreach($money as $r) {
 		$send .= '<tr'.($r['status'] == 0 ? ' class="deleted"' : '').'>'.
 			'<td class="sum"><b>'.$r['sum'].'</b>'.
@@ -2064,7 +2064,7 @@ function setup_main() {
 		'<TABLE class="tab">'.
 			'<TR><TD class="label">Название организации:<TD><INPUT type="text" id="org_name" maxlength="100" value="'.$ws['org_name'].'">'.
 			'<TR><TD class="label">Город:<TD>'.$ws['city_name'].', '.$ws['country_name'].
-			'<TR><TD class="label">Главный администратор:<TD><B>'._viewerName($ws['admin_id']).'</B>'.
+			'<TR><TD class="label">Главный администратор:<TD><B>'._viewer($ws['admin_id'], 'name').'</B>'.
 		'</TABLE>'.
 
 		'<DIV class="headName">Категории ремонтируемых устройств</DIV>'.

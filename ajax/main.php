@@ -73,7 +73,7 @@ switch(@$_POST['op']) {
                     ".VIEWER_ID."
                 )";
         query($sql);
-        $send['html'] = utf8(_vkCommentUnit(mysql_insert_id(), _viewersInfo(), $txt, curTime()));
+        $send['html'] = utf8(_vkCommentUnit(mysql_insert_id(), _viewer(), $txt, curTime()));
         jsonSuccess($send);
         break;
     case 'vkcomment_add_child':
@@ -101,7 +101,7 @@ switch(@$_POST['op']) {
                     ".VIEWER_ID."
                 )";
         query($sql);
-        $send['html'] = utf8(_vkCommentChild(mysql_insert_id(), _viewersInfo(), $txt, curTime()));
+        $send['html'] = utf8(_vkCommentChild(mysql_insert_id(), _viewer(), $txt, curTime()));
         jsonSuccess($send);
         break;
     case 'vkcomment_del':

@@ -54,7 +54,7 @@ function sa_ws() {
                 '<td class="name'.(!$r['status'] ? ' del' : '').'">'.
                     '<a href="'.URL.'&p=sa&d=ws&id='.$r['id'].'">'.$r['org_name'].'</a>'.
                     '<div class="city">'.$r['city_name'].($r['country_id'] != 1 ? ', '.$r['country_name'] : '').'</div>'.
-                '<td>'._viewerName($r['admin_id'], true).
+                '<td>'._viewer($r['admin_id'], 'link').
                 '<td class="dtime">'.FullDataTime($r['dtime_add']);
 
     return '<div class="path">'.sa_cookie_back().'<a href="'.URL.'&p=sa">Администрирование</a> » Мастерские</div>'.
@@ -93,7 +93,7 @@ function sa_ws_info($id) {
         $sql = "SELECT * FROM `vk_user` WHERE `ws_id`=".$ws['id']." AND `viewer_id`!=".$ws['admin_id'];
         $q = query($sql);
         while($r = mysql_fetch_assoc($q))
-            $workers = _viewerName($r['viewer_id'], true).'<br />';
+            $workers .= _viewer($r['viewer_id'], 'link').'<br />';
     }
 
     return
@@ -111,13 +111,13 @@ function sa_ws_info($id) {
             '<tr><td class="label">Дата создания:<td>'.FullDataTime($ws['dtime_add']).
             '<tr><td class="label">Статус:<td><div class="status'.($ws['status'] ? '' : ' off').'">'.($ws['status'] ? '' : 'не ').'активна</div>'.
             (!$ws['status'] ? '<tr><td class="label">Дата удаления:<td>'.FullDataTime($ws['dtime_del']) : '').
-            '<tr><td class="label">Администратор:<td>'._viewerName($ws['admin_id'], true).
+            '<tr><td class="label">Администратор:<td>'._viewer($ws['admin_id'], 'link').
             ($ws['status'] && $workers ? '<tr><td class="label top">Сотрудники:<td>'.$workers : '').
         '</table>'.
         '<div class="headName">Действия</div>'.
         '<div class="vkButton ws_status_change" val="'.$ws['id'].'"><button>'.($ws['status'] ? 'Деактивировать' : 'Восстановить').' мастерскую</button></div>'.
         '<br />'.
-        ($ws['status'] ? '<div class="vkButton ws_enter" val="'.$ws['admin_id'].'"><button>Выполнить вход в эту мастерскую</button></div><br />' : '').
+        ($ws['status'] && $ws['id'] != WS_ID ? '<div class="vkButton ws_enter" val="'.$ws['admin_id'].'"><button>Выполнить вход в эту мастерскую</button></div><br />' : '').
         '<div class="vkCancel ws_del" val="'.$ws['id'].'"><button style="color:red">Физическое удаление мастерской</button></div>'.
         '<div class="headName">Записи в базе</div>'.
         '<table class="counts">'.$counts.'</table>'.
