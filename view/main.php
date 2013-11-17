@@ -89,7 +89,7 @@ function _header() {
         '<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="ru" lang="ru">'.
         '<head>'.
         '<meta http-equiv="content-type" content="text/html; charset=windows-1251" />'.
-        '<title>Hi-tech Service - Приложение 2031819</title>'.
+        '<title>Hi-tech Service - Приложение '.API_ID.'</title>'.
 
         //Отслеживание ошибок в скриптах
         (SA ? '<script type="text/javascript" src="http://nyandoma'.(LOCAL ? '' : '.ru').'/js/errors.js?'.VERSION.'"></script>' : '').

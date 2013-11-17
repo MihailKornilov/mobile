@@ -12,4 +12,3 @@ define('PATH_FILES', 'c:/www/vkmobile/files/');
 define('CACHE_PREFIX', 'vkmobile_');
 
 $_GET['viewer_id'] = 982006;
-$_GET['api_id'] = 2031819;

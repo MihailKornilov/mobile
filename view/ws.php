@@ -254,6 +254,11 @@ function client_info($client_id) {
 
 	$remindData = remind_data(1, array('client'=>$client_id));
 
+    $histCount = query_value("SELECT COUNT(`id`)
+							   FROM `history`
+							   WHERE `ws_id`=".WS_ID."
+								 AND `client_id`=".$client_id);
+
 	return '<script type="text/javascript">'.
 		'G.clientInfo = {'.
 			'id:'.$client_id.','.
@@ -275,15 +280,17 @@ function client_info($client_id) {
 						'<div class="dtime">Клиента внёс '._viewer($client['viewer_id_add'], 'name').' '.FullData($client['dtime_add'], 1).'</div>'.
 					'</div>'.
 					'<div id="dopLinks">'.
-						'<a class="link sel" val="zayav">Заявки'.($zayavData['all'] ? ' ('.$zayavData['all'].')' : '').'</a>'.
-						'<a class="link" val="money">Платежи'.($moneyCount ? ' ('.$moneyCount.')' : '').'</a>'.
-						'<a class="link" val="remind">Задания'.(!empty($remindData) ? ' ('.$remindData['all'].')' : '').'</a>'.
-						'<a class="link" val="comm">Заметки'.($commCount ? ' ('.$commCount.')' : '').'</a>'.
+						'<a class="link sel" val="zayav">Заявки'.($zayavData['all'] ? ' (<b>'.$zayavData['all'].'</b>)' : '').'</a>'.
+						'<a class="link" val="money">Платежи'.($moneyCount ? ' (<b>'.$moneyCount.'</b>)' : '').'</a>'.
+						'<a class="link" val="remind">Задания'.(!empty($remindData) ? ' (<b>'.$remindData['all'].'</b>)' : '').'</a>'.
+						'<a class="link" val="comm">Заметки'.($commCount ? ' (<b>'.$commCount.'</b>)' : '').'</a>'.
+						'<a class="link" val="hist">История'.($histCount ? ' (<b>'.$histCount.'</b>)' : '').'</a>'.
 					'</div>'.
 					'<div id="zayav_spisok">'.zayav_spisok($zayavData).'</div>'.
 					'<div id="money_spisok">'.$money.'</div>'.
 					'<div id="remind_spisok">'.(!empty($remindData) ? report_remind_spisok($remindData) : '<div class="_empty">Заданий нет.</div>').'</div>'.
 					'<div id="comments">'._vkComment('client', $client_id).'</div>'.
+					'<div id="histories">'.report_history_spisok(1, array('client_id'=>$client_id), 15).'</div>'.
 				'<td class="right">'.
 					'<div class="rightLink">'.
 						'<a class="sel">Информация</a>'.
@@ -1418,10 +1425,10 @@ function history_types($arr) {
 			return 'Изменил статус заявки '.$arr['zayav_link'].' на <span style="background-color:#'.$status['color'].'">'.$status['name'].'</span>.';
 		case 5: return 'Произвёл начисление на сумму <b>'.$arr['value'].'</b> руб. для заявки '.$arr['zayav_link'].'.';
 		case 6: return
-			'Внёс платёж на сумму <b>'.$arr['value'].'</b> руб. '.
-			($arr['value1'] ? '('.$arr['value1'].')' : '').
+			'Внёс платёж на сумму <b>'.$arr['value'].'</b> руб.'.
+			($arr['value1'] ? '<span class="prim">('.$arr['value1'].')</span>' : '').
 			($arr['zayav_id'] ? ' по заявке '.$arr['zayav_link'] : '');
-		case 7: return 'Отредактировал данные заявки '.$arr['zayav_link'].'.';
+		case 7: return 'Отредактировал данные заявки '.$arr['zayav_link'].($arr['value'] ? ':<div class="changes">'.$arr['value'].'</div>' : '.');
 		case 8:
 			return 'Удалил начисление на сумму <b>'.$arr['value'].'</b> руб. '.
 				($arr['value1'] ? '('.$arr['value1'].')' : '').
@@ -1432,8 +1439,8 @@ function history_types($arr) {
 				($arr['zayav_id'] ? ' у заявки '.$arr['zayav_link'] : '').
 				($arr['zp_id'] ? ' (Продажа запчасти '.$arr['zp_link'].')' : '').
 				'.';
-		case 10: return 'Отдерактировал данные клиента '.$arr['client_link'].'.';
-		case 11: return 'Произвёл объединение клиентов. Результат: '.$arr['client_link'].'.';
+		case 10: return 'Отдерактировал данные клиента '.$arr['client_link'].($arr['value'] ? ':<div class="changes">'.$arr['value'].'</div>' : '.');
+		case 11: return 'Произвёл объединение клиентов. Результат: '.$arr['client_link'].($arr['value'] ? ':<div class="changes">'.$arr['value'].'</div>' : '.');
 		case 12: return 'Установил значение в кассе: '.$arr['value'].' руб.';
 		case 13: return 'Произвёл установку запчасти '.$arr['zp_link'].' по заявке '.$arr['zayav_link'].'.';
 		case 14: return 'Продал запчасть '.$arr['zp_link'].' на сумму <b>'.$arr['value'].'</b> руб.';
@@ -1499,10 +1506,11 @@ function report_history_right() {
 function report_history() {
 	return '<div id="report_history">'.report_history_spisok().'</div>';
 }//end of report_history()
-function report_history_spisok($worker=0, $action=0, $page=1) {
-	$limit = 30;
-	$cond = "`ws_id`=".WS_ID.($worker > 0 ? ' AND `viewer_id_add`='.$worker : '').
-		($action > 0 ? ' AND `type` IN ('.history_types_group($action).')' : '');
+function report_history_spisok($page=1, $filter=array(), $limit=30) {
+	$cond = "`ws_id`=".WS_ID.
+        (isset($filter['worker']) ? ' AND `viewer_id_add`='.$filter['worker'] : '').
+        (isset($filter['client_id']) ? ' AND `client_id`='.$filter['client_id'] : '').
+		(isset($filter['action']) ? ' AND `type` IN ('.history_types_group($filter['action']).')' : '');
 	$sql = "SELECT
 				COUNT(`id`) AS `all`
 			FROM `history`
@@ -1539,18 +1547,36 @@ function report_history_spisok($worker=0, $action=0, $page=1) {
 	_zayavNomerLink($zayav);
 	$zp = _zpLink($zp);
 	$send = '';
-	foreach($history as $r) {
+    $time = strtotime($history[0]['dtime_add']);
+    $txt = '';
+    $viewer_id = $history[0]['viewer_id_add'];
+    $count = count($history) - 1;
+    foreach($history as $n => $r) {
+        if(!$time) {
+            $time = strtotime($r['dtime_add']);
+            $txt = '';
+            $viewer_id = $r['viewer_id_add'];
+        }
 		if($r['client_id'] > 0 && isset($client[$r['client_id']]))
 			$r['client_link'] = $client[$r['client_id']];
 		if($r['zayav_id'] && _zayavNomerLink($r['zayav_id']))
 			$r['zayav_link'] = _zayavNomerLink($r['zayav_id']);
 		if($r['zp_id'] && isset($zp[$r['zp_id']]))
 			$r['zp_link'] = $zp[$r['zp_id']];
-		$send .= '<div class="head">'.FullDataTime($r['dtime_add']).$viewer[$r['viewer_id_add']]['link'].'</div>'.
-				 '<div class="txt">'.history_types($r).'</div>';
+        $txt .= '<div class="txt">'.history_types($r).'</div>';
+        if($count == $n
+           || $time - strtotime($history[$n + 1]['dtime_add']) > 900
+           || $viewer_id != $history[$n + 1]['viewer_id_add']) {
+            $time = 0;
+            $send .=
+            '<div class="history_unit">'.
+                '<div class="head">'.FullDataTime($r['dtime_add']).$viewer[$r['viewer_id_add']]['link'].'</div>'.
+                $txt.
+            '</div>';
+        }
 	}
 	if($start + $limit < $all)
-		$send .= '<div class="ajaxNext" id="report_history_next" val="'.($page + 1).'"><span>Далее...</span></div>';
+		$send .= '<div class="ajaxNext" val="'.($page + 1).'"><span>Далее...</span></div>';
 	return $send;
 }//end of report_history_spisok()
 

@@ -44,14 +44,16 @@
 .client_edit #fio,.client_edit #telefon{width:228px}
 .client_edit .tr_join{display:none}
 #clientInfo #dopLinks{border-top:#dae1e8 solid 1px}
+#clientInfo #dopLinks a{font-weight:normal}
 #clientInfo #dopLinks.busy{background-position:right center}
 #clientInfo #zayav_result{color:#777;text-align:center}
 #clientInfo .zayav_unit{margin-right:10px}
-#clientInfo .ajaxNext{margin:5px 10px 0 10px}
-#clientInfo #money_spisok{margin:10px;display:none}
+#clientInfo #zayav_spisok .ajaxNext{margin:5px 10px 0 10px}
+#clientInfo #money_spisok,#clientInfo #histories{margin:10px;display:none}
 #clientInfo #money_spisok ._empty{margin:0;padding:60px 10px}
 #clientInfo #comments,#clientInfo #remind_spisok{margin:0 10px;display:none}
 #clientInfo #remind_spisok ._empty{margin:10px 0;padding:60px 10px}
+#clientInfo #histories .ajaxNext{margin:0}
 #clientInfo .right{width:145px}
 #clientInfo .rightLink{margin-bottom:30px}
 
@@ -274,12 +276,20 @@ table.zayavNomerTab td{vertical-align:top}
 
 
 #report_history{margin:8px}
-#report_history .head{font-size:10px;color:#777;margin-top:10px}
-#report_history .head a{font-size:10px;margin-left:10px}
-#report_history .txt{margin:0 0 5px 30px}
-#report_history i{font:italic 11px Arial;color:#977}
 .report_history_rl .label{display:inline-block;width:20px}
 .report_history_rl .cal{margin-top:5px}
+.history_unit{margin-bottom:12px;padding-bottom:8px;border-bottom:#dae1e8 solid 1px}
+.history_unit .head{font-size:10px;color:#777}
+.history_unit .head a{font-size:10px;margin-left:10px}
+.history_unit .txt{margin:7px 0 7px 15px}
+.history_unit i{font:italic 11px Arial;color:#977}
+.history_unit .changes{margin:0 0 0 15px}
+.history_unit .changes *{font-size:10px;color:#777}
+.history_unit .changes th{text-align:right;font-weight:700}
+.history_unit .changes td{padding:0 3px}
+.history_unit a.deleted{color:#a66}
+.history_unit .prim{font:italic 11px Arial;color:#555}
+
 
 
 #remind_private_check{margin-top:20px}

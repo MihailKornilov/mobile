@@ -1,4 +1,5 @@
 <?php
+define('API_ID', 2031819);
 define('TIME', microtime(true));
 
 $SA[982006] = 1; // Корнилов Михаил
@@ -22,6 +23,7 @@ define('URL', SITE.'/index.php?'.VALUES);
 
 require_once(DOCUMENT_ROOT.'/syncro.php');
 require_once(VKPATH.'/vk.php');
+_appAuth();
 require_once(DOCUMENT_ROOT.'/view/main.php');
 
 define('REGEXP_NUMERIC', '/^[0-9]{1,20}$/i');

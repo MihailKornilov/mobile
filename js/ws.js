@@ -1017,7 +1017,7 @@ $(document)
                 });
         }
     })
-    .on('click', '#clientInfo .ajaxNext', function() {
+    .on('click', '#clientInfo #zayav_spisok .ajaxNext', function() {
         if($(this).hasClass('busy'))
             return;
         var next = $(this),
@@ -1093,6 +1093,24 @@ $(document)
             }
         }//submit()
     })
+    .on('click', '#clientInfo #histories .ajaxNext', function() {
+        if($(this).hasClass('busy'))
+            return;
+        var next = $(this),
+            send = {
+                op:'client_history_next',
+                page:$(this).attr('val'),
+                client_id:G.clientInfo.id
+            };
+        next.addClass('busy');
+        $.post(AJAX_WS, send, function (res) {
+            if(res.success)
+                next.after(res.html).remove();
+            else
+                next.removeClass('busy');
+        }, 'json');
+    })
+
 
     .on('click', '#zayav .ajaxNext', function() {
         if($(this).hasClass('busy'))
@@ -2321,7 +2339,7 @@ $(document)
         return false;
     })
 
-    .on('click', '#report_history_next', function() {
+    .on('click', '#report_history .ajaxNext', function() {
         if($(this).hasClass('busy'))
             return;
         var next = $(this),
@@ -3329,6 +3347,7 @@ $(document)
                 $('#money_spisok').css('display', val == 'money' ? 'block' : 'none');
                 $('#remind_spisok').css('display', val == 'remind' ? 'block' : 'none');
                 $('#comments').css('display', val == 'comm' ? 'block' : 'none');
+                $('#histories').css('display', val == 'hist' ? 'block' : 'none');
             });
             $('#status').rightLink(clientZayavSpisokLoad);
             $('#dev').device({
