@@ -620,28 +620,6 @@ switch(@$_POST['op']) {
         $send['html'] = _zayavImg(intval($_POST['zayav_id']), 'big', 200, 320, 'fotoView');
         jsonSuccess($send);
         break;
-    case 'zayav_money_update':
-        //Получение разницы между начислениями и платежами и их обновление
-        if(!preg_match(REGEXP_NUMERIC, $_POST['id']))
-            jsonError();
-        $id = intval($_POST['id']);
-        $sql = "SELECT IFNULL(SUM(`sum`),0) AS `acc`
-                FROM `accrual`
-                WHERE `ws_id`=".WS_ID."
-                  AND `status`=1
-                  AND `zayav_id`=".$id;
-        $send = mysql_fetch_assoc(query($sql));
-        $sql = "SELECT IFNULL(SUM(`sum`),0) AS `opl`
-                FROM `money`
-                WHERE `ws_id`=".WS_ID."
-                  AND `status`=1
-                  AND `sum`>0
-                  AND `zayav_id`=".$id;
-        $r = mysql_fetch_assoc(query($sql));
-        $send['opl'] = $r['opl'];
-        $send['dopl'] = $send['acc'] - $r['opl'];
-        jsonSuccess($send);
-        break;
     case 'zayav_accrual_add':
         if(!preg_match(REGEXP_NUMERIC, $_POST['zayav_id']) || $_POST['zayav_id'] == 0)
             jsonError();
@@ -693,12 +671,16 @@ switch(@$_POST['op']) {
                     ".VIEWER_ID."
                 )";
         query($sql);
+
+        clientBalansUpdate($zayav['client_id']);
+        $send = zayavBalansUpdate($zayav_id);
+
         $send['html'] = utf8(zayav_accrual_unit(array(
             'id' => mysql_insert_id(),
             'sum' => $sum,
             'prim' => $prim,
         )));
-        clientBalansUpdate($zayav['client_id']);
+
         history_insert(array(
             'type' => 5,
             'zayav_id' => $zayav_id,
@@ -749,22 +731,26 @@ switch(@$_POST['op']) {
         if(!preg_match(REGEXP_NUMERIC, $_POST['id']))
             jsonError();
         $id = intval($_POST['id']);
+        $sql = "SELECT * FROM `accrual` WHERE `status`=1 AND `id`=".$id;
+        if(!$r = mysql_fetch_assoc(query($sql)))
+            jsonError();
         $sql = "UPDATE `accrual` SET
                     `status`=0,
                     `viewer_id_del`=".VIEWER_ID.",
                     `dtime_del`=CURRENT_TIMESTAMP
                 WHERE `id`=".$id;
         query($sql);
-        $sql = "SELECT * FROM `accrual` WHERE `id`=".$id;
-        $r = mysql_fetch_assoc(query($sql));
+
         clientBalansUpdate($r['client_id']);
+        $send = zayavBalansUpdate($r['zayav_id']);
+
         history_insert(array(
             'type' => 8,
             'value' => $r['sum'],
             'value1' => $r['prim'],
             'zayav_id' => $r['zayav_id']
         ));
-        jsonSuccess();
+        jsonSuccess($send);
         break;
     case 'zayav_accrual_rest':
         if(!preg_match(REGEXP_NUMERIC, $_POST['id']))
@@ -783,7 +769,10 @@ switch(@$_POST['op']) {
                     `dtime_del`='0000-00-00 00:00:00'
                 WHERE `id`=".$id;
         query($sql);
+
         clientBalansUpdate($acc['client_id']);
+        $send = zayavBalansUpdate($acc['zayav_id']);
+
         history_insert(array(
             'type' => 27,
             'value' => $acc['sum'],
@@ -834,12 +823,16 @@ switch(@$_POST['op']) {
                     ".VIEWER_ID."
                 )";
         query($sql);
+
+        clientBalansUpdate($zayav['client_id']);
+        $send = zayavBalansUpdate($zayav_id);
+
         $send['html'] = utf8(zayav_oplata_unit(array(
             'id' => mysql_insert_id(),
             'sum' => $sum,
             'prim' => $prim
         )));
-        clientBalansUpdate($zayav['client_id']);
+
         history_insert(array(
             'type' => 6,
             'zayav_id' => $zayav_id,
@@ -876,6 +869,7 @@ switch(@$_POST['op']) {
         query($sql);
 
         clientBalansUpdate($r['client_id']);
+        $send = zayavBalansUpdate($r['zayav_id']);
 
         history_insert(array(
             'type' => 9,
@@ -883,7 +877,7 @@ switch(@$_POST['op']) {
             'value1' => $r['prim'],
             'zayav_id' => $r['zayav_id']
         ));
-        jsonSuccess();
+        jsonSuccess($send);
         break;
     case 'zayav_oplata_rest':
         if(!preg_match(REGEXP_NUMERIC, $_POST['id']))
@@ -902,7 +896,10 @@ switch(@$_POST['op']) {
                     `dtime_del`='0000-00-00 00:00:00'
                 WHERE `id`=".$id;
         query($sql);
+
         clientBalansUpdate($acc['client_id']);
+        $send = zayavBalansUpdate($acc['zayav_id']);
+
         history_insert(array(
             'type' => 19,
             'value' => $acc['sum'],
@@ -1721,14 +1718,27 @@ switch(@$_POST['op']) {
         if(!preg_match(REGEXP_NUMERIC, $_POST['id']))
             jsonError();
         $id = intval($_POST['id']);
+
+        $sql = "SELECT *
+                FROM `money`
+                WHERE `ws_id`=".WS_ID."
+                  AND `status`=1
+                  AND `id`=".$id;
+        if(!$r = mysql_fetch_assoc(query($sql)))
+            jsonError();
+
         $sql = "UPDATE `money` SET
                     `status`=0,
                     `viewer_id_del`=".VIEWER_ID.",
                     `dtime_del`=CURRENT_TIMESTAMP
                 WHERE `id`=".$id;
         query($sql);
-        $sql = "SELECT * FROM `money` WHERE `id`=".$id;
-        $r = mysql_fetch_assoc(query($sql));
+
+        if($r['client_id'])
+            clientBalansUpdate($r['client_id']);
+        if($r['zayav_id'])
+            zayavBalansUpdate($r['zayav_id']);
+
         history_insert(array(
             'type' => 9,
             'value' => $r['sum'],
@@ -1745,14 +1755,27 @@ switch(@$_POST['op']) {
         if(!preg_match(REGEXP_NUMERIC, $_POST['id']))
             jsonError();
         $id = intval($_POST['id']);
+
+        $sql = "SELECT *
+                FROM `money`
+                WHERE `ws_id`=".WS_ID."
+                  AND `status`=0
+                  AND `id`=".$id;
+        if(!$r = mysql_fetch_assoc(query($sql)))
+            jsonError();
+
         $sql = "UPDATE `money` SET
                     `status`=1,
                     `viewer_id_del`=0,
                     `dtime_del`='0000-00-00 00:00:00'
                 WHERE `id`=".$id;
         query($sql);
-        $sql = "SELECT * FROM `money` WHERE `id`=".$id;
-        $r = mysql_fetch_assoc(query($sql));
+
+        if($r['client_id'])
+            clientBalansUpdate($r['client_id']);
+        if($r['zayav_id'])
+            zayavBalansUpdate($r['zayav_id']);
+
         history_insert(array(
             'type' => 19,
             'value' => $r['sum'],

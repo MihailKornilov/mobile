@@ -302,6 +302,7 @@ function client_info($client_id) {
 						'<div id="zayav_result">'.zayav_count($zayavData['all'], 0).'</div>'.
 						'<div class="findHead">Статус заявки</div>'.
                         _rightLink('status', _zayavStatusName()).
+                        _check('diff', 'Неоплаченные заявки').
 						'<div class="findHead">Устройство</div><div id="dev"></div>'.
 					'</div>'.
 			'</table>'.
@@ -487,6 +488,7 @@ function zayavFilter($v) {
 	}
 	$filter['desc'] = intval(@$v['desc']) == 1 ? 'ASC' : 'DESC';
 	$filter['status'] = intval($v['status']);
+	$filter['diff'] = intval(@$v['diff']) == 1 ? 1 : 0;
 	$filter['zpzakaz'] = intval($v['zpzakaz']);
 	$filter['device'] = intval($v['device']);
 	$filter['vendor'] = intval($v['vendor']);
@@ -494,7 +496,7 @@ function zayavFilter($v) {
 	if(isset($v['place']))
 		$filter['place'] = win1251(urldecode(htmlspecialchars(trim($v['place']))));
 	$filter['devstatus'] = $v['devstatus'];
-	if($v['client'] > 0)
+	if($v['client'])
 		$filter['client'] = intval($v['client']);
 	return $filter;
 }//end of zayavFilter()
@@ -513,6 +515,8 @@ function zayav_data($page=1, $filter=array(), $limit=20) {
 	} else {
 		if(isset($filter['status']) && $filter['status'] > 0)
 			$cond .= " AND `zayav_status`=".$filter['status'];
+		if(isset($filter['diff']) && $filter['diff'] > 0)
+			$cond .= " AND `accrual_sum`!=`oplata_sum`";
 		if(isset($filter['zpzakaz']) && $filter['zpzakaz'] > 0) {
 			$sql = "SELECT `zayav_id` FROM `zp_zakaz` WHERE `ws_id`=".WS_ID;
 			$q = query($sql);
@@ -544,7 +548,7 @@ function zayav_data($page=1, $filter=array(), $limit=20) {
 	$client = array();
 	$images = array();
 
-	$send['all'] = query_value("SELECT COUNT(`id`) AS `all` FROM `zayavki` WHERE ".$cond." LIMIT 1");
+	$send['all'] = query_value("SELECT COUNT(*) AS `all` FROM `zayavki` WHERE ".$cond." LIMIT 1");
 
 	if(isset($nomer)) {
 		$sql = "SELECT * FROM `zayavki` WHERE `nomer`=".$nomer." AND `zayav_status`>0 LIMIT 1";
@@ -559,7 +563,7 @@ function zayav_data($page=1, $filter=array(), $limit=20) {
 				$images['dev'.$r['base_model_id']] = '"dev'.$r['base_model_id'].'"';
 		}
 	}
-	if($send['all'] == 0)
+	if(!$send['all'])
 		return $send;
 
 	$start = ($page - 1) * $limit;
@@ -579,9 +583,10 @@ function zayav_data($page=1, $filter=array(), $limit=20) {
 			$images['dev'.$r['base_model_id']] = '"dev'.$r['base_model_id'].'"';
 	}
 
+    $zayavIds = implode(',', array_keys($zayav));
+
 	if(empty($filter['client']))
 		$client = _clientLink($client);
-	$status = _zayavStatus();
 
 	$sql = "SELECT `owner`,`link` FROM `images` WHERE `status`=1 AND `sort`=0 AND `owner` IN (".implode(',', $images).")";
 	$q = query($sql);
@@ -590,7 +595,8 @@ function zayav_data($page=1, $filter=array(), $limit=20) {
 		$imgLinks[$r['owner']] = $r['link'].'-small.jpg';
 	unset($images);
 
-	$sql = "SELECT `zayav_id`,`zp_id` FROM `zp_zakaz` WHERE `zayav_id` IN (".implode(',', array_keys($zayav)).")";
+    //Запчасти
+	$sql = "SELECT `zayav_id`,`zp_id` FROM `zp_zakaz` WHERE `zayav_id` IN (".$zayavIds.")";
 	$q = query($sql);
 	$zp = array();
 	$zpZakaz = array();
@@ -608,12 +614,13 @@ function zayav_data($page=1, $filter=array(), $limit=20) {
 				$zpZakaz[$id][$i] = _zpName($zp[$zpId]);
 	}
 
+    //Заметки
 	$sql = "SELECT
 				`table_id`,
 				`txt`
 			FROM `vk_comment`
 			WHERE `table_name`='zayav'
-			  AND `table_id` IN (".implode(',', array_keys($zayav)).")
+			  AND `table_id` IN (".$zayavIds.")
 			  AND `status`=1
 			ORDER BY `id` ASC";
 	$articles = array();
@@ -628,7 +635,7 @@ function zayav_data($page=1, $filter=array(), $limit=20) {
 		elseif(isset($imgLinks['dev'.$r['base_model_id']]))
 			$img = $imgLinks['dev'.$r['base_model_id']];
 		$unit = array(
-			'status_color' => $status[$r['zayav_status']]['color'],
+			'status_color' => _zayavStatusColor($r['zayav_status']),
 			'nomer' => $r['nomer'],
 			'nomer_find' => isset($r['nomer_find']),
 			'device' => _deviceName($r['base_device_id']),
@@ -636,7 +643,9 @@ function zayav_data($page=1, $filter=array(), $limit=20) {
 			'model' => _modelName($r['base_model_id']),
 			'dtime' => FullData($r['dtime_add'], 1),
 			'img' => $img,
-			'article' => isset($articles[$id]) ? $articles[$id] : ''
+			'article' => isset($articles[$id]) ? $articles[$id] : '',
+            'acc' => $r['accrual_sum'],
+            'opl' => $r['oplata_sum']
 		);
 		if(empty($filter['client']))
 			$unit['client'] = $client[$r['client_id']];
@@ -689,6 +698,7 @@ function zayav_list($data, $values) {
 					'<div class="condLost'.(!empty($values['find']) ? ' hide' : '').'">'.
 						'<div class="findHead">Статус заявки</div>'.
                         _rightLink('status', _zayavStatusName(), $values['status']).
+                        _check('diff', 'Неоплаченные заявки', $values['diff']).
 						'<div class="findHead">Заказаны запчасти</div>'.
                         _radio('zpzakaz', array(0=>'Все заявки',1=>'Да',2=>'Нет'), $values['zpzakaz'], 1).
 						'<div class="findHead">Устройство</div><div id="dev"></div>'.
@@ -718,9 +728,15 @@ function zayav_spisok($data) {
 				'<tr><td valign=top>'.
 						'<h2'.($sp['nomer_find'] ? ' class="finded"' : '').'>#'.$sp['nomer'].'</h2>'.
 						'<a class="name">'.$sp['device'].' <b>'.$sp['vendor'].' '.$sp['model'].'</b></a>'.
-						'<table style="border-spacing:2px">'.
+						'<table class="utab">'.
 							(isset($sp['client']) ? '<tr><td class="label">Клиент:<td>'.$sp['client'] : '').
-							'<tr><td class="label">Дата подачи:<td>'.$sp['dtime'].
+							'<tr><td class="label">Дата подачи:'.
+                                '<td>'.$sp['dtime'].
+                                      ($sp['acc'] || $sp['opl'] ?
+                                          '<div class="balans'.($sp['acc'] != $sp['opl'] ? ' diff' : '').'">'.
+                                            '<span class="acc" title="Начисление">'.$sp['acc'].'</span>/'.
+                                            '<span class="opl" title="Платёж">'.$sp['opl'].'</span>'.
+                                          '</div>' : '').
 							(isset($sp['imei']) ? '<tr><td class="label">IMEI:<td>'.$sp['imei'] : '').
 							(isset($sp['serial']) ? '<tr><td class="label">Серийный номер:<td>'.$sp['serial'] : '').
 							(isset($sp['zakaz']) ? '<tr><td class="label">Заказаны з/п:<td class="zz">'.$sp['zakaz'] : '').
@@ -735,6 +751,25 @@ function zayav_spisok($data) {
 	return $send;
 }//end of zayav_spisok()
 
+function zayavBalansUpdate($zayav_id, $ws_id=WS_ID) {//Обновление баланса клиента
+    $opl = query_value("SELECT IFNULL(SUM(`sum`),0)
+	                       FROM `money`
+	                       WHERE `ws_id`=".$ws_id."
+	                         AND `status`=1
+	                         AND `zayav_id`=".$zayav_id."
+	                         AND `sum`>0");
+    $acc = query_value("SELECT IFNULL(SUM(`sum`),0)
+	                    FROM `accrual`
+	                    WHERE `ws_id`=".$ws_id."
+	                      AND `status`=1
+	                      AND `zayav_id`=".$zayav_id);
+    query("UPDATE `zayavki` SET `accrual_sum`=".$acc.",`oplata_sum`=".$opl." WHERE `id`=".$zayav_id);
+    return array(
+        'acc' => $acc,
+        'opl' => $opl,
+        'diff' => $acc - $opl
+    );
+}//end of zayavBalansUpdate()
 function zayavEquipSpisok($ids) {//Список комплектации через запятую
     if(empty($ids))
         return '';

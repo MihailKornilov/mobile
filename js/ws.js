@@ -136,6 +136,7 @@ var AJAX_WS = SITE + '/ajax/ws.php?' + VALUES,
         return {
             client:G.clientInfo.id,
             status:$('#status').val(),
+            diff:$('#diff').val(),
             device:$('#dev_device').val(),
             vendor:$('#dev_vendor').val(),
             model:$('#dev_model').val()
@@ -158,6 +159,7 @@ var AJAX_WS = SITE + '/ajax/ws.php?' + VALUES,
                 sort:$('#sort').val(),
                 desc:$('#desc').val(),
                 status:$('#status').val(),
+                diff:$('#diff').val(),
                 zpzakaz:$('#zpzakaz').val(),
                 device:$('#dev_device').val(),
                 vendor:$('#dev_vendor').val(),
@@ -171,7 +173,8 @@ var AJAX_WS = SITE + '/ajax/ws.php?' + VALUES,
         if(v.find) loc += '.find=' + escape(v.find);
         else {
             if(v.status > 0) loc += '.status=' + v.status;
-            if(v.zpzakaz > 0) loc += '.zpzakaz=' + v.status;
+            if(v.diff > 0) loc += '.diff=' + v.diff;
+            if(v.zpzakaz > 0) loc += '.zpzakaz=' + v.zpzakaz;
             if(v.device > 0) loc += '.device=' + v.device;
             if(v.vendor > 0) loc += '.vendor=' + v.vendor;
             if(v.model > 0) loc += '.model=' + v.model;
@@ -184,6 +187,7 @@ var AJAX_WS = SITE + '/ajax/ws.php?' + VALUES,
         setCookie('zayav_sort', v.sort);
         setCookie('zayav_desc', v.desc);
         setCookie('zayav_status', v.status);
+        setCookie('zayav_diff', v.diff);
         setCookie('zayav_zpzakaz', v.zpzakaz);
         setCookie('zayav_device', v.device);
         setCookie('zayav_vendor', v.vendor);
@@ -216,25 +220,17 @@ var AJAX_WS = SITE + '/ajax/ws.php?' + VALUES,
             }
         }, 'json');
     },
-    zayavInfoMoneyUpdate = function() {
-        var send = {
-            op:'zayav_money_update',
-            id:G.zayavInfo.id
-        };
-        $.post(AJAX_WS, send, function (res) {
-            if(res.success) {
-                $('b.acc').html(res.acc);
-                $('.acc_tr')[(res.acc == 0 ? 'add' : 'remove') + 'Class']('dn');
-                $('b.op').html(res.opl);
-                $('.op_tr')[(res.opl == 0 ? 'add' : 'remove') + 'Class']('dn');
-                $('.dopl')
-                    [(res.dopl == 0 ? 'add' : 'remove') + 'Class']('dn')
-                    .html((res.dopl > 0 ? '+' : '') + res.dopl);
-                var del = res.acc == 0 && res.opl == 0;
-                $('.delete')[(del ? 'remove' : 'add') + 'Class']('dn');
-            }
-        }, 'json');
-    },
+    zayavInfoMoneyUpdate = function(res) {
+        $('b.acc').html(res.acc);
+        $('.acc_tr')[(res.acc == 0 ? 'add' : 'remove') + 'Class']('dn');
+        $('b.op').html(res.opl);
+        $('.op_tr')[(res.opl == 0 ? 'add' : 'remove') + 'Class']('dn');
+        $('.dopl')
+            [(res.diff == 0 ? 'add' : 'remove') + 'Class']('dn')
+            .html((res.diff > 0 ? '+' : '') + res.diff);
+        var del = res.acc == 0 && res.opl == 0;
+        $('.delete')[(del ? 'remove' : 'add') + 'Class']('dn');
+   },
     zayavDevSelect = function(dev) {
         modelImageGet(dev);
         if(dev.device_id == 0) {
@@ -1152,6 +1148,7 @@ $(document)
         $('#sort')._radio(1);
         $('#desc')._check(0);
         $('#status').rightLink(0);
+        $('#diff')._check(0);
         $('#zpzakaz')._radio(0);
         $('#dev').device({
             width:155,
@@ -1385,7 +1382,7 @@ $(document)
                         dialog.close();
                         _msg('Начисление успешно произведено!');
                         $('._spisok._money').append(res.html);
-                        zayavInfoMoneyUpdate();
+                        zayavInfoMoneyUpdate(res);
                         if(res.status) {
                             $('#status')
                                 .html(res.status.name)
@@ -1420,7 +1417,7 @@ $(document)
         $.post(AJAX_WS, send, function(res) {
             if(res.success) {
                 tr.find('.deleting').html('Начисление удалено. <a class="acc_rest" val="' + send.id + '">Восстановить</a>');
-                zayavInfoMoneyUpdate();
+                zayavInfoMoneyUpdate(res);
             }
         }, 'json');
     })
@@ -1435,7 +1432,7 @@ $(document)
         $.post(AJAX_WS, send, function(res) {
             if(res.success) {
                 tr.after(res.html).remove();
-                zayavInfoMoneyUpdate();
+                zayavInfoMoneyUpdate(res);
             }
         }, 'json');
     })
@@ -1488,7 +1485,7 @@ $(document)
                         dialog.close();
                         _msg('Платёж успешно внесён!');
                         $('._spisok._money').append(res.html);
-                        zayavInfoMoneyUpdate();
+                        zayavInfoMoneyUpdate(res);
                     }
                 }, 'json');
             }
@@ -1514,7 +1511,7 @@ $(document)
         $.post(AJAX_WS, send, function (res) {
             if(res.success) {
                 tr.find('.deleting').html('Платёж удалён. <a class="op_rest" val="' + send.id + '">Восстановить</a>');
-                zayavInfoMoneyUpdate();
+                zayavInfoMoneyUpdate(res);
             }
         }, 'json');
     })
@@ -1529,7 +1526,7 @@ $(document)
         $.post(AJAX_WS, send, function(res) {
             if(res.success) {
                 tr.after(res.html).remove();
-                zayavInfoMoneyUpdate();
+                zayavInfoMoneyUpdate(res);
             }
         }, 'json');
     })
@@ -3350,6 +3347,7 @@ $(document)
                 $('#histories').css('display', val == 'hist' ? 'block' : 'none');
             });
             $('#status').rightLink(clientZayavSpisokLoad);
+            $('#diff')._check(clientZayavSpisokLoad);
             $('#dev').device({
                 width:145,
                 type_no:1,
@@ -3380,6 +3378,7 @@ $(document)
             zFind.inp(G.zayav_find);
             $('#desc')._check(zayavSpisokLoad);
             $('#status').rightLink(zayavSpisokLoad);
+            $('#diff')._check(zayavSpisokLoad);
             $('#dev').device({
                 width:155,
                 type_no:1,

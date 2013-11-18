@@ -86,6 +86,59 @@ switch(@$_POST['op']) {
         $send['time'] = round(microtime(true) - TIME, 3);
         jsonSuccess($send);
         break;
+    case 'ws_zayav_balans':
+        if(!preg_match(REGEXP_NUMERIC, $_POST['ws_id']))
+            jsonError();
+        $ws_id = intval($_POST['ws_id']);
+        $sql = "SELECT
+                  `z`.`id`,
+                  `z`.`accrual_sum`,
+                  IFNULL(SUM(`a`.`sum`),0) AS `acc`
+                FROM `zayavki` AS `z`
+                  LEFT JOIN `accrual` AS `a`
+	              ON `z`.`id`=`a`.`zayav_id`
+	                AND `a`.`status`=1
+	            WHERE `z`.`ws_id`=".$ws_id."
+                GROUP BY `z`.`id`
+                ORDER BY `z`.`id`";
+        $q = query($sql);
+        $zayav = array();
+        while($r = mysql_fetch_assoc($q))
+            $zayav[$r['id']] = $r;
+        $sql = "SELECT
+                  `z`.`id`,
+                  `z`.`oplata_sum`,
+                  IFNULL(SUM(`m`.`sum`),0) AS `opl`
+                FROM `zayavki` AS `z`
+                  LEFT JOIN `money` AS `m`
+	              ON `z`.`id`=`m`.`zayav_id`
+	                AND `m`.`status`=1
+	                AND `m`.`sum`>0
+	            WHERE `z`.`ws_id`=".$ws_id."
+                GROUP BY `z`.`id`
+                ORDER BY `z`.`id`";
+        $q = query($sql);
+        $send['count'] = 0;
+        $upd = array();
+        while($r = mysql_fetch_assoc($q)) {
+            $z = $zayav[$r['id']];
+            if($z['accrual_sum'] != $z['acc'] || $r['oplata_sum'] != $r['opl']) {
+                $upd[] = '('.$r['id'].','.$z['acc'].','.$r['opl'].')';
+                $send['count']++;
+            }
+        }
+        if(!empty($upd)) {
+            $sql = "INSERT INTO `zayavki`
+                        (`id`,`accrual_sum`, `oplata_sum`)
+                    VALUES ".implode(',', $upd)."
+                    ON DUPLICATE KEY UPDATE
+                        `accrual_sum`=VALUES(`accrual_sum`),
+                        `oplata_sum`=VALUES(`oplata_sum`)";
+            query($sql);
+        }
+        $send['time'] = round(microtime(true) - TIME, 3);
+        jsonSuccess($send);
+        break;
 
     case 'device_add':
         $name = win1251(htmlspecialchars(trim($_POST['name'])));

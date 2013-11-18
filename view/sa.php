@@ -123,6 +123,8 @@ function sa_ws_info($id) {
         '<table class="counts">'.$counts.'</table>'.
         '<div class="headName">Счётчики</div>'.
         '<div class="vkButton ws_client_balans" val="'.$ws['id'].'"><button>Обновить балансы клиентов</button></div>'.
+        '<br />'.
+        '<div class="vkButton ws_zayav_balans" val="'.$ws['id'].'"><button>Обновить суммы начислений и платежей заявок</button></div>'.
     '</div>';
 }//end of sa_ws_info()
 

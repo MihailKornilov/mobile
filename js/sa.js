@@ -61,6 +61,21 @@ $(document)
             }
         }, 'json');
     })
+    .on('click', '.sa-ws-info .ws_zayav_balans', function() {
+        var t = $(this),
+            send = {
+                op:'ws_zayav_balans',
+                ws_id:t.attr('val')
+            };
+        t.addClass('busy');
+        $.post(AJAX_SA, send, function(res) {
+            t.removeClass('busy');
+            if(res.success) {
+                t.next().remove('span');
+                t.after('<span> Изменено: ' + res.count + '. Время: ' + res.time + '</span>');
+            }
+        }, 'json');
+    })
 
     .on('click', '.sa-device .add', function() {
         var t = $(this),

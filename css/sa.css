@@ -16,7 +16,7 @@
 .sa-ws-info .counts{border-spacing:4px}
 .sa-ws-info .counts .tb{text-align:right}
 .sa-ws-info .counts .c{text-align:right;font-weight:700;padding:0 5px}
-.sa-ws-info .ws_client_balans{margin-top:10px}
+.sa-ws-info .ws_client_balans,.sa-ws-info .ws_zayav_balans{margin-top:10px}
 
 .sa-device .spisok{margin:10px 20px}
 .sa-device .name{width:220px;cursor:move}

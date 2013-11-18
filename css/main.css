@@ -55,7 +55,8 @@
 #clientInfo #remind_spisok ._empty{margin:10px 0;padding:60px 10px}
 #clientInfo #histories .ajaxNext{margin:0}
 #clientInfo .right{width:145px}
-#clientInfo .rightLink{margin-bottom:30px}
+#clientInfo #zayav_filter{margin-top:30px}
+#clientInfo #diff_check{margin-top:15px}
 
 /* список заявок */
 #zayav #filter_break{float:right}
@@ -76,7 +77,13 @@
 .zayav_unit H2.finded{background:#FFC;color:#444;text-decoration:underline}
 .zayav_unit em{background:#FFC;border-bottom:1px solid #FE2;font-size:12px}
 .zayav_unit b em{font-weight:bold}
+.zayav_unit .utab{border-spacing:2px;width:100%}
+.zayav_unit .utab em{font-size:11px}
 .zayav_unit .label{width:90px;padding-left:10px}
+.zayav_unit .balans{float:right;margin-right:2px;color:#777}
+.zayav_unit .acc{color:#07a;cursor:help}
+.zayav_unit .opl{color:#090;cursor:help}
+.zayav_unit .diff .acc,.zayav_unit .diff .opl{color:#b33;font-weight:700}
 .zayav_unit .zz{color:#a33}
 .zayav_unit .image {
     width:80px;
@@ -89,6 +96,7 @@
 #zayav .ajaxNext{margin:6px 5px 0 8px}
 #zayav #find{margin-top:15px}
 #zayav #desc_check{margin-top:10px}
+#zayav #diff_check{margin-top:15px}
 #zayav ._empty{margin-right:6px;}
 
 /* Внесение новой заявки */
@@ -135,8 +143,8 @@
 #zayavInfo #remind_spisok{margin:8px 0}
 #zayavInfo .headBlue.mon{margin-top:10px}
 #zayavInfo .headBlue.mon em{float:right;margin:0 5px;}
-#zayavInfo .op{color:#090;cursor:help}
 #zayavInfo .acc{color:#07a;cursor:help}
+#zayavInfo .op{color:#090;cursor:help}
 #zayavInfo ._money .del{width:20px;padding:0}
 #zayavInfo ._money .img_del{margin:0 0 -2px 4px}
 .zayav_accrual_add{border-spacing:8px}

@@ -71,6 +71,7 @@ switch($_GET['p']) {
                     'sort' => isset($values['sort']) ? intval($values['sort']) : 1,
                     'desc' => isset($values['desc']) && intval($values['desc']) == 1 ? 1 : 0,
                     'status' => isset($values['status']) ? intval($values['status']) : 0,
+                    'diff' => isset($values['diff']) && intval($values['diff']) == 1 ? 1 : 0,
                     'zpzakaz' => isset($values['zpzakaz']) ? intval($values['zpzakaz']) : 0,
                     'device' => isset($values['device']) ? intval($values['device']) : 0,
                     'vendor' => isset($values['vendor']) ? intval($values['vendor']) : 0,
