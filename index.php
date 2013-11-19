@@ -208,12 +208,9 @@ switch($_GET['p']) {
                 }
                 $html .= sa_ws();
                 break;
-            case 'device':
-                $html .= sa_device();
-                break;
-            case 'equip':
-                $html .= sa_equip();
-                break;
+            case 'device': $html .= sa_device(); break;
+            case 'vendor': $html .= sa_vendor(); break;
+            case 'equip': $html .= sa_equip(); break;
             default: $html .= sa_index();
         }
         break;

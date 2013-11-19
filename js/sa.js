@@ -242,6 +242,133 @@ $(document)
         }
     })
 
+    .on('click', '.sa-vendor .add', function() {
+        var t = $(this),
+            html = '<table class="sa-vendor-add">' +
+                '<tr><td class="label r">Наименование:<td><input id="name" type="text" maxlength="100" />' +
+                '<tr><td class="label r">Выделить:<td><input id="bold" type="hidden" />' +
+                '</table>',
+            dialog = _dialog({
+                top:60,
+                width:390,
+                head:'Добавление нового наименования производителя',
+                content:html,
+                submit:submit
+            });
+        $('#name').focus().keyEnter(submit);
+        $('#bold')._check();
+        function submit() {
+            var send = {
+                op:'vendor_add',
+                device_id:DEVICE_ID,
+                name:$('#name').val(),
+                bold:$('#bold').val()
+            };
+            if(!send.name) {
+                dialog.bottom.vkHint({
+                    msg:'<SPAN class=red>Не указано наименование</SPAN>',
+                    top:-47,
+                    left:99,
+                    indent:50,
+                    show:1,
+                    remove:1
+                });
+                $('#name').focus();
+            } else {
+                dialog.process();
+                $.post(AJAX_SA, send, function(res) {
+                    if(res.success) {
+                        $('.spisok').html(res.html);
+                        dialog.close();
+                        _msg('Внесено!');
+                        sortable();
+                    } else
+                        dialog.abort();
+                }, 'json');
+            }
+        }
+    })
+    .on('click', '.sa-vendor .img_edit', function() {
+        var t = $(this),
+            ven = t;
+        while(ven[0].tagName != 'DD')
+            ven = ven.parent();
+        var bold = ven.find('.name').hasClass('b') ? 1 : 0,
+            html = '<table class="sa-vendor-add">' +
+                '<tr><td class="label r">Наименование:<td><input id="name" type="text" maxlength="100" value="' + ven.find('.name a').html() + '" />' +
+                '<tr><td class="label r">Выделить:<td><input id="bold" type="hidden" value="' + bold + '" />' +
+                '</table>',
+            dialog = _dialog({
+                top:60,
+                width:390,
+                head:'Изменение данных производителя',
+                content:html,
+                butSubmit:'Сохранить',
+                submit:submit
+            });
+        $('#name').focus().keyEnter(submit);
+        $('#bold')._check();
+        function submit() {
+            var send = {
+                op:'vendor_edit',
+                vendor_id:ven.attr('val'),
+                name:$('#name').val(),
+                bold:$('#bold').val()
+            };
+            if(!send.name) {
+                dialog.bottom.vkHint({
+                    msg:'<SPAN class=red>Не указано наименование</SPAN>',
+                    top:-47,
+                    left:99,
+                    indent:50,
+                    show:1,
+                    remove:1
+                });
+                $('#name').focus();
+            } else {
+                dialog.process();
+                $.post(AJAX_SA, send, function(res) {
+                    if(res.success) {
+                        $('.spisok').html(res.html);
+                        dialog.close();
+                        _msg('Изменено!');
+                        sortable();
+                    } else
+                        dialog.abort();
+                }, 'json');
+            }
+        }
+    })
+    .on('click', '.sa-vendor .img_del', function() {
+        var t = $(this),
+            dialog = _dialog({
+                top:90,
+                width:300,
+                head:'Удаление производителя',
+                content:'<center><b>Подтвердите удаление производителя.</b></center>',
+                butSubmit:'Удалить',
+                submit:submit
+            });
+        function submit() {
+            while(t[0].tagName != 'DD')
+                t = t.parent();
+            var send = {
+                op:'vendor_del',
+                vendor_id:t.attr('val')
+            };
+            dialog.process();
+            $.post(AJAX_SA, send, function(res) {
+                if(res.success) {
+                    $('.spisok').html(res.html);
+                    dialog.close();
+                    _msg('Удалено!');
+                    sortable();
+                } else
+                    dialog.abort();
+            }, 'json');
+        }
+    })
+
     .on('click', '.sa-equip .rightLink a', function() {
         $('.sa-equip .rightLink a.sel').removeClass('sel');
         $(this).addClass('sel');

@@ -28,6 +28,16 @@
 .sa-device-add input{width:250px}
 .sa-device-add .equip div{display:block;margin-top:5px}
 
+.sa-vendor .spisok{margin:10px 20px}
+.sa-vendor .name{width:220px;cursor:move}
+.sa-vendor .b a{font-weight:bold}
+.sa-vendor .mod{width:60px;text-align:center}
+.sa-vendor .zayav{width:60px;text-align:center}
+.sa-vendor .edit{width:40px}
+.sa-vendor-add{border-spacing:8px}
+.sa-vendor-add input{width:250px}
+
+
 .sa-equip{margin-bottom:20px}
 .sa-equip .headName{margin-top:10px}
 .sa-equip .rightLink{

@@ -186,7 +186,7 @@ function sa_device_spisok() {
     foreach($devs as $id => $r)
         $spisok .= '<dd val="'.$id.'">'.
             '<table class="_spisok">'.
-                '<tr><td class="name"><a>'.$r['name'].'</a>'.
+                '<tr><td class="name"><a href="'.URL.'&p=sa&d=vendor&id='.$id.'">'.$r['name'].'</a>'.
                     '<td class="ven">'.($r['vendor_count'] ? $r['vendor_count'] : '').
                     '<td class="mod">'.(isset($r['model_count']) ? $r['model_count'] : '').
                     '<td class="zayav">'.(isset($r['zayav_count']) ? $r['zayav_count'] : '').
@@ -197,6 +197,80 @@ function sa_device_spisok() {
     $spisok .= '</dl>';
     return $spisok;
 }//end of sa_device_spisok()
+function sa_vendor() {
+    if(empty($_GET['id']) || !preg_match(REGEXP_NUMERIC, $_GET['id']))
+        return 'Ошибка id. <a href="'.URL.'&p=sa&d=device">Назад</a>.';
+    $device_id = intval($_GET['id']);
+    $sql = "SELECT * FROM `base_device` WHERE `id`=".$device_id;
+    if(!$dev = mysql_fetch_assoc(query($sql)))
+        return 'Устройства id = '.$device_id.' не существует. <a href="'.URL.'&p=sa&d=device">Назад</a>.';
+    return
+    '<script type="text/javascript">var DEVICE_ID='.$device_id.';</script>'.
+    '<div class="path">'.
+        sa_cookie_back().
+        '<a href="'.URL.'&p=sa">Администрирование</a> » '.
+        '<a href="'.URL.'&p=sa&d=device">Устройства</a> » '.
+        $dev['name'].
+    '</div>'.
+    '<div class="sa-vendor">'.
+        '<div class="headName">Список производителей для "'.$dev['name'].'"<a class="add">Добавить</a></div>'.
+        '<div class="spisok">'.sa_vendor_spisok($device_id).'</div>'.
+    '</div>';
+}//end of sa_device()
+function sa_vendor_spisok($device_id) {
+    $sql = "SELECT
+                `bv`.`id`,
+                `bv`.`name`,
+                `bv`.`bold`,
+                COUNT(`bm`.`id`) AS `model_count`
+            FROM `base_vendor` AS `bv`
+                 LEFT JOIN `base_model` AS `bm`
+                 ON `bv`.`id`=`bm`.`vendor_id`
+            WHERE `bv`.`device_id`=".$device_id."
+            GROUP BY `bv`.`id`
+            ORDER BY `bv`.`sort`";
+    $q = query($sql);
+    if(!mysql_num_rows($q))
+        return 'Производителей нет.';
+
+    $vens = array();
+    while($r = mysql_fetch_assoc($q))
+        $vens[$r['id']] = $r;
+
+    $sql = "SELECT
+                `v`.`id` AS `id`,
+                COUNT(`z`.`id`) AS `count`
+            FROM `base_vendor` AS `v`,
+                 `zayavki` AS `z`
+            WHERE `v`.`device_id`=".$device_id."
+              AND `v`.`id`=`z`.`base_vendor_id`
+              AND `z`.`zayav_status`>0
+            GROUP BY `v`.`id`";
+    $q = query($sql);
+    while($r = mysql_fetch_assoc($q))
+        $vens[$r['id']]['zayav_count'] = $r['count'];
+
+    $spisok =
+    '<table class="_spisok">'.
+        '<tr><th class="name">Наименование устройства'.
+            '<th class="mod">Кол-во<BR>моделей'.
+            '<th class="zayav">Кол-во<BR>заявок'.
+            '<th class="edit">'.
+    '</table>'.
+    '<dl class="_sort" val="base_vendor">';
+    foreach($vens as $id => $r)
+        $spisok .= '<dd val="'.$id.'">'.
+            '<table class="_spisok">'.
+                '<tr><td class="name'.($r['bold'] ? ' b' : '').'"><a href="'.URL.'&p=sa&d=model&id='.$id.'">'.$r['name'].'</a>'.
+                    '<td class="mod">'.($r['model_count'] ? $r['model_count'] : '').
+                    '<td class="zayav">'.(isset($r['zayav_count']) ? $r['zayav_count'] : '').
+                    '<td class="edit">'.
+                        '<div class="img_edit"></div>'.
+                        ($r['model_count']  || isset($r['zayav_count']) ? '' : '<div class="img_del"></div>').
+            '</table>';
+    $spisok .= '</dl>';
+    return $spisok;
+}//end of sa_vendor_spisok()
 
 
 function sa_equip() {

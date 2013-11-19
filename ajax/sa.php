@@ -232,6 +232,85 @@ switch(@$_POST['op']) {
         jsonSuccess($send);
         break;
 
+    case 'vendor_add':
+        if(!preg_match(REGEXP_NUMERIC, $_POST['device_id']) && $_POST['device_id'] > 0)
+            jsonError();
+        if(!preg_match(REGEXP_BOOL, $_POST['bold']))
+            jsonError();
+
+        $device_id = intval($_POST['device_id']);
+        $name = win1251(htmlspecialchars(trim($_POST['name'])));
+        $bold = intval($_POST['bold']);
+        if(empty($name))
+            jsonError();
+
+        $sort = query_value("SELECT IFNULL(MAX(`sort`)+1,0) FROM `base_vendor` WHERE `device_id`=".$device_id);
+        $sql = "INSERT INTO `base_vendor` (
+                    `device_id`,
+                    `name`,
+                    `bold`,
+                    `sort`,
+                    `viewer_id_add`
+                ) VALUES (
+                    ".$device_id.",
+                    '".addslashes($name)."',
+                    ".$bold.",
+                    ".$sort.",
+                    ".VIEWER_ID."
+                )";
+        query($sql);
+        xcache_unset(CACHE_PREFIX.'vendor_name');
+        GvaluesCreate();
+        $send['html'] = utf8(sa_vendor_spisok($device_id));
+        jsonSuccess($send);
+        break;
+    case 'vendor_edit':
+        if(!preg_match(REGEXP_NUMERIC, $_POST['vendor_id']) && $_POST['vendor_id'] > 0)
+            jsonError();
+        if(!preg_match(REGEXP_BOOL, $_POST['bold']))
+            jsonError();
+
+        $vendor_id = intval($_POST['vendor_id']);
+        $name = win1251(htmlspecialchars(trim($_POST['name'])));
+        $bold = intval($_POST['bold']);
+        if(empty($name))
+            jsonError();
+
+        $sql = "SELECT * FROM `base_vendor` WHERE `id`=".$vendor_id;
+        if(!$r = mysql_fetch_assoc(query($sql)))
+            jsonError();
+
+        $sql = "UPDATE `base_vendor` SET
+                    `name`='".addslashes($name)."',
+                    `bold`='".$bold."'
+                WHERE `id`=".$vendor_id;
+        query($sql);
+        xcache_unset(CACHE_PREFIX.'vendor_name');
+        GvaluesCreate();
+        $send['html'] = utf8(sa_vendor_spisok($r['device_id']));
+        jsonSuccess($send);
+        break;
+    case 'vendor_del':
+        if(!preg_match(REGEXP_NUMERIC, $_POST['vendor_id']))
+            jsonError();
+        $vendor_id = intval($_POST['vendor_id']);
+
+        $sql = "SELECT * FROM `base_vendor` WHERE `id`=".$vendor_id;
+        if(!$r = mysql_fetch_assoc(query($sql)))
+            jsonError();
+
+        if(query_value("SELECT COUNT(`id`) FROM `base_model` WHERE `vendor_id`=".$vendor_id))
+            jsonError();
+        if(query_value("SELECT COUNT(`id`) FROM `zayavki` WHERE `base_vendor_id`=".$vendor_id))
+            jsonError();
+        $sql = "DELETE FROM `base_vendor` WHERE `id`=".$vendor_id;
+        query($sql);
+        xcache_unset(CACHE_PREFIX.'vendor_name');
+        GvaluesCreate();
+        $send['html'] = utf8(sa_vendor_spisok($r['device_id']));
+        jsonSuccess($send);
+        break;
+
     case 'equip_add':
         if(!preg_match(REGEXP_NUMERIC, $_POST['device_id']))
             jsonError();
