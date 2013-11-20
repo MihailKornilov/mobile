@@ -216,7 +216,7 @@ function sa_vendor() {
         '<div class="headName">Список производителей для "'.$dev['name'].'"<a class="add">Добавить</a></div>'.
         '<div class="spisok">'.sa_vendor_spisok($device_id).'</div>'.
     '</div>';
-}//end of sa_device()
+}//end of sa_vendor()
 function sa_vendor_spisok($device_id) {
     $sql = "SELECT
                 `bv`.`id`,
@@ -261,7 +261,7 @@ function sa_vendor_spisok($device_id) {
     foreach($vens as $id => $r)
         $spisok .= '<dd val="'.$id.'">'.
             '<table class="_spisok">'.
-                '<tr><td class="name'.($r['bold'] ? ' b' : '').'"><a href="'.URL.'&p=sa&d=model&id='.$id.'">'.$r['name'].'</a>'.
+                '<tr><td class="name'.($r['bold'] ? ' b' : '').'"><a href="'.URL.'&p=sa&d=model&vendor_id='.$id.'">'.$r['name'].'</a>'.
                     '<td class="mod">'.($r['model_count'] ? $r['model_count'] : '').
                     '<td class="zayav">'.(isset($r['zayav_count']) ? $r['zayav_count'] : '').
                     '<td class="edit">'.
@@ -271,6 +271,76 @@ function sa_vendor_spisok($device_id) {
     $spisok .= '</dl>';
     return $spisok;
 }//end of sa_vendor_spisok()
+function sa_model() {
+    if(empty($_GET['vendor_id']) || !preg_match(REGEXP_NUMERIC, $_GET['vendor_id']))
+        return 'Ошибка vendor_id. <a href="'.URL.'&p=sa&d=device">Назад</a>.';
+    $vendor_id = intval($_GET['vendor_id']);
+    $sql = "SELECT * FROM `base_vendor` WHERE `id`=".$vendor_id;
+    if(!$ven = mysql_fetch_assoc(query($sql)))
+        return 'Произодителя id = '.$vendor_id.' не существует. <a href="'.URL.'&p=sa&d=device">Назад</a>.';
+    return
+    '<script type="text/javascript">var VENDOR_ID='.$vendor_id.';</script>'.
+    '<div class="path">'.
+        sa_cookie_back().
+        '<a href="'.URL.'&p=sa">Администрирование</a> » '.
+        '<a href="'.URL.'&p=sa&d=device">Устройства</a> » '.
+        '<a href="'.URL.'&p=sa&d=vendor&id='.$ven['device_id'].'">'._deviceName($ven['device_id']).'</a> » '.
+        $ven['name'].
+    '</div>'.
+    '<div class="sa-model">'.
+        '<div class="headName">Список моделей для "'._deviceName($ven['device_id']).$ven['name'].'"<a class="add">Добавить</a></div>'.
+        '<div id="find"></div>'.
+        '<table class="_spisok">'.
+            '<tr><th>'.
+                '<th class="name">Наименование модели'.
+                '<th class="zayav">Кол-во<BR>заявок'.
+                '<th class="edit">'.
+            sa_model_spisok($vendor_id).
+        '</table>'.
+    '</div>';
+}//end of sa_model()
+function sa_model_spisok($vendor_id, $page=1, $find='') {
+    $limit = 15;
+    $all = query_value("SELECT COUNT(`id`) FROM `base_model` WHERE `vendor_id`=".$vendor_id.($find ? " AND `name` LIKE '%".$find."%'" : ''));
+    if(!$all)
+        return 'Моделей нет.';
+
+    $start = ($page - 1) * $limit;
+    $sql = "SELECT
+                `m`.`id`,
+                `m`.`name`,
+                COUNT(`z`.`id`) AS `zayav_count`
+            FROM `base_model` AS `m`
+                 LEFT JOIN `zayavki` AS `z`
+                 ON `m`.`id`=`z`.`base_model_id`
+            WHERE `m`.`vendor_id`=".$vendor_id.
+                ($find ? " AND `m`.`name` LIKE '%".$find."%'" : '')."
+            GROUP BY `m`.`id`
+            ORDER BY `m`.`name`
+            LIMIT ".$start.",".$limit;
+    $q = query($sql);
+    $mods = array();
+    while($r = mysql_fetch_assoc($q))
+        $mods[$r['id']] = $r;
+
+    _modelImg(array_keys($mods), 'small', 40, 40, 'fotoView');
+
+    $send = '';
+    foreach($mods as $id => $r)
+        $send .= '<tr class="tr" val="'.$id.'"><td class="img">'._modelImg($id).
+                       '<td class="name"><a href="'.URL.'&p=sa&d=modelInfo&id='.$id.'">'._vendorName($vendor_id).'<b>'.$r['name'].'</b></a>'.
+                       '<td class="zayav">'.($r['zayav_count'] ? $r['zayav_count'] : '').
+                       '<td class="edit">'.
+                           '<div class="img_edit"></div>'.
+                           ($r['zayav_count'] ? '' : '<div class="img_del"></div>');
+    if($start + $limit < $all) {
+        $c = $all - $start - $limit;
+        $c = $c > $limit ? $limit : $c;
+        $send .= '<tr class="tr"><td colspan="4" class="next">'.
+            '<div class="ajaxNext" val="'.($page + 1).'"><span>Показать ещё '.$c.' модел'._end($c, 'ь', 'и', 'ей').'</span></div>';
+    }
+    return $send;
+}//end of sa_model_spisok()
 
 
 function sa_equip() {

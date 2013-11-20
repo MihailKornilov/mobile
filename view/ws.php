@@ -1095,7 +1095,7 @@ function zp_data($page=1, $filter=array(), $limit=20) {
 
 	$send['filter'] = $filter;
 	$send['all'] = query_value("SELECT COUNT(`id`) AS `all` FROM `zp_catalog` WHERE ".$cond." LIMIT 1");
-	if($send['all'] == 0) {
+	if(!$send['all']) {
 		$send['spisok'] = '<div class="_empty">Запчастей не найдено.</div>';
 		return $send;
 	}

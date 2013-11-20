@@ -210,6 +210,7 @@ switch($_GET['p']) {
                 break;
             case 'device': $html .= sa_device(); break;
             case 'vendor': $html .= sa_vendor(); break;
+            case 'model': $html .= sa_model(); break;
             case 'equip': $html .= sa_equip(); break;
             default: $html .= sa_index();
         }

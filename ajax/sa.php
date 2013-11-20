@@ -233,7 +233,7 @@ switch(@$_POST['op']) {
         break;
 
     case 'vendor_add':
-        if(!preg_match(REGEXP_NUMERIC, $_POST['device_id']) && $_POST['device_id'] > 0)
+        if(!preg_match(REGEXP_NUMERIC, $_POST['device_id']) && $_POST['device_id'] == 0)
             jsonError();
         if(!preg_match(REGEXP_BOOL, $_POST['bold']))
             jsonError();
@@ -265,7 +265,7 @@ switch(@$_POST['op']) {
         jsonSuccess($send);
         break;
     case 'vendor_edit':
-        if(!preg_match(REGEXP_NUMERIC, $_POST['vendor_id']) && $_POST['vendor_id'] > 0)
+        if(!preg_match(REGEXP_NUMERIC, $_POST['vendor_id']) && $_POST['vendor_id'] == 0)
             jsonError();
         if(!preg_match(REGEXP_BOOL, $_POST['bold']))
             jsonError();
@@ -291,7 +291,7 @@ switch(@$_POST['op']) {
         jsonSuccess($send);
         break;
     case 'vendor_del':
-        if(!preg_match(REGEXP_NUMERIC, $_POST['vendor_id']))
+        if(!preg_match(REGEXP_NUMERIC, $_POST['vendor_id']) && $_POST['vendor_id'] == 0)
             jsonError();
         $vendor_id = intval($_POST['vendor_id']);
 
@@ -309,6 +309,103 @@ switch(@$_POST['op']) {
         GvaluesCreate();
         $send['html'] = utf8(sa_vendor_spisok($r['device_id']));
         jsonSuccess($send);
+        break;
+
+    case 'model_next':
+        if(!preg_match(REGEXP_NUMERIC, $_POST['vendor_id']) && $_POST['vendor_id'] == 0)
+            jsonError();
+        if(!preg_match(REGEXP_NUMERIC, $_POST['page']))
+            jsonError();
+        if(!preg_match(REGEXP_WORDFIND, win1251($_POST['find'])))
+            $_POST['find'] = '';
+        $vendor_id = intval($_POST['vendor_id']);
+        $find = win1251(htmlspecialchars(trim($_POST['find'])));
+        $page = intval($_POST['page']);
+        $send['html'] = utf8(sa_model_spisok($vendor_id, $page, $find));
+        jsonSuccess($send);
+        break;
+    case 'model_load':
+        if(!preg_match(REGEXP_NUMERIC, $_POST['vendor_id']) && $_POST['vendor_id'] == 0)
+            jsonError();
+        if(!preg_match(REGEXP_WORDFIND, win1251($_POST['find'])))
+            $_POST['find'] = '';
+        $vendor_id = intval($_POST['vendor_id']);
+        $find = win1251(htmlspecialchars(trim($_POST['find'])));
+        $send['html'] = utf8(sa_model_spisok($vendor_id, 1, $find));
+        jsonSuccess($send);
+        break;
+    case 'model_add':
+        if(!preg_match(REGEXP_NUMERIC, $_POST['vendor_id']) && $_POST['vendor_id'] == 0)
+            jsonError('Некорректный vendor_id');
+
+        $vendor_id = intval($_POST['vendor_id']);
+        $name = win1251(htmlspecialchars(trim($_POST['name'])));
+        if(empty($name))
+            jsonError('Пустое наименование');
+
+        $device_id = query_value("SELECT `device_id` FROM `base_vendor` WHERE `id`=".$vendor_id);
+        if(!$device_id)
+            jsonError('vendor_id нет в базе');
+
+        $sql = "SELECT *
+                FROM `base_model`
+                WHERE `vendor_id`=".$vendor_id."
+                  AND `name`='".$name."'";
+        if(mysql_num_rows(query($sql)))
+            jsonError('Такое название уже существует в списке');
+
+        $sql = "INSERT INTO `base_model` (
+                    `device_id`,
+                    `vendor_id`,
+                    `name`,
+                    `viewer_id_add`
+                ) VALUES (
+                    ".$device_id.",
+                    ".$vendor_id.",
+                    '".addslashes($name)."',
+                    ".VIEWER_ID."
+                )";
+        query($sql);
+        xcache_unset(CACHE_PREFIX.'model_name');
+        GvaluesCreate();
+        $send['html'] = utf8(sa_model_spisok($vendor_id));
+        jsonSuccess($send);
+        break;
+    case 'model_edit':
+        if(!preg_match(REGEXP_NUMERIC, $_POST['model_id']) && $_POST['model_id'] == 0)
+            jsonError();
+
+        $model_id = intval($_POST['model_id']);
+        $name = win1251(htmlspecialchars(trim($_POST['name'])));
+        if(empty($name))
+            jsonError();
+
+        $sql = "SELECT * FROM `base_model` WHERE `id`=".$model_id;
+        if(!$r = mysql_fetch_assoc(query($sql)))
+            jsonError();
+
+        $sql = "UPDATE `base_model` SET `name`='".addslashes($name)."' WHERE `id`=".$model_id;
+        query($sql);
+        xcache_unset(CACHE_PREFIX.'model_name');
+        GvaluesCreate();
+        jsonSuccess();
+        break;
+    case 'model_del':
+        if(!preg_match(REGEXP_NUMERIC, $_POST['model_id']) && $_POST['model_id'] == 0)
+            jsonError();
+        $model_id = intval($_POST['model_id']);
+
+        $sql = "SELECT * FROM `base_model` WHERE `id`=".$model_id;
+        if(!$r = mysql_fetch_assoc(query($sql)))
+            jsonError();
+
+        if(query_value("SELECT COUNT(`id`) FROM `zayavki` WHERE `base_model_id`=".$model_id))
+            jsonError();
+        $sql = "DELETE FROM `base_model` WHERE `id`=".$model_id;
+        query($sql);
+        xcache_unset(CACHE_PREFIX.'model_name');
+        GvaluesCreate();
+        jsonSuccess();
         break;
 
     case 'equip_add':

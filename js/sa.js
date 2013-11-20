@@ -369,6 +369,147 @@ $(document)
         }
     })
 
+    .on('click', '.sa-model .ajaxNext', function() {
+        var t = $(this);
+        if(t.hasClass('busy'))
+            return;
+        var send = {
+            op:'model_next',
+            vendor_id:VENDOR_ID,
+            page:t.attr('val'),
+            find:find.inp()
+        };
+        t.addClass('busy');
+        $.post(AJAX_SA, send, function(res) {
+            if(res.success) {
+                t.parent().parent().remove();
+                $('._spisok').append(res.html);
+            } else
+                t.removeClass('busy');
+        }, 'json');
+    })
+    .on('click', '.sa-model .add', function() {
+        var t = $(this),
+            html = '<table class="sa-model-add">' +
+                '<tr><td class="label r">Наименование:<td><input id="name" type="text" maxlength="100" />' +
+                '</table>',
+            dialog = _dialog({
+                top:60,
+                width:390,
+                head:'Добавление нового наименования модели',
+                content:html,
+                submit:submit
+            });
+        $('#name').focus().keyEnter(submit);
+        function submit() {
+            var send = {
+                op:'model_add',
+                vendor_id:VENDOR_ID,
+                name:$('#name').val()
+            };
+            if(!send.name)
+                hint('Не указано наименование');
+            else {
+                dialog.process();
+                $.post(AJAX_SA, send, function(res) {
+                    if(res.success) {
+                        $('._spisok').find('.tr').remove().end().append(res.html);
+                        dialog.close();
+                        _msg('Внесено!');
+                    } else {
+                        dialog.abort();
+                        hint(res.text);
+                    }
+                }, 'json');
+            }
+        }
+        function hint(msg) {
+            dialog.bottom.vkHint({
+                msg:'<SPAN class=red>' + msg + '</SPAN>',
+                top:-47,
+                left:99,
+                indent:50,
+                show:1,
+                remove:1
+            });
+            $('#name').focus();
+        }
+    })
+    .on('click', '.sa-model .img_edit', function() {
+        var t = $(this),
+            mod = t;
+        while(mod[0].tagName != 'TR')
+            mod = mod.parent();
+        var html = '<table class="sa-model-add">' +
+                '<tr><td class="label r">Наименование:<td><input id="name" type="text" maxlength="100" value="' + mod.find('.name b').html() + '" />' +
+                '</table>',
+            dialog = _dialog({
+                top:60,
+                width:390,
+                head:'Изменение данных модели',
+                content:html,
+                butSubmit:'Сохранить',
+                submit:submit
+            });
+        $('#name').focus().keyEnter(submit);
+        function submit() {
+            var send = {
+                op:'model_edit',
+                model_id:mod.attr('val'),
+                name:$('#name').val()
+            };
+            if(!send.name) {
+                dialog.bottom.vkHint({
+                    msg:'<SPAN class=red>Не указано наименование</SPAN>',
+                    top:-47,
+                    left:99,
+                    indent:50,
+                    show:1,
+                    remove:1
+                });
+                $('#name').focus();
+            } else {
+                dialog.process();
+                $.post(AJAX_SA, send, function(res) {
+                    if(res.success) {
+                        mod.find('.name b').html(send.name);
+                        dialog.close();
+                        _msg('Изменено!');
+                    } else
+                        dialog.abort();
+                }, 'json');
+            }
+        }
+    })
+    .on('click', '.sa-model .img_del', function() {
+        var t = $(this),
+            dialog = _dialog({
+                top:90,
+                width:300,
+                head:'Удаление модели',
+                content:'<center><b>Подтвердите удаление модели.</b></center>',
+                butSubmit:'Удалить',
+                submit:submit
+            });
+        function submit() {
+            while(t[0].tagName != 'TR')
+                t = t.parent();
+            var send = {
+                op:'model_del',
+                model_id:t.attr('val')
+            };
+            dialog.process();
+            $.post(AJAX_SA, send, function(res) {
+                if(res.success) {
+                    t.remove();
+                    dialog.close();
+                    _msg('Удалено!');
+                } else
+                    dialog.abort();
+            }, 'json');
+        }
+    })
+
     .on('click', '.sa-equip .rightLink a', function() {
         $('.sa-equip .rightLink a.sel').removeClass('sel');
         $(this).addClass('sel');
@@ -539,5 +680,29 @@ $(document)
     })
 
     .ready(function() {
+        if($('.sa-model').length > 0) {
+            window.find = $('#find')._search({
+                width:300,
+                txt:'Поиск по названию модели',
+                enter:1,
+                focus:1,
+                func:function(val) {
+                    var path = $('.path');
+                    if(path.hasClass('busy'))
+                        return;
+                    var send = {
+                        op:'model_load',
+                        vendor_id:VENDOR_ID,
+                        find:val
+                    };
+                    path.addClass('busy');
+                    $.post(AJAX_SA, send, function(res) {
+                        path.removeClass('busy');
+                        if(res.success)
+                            $('._spisok').find('.tr').remove().end().append(res.html);
 
+                    }, 'json');
+                }
+            });
+        }
     });
