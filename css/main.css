@@ -3,14 +3,14 @@
 
 .zayav_link{position:relative;display:inline-block}
 .zayav_link .tooltip{
-    position:absolute;
-    background-color:#fff;
-    border:#ccc solid 1px;
-    min-width:100px;
-    min-height:75px;
-    padding:5px;
-    top:-86px;
-    left:-10px;
+	position:absolute;
+	background-color:#fff;
+	border:#ccc solid 1px;
+	min-width:100px;
+	min-height:75px;
+	padding:5px;
+	top:-86px;
+	left:-10px;
 }
 .zayav_link:not(:hover) .tooltip{display:none}
 .zayav_link td{border:0;padding:0}
@@ -64,11 +64,11 @@
 #zayav .right{border:0;width:155px;padding-bottom:300px}
 #zayav .condLost.hide{display:none}
 .zayav_unit{
-    cursor:pointer;
-    margin:10px 5px 0 10px;
-    border:#ccc solid 1px;
-    border-radius:2px;
-    box-shadow: 0 0 5px rgba(0,0,0,0.2);
+	cursor:pointer;
+	margin:10px 5px 0 10px;
+	border:#ccc solid 1px;
+	border-radius:2px;
+	box-shadow: 0 0 5px rgba(0,0,0,0.2);
 }
 .zayav_unit:hover{border:#bbb solid 1px;box-shadow: 0 0 5px rgba(0,0,0,0.4);}
 .zayav_unit .name{display:block;margin:4px 0 2px 6px;font-size:12px}
@@ -86,12 +86,12 @@
 .zayav_unit .diff .acc,.zayav_unit .diff .opl{color:#b33;font-weight:700}
 .zayav_unit .zz{color:#a33}
 .zayav_unit .image {
-    width:80px;
-    height:80px;
-    vertical-align:middle;
-    text-align:center;
-    border-left:#DDD solid 1px;
-    background-color:#FFF;
+	width:80px;
+	height:80px;
+	vertical-align:middle;
+	text-align:center;
+	border-left:#DDD solid 1px;
+	background-color:#FFF;
 }
 #zayav .ajaxNext{margin:6px 5px 0 8px}
 #zayav #find{margin-top:15px}
@@ -129,13 +129,13 @@
 .zayav-info-edit{border-spacing:8px}
 .zayav-info-edit .equip_spisok div{margin-right:7px}
 #zayavInfo #status {
-    display:inline-block;
-    border:#DDD solid 1px;
-    width:140px;
-    text-align:center;
-    padding:2px 0 3px 0;
-    color:#666;
-    cursor:pointer;
+	display:inline-block;
+	border:#DDD solid 1px;
+	width:140px;
+	text-align:center;
+	padding:2px 0 3px 0;
+	color:#666;
+	cursor:pointer;
 }
 #zayavInfo #status:hover{border-color:#BBD; color:#444}
 #zayavInfo #status_dtime{display:inline-block;color:#AAA;font-size:10px;margin-left:10px}
@@ -186,15 +186,15 @@
 #zayavInfo #zpSpisok .unit:not(:hover) .image{display:none}
 #zayavInfo #zpSpisok .image{position:relative}
 #zayavInfo #zpSpisok .image div{
-    position:absolute;
-    top:0;
-    left:-94px;
-    background-color:#fff;
-    border:#ccc solid 1px;
-    min-width:80px;
-    min-height:60px;
-    padding:5px;
-    text-align:center;
+	position:absolute;
+	top:0;
+	left:-94px;
+	background-color:#fff;
+	border:#ccc solid 1px;
+	min-width:80px;
+	min-height:60px;
+	padding:5px;
+	text-align:center;
 }
 
 /* Список запчастей */
@@ -318,14 +318,14 @@ table.zayavNomerTab td{vertical-align:top}
 .remind_unit:not(:hover) .action{display:none}
 .remind_unit .action a{font-size:10px}
 .remind_unit .hist{
-    display:none;
-    background-color:#FFF;
-    font-size:10px;
-    color:#888;
-    border-top:#F8F8F8 solid 1px;
-    border-bottom:#F8F8F8 solid 1px;
-    margin-top:3px;
-    padding:2px 3px;
+	display:none;
+	background-color:#FFF;
+	font-size:10px;
+	color:#888;
+	border-top:#F8F8F8 solid 1px;
+	border-bottom:#F8F8F8 solid 1px;
+	margin-top:3px;
+	padding:2px 3px;
 }
 .remind_unit.yellow{border:#EED solid 1px}
 .remind_unit.yellow .txt{background-color:#FFC}
@@ -364,13 +364,13 @@ table.zayavNomerTab td{vertical-align:top}
 .remind_action_tab{margin:0 10px;border-spacing:6px}
 .remind_action_tab .label{width:80px;text-align:right}
 .remind_action_tab b{
-    display:block;
-    border:#DDD solid 1px;
-    padding:2px 4px;
-    font-weight:bold;
-    font-size:12px;
-    color:#444;
-    background-color:#FAFAFA;
+	display:block;
+	border:#DDD solid 1px;
+	padding:2px 4px;
+	font-weight:bold;
+	font-size:12px;
+	color:#444;
+	background-color:#FAFAFA;
 }
 .remind_action_tab#new_action{display:none;margin-top:6px}
 .remind_action_tab #comment{width:240px; height:40px}
@@ -417,18 +417,18 @@ table.zayavNomerTab td{vertical-align:top}
 
 
 #report_kassa .set_info{
-    margin:15px;
-    background-color:#FFE;
-    border:#EED solid 1px;
-    padding:6px 8px;
-    text-align:justify;
+	margin:15px;
+	background-color:#FFE;
+	border:#EED solid 1px;
+	padding:6px 8px;
+	text-align:justify;
 }
 #report_kassa #set_summa{
-    padding:0 3px;
-    width:70px;
-    height:24px;
-    font-size:13px;
-    font-weight:bold;
+	padding:0 3px;
+	width:70px;
+	height:24px;
+	font-size:13px;
+	font-weight:bold;
 }
 #report_kassa .set_tab{margin:0 0 20px 100px}
 #report_kassa #set_go{margin-left:10px}
@@ -460,12 +460,12 @@ table.zayavNomerTab td{vertical-align:top}
 #setup_main #devs div{display:block;margin-bottom:4px}
 #setup_main #devs span{position:absolute}
 #setup_main #devs em{
-    display:inline-block;
-    width:140px;
-    text-align:right;
-    position:relative;
-    left:-163px;
-    color:#777
+	display:inline-block;
+	width:140px;
+	text-align:right;
+	position:relative;
+	left:-163px;
+	color:#777
 }
 #setup_main #devs em.err{color:#f44}
 #setup_main .del_inf{margin:2px 0 10px 20px}
@@ -493,11 +493,11 @@ table.zayavNomerTab td{vertical-align:top}
 
 .ws-create-info{background-color:#F7F7F7;padding:10px}
 .ws-create-info .txt,.ws-create-step1 .txt{
-    margin:10px;
-    background-color:#FFF;
-    padding:10px;
-    border:#DDD solid 1px;
-    text-align:justify;
+	margin:10px;
+	background-color:#FFF;
+	padding:10px;
+	border:#DDD solid 1px;
+	text-align:justify;
 }
 .ws-create-info .txt h3,.ws-create-step1 .txt h3{text-align:center;font-weight:bold;margin-bottom:4px}
 .ws-create-info .vkButton{margin:10px 0 10px 190px}

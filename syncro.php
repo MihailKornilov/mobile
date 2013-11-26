@@ -1,8 +1,8 @@
 <?php
 $mysql = array(
-    'host' => '127.0.0.1',
-    'user' => 'root',
-    'pass' => '4909099',
+	'host' => '127.0.0.1',
+	'user' => 'root',
+	'pass' => '4909099',
     'database' => 'vk_mobile',
     'names' => 'cp1251'
 );

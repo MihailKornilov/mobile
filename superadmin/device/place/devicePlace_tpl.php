@@ -20,9 +20,9 @@ foreach($spisok as $sp) {
 <DIV id=setup_device_place>
   <DIV class=headName>Местонахождения устройств в заявках<A class=add val=add_>Новое местонахождение</A></DIV>
   <TABLE cellpadding=0 cellspacing=0 class=tabSpisok>
-     <TR><TH class=uid>id
-              <TH class=name>Наименование
-              <TH class=zayav_count>Количество<BR>заявок
+	 <TR><TH class=uid>id
+   	   	<TH	ss=name>Наименование
+            	H c	=za	count>Количество<BR>заявок
               <TH class=edit>
   </TABLE>
   <DL id=drag></DL>

@@ -13,16 +13,16 @@ foreach($spisok as $sp) {
 
 <DIV class=path>
   <?php include('superadmin/incBack.php'); ?>
-  <A HREF="<?php echo $URL; ?>&my_page=superAdmin">Администрирование</A> » 
-  Статусы устройств в заявках
+  <A HREF="<?php echo $URL; ?>&my_page=superAdmin">пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ</A> пїЅ 
+  пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 </DIV>
 
 <DIV id=setup_device_status>
-  <DIV class=headName>Статусы устройств в заявках<A class=add val=add_>Новый статус</A></DIV>
+  <DIV class=headName>пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ<A class=add val=add_>пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ</A></DIV>
   <TABLE cellpadding=0 cellspacing=0 class=tabSpisok>
-     <TR><TH class=uid>id
-              <TH class=name>Наименование
-              <TH class=zayav_count>Количество<BR>заявок
+	 <TR><TH class=uid>id
+   	   	<TH	ss=name>пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+            	H c	=za	count>пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ<BR>пїЅпїЅпїЅпїЅпїЅпїЅ
               <TH class=edit>
   </TABLE>
   <DL id=drag></DL>

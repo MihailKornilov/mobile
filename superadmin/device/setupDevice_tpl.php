@@ -2,15 +2,14 @@
 $spisok = $VK->QueryObjectArray("select * from base_device order by sort");
 if(count($spisok) > 0) {
   foreach ($spisok as $n => $sp)  {
-    $dd[$n]->id = $sp->id;
-    $dd[$n]->name = iconv("WINDOWS-1251","UTF-8",$sp->name);
-    $dd[$n]->name_rod = iconv("WINDOWS-1251","UTF-8",$sp->name_rod);
-    $dd[$n]->name_mn = iconv("WINDOWS-1251","UTF-8",$sp->name_mn);
-    $dd[$n]->vendor=$VK->QRow("select count(id) from base_vendor where device_id=".$sp->id);
-    $dd[$n]->model=$VK->QRow("select count(id) from base_model where device_id=".$sp->id);
-    $dd[$n]->zayav=$VK->QRow("select count(id) from zayavki where zayav_status>0 and base_device_id=".$sp->id);
-    $dd[$n]->insert = 1;
-  }
+	$dd[$n]->id = $sp->id;
+   	[$n]->name = iconv("WINDOWS-1251","UTF-8",$sp->name);
+    $d	]->name_rod = iconv("WINDOWS-1251","UTF-8",$sp->name_rod);
+    $dd[$	name_mn = iconv("WINDOWS-1251","UTF-8",$sp->name_mn);
+    $dd[$n]-	dor=$VK->QRow("select count(id) from base_vendor where device_id=".$sp->id);
+    $dd[$n]->mo	$VK->QRow("select count(id) from base_model where device_id=".$sp->id);
+    $dd[$n]->zayav	->QRow("select count(id) from zayavki where zayav_status>0 and base_device_id=".$sp->id);
+    $dd[$n]->insert =	  }
 }
 include('incHeader.php');
 ?>
@@ -24,18 +23,14 @@ include('incHeader.php');
 <DIV id=setupZpName>
   <DIV class=headName id=hTab>Список устройств<EM onclick=setupDeviceAdd();>Новое устройство</EM></DIV>
   <TABLE cellpadding=0 cellspacing=0 class=tabSpisok>
-     <TR><TH class=device>Наименование устройства
-             <TH class=vendor>Кол-во<BR>производителей
-             <TH class=model>Кол-во<BR>моделей
-             <TH class=zayav>Кол-во<BR>заявок
-             <TH class=edit>
+     <TR><TH class=devic	именование устройства
+             <TH class=vend	ол-	R>п	водителей
+             <TH class=model>Кол-во<	оде	   	      <TH class=zayav>Кол-во<BR>заявок	   	   	class=edit>
   </TABLE>
-  <DL id=drag></DL>
-</DIV>
+  <DL id=drag>	>
+<	>
 
-
-
-<?php include('incFooter.php'); ?>
+	php include('incFooter.php'); ?>
 
 
 <SCRIPT type="text/javascript">
@@ -48,11 +43,11 @@ $("#drag").sortable({
   update:function () {
     var DD = $(this).find("DD");
     var LEN = DD.length;
-    var VAL = DD.eq(0).attr('id').split('dd')[1];
+    v	AL = DD.eq(0).attr('id').split('	[1];
     if (LEN>1) {
-      $("#hTab").find("IMG").remove().end().append("<IMG src=/img/upload.gif>");
-      for(var n=1; n < LEN; n++) { VAL += "," + DD.eq(n).attr('id').split('dd')[1]; }
-     $.getJSON("/superadmin/device/AjaxDeviceSort.php?" + VALUES + "&val=" + VAL,function(){ $("#hTab IMG").remove(); });
+  	$("#hTab").find("IMG").remove().end().append("<IM	c=/img/upload.gi	;
+      for(var n=1; n < LEN; n++) { VAL += "," + DD.eq(n).attr('id').split('dd'	; }
+     $.getJSON("/superadmin/device/AjaxDeviceSort.php?" + VALUES + "&val=" + VAL,	tion(){ $("#hTab IMG").remove(); });
     }
   }
 });
@@ -61,8 +56,7 @@ $("#drag").sortable({
 
 
 // формирование элемента данных устройств
-function tableInsert(obj) {
-  if (!obj.vendor) { obj.vendor = 0; }
+function tableInsert(obj	  if (!obj.vendor) { obj.vendor = 0; }
   if (!obj.model) { obj.model = 0; }
   if (!obj.zayav) { obj.zayav = 0; }
   var TAB = "<TABLE cellpadding=0 cellspacing=0 class=tabSpisok><TR>";
@@ -76,7 +70,7 @@ function tableInsert(obj) {
   if(obj.insert == 1) {
     $("#drag").append("<DD id=dd" + obj.id + ">" + TAB);
   } else {
-    $("#dd" + obj.id).html(TAB);
+    $("#dd" + obj.i	tml(TAB);
   }
 }
 
@@ -84,7 +78,7 @@ function tableInsert(obj) {
 
 
 // внесение нового устройства
-function setupDeviceAdd() {
+function setupDev	dd() {
   var HTML = "<TABLE cellpadding=0 cellspacing=10>";
   HTML += "<TR><TD class=tdAbout>Наименование:<TD><INPUT type=text id=device_name>";
   HTML += "<TR><TD class=tdAbout>Родительный падеж (кого?):<TD><INPUT type=text id=name_rod>";
@@ -95,40 +89,31 @@ function setupDeviceAdd() {
     width:430,
     head:'Внесение нового устройства',
     content:HTML,
-    submit:function () {
-      var obj = {
-        name:$("#device_name").val(),
-        name_rod:$("#name_rod").val(),
-        name_mn:$("#name_mn").val(),
-        insert:1
+    subm	unction () {	   var obj = {	     name:$("#device_name").val(),
+   	 name_rod:$("#nam	d").val(),
+        name_	("#name_mn").val(	   	insert:1
       };
-      if (!obj.name) {
-        $("#ms").alertShow({txt:'<SPAN class=red>Не указано наименование.</SPAN>',top:13,left:125});
-      } else {
-        $("#butDialog").butProcess();
+      if (!obj.	) {	     $("#ms").alertShow({txt:'<SPA	ass	>Не указано наименование.</SPAN>	p:1	ft:125});
+  	} else {	     $("#butDialog").b	oce	;
         $.post("/superadmin/device/AjaxDeviceAdd.php?"+VALUES,obj,function(res){
-          dialogHide();
-          obj.id = res.id;
-          tableInsert(obj);
-          _msg("Новое устройство внесёно!");
+          dia	ide();
+       	bj.	 res.id;
+          tableInsert(ob	   	   _msg("Новое устройство внесёно!");
           frameBodyHeightSet();
-          },'json');
+      	},'	');
       }
     },
-    focus:'#device_name'
+	foc	#device_name'
   });
-  $("#dialog INPUT").css('width','200px');
-}
-
-
+  	dia	INPUT").css('width','20	);
 
 // редактирование данных устройства
-function setupDeviceEdit(id) {
-  for (var n = 0; n < spisok.length; n++) {
-    if (id == spisok[n].id) { break; }
+fun	n s	DeviceEdit(id) {
+  for (var	 0;	 spisok.length; 	 {
+    	id == 	ok[n].id) { break; }
   }
   var HTML = "<TABLE cellpadding=0 cellspacing=10>";
-  HTML += "<TR><TD class=tdAbout>Наименование:<TD><INPUT type=text id=device_name value='" + spisok[n].name + "'>";
+  HTML += "<TR><TD class=tdAbout>Наименование:<TD><INPUT type=text id=device_name value='" + spisok[n].name + "
   HTML += "<TR><TD class=tdAbout>Родительный падеж (кого?):<TD><INPUT type=text id=name_rod value='" + spisok[n].name_rod + "'>";
   HTML += "<TR><TD class=tdAbout id=ms>Множественное число:<TD><INPUT type=text id=name_mn value='" + spisok[n].name_mn + "'>";
   HTML += "</TABLE>";
@@ -141,54 +126,49 @@ function setupDeviceEdit(id) {
     submit:function () {
       var obj = {
         id:id,
-        name:$("#device_name").val(),
-        name_rod:$("#name_rod").val(),
+        name:$("#device_name").val	        name	:$("#name_rod"	l(),
         name_mn:$("#name_mn").val(),
-      };
-      if (!obj.name) {
-        $("#ms").alertShow({txt:'<SPAN class=red>Не указано наименование.</SPAN>',top:13,left:125});
-      } else {
-        $("#butDialog").butProcess();
-        $.post("/superadmin/device/AjaxDeviceNameSave.php?"+VALUES,obj,function(res){
-          dialogHide();
-          spisok[n].name = obj.name;
+  	};
+      if (!obj	e) {
+        $("#ms").aler	w({txt:'<SPAN class=red>	казано наименован	/SP	,top:13,le	25}	     } else {
+        $("#butDial	.bu	cess();
+        $.post("/superadmi	vic	axDeviceNameSave.php?"+VALUES,ob	nction(r
+          dialogHide(	   	  spisok[n].name = obj.name;
           spisok[n].name_rod = obj.name_rod;
-          spisok[n].name_mn = obj.name_mn;
-          obj.vendor = spisok[n].vendor;
-          obj.model = spisok[n].model;
+          spisok[n].na	n = obj.name_m	   	  obj.vendor = spisok[n].vendor;
+	   	bj.model = spisok[n].model;
           obj.zayav = spisok[n].zayav;
-          tableInsert(obj);
-          vkM_msgанные изменены!");
+          tabl	ert	);
+          vkM_ms	ые 	нены!");
           },'json');
-      }
-    }
+  	}
+
   });
-  $("#dialog INPUT").css('width','200px');
-}
+  $("#dialog INPUT").css('width',	px'
 
 
 
 // удаление устройства
-function setupDeviceDel(id) {
+function se	evi	l(id) {
   dialogShow({
     top:110,
-    width:250,
+	wid	50,
     head:'Удаление',
-    content:"<CENTER>Подтвердите удаление устройства<BR><B>" + $("#dd" + id + " A:first").html() + "</B>.</CENTER>",
-    butSubmit:'Удалить',
-    submit:function () {
-      $("#butDialog").butProcess();
+    conte	<CE	>Подтвердите удаление устройства<B	>" 	"#dd" + id + " A:first"	ml(	"</B>.</CENTER>",
+    butSubmit	али
+    submit:func	 () {
+ 	 $("#butDialog").butProcess();
       $.post("/superadmin/device/AjaxDeviceDel.php?"+VALUES,{id:id},function(res){
-        dialogHide();
-        if(res.result == 0) {
-          tableInsert(res);
+        dialo	e();
+       	res.result ==
+          tableInse	es);
           vkMsgO_msgение невозможно!");
         } else {
           $("#dd" + id).remove();
-          vkMsgOk("Удалено!");
-          frameBodyHeightSet();
+          vkMsgOk("У	но!");
+          frameBo	ightSet();
         }
-      },'json');
+   	,'json');
     }
   });
 }

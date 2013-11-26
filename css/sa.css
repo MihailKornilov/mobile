@@ -50,11 +50,11 @@
 .sa-equip{margin-bottom:20px}
 .sa-equip .headName{margin-top:10px}
 .sa-equip .rightLink{
-    width:180px;
-    background-color:#f7f7f7;
-    padding:10px;
-    margin:10px 0 0 15px;
-    border:#ddd solid 1px;
+	width:180px;
+	background-color:#f7f7f7;
+	padding:10px;
+	margin:10px 0 0 15px;
+	border:#ddd solid 1px;
 }
 .sa-equip #eq-spisok{vertical-align:top;padding:10px 20px}
 .sa-equip .name{width:200px}

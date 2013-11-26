@@ -3,15 +3,15 @@
 
 <DIV class=path>
   <?php include('superadmin/incBack.php'); ?>
-  <A HREF="<?php echo $URL; ?>&my_page=superAdmin">Администрирование</A> » 
-  Виды неисправностей
+  <A HREF="<?php echo $URL; ?>&my_page=superAdmin">пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ</A> пїЅ 
+  пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 </DIV>
 
 <DIV id=setup_fault>
-  <DIV class=headName>Виды неисправностей<A class=add val=add_>Новая неисправность</A></DIV>
+  <DIV class=headName>пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ<A class=add val=add_>пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ</A></DIV>
   <TABLE cellpadding=0 cellspacing=0 class=tabSpisok>
-     <TR><TH class=uid>id
-              <TH class=name>Наименование
+	 <TR><TH class=uid>id
+   	   	<TH	ss=name>пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
               <TH class=edit>
   </TABLE>
   <DL id=drag></DL>
