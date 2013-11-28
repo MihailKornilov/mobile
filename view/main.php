@@ -110,14 +110,12 @@ function _header() {
 				'VIEWER_ID='.VIEWER_ID.';'.
 		'</script>'.
 
-		//Подключение стилей VK. Должны стоять до основных стилей сайта
+		//Подключение api VK. Стили VK должны стоять до основных стилей сайта
 		'<link href="http://nyandoma'.(LOCAL ? '' : '.ru').'/vk/'.(DEBUG ? '' : 'min/').'vk.css?'.VERSION.'" rel="stylesheet" type="text/css" />'.
+		'<script type="text/javascript" src="http://nyandoma'.(LOCAL ? '' : '.ru').'/vk/'.(DEBUG ? '' : 'min/').'vk.js?'.VERSION.'"></script>'.
 
 		'<link href="'.SITE.'/css/main.css?'.VERSION.'" rel="stylesheet" type="text/css" />'.
 		'<script type="text/javascript" src="'.SITE.'/js/main.js?'.VERSION.'"></script>'.
-
-		//Подключение API VK
-		'<script type="text/javascript" src="http://nyandoma'.(LOCAL ? '' : '.ru').'/vk/'.(DEBUG ? '' : 'min/').'vk.js?'.VERSION.'"></script>'.
 
 		(WS_ID ? '<script type="text/javascript" src="'.SITE.'/js/ws.js?'.VERSION.'"></script>' : '').
 
