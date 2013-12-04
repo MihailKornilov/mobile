@@ -1046,7 +1046,7 @@ $(document)
 			day = $('.remind_add_tab #data'),
 			priv = $('.remind_add_tab #private');
 		txt.autosize().focus();
-		day.vkCalendar();
+		day._calendar();
 		priv._check();
 		$('.remind_add_tab #private_check').vkHint({
 			msg:'Задание сможете<br />видеть только Вы.',
@@ -1285,7 +1285,7 @@ $(document)
 			day = $('.remind_add_tab #data'),
 			priv = $('.remind_add_tab #private');
 		txt.autosize().focus();
-		day.vkCalendar();
+		day._calendar();
 		priv._check();
 		$('.remind_add_tab #private_check').vkHint({
 			msg:'Задание сможете<br />видеть только Вы.',
@@ -1357,7 +1357,7 @@ $(document)
 		$('#acc_remind_check').click(function(id) {
 			$('.zayav_accrual_add.remind').toggle();
 		});
-		$('#reminder_day').vkCalendar();
+		$('#reminder_day')._calendar();
 
 		function submit() {
 			var msg,
@@ -2396,7 +2396,7 @@ $(document)
 		}).o;
 
 		$('#tab_content #txt').autosize();
-		$('#tab_content #data').vkCalendar();
+		$('#tab_content #data')._calendar();
 		$('#tab_content #private')._check();
 		$('#tab_content #private_check').vkHint({
 			msg:'Задание сможете<br />видеть только Вы.',
@@ -2526,7 +2526,7 @@ $(document)
 						$('#new_about').html('Дата:');
 						$('#new_title').html('<INPUT type="hidden" id="data">');
 						$('#new_comm').html('Причина:');
-						$('#new_action #data').vkCalendar();
+						$('#new_action #data')._calendar();
 					}
 					if(id == 2) $('#new_comm').html('Комментарий:');
 					if(id == 3) $('#new_comm').html('Причина:');
@@ -3447,7 +3447,7 @@ $(document)
 				$('#reminder_tab').toggle();
 				$('#reminder_txt').focus();
 			});
-			$('#reminder_day').vkCalendar();
+			$('#reminder_day')._calendar();
 			$('.vkCancel').click(function() {
 				location.href = URL + '&p=' + $(this).attr('val');
 			});
@@ -3579,8 +3579,8 @@ $(document)
 			});
 		}
 		if($('#report_prihod').length > 0) {
-			$('#report_prihod_day_begin').vkCalendar({lost:1, place:'left', func:reportPrihodLoad});
-			$('#report_prihod_day_end').vkCalendar({lost:1, place:'left', func:reportPrihodLoad});
+			$('#report_prihod_day_begin')._calendar({lost:1, place:'left', func:reportPrihodLoad});
+			$('#report_prihod_day_end')._calendar({lost:1, place:'left', func:reportPrihodLoad});
 		}
 		if($('#report_rashod').length > 0) {
 			$('#rashod_category').vkSel({
