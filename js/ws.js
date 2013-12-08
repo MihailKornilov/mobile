@@ -2356,11 +2356,6 @@ $(document)
 		}, 'json');
 	})
 
-	.on('click', '#report_remind .info a', function() {
-		var info = $(this).parent(),
-			show = info.hasClass('show');
-		info[(show ? 'remove' : 'add') + 'Class']('show');
-	})
 	.on('click', '.remind_unit .hist_a', function() {
 		$(this).parent().parent().find('.hist').slideToggle();
 	})

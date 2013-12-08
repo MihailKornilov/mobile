@@ -301,10 +301,6 @@ table.zayavNomerTab td{vertical-align:top}
 
 
 #remind_private_check{margin-top:20px}
-#report_remind .info{margin:8px;border:#DDD solid 1px;padding:6px 8px}
-#report_remind .info:not(.show) .text,
-#report_remind .show .opening,
-#report_remind .info:not(.show) .closing{display:none}
 #report_remind #remind_spisok{margin:0 8px}
 .remind_unit{font-size:12px;margin:8px 0}
 .remind_unit B{font-size:12px;color:#555}
