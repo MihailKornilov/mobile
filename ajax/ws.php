@@ -139,7 +139,8 @@ switch(@$_POST['op']) {
 		$client_id = intval($_POST['client_id']);
 		$sql = "SELECT *
 				FROM `client`
-				WHERE `ws_id`=".WS_ID.
+				WHERE `ws_id`=".WS_ID."
+				  AND `deleted`=0".
 					(!empty($val) ? " AND (`fio` LIKE '%".$val."%' OR `telefon` LIKE '%".$val."%')" : '').
 					($client_id > 0 ? " AND `id`<=".$client_id : '')."
 				ORDER BY `id` DESC
@@ -212,7 +213,7 @@ switch(@$_POST['op']) {
 		$client2 = intval($_POST['client2']);
 		if(empty($fio))
 			jsonError();
-		$sql = "SELECT * FROM `client` WHERE `id`=".$client_id;
+		$sql = "SELECT * FROM `client` WHERE `deleted`=0 AND `id`=".$client_id;
 		if(!$client = mysql_fetch_assoc(query($sql)))
 			jsonError();
 		if($join && $client2 == 0)
@@ -226,8 +227,13 @@ switch(@$_POST['op']) {
 			query("UPDATE `vk_comment` SET `table_id`=".$client_id."  WHERE `table_name`='client' AND `table_id`=".$client2);
 			query("UPDATE `zayavki`	SET `client_id`=".$client_id." WHERE `client_id`=".$client2);
 			query("UPDATE `zp_move`	SET `client_id`=".$client_id." WHERE `client_id`=".$client2);
-			query("DELETE FROM `client` WHERE `id`=".$client2);
+			query("UPDATE `client` SET `deleted`=1,`join_id`=".$client_id." WHERE `id`=".$client2);
 			clientBalansUpdate($client_id);
+			history_insert(array(
+				'type' => 11,
+				'client_id' => $client_id,
+				'value' => _clientLink_($client2, 1)
+			));
 		}
 
 		$changes = '';
@@ -237,7 +243,7 @@ switch(@$_POST['op']) {
 			$changes .= '<tr><th>Тел.:<td>'.$client['telefon'].'<td>»<td>'.$telefon;
 		if($changes)
 			history_insert(array(
-				'type' => $join ? 11 : 10,
+				'type' => 10,
 				'client_id' => $client_id,
 				'value' => '<table>'.$changes.'</table>'
 			));
@@ -2091,7 +2097,7 @@ switch(@$_POST['op']) {
 		$sql = "SELECT * FROM `zayavki` WHERE `id`=".$id;
 		$zayav = mysql_fetch_assoc(query($sql));
 
-		$sql = "SELECT `fio` FROM `client` WHERE `id`=".$zayav['client_id'];
+		$sql = "SELECT `fio` FROM `client` WHERE `deleted`=0 AND `id`=".$zayav['client_id'];
 		$r = mysql_fetch_assoc(query($sql));
 		$client = $r['fio'];
 

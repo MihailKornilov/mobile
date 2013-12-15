@@ -14,7 +14,7 @@ function _remindActiveSet() { //Получение количества активных напоминаний
 		xcache_set($key, $count, 7200);
 	}
 	define('REMIND_ACTIVE', $count > 0 ? ' (<b>'.$count.'</b>)' : '');
-}//end of _remindActiveSet()
+}//_remindActiveSet()
 function _mainLinks() {
 	global $html;
 	_remindActiveSet();
@@ -52,7 +52,7 @@ function _mainLinks() {
 			$send .= '<a href="'.URL.'&p='.$l['page'].'"'.($l['page'] == $_GET['p'] ? 'class="sel"' : '').'>'.$l['name'].'</a>';
 	$send .= pageHelpIcon().'</div>';
 	$html .= $send;
-}//end of _mainLinks()
+}//_mainLinks()
 
 // ---===! client !===--- Секция клиентов
 
@@ -64,7 +64,11 @@ function _clientLink($arr) {
 		$id = $arr;
 		$arr = array($arr);
 	}
-	$sql = "SELECT `id`,`fio` FROM `client` WHERE `ws_id`=".WS_ID." AND `id` IN (".implode(',', $arr).")";
+	$sql = "SELECT `id`,`fio`
+	        FROM `client`
+			WHERE `ws_id`=".WS_ID."
+			  AND `deleted`=0
+			  AND `id` IN (".implode(',', $arr).")";
 	$q = query($sql);
 	$send = array();
 	while($r = mysql_fetch_assoc($q))
@@ -72,7 +76,37 @@ function _clientLink($arr) {
 	if($id)
 		return $send[$id];
 	return $send;
-}//end of _clientLink()
+}//_clientLink()
+function _clientLink_($arr, $fio=0) {//Добавление имени и ссылки клиента в массив
+	$clientArr = array(is_array($arr) ? 0 : $arr);
+	if(is_array($arr)) {
+		$ass = array();
+		foreach($arr as $r) {
+			$clientArr[$r['client_id']] = $r['client_id'];
+			if($r['client_id'])
+				$ass[$r['client_id']][] = $r['id'];
+		}
+		unset($clientArr[0]);
+	}
+	if(!empty($clientArr)) {
+		$sql = "SELECT `id`,`fio`
+		        FROM `client`
+				WHERE `ws_id`=".WS_ID."
+				  AND `id` IN (".implode(',', $clientArr).")";
+		$q = query($sql);
+		if(!is_array($arr)) {
+			if($r = mysql_fetch_assoc($q))
+				return $fio ? $r['fio'] : '<a href="'.URL.'&p=client&d=info&id='.$r['id'].'">'.$r['fio'].'</a>';
+			return '';
+		}
+		while($r = mysql_fetch_assoc($q))
+			foreach($ass[$r['id']] as $id) {
+				$arr[$id]['client_link'] = '<a href="'.URL.'&p=client&d=info&id='.$r['id'].'">'.$r['fio'].'</a>';
+				$arr[$id]['client_fio'] = $r['fio'];
+			}
+	}
+	return $arr;
+}//_clientLink()
 
 function clientFilter($v) {
 	if(!preg_match(REGEXP_WORDFIND, win1251($v['fast'])))
@@ -87,9 +121,9 @@ function clientFilter($v) {
 		'active' => intval($v['active'])
 	);
 	return $filter;
-}//end of clientFilter()
+}//clientFilter()
 function client_data($page=1, $filter=array()) {
-	$cond = "`ws_id`=".WS_ID;
+	$cond = "`ws_id`=".WS_ID." AND `deleted`=0";
 	$reg = '';
 	$regEngRus = '';
 	if(!empty($filter['fast'])) {
@@ -174,7 +208,7 @@ function client_data($page=1, $filter=array()) {
 		$send['spisok'] .= '<div class="ajaxNext" val="'.($page + 1).'"><span>Показать ещё '.$c.' клиент'._end($c, 'а', 'а', 'ов').'</span></div>';
 	}
 	return $send;
-}//end of client_data()
+}//client_data()
 function client_list($data) {
 	return '<div id="client">'.
 		'<div id="find"></div>'.
@@ -189,21 +223,26 @@ function client_list($data) {
 					'</div>'.
 		  '</table>'.
 		'</div>';
-}//end of client_list()
+}//client_list()
 function client_count($count, $dolg=0) {
 	if($dolg)
-		$dolg = abs(query_value("SELECT SUM(`balans`) FROM `client` WHERE `balans`<0 LIMIT 1"));
+		$dolg = abs(query_value("SELECT SUM(`balans`) FROM `client` WHERE `deleted`=0 AND `balans`<0 LIMIT 1"));
 	return ($count > 0 ?
 			'Найден'._end($count, ' ', 'о ').$count.' клиент'._end($count, '', 'а', 'ов').
 			($dolg ? '<em>(Общая сумма долга = '.$dolg.' руб.)</em>' : '')
 			:
 			'Клиентов не найдено');
-}//end of client_count()
+}//client_count()
 
 function client_info($client_id) {
 	$sql = "SELECT * FROM `client` WHERE `ws_id`=".WS_ID." AND `id`=".$client_id;
 	if(!$client = mysql_fetch_assoc(query($sql)))
-		return 'Клиента не существует';
+		return _noauth('Клиента не существует');
+	if($client['deleted'])
+		if($client['join_id'])
+			return _noauth('Клиент <b>'.$client['fio'].'</b> был объединён с клиентом '._clientLink_($client['join_id']).'.');
+		else
+			return _noauth('Клиент был удалён.');
 
 	$zayavData = zayav_data(1, array('client'=>$client_id), 10);
 	$commCount = query_value("SELECT COUNT(`id`)
@@ -307,7 +346,7 @@ function client_info($client_id) {
 					'</div>'.
 			'</table>'.
 		'</div>';
-}//end of client_info()
+}//client_info()
 function clientBalansUpdate($client_id, $ws_id=WS_ID) {//Обновление баланса клиента
 	$prihod = query_value("SELECT IFNULL(SUM(`sum`),0)
 						   FROM `money`
@@ -323,7 +362,7 @@ function clientBalansUpdate($client_id, $ws_id=WS_ID) {//Обновление баланса клие
 	$balans = $prihod - $acc;
 	query("UPDATE `client` SET `balans`=".$balans." WHERE `id`=".$client_id);
 	return $balans;
-}//end of clientBalansUpdate()
+}//clientBalansUpdate()
 
 
 
@@ -351,7 +390,7 @@ function _zayavStatus($id=false) {
 		)
 	);
 	return $id ? $arr[$id] : $arr;
-}//end of _zayavStatus()
+}//_zayavStatus()
 function _zayavStatusName($id=false) {
 	$status = _zayavStatus();
 	if($id)
@@ -360,7 +399,7 @@ function _zayavStatusName($id=false) {
 	foreach($status as $id => $r)
 		$send[$id] = $r['name'];
 	return $send;
-}//end of _zayavStatusName()
+}//_zayavStatusName()
 function _zayavStatusColor($id=false) {
 	$status = _zayavStatus();
 	if($id)
@@ -369,7 +408,7 @@ function _zayavStatusColor($id=false) {
 	foreach($status as $id => $r)
 		$send[$id] = $r['color'];
 	return $send;
-}//end of _zayavStatusColor()
+}//_zayavStatusColor()
 function _zayavNomerLink($arr, $noHint=false) { //Вывод номеров заявок с возможностью отображения дополнительной информации при наведении
 	if(empty($arr))
 		return true;
@@ -396,7 +435,7 @@ function _zayavNomerLink($arr, $noHint=false) { //Вывод номеров заявок с возможн
 		if(!defined('ZAYAV_NOMER_'.$id))
 			define('ZAYAV_NOMER_'.$id, false);
 	return isset($zayav_id) ? constant('ZAYAV_NOMER_'.$zayav_id) : true;
-}//end of _zayavNomerLink()
+}//_zayavNomerLink()
 function _zayavDeviveBaseIds($type='device', $client_id=0) { //список id устройств, производителей и моделей, которые используются в заявках
 	if($type == 'vendor' && !ZAYAV_BASE_DEVICE || $type == 'model' && !ZAYAV_BASE_VENDOR)
 		return '';
@@ -422,7 +461,7 @@ function _zayavDeviveBaseIds($type='device', $client_id=0) { //список id устройс
 	if(!ZAYAV_BASE_DEVICE)
 		define('ZAYAV_BASE_VENDOR', false);
 	return $cache;
-}//end of _zayavDeviveBaseIds()
+}//_zayavDeviveBaseIds()
 
 function zayav_add($v=array()) {
 	$sql = "SELECT `id`,`name` FROM `setup_fault` ORDER BY SORT";
@@ -462,7 +501,7 @@ function zayav_add($v=array()) {
 		'<div class="vkButton"><button>Внести</button></div>'.
 		'<div class="vkCancel" val="'.$back.'"><button>Отмена</button></div>'.
 	'</div>';
-}//end of zayav_add()
+}//zayav_add()
 
 function zayavFilter($v) {
 	if(empty($v['status']) || !preg_match(REGEXP_NUMERIC, $v['status']))
@@ -499,7 +538,7 @@ function zayavFilter($v) {
 	if($v['client'])
 		$filter['client'] = intval($v['client']);
 	return $filter;
-}//end of zayavFilter()
+}//zayavFilter()
 function zayav_data($page=1, $filter=array(), $limit=20) {
 	$cond = "`ws_id`=".WS_ID." AND `zayav_status`>0";
 
@@ -665,7 +704,7 @@ function zayav_data($page=1, $filter=array(), $limit=20) {
 	if($start + $limit < $send['all'])
 		$send['next'] = $page + 1;
 	return $send;
-}//end of zayav_data()
+}//zayav_data()
 function zayav_count($count, $filter_break_show=true) {
 	return
 		($filter_break_show ? '<a id="filter_break">Сбросить условия поиска</a>' : '').
@@ -673,7 +712,7 @@ function zayav_count($count, $filter_break_show=true) {
 			'Показан'._end($count, 'а', 'о').' '.$count.' заяв'._end($count, 'ка', 'ки', 'ок')
 			:
 			'Заявок не найдено');
-}//end of zayav_count()
+}//zayav_count()
 function zayav_list($data, $values) {
 	$place_other = array();
 	$sql = "SELECT DISTINCT `device_place_other` AS `other`
@@ -717,7 +756,7 @@ function zayav_list($data, $values) {
 			'G.zayav_model = '.$values['model'].';'.
 		'</script>'.
 	'</div>';
-}//end of zayav_list()
+}//zayav_list()
 function zayav_spisok($data) {
 	if(!isset($data['spisok']))
 		return '<div class="_empty">Заявок не найдено.</div>';
@@ -749,7 +788,7 @@ function zayav_spisok($data) {
 	if(isset($data['next']))
 		$send .= '<div class="ajaxNext" val="'.($data['next']).'"><span>Следующие '.$data['limit'].' заявок</span></div>';
 	return $send;
-}//end of zayav_spisok()
+}//zayav_spisok()
 
 function zayavBalansUpdate($zayav_id, $ws_id=WS_ID) {//Обновление баланса клиента
 	$opl = query_value("SELECT IFNULL(SUM(`sum`),0)
@@ -769,7 +808,7 @@ function zayavBalansUpdate($zayav_id, $ws_id=WS_ID) {//Обновление баланса клиент
 		'opl' => $opl,
 		'diff' => $acc - $opl
 	);
-}//end of zayavBalansUpdate()
+}//zayavBalansUpdate()
 function zayavEquipSpisok($ids) {//Список комплектации через запятую
 	if(empty($ids))
 		return '';
@@ -782,7 +821,7 @@ function zayavEquipSpisok($ids) {//Список комплектации через запятую
 		if(isset($equip[$id]))
 			$send[] = $r['name'];
 	return implode(', ', $send);
-}//end of zayavEquipSpisok()
+}//zayavEquipSpisok()
 function zayav_info($zayav_id) {
 	$sql = "SELECT * FROM `zayavki` WHERE `ws_id`=".WS_ID." AND `zayav_status`>0 AND `id`=".$zayav_id." LIMIT 1";
 	if(!$zayav = mysql_fetch_assoc(query($sql)))
@@ -936,7 +975,7 @@ function zayav_info($zayav_id) {
 				'<div id="zpSpisok">'.$zpSpisok.'</div>'.
 		'</table>'.
 	'</div>';
-}//end of zayav_info()
+}//zayav_info()
 function zayav_accrual_unit($acc) {
 	return '<tr><td class="sum acc" title="Начисление">'.$acc['sum'].'</td>'.
 		'<td>'.$acc['prim'].'</td>'.
@@ -945,7 +984,7 @@ function zayav_accrual_unit($acc) {
 		'</td>'.
 		'<td class="del"><div class="img_del acc_del" title="Удалить начисление" val="'.$acc['id'].'"></div></td>'.
 	'</tr>';
-}//end of zayav_accrual_unit()
+}//zayav_accrual_unit()
 function zayav_oplata_unit($op) {
 	return '<tr><td class="sum op" title="Платёж">'.$op['sum'].'</td>'.
 		'<td>'.$op['prim'].'</td>'.
@@ -954,7 +993,7 @@ function zayav_oplata_unit($op) {
 		'</td>'.
 		'<td class="del"><div class="img_del op_del" title="Удалить платёж" val="'.$op['id'].'"></div></td>'.
 	'</tr>';
-}//end of zayav_oplata_unit()
+}//zayav_oplata_unit()
 function zayav_zp_unit($r, $model) {
 	return '<div class="unit" val="'.$r['id'].'">'.
 		'<div class="image"><div>'._zpImg($r['id']).'</div></div>'.
@@ -967,7 +1006,7 @@ function zayav_zp_unit($r, $model) {
 			(isset($r['avai']) && $r['avai'] > 0 ? '<b class="avai">Наличие: '.$r['avai'].'</b> <a class="set">Установить</a>' : '').
 		'</div>'.
 	'</div>';
-}//end of zayav_zp_unit()
+}//zayav_zp_unit()
 
 
 
@@ -991,7 +1030,7 @@ function _zpLink($arr) {
 			_modelName($r['base_model_id']).
 			'</a>';
 	return $send;
-}//end of _zpLink()
+}//_zpLink()
 
 function zpAddQuery($zp) {//Внесение новой запчасти из заявки и из списка запчастей
 	if(!isset($zp['compat_id']))
@@ -1021,7 +1060,7 @@ function zpAddQuery($zp) {//Внесение новой запчасти из заявки и из списка запчас
 			)";
 	query($sql);
 	return mysql_insert_id();
-}//end of zpAddQuery()
+}//zpAddQuery()
 
 function zpFilter($v) {
 	if(empty($v['menu']) || !preg_match(REGEXP_NUMERIC, $v['menu']))
@@ -1046,7 +1085,7 @@ function zpFilter($v) {
 	$filter['model'] = intval($v['model']);
 	$filter['bu'] = intval($v['bu']);
 	return $filter;
-}//end of zpFilter()
+}//zpFilter()
 function zp_data($page=1, $filter=array(), $limit=20) {
 	$cond = "`id`";
 	if(empty($filter['find']) && (!isset($filter['model']) || $filter['model'] == 0))
@@ -1196,7 +1235,7 @@ function zp_data($page=1, $filter=array(), $limit=20) {
 		$send['spisok'] .= '<div class="ajaxNext" val="'.($page + 1).'"><span>Показать ещё '.$c.' запчаст'._end($c, 'ь', 'и', 'ей').'</span></div>';
 	}
 	return $send;
-}//end of zp_data()
+}//zp_data()
 function zp_list($data) {
 	$filter = $data['filter'];
 	$menu = array(
@@ -1223,7 +1262,7 @@ function zp_list($data) {
 			'G.zp_model = '.$filter['model'].';'.
 		'</script>'.
 	'</div>';
-}//end of zp_list()
+}//zp_list()
 function zp_count($data) {
 	$all = $data['all'];
 	return ($all > 0 ?
@@ -1231,7 +1270,7 @@ function zp_count($data) {
 		(!$data['filter']['menu'] ? '<a class="add">Внести новую запчасть в каталог</a>' : '')
 		:
 		'Запчастей не найдено');
-}//end of zp_count()
+}//zp_count()
 
 function zp_info($zp_id) {
 	$sql = "SELECT * FROM `zp_catalog` WHERE `id`=".$zp_id;
@@ -1317,7 +1356,7 @@ function zp_info($zp_id) {
 					'<div class="compatSpisok">'.($compatCount ? implode($compatSpisok) : '').'</div>'.
 		'</table>'.
 	'</div>';
-}//end of zp_info()
+}//zp_info()
 function zp_move($zp_id, $page=1) {
 	$all = query_value("SELECT COUNT(`id`) FROM `zp_move` WHERE `ws_id`=".WS_ID." AND `zp_id`=".$zp_id);
 	if(!$all)
@@ -1378,7 +1417,7 @@ function zp_move($zp_id, $page=1) {
 		$move .= '<div class="ajaxNext" val="'.($page + 1).'"><span>Показать ещё '.$c.' запис'._end($c, 'ь', 'и', 'ей').'</span></div>';
 	}
 	return $move;
-}//end of zp_move()
+}//zp_move()
 function zp_compat_spisok($zp_id, $compat_id=false) {
 	if(!$compat_id)
 		$compat_id = _zpCompatId($zp_id);
@@ -1394,7 +1433,7 @@ function zp_compat_spisok($zp_id, $compat_id=false) {
 	}
 	ksort($send);
 	return $send;
-}//end of zp_compat_spisok()
+}//zp_compat_spisok()
 function zp_compat_count($c) {
 	return $c ? $c.' устройств'._end($c, 'о', 'а', '') : 'Совместимостей нет';
 }
@@ -1420,7 +1459,7 @@ function reportMenu($g) {
 		'</a>'.
 		'<a href="'.URL.'&p=report&d=money"'.($g == 'money' ? ' class="sel"' : '').'>Деньги</a>'.
 	'</div>';
-}//end of reportMenu()
+}//reportMenu()
 
 function history_insert($arr) {
 	$sql = "INSERT INTO `history` (
@@ -1443,71 +1482,71 @@ function history_insert($arr) {
 				".VIEWER_ID."
 			)";
 	query($sql);
-}//end of history_insert()
-function history_types($arr) {
-	if(!isset($arr['client_link']))
-		$arr['client_link'] = '<i>удалённый клиент</i>';
-	if(!isset($arr['zayav_link']))
-		$arr['zayav_link'] = '<i>удалённая заявка</i>';
-	if(!isset($arr['zp_link']))
-		$arr['zp_link'] = '<i>удалённая запчасть</i>';
-	switch($arr['type']) {
-		case 1: return 'Создал новую заявку '.$arr['zayav_link'].' для клиента '.$arr['client_link'].'.';
-		case 2: return 'Удалил заявку №'.$arr['value'].'.';
-		case 3: return 'Внёс в базу нового клиента '.$arr['client_link'].'.';
+}//history_insert()
+function history_types($v) {
+	if(empty($v['client_link']))
+		$v['client_link'] = '<i>удалённый клиент</i>';
+	if(!isset($v['zayav_link']))
+		$v['zayav_link'] = '<i>удалённая заявка</i>';
+	if(!isset($v['zp_link']))
+		$v['zp_link'] = '<i>удалённая запчасть</i>';
+	switch($v['type']) {
+		case 1: return 'Создана новая заявка '.$v['zayav_link'].' для клиента '.$v['client_link'].'.';
+		case 2: return 'Удалена заявка №'.$v['value'].'.';
+		case 3: return 'Внесён новый клиент '.$v['client_link'].'.';
 		case 4:
-			$status = _zayavStatus($arr['value']);
-			return 'Изменил статус заявки '.$arr['zayav_link'].' на <span style="background-color:#'.$status['color'].'">'.$status['name'].'</span>.';
-		case 5: return 'Произвёл начисление на сумму <b>'.$arr['value'].'</b> руб. для заявки '.$arr['zayav_link'].'.';
+			$status = _zayavStatus($v['value']);
+			return 'Изменён статус заявки '.$v['zayav_link'].' на <span style="background-color:#'.$status['color'].'">'.$status['name'].'</span>.';
+		case 5: return 'Произведено начисление на сумму <b>'.$v['value'].'</b> руб. для заявки '.$v['zayav_link'].'.';
 		case 6: return
-			'Внёс платёж на сумму <b>'.$arr['value'].'</b> руб.'.
-			($arr['value1'] ? '<span class="prim">('.$arr['value1'].')</span>' : '').
-			($arr['zayav_id'] ? ' по заявке '.$arr['zayav_link'] : '');
-		case 7: return 'Отредактировал данные заявки '.$arr['zayav_link'].($arr['value'] ? ':<div class="changes">'.$arr['value'].'</div>' : '.');
+			'Внесён платёж на сумму <b>'.$v['value'].'</b> руб.'.
+			($v['value1'] ? '<span class="prim">('.$v['value1'].')</span>' : '').
+			($v['zayav_id'] ? ' по заявке '.$v['zayav_link'] : '');
+		case 7: return 'Отредактированы данные заявки '.$v['zayav_link'].($v['value'] ? ':<div class="changes">'.$v['value'].'</div>' : '.');
 		case 8:
-			return 'Удалил начисление на сумму <b>'.$arr['value'].'</b> руб. '.
-				($arr['value1'] ? '('.$arr['value1'].')' : '').
-				' у заявки '.$arr['zayav_link'].'.';
+			return 'Удалено начисление на сумму <b>'.$v['value'].'</b> руб. '.
+				($v['value1'] ? '('.$v['value1'].')' : '').
+				' у заявки '.$v['zayav_link'].'.';
 		case 9:
-			return 'Удалил платёж на сумму <b>'.$arr['value'].'</b> руб. '.
-				($arr['value1'] ? '('.$arr['value1'].')' : '').
-				($arr['zayav_id'] ? ' у заявки '.$arr['zayav_link'] : '').
-				($arr['zp_id'] ? ' (Продажа запчасти '.$arr['zp_link'].')' : '').
+			return 'Удалён платёж на сумму <b>'.$v['value'].'</b> руб. '.
+				($v['value1'] ? '('.$v['value1'].')' : '').
+				($v['zayav_id'] ? ' у заявки '.$v['zayav_link'] : '').
+				($v['zp_id'] ? ' (Продажа запчасти '.$v['zp_link'].')' : '').
 				'.';
-		case 10: return 'Отдерактировал данные клиента '.$arr['client_link'].($arr['value'] ? ':<div class="changes">'.$arr['value'].'</div>' : '.');
-		case 11: return 'Произвёл объединение клиентов. Результат: '.$arr['client_link'].($arr['value'] ? ':<div class="changes">'.$arr['value'].'</div>' : '.');
-		case 12: return 'Установил значение в кассе: '.$arr['value'].' руб.';
-		case 13: return 'Произвёл установку запчасти '.$arr['zp_link'].' по заявке '.$arr['zayav_link'].'.';
-		case 14: return 'Продал запчасть '.$arr['zp_link'].' на сумму <b>'.$arr['value'].'</b> руб.';
-		case 15: return 'Произвёл списание запчасти '.$arr['zp_link'].'';
-		case 16: return 'Произвёл возврат запчасти '.$arr['zp_link'].'';
-		case 17: return 'Забраковал запчась '.$arr['zp_link'].'';
-		case 18: return 'Внёс наличие запчасти '.$arr['zp_link'].' в количестве '.$arr['value'].' шт.';
+		case 10: return 'Отдерактированы данные клиента '.$v['client_link'].($v['value'] ? ':<div class="changes">'.$v['value'].'</div>' : '.');
+		case 11: return 'Произвено объединение клиентов <i>'.$v['value'].'</i> и '.$v['client_link'].'.';
+		case 12: return 'Установлено значение в кассе: '.$v['value'].' руб.';
+		case 13: return 'Произведена установка запчасти '.$v['zp_link'].' по заявке '.$v['zayav_link'].'.';
+		case 14: return 'Продана запчасть '.$v['zp_link'].' на сумму <b>'.$v['value'].'</b> руб.';
+		case 15: return 'Произведено списание запчасти '.$v['zp_link'].'';
+		case 16: return 'Произведён возврат запчасти '.$v['zp_link'].'';
+		case 17: return 'Забракована запчась '.$v['zp_link'].'';
+		case 18: return 'Внесено наличие запчасти '.$v['zp_link'].' в количестве '.$v['value'].' шт.';
 		case 19:
-			return 'Восстановил платёж на сумму <b>'.$arr['value'].'</b> руб. '.
-				($arr['value1'] ? '('.$arr['value1'].')' : '').
-				($arr['zayav_id'] ? ' у заявки '.$arr['zayav_link'] : '').
-				($arr['zp_id'] ? ' (Продажа запчасти '.$arr['zp_link'].')' : '').
+			return 'Восстановлен платёж на сумму <b>'.$v['value'].'</b> руб. '.
+				($v['value1'] ? '('.$v['value1'].')' : '').
+				($v['zayav_id'] ? ' у заявки '.$v['zayav_link'] : '').
+				($v['zp_id'] ? ' (Продажа запчасти '.$v['zp_link'].')' : '').
 				'.';
 		case 20:
-			return 'Создал новое задание'.
-				($arr['zayav_id'] ? ' для заявки '.$arr['zayav_link'] : '').
-				($arr['client_id'] ? ' для клиента '.$arr['client_link'] : '').
+			return 'Создано новое задание'.
+				($v['zayav_id'] ? ' для заявки '.$v['zayav_link'] : '').
+				($v['client_id'] ? ' для клиента '.$v['client_link'] : '').
 				'.';
-		case 21: return 'Внёс расход на сумму <b>'.$arr['value'].'</b> руб.';
-		case 22: return 'Удалил расход на сумму <b>'.$arr['value'].'</b> руб.';
-		case 23: return 'Изменил данные расхода на сумму <b>'.$arr['value'].'</b> руб.';
-		case 24: return 'Установил начальное значение в кассе = <b>'.$arr['value'].'</b> руб.';
-		case 25: return 'Удалил запись в кассе на сумму <b>'.$arr['value'].'</b> руб. ('.$arr['value1'].')';
-		case 26: return 'Восстановил запись в кассе на сумму <b>'.$arr['value'].'</b> руб. ('.$arr['value1'].')';
+		case 21: return 'Внесён расход на сумму <b>'.$v['value'].'</b> руб.';
+		case 22: return 'Удалён расход на сумму <b>'.$v['value'].'</b> руб.';
+		case 23: return 'Изменены данные расхода на сумму <b>'.$v['value'].'</b> руб.';
+		case 24: return 'Установлено начальное значение в кассе = <b>'.$v['value'].'</b> руб.';
+		case 25: return 'Удалена запись в кассе на сумму <b>'.$v['value'].'</b> руб. ('.$v['value1'].')';
+		case 26: return 'Восстановлена запись в кассе на сумму <b>'.$v['value'].'</b> руб. ('.$v['value1'].')';
 		case 27:
-			return 'Восстановил начисление на сумму <b>'.$arr['value'].'</b> руб. '.
-				($arr['value1'] ? '('.$arr['value1'].')' : '').
-				' у заявки '.$arr['zayav_link'].'.';
+			return 'Восстановлено начисление на сумму <b>'.$v['value'].'</b> руб. '.
+				($v['value1'] ? '('.$v['value1'].')' : '').
+				' у заявки '.$v['zayav_link'].'.';
 
-		default: return $arr['type'];
+		default: return $v['type'];
 	}
-}//end of history_types()
+}//history_types()
 function history_types_group($action) {
 	switch($action) {
 		case 1: return '3,10,11';
@@ -1516,7 +1555,7 @@ function history_types_group($action) {
 		case 4: return '6,9,12,19';
 	}
 	return 0;
-}//end of history_types_group()
+}//history_types_group()
 function report_history_right() {
 	$sql = "SELECT
 				DISTINCT `viewer_id_add` AS `id`
@@ -1537,10 +1576,10 @@ function report_history_right() {
 			'<div class="findHead">Действие</div>'.
 			'<input type="hidden" id="report_history_action" value="0">'.
 		'</div>';
-}//end of report_history_right()
+}//report_history_right()
 function report_history() {
 	return '<div id="report_history">'.report_history_spisok().'</div>';
-}//end of report_history()
+}//report_history()
 function report_history_spisok($page=1, $filter=array(), $limit=30) {
 	$cond = "`ws_id`=".WS_ID.
 		(isset($filter['worker']) ? ' AND `viewer_id_add`='.$filter['worker'] : '').
@@ -1564,44 +1603,39 @@ function report_history_spisok($page=1, $filter=array(), $limit=30) {
 	$q = query($sql);
 	$history = array();
 	$viewer = array();
-	$client = array();
 	$zayav = array();
 	$zp = array();
 	while($r = mysql_fetch_assoc($q)) {
 		$viewer[$r['viewer_id_add']] = $r['viewer_id_add'];
-		if($r['client_id'] > 0)
-			$client[$r['client_id']] = $r['client_id'];
 		if($r['zayav_id'] > 0)
 			$zayav[$r['zayav_id']] = $r['zayav_id'];
 		if($r['zp_id'] > 0)
 			$zp[$r['zp_id']] = $r['zp_id'];
-		$history[] = $r;
+		$history[$r['id']] = $r;
 	}
 	$viewer = _viewer($viewer);
-	$client = _clientLink($client);
+	$history = _clientLink_($history);
 	_zayavNomerLink($zayav);
 	$zp = _zpLink($zp);
 	$send = '';
-	$time = strtotime($history[0]['dtime_add']);
+	$time = strtotime($history[key($history)]['dtime_add']);
 	$txt = '';
-	$viewer_id = $history[0]['viewer_id_add'];
-	$count = count($history) - 1;
-	foreach($history as $n => $r) {
+	$viewer_id = $history[key($history)]['viewer_id_add'];
+	foreach($history as $r) {
 		if(!$time) {
 			$time = strtotime($r['dtime_add']);
 			$txt = '';
 			$viewer_id = $r['viewer_id_add'];
 		}
-		if($r['client_id'] > 0 && isset($client[$r['client_id']]))
-			$r['client_link'] = $client[$r['client_id']];
 		if($r['zayav_id'] && _zayavNomerLink($r['zayav_id']))
 			$r['zayav_link'] = _zayavNomerLink($r['zayav_id']);
 		if($r['zp_id'] && isset($zp[$r['zp_id']]))
 			$r['zp_link'] = $zp[$r['zp_id']];
 		$txt .= '<div class="txt">'.history_types($r).'</div>';
-		if($count == $n
-		   || $time - strtotime($history[$n + 1]['dtime_add']) > 900
-		   || $viewer_id != $history[$n + 1]['viewer_id_add']) {
+		$key = key($history);
+		if(!$key
+		   || $time - strtotime($history[$key]['dtime_add']) > 900
+		   || $viewer_id != $history[$key]['viewer_id_add']) {
 			$time = 0;
 			$send .=
 			'<div class="history_unit">'.
@@ -1609,11 +1643,12 @@ function report_history_spisok($page=1, $filter=array(), $limit=30) {
 				$txt.
 			'</div>';
 		}
+		next($history);
 	}
 	if($start + $limit < $all)
 		$send .= '<div class="ajaxNext" val="'.($page + 1).'"><span>Далее...</span></div>';
 	return $send;
-}//end of report_history_spisok()
+}//report_history_spisok()
 
 function report_remind() {
 	$data = remind_data();
@@ -1621,12 +1656,12 @@ function report_remind() {
 		'<div id="remind_spisok">'.(!empty($data) ? report_remind_spisok($data) : '<div class="_empty">Заданий нет.</div>').'</div>'.
 	'</div>';
 	return $send;
-}//end of report_remind()
+}//report_remind()
 function report_remind_right() {
 	return '<div class=findHead>Категории заданий</div>'.
 		_radio('remind_status', array(1=>'Активные',2=>'Выполнены',0=>'Отменены'), 1, 1).
 		_check('remind_private', 'Личное');
-}//end of report_remind_right()
+}//report_remind_right()
 function remind_data($page=1, $filter=array()) {
 	$cond = "`ws_id`=".WS_ID." AND `status`=".(isset($filter['status']) ? intval($filter['status']) : 1);
 	if(!empty($filter['private']))
@@ -1671,7 +1706,7 @@ function remind_data($page=1, $filter=array()) {
 		$send['page'] = ++$page;
 	$send['filter'] = $filter;
 	return $send;
-}//end of remind_data()
+}//remind_data()
 function report_remind_spisok($data) {
 	if(empty($data['spisok']))
 		return '';
@@ -1726,7 +1761,7 @@ function report_remind_spisok($data) {
 	if(isset($data['page']))
 		$send .= '<div class="ajaxNext" val="'.$data['page'].'"><span>Показать ещё задания...</span></div>';
 	return $send;
-}//end of report_remind_spisok()
+}//report_remind_spisok()
 
 function report_prihod_right() { //Условия поиска справа для отчётов
 	return '<div class="report_prihod_rl">'.
@@ -1735,14 +1770,14 @@ function report_prihod_right() { //Условия поиска справа для отчётов
 		'<div class="cal"><EM class="label">до:</EM><INPUT type="hidden" id="report_prihod_day_end" value="'._curSunday().'"></div>'.
 		(VIEWER_ADMIN ? _check('prihodShowDel', 'Показывать удалённые платежи') : '').
 		'</div>';
-}//end of report_prihod_right()
+}//report_prihod_right()
 function report_prihod() {
 	return
 	'<div id="report_prihod">'.
 		'<div class="headName">Список поступлений<a class="add">Внести платёж</a></div>'.
 		'<div class="spisok">'.report_prihod_spisok(_curMonday(), _curSunday(), 0).'</div>'.
 	'</div>';
-}//end of report_prihod()
+}//report_prihod()
 function report_prihod_spisok($day_begin, $day_end, $del_show=0, $page=1) {
 	$limit = 30;
 	$cond = "`ws_id`=".WS_ID."
@@ -1815,7 +1850,7 @@ function report_prihod_spisok($day_begin, $day_end, $del_show=0, $page=1) {
 		$send .= '<tr class="ajaxNext" id="report_prihod_next" val="'.($page + 1).'"><td colspan="4"><span>Показать ещё платежи...</span></td></tr>';
 	if($page == 1) $send .= '</table>';
 	return $send;
-}//end of report_prihod_spisok()
+}//report_prihod_spisok()
 
 function report_rashod_right() {
 	return '<div class="findHead">Категория</div>'.
@@ -1824,7 +1859,7 @@ function report_rashod_right() {
 		'<input type="hidden" id="rashod_worker">'.
 		'<input type="hidden" id="rashod_year">'.
 		'<div id="monthList">'.report_rashod_monthSum().'</div>';
-}//end of report_rashod_right()
+}//report_rashod_right()
 function report_rashod_monthSum($year=0, $month=0, $category=0, $worker=0) {
 	if(!$year) $year = strftime('%Y', time());
 	if(!$month) $month = intval(strftime('%m', time()));
@@ -1848,7 +1883,7 @@ function report_rashod_monthSum($year=0, $month=0, $category=0, $worker=0) {
 	for($n = 1; $n <= 12; $n++)
 		$mon[$n] = _monthDef($n).(isset($res[$n]) ? '<span class="sum">'.$res[$n].'</span>' : '');
 	return _radio('monthSum', $mon, $month, 1);
-}//end of report_rashod_monthSum()
+}//report_rashod_monthSum()
 function report_rashod() {
 	$sql = "SELECT
 				`viewer_id`,
@@ -1875,7 +1910,7 @@ function report_rashod() {
 			'<div class="headName">Список расходов мастерской<a class="add">Внести новый расход</a></div>'.
 			'<div id="spisok">'.report_rashod_spisok().'</div>'.
 		'</div>';
-}//end of report_rashod()
+}//report_rashod()
 function report_rashod_spisok($page=1, $month=false, $category=0, $worker=0) {
 	if(!$month) $month = strftime('%Y-%m', time());
 	$limit = 30;
@@ -1952,7 +1987,7 @@ function report_rashod_spisok($page=1, $month=false, $category=0, $worker=0) {
 		$send .= '<tr class="ajaxNext" id="report_rashod_next" val="'.($page + 1).'"><td colspan="4"><span>Показать далее...</span></td></tr>';
 	if($page == 1) $send .= '</table>';
 	return $send;
-}//end of report_rashod_spisok()
+}//report_rashod_spisok()
 
 function kassa_sum() {
 	$sql = "SELECT SUM(`sum`) AS `sum` FROM `kassa` WHERE `ws_id`=".WS_ID." AND `status`=1 LIMIT 1";
@@ -1961,7 +1996,7 @@ function kassa_sum() {
 	$sql = "SELECT SUM(`sum`) AS `sum` FROM `money` WHERE `ws_id`=".WS_ID." AND `status`=1 AND `kassa`=1 LIMIT 1";
 	$r = mysql_fetch_assoc(query($sql));
 	return KASSA_START + $kassa_sum + $r['sum'];
-}//end of kassa_sum()
+}//kassa_sum()
 function report_kassa() {
 	if(KASSA_START == -1)
 		$send = '<div class="set_info">Установите значение, равное текущей сумме денег, находящейся сейчас в мастерской. '.
@@ -1978,10 +2013,10 @@ function report_kassa() {
 				'</div>'.
 				'<div id="spisok">'.report_kassa_spisok().'</div>';
 	return '<div id="report_kassa">'.$send.'</div>';
-}//end of report_kassa()
+}//report_kassa()
 function report_kassa_right() {
 	return KASSA_START == -1 ? '' : _check('kassaShowDel', 'Показывать удалённые записи');
-}//end of report_kassa_right()
+}//report_kassa_right()
 function report_kassa_spisok($page=1, $del_show=0) {
 	$limit = 30;
 	$cond = "`ws_id`=".WS_ID."
@@ -2030,7 +2065,7 @@ function report_kassa_spisok($page=1, $del_show=0) {
 		$send .= '<tr class="ajaxNext" id="report_kassa_next" val="'.($page + 1).'"><td colspan="4"><span>Показать ещё платежи...</span></td></tr>';
 	if($page == 1) $send .= '</table>';
 	return $send;
-}//end of report_kassa_spisok()
+}//report_kassa_spisok()
 
 function statistic() {
 	$sql = "SELECT
@@ -2066,7 +2101,7 @@ function statistic() {
 		'var statRashod = '.json_encode($rashod).';'.
 	'</script>'.
 	'<script type="text/javascript" src="'.SITE.'/js/statistic.js"></script>';
-}//end of statistic()
+}//statistic()
 
 
 
@@ -2109,7 +2144,7 @@ function setup_main() {
 		'<div class="del_inf">Мастерская, а также все данные удаляются без возможности восстановления.</div>'.
 		'<DIV class="vkButton" id="ws_del"><BUTTON>Удалить мастерскую</BUTTON></DIV>'.
 	'</DIV>';
-}//end of setup_main()
+}//setup_main()
 
 function setup_workers() {
 	return
@@ -2117,7 +2152,7 @@ function setup_workers() {
 		'<DIV class="headName">Сотрудники мастерской<a class="add">Добавить нового сотрудника</a></DIV>'.
 		'<DIV id="spisok">'.setup_workers_spisok().'</DIV>'.
 	'</DIV>';
-}//end of setup_workers()
+}//setup_workers()
 function setup_workers_spisok() {
 	$sql = "SELECT * FROM `vk_user` WHERE `ws_id`=".WS_ID." ORDER BY `dtime_add`";
 	$q = query($sql);
@@ -2137,4 +2172,4 @@ function setup_workers_spisok() {
 		'</table>';
 	}
 	return $send;
-}//end of setup_workers()
+}//setup_workers()

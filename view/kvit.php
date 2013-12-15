@@ -16,7 +16,7 @@ if(!$zayav = mysql_fetch_assoc(query($sql))) {
 	exit;
 }
 
-$sql = "SELECT * FROM `client` WHERE `ws_id`=".WS_ID." AND `id`=".$zayav['client_id']." LIMIT 1";
+$sql = "SELECT * FROM `client` WHERE `ws_id`=".WS_ID." AND `deleted`=0 AND `id`=".$zayav['client_id']." LIMIT 1";
 $client = mysql_fetch_assoc(query($sql));
 
 $kvit =
