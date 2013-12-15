@@ -114,14 +114,14 @@ function _header() {
 		'<link href="http://nyandoma'.(LOCAL ? '' : '.ru').'/vk/vk'.(DEBUG ? '' : '.min').'.css?'.VERSION.'" rel="stylesheet" type="text/css" />'.
 		'<script type="text/javascript" src="http://nyandoma'.(LOCAL ? '' : '.ru').'/vk/vk'.(DEBUG ? '' : '.min').'.js?'.VERSION.'"></script>'.
 
-		'<link href="'.SITE.'/css/main.css?'.VERSION.'" rel="stylesheet" type="text/css" />'.
-		'<script type="text/javascript" src="'.SITE.'/js/main.js?'.VERSION.'"></script>'.
+		'<link href="'.SITE.'/css/main'.(DEBUG ? '' : '.min').'.css?'.VERSION.'" rel="stylesheet" type="text/css" />'.
+		'<script type="text/javascript" src="'.SITE.'/js/main'.(DEBUG ? '' : '.min').'.js?'.VERSION.'"></script>'.
 
-		(WS_ID ? '<script type="text/javascript" src="'.SITE.'/js/ws.js?'.VERSION.'"></script>' : '').
+		(WS_ID ? '<script type="text/javascript" src="'.SITE.'/js/ws'.(DEBUG ? '' : '.min').'.js?'.VERSION.'"></script>' : '').
 
 		//Скрипты и стили для суперадминистратора
-		(@$_GET['p'] == 'sa' ? '<link href="'.SITE.'/css/sa.css?'.VERSION.'" rel="stylesheet" type="text/css" />' : '').
-		(@$_GET['p'] == 'sa' ? '<script type="text/javascript" src="'.SITE.'/js/sa.js?'.VERSION.'"></script>' : '').
+		(@$_GET['p'] == 'sa' ? '<link href="'.SITE.'/css/sa'.(DEBUG ? '' : '.min').'.css?'.VERSION.'" rel="stylesheet" type="text/css" />' : '').
+		(@$_GET['p'] == 'sa' ? '<script type="text/javascript" src="'.SITE.'/js/sa'.(DEBUG ? '' : '.min').'.js?'.VERSION.'"></script>' : '').
 
 		'<script type="text/javascript" src="'.SITE.'/js/G_values.js?'.G_VALUES.'"></script>'.
 		'</head>'.
@@ -601,6 +601,6 @@ function ws_create_step1() {
 
 		'<div class="vkButton"><button>Готово</button></div>'.
 		'<div class="vkCancel"><button>Отмена</button></div>'.
-		'<script type="text/javascript" src="'.SITE.'/js/ws_create_step1.js?'.VERSION.'"></script>'.
+		'<script type="text/javascript" src="'.SITE.'/js/ws_create_step1'.(DEBUG ? '' : '.min').'.js?'.VERSION.'"></script>'.
 	'</div>';
 }//end of ws_create_step1()

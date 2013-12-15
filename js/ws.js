@@ -153,7 +153,7 @@ var AJAX_WS = SITE + '/ajax/ws.php?' + VALUES,
 		}, 'json');
 	},
 
-	zayavfilter = function () {
+	zayavFilter = function () {
 		var v = {
 				find:$.trim($('#find input').val()),
 				sort:$('#sort').val(),
