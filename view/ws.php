@@ -56,28 +56,7 @@ function _mainLinks() {
 
 // ---===! client !===--- Секция клиентов
 
-function _clientLink($arr) {
-	if(empty($arr))
-		return array();
-	$id = false;
-	if(!is_array($arr)) {
-		$id = $arr;
-		$arr = array($arr);
-	}
-	$sql = "SELECT `id`,`fio`
-	        FROM `client`
-			WHERE `ws_id`=".WS_ID."
-			  AND `deleted`=0
-			  AND `id` IN (".implode(',', $arr).")";
-	$q = query($sql);
-	$send = array();
-	while($r = mysql_fetch_assoc($q))
-		$send[$r['id']] = '<a href="'.URL.'&p=client&d=info&id='.$r['id'].'">'.$r['fio'].'</a>';
-	if($id)
-		return $send[$id];
-	return $send;
-}//_clientLink()
-function _clientLink_($arr, $fio=0) {//Добавление имени и ссылки клиента в массив
+function _clientLink($arr, $fio=0) {//Добавление имени и ссылки клиента в массив или возврат по id
 	$clientArr = array(is_array($arr) ? 0 : $arr);
 	if(is_array($arr)) {
 		$ass = array();
@@ -89,19 +68,22 @@ function _clientLink_($arr, $fio=0) {//Добавление имени и ссылки клиента в масси
 		unset($clientArr[0]);
 	}
 	if(!empty($clientArr)) {
-		$sql = "SELECT `id`,`fio`
+		$sql = "SELECT
+					`id`,
+					`fio`,
+					`deleted`
 		        FROM `client`
 				WHERE `ws_id`=".WS_ID."
 				  AND `id` IN (".implode(',', $clientArr).")";
 		$q = query($sql);
 		if(!is_array($arr)) {
 			if($r = mysql_fetch_assoc($q))
-				return $fio ? $r['fio'] : '<a href="'.URL.'&p=client&d=info&id='.$r['id'].'">'.$r['fio'].'</a>';
+				return $fio ? $r['fio'] : '<a'.($r['deleted'] ? ' class="deleted"' : '').' href="'.URL.'&p=client&d=info&id='.$r['id'].'">'.$r['fio'].'</a>';
 			return '';
 		}
 		while($r = mysql_fetch_assoc($q))
 			foreach($ass[$r['id']] as $id) {
-				$arr[$id]['client_link'] = '<a href="'.URL.'&p=client&d=info&id='.$r['id'].'">'.$r['fio'].'</a>';
+				$arr[$id]['client_link'] = '<a'.($r['deleted'] ? ' class="deleted"' : '').' href="'.URL.'&p=client&d=info&id='.$r['id'].'">'.$r['fio'].'</a>';
 				$arr[$id]['client_fio'] = $r['fio'];
 			}
 	}
@@ -583,9 +565,6 @@ function zayav_data($page=1, $filter=array(), $limit=20) {
 		if(isset($filter['client']) && $filter['client'] > 0)
 			$cond .= " AND `client_id`=".$filter['client'];
 	}
-	$zayav = array();
-	$client = array();
-	$images = array();
 
 	$send['all'] = query_value("SELECT COUNT(*) AS `all` FROM `zayavki` WHERE ".$cond." LIMIT 1");
 
@@ -612,11 +591,12 @@ function zayav_data($page=1, $filter=array(), $limit=20) {
 			ORDER BY `".$filter['sort']."` ".$filter['desc']."
 			LIMIT ".$start.",".$limit;
 	$q = query($sql);
+	$zayav = array();
+	$images = array();
 	while($r = mysql_fetch_assoc($q)) {
 		if(isset($nomer) && $nomer == $r['nomer'])
 			continue;
 		$zayav[$r['id']] = $r;
-		$client[$r['client_id']] = $r['client_id'];
 		$images['zayav'.$r['id']] = '"zayav'.$r['id'].'"';
 		if($r['base_model_id'] > 0)
 			$images['dev'.$r['base_model_id']] = '"dev'.$r['base_model_id'].'"';
@@ -625,7 +605,7 @@ function zayav_data($page=1, $filter=array(), $limit=20) {
 	$zayavIds = implode(',', array_keys($zayav));
 
 	if(empty($filter['client']))
-		$client = _clientLink($client);
+	$zayav = _clientLink($zayav);
 
 	$sql = "SELECT `owner`,`link` FROM `images` WHERE `status`=1 AND `sort`=0 AND `owner` IN (".implode(',', $images).")";
 	$q = query($sql);
@@ -687,7 +667,7 @@ function zayav_data($page=1, $filter=array(), $limit=20) {
 			'opl' => $r['oplata_sum']
 		);
 		if(empty($filter['client']))
-			$unit['client'] = $client[$r['client_id']];
+			$unit['client'] = $r['client_link'];
 		if(!empty($filter['find'])) {
 			if(preg_match($reg, $unit['model']))
 				$unit['model'] = preg_replace($reg, "<em>\\1</em>", $unit['model'], 1);
@@ -1374,18 +1354,15 @@ function zp_move($zp_id, $page=1) {
 	$spisok = array();
 	$viewer = array();
 	$zayav = array();
-	$client = array();
 	while($r = mysql_fetch_assoc($q)) {
-		$spisok[] = $r;
+		$spisok[$r['id']] = $r;
 		$viewer[$r['viewer_id_add']] = $r['viewer_id_add'];
 		if($r['zayav_id'] > 0)
 			$zayav[$r['zayav_id']] = $r['zayav_id'];
-		if($r['client_id'] > 0)
-			$client[$r['client_id']] = $r['client_id'];
 	}
 	$viewer = _viewer($viewer);
 	_zayavNomerLink($zayav);
-	$client = _clientLink($client);
+	$spisok = _clientLink($spisok);
 	$move = '';
 	$type = array(
 		'' => 'Приход',
@@ -1395,17 +1372,18 @@ function zp_move($zp_id, $page=1) {
 		'return' => 'Возврат',
 		'writeoff' => 'Списание'
 	);
-	foreach($spisok as $n => $r) {
+	$n = 0;
+	foreach($spisok as $r) {
 		$cena = round($r['cena'], 2);
 		$summa = round($r['summa'], 2);
 		$count = abs($r['count']);
 		$move .= '<div class="unit">'.
 			'<div>'.
-				(!$n && $page == 1 ? '<div class="img_del" val="'.$r['id'].'"></div>' : '').
+				(!$n++ && $page == 1 ? '<div class="img_del" val="'.$r['id'].'"></div>' : '').
 				$type[$r['type']].' <b>'.$count.'</b> шт. '.
 				($summa ? 'на сумму '.$summa.' руб.'.($count > 1 ? ' <span class="cenaed">('.$cena.' руб./шт.)</span> ' : '') : '').
 				($r['zayav_id'] ? 'по заявке '._zayavNomerLink($r['zayav_id']).'.' : '').
-				($r['client_id'] ? 'клиенту '.$client[$r['client_id']].'.' : '').
+				($r['client_id'] ? 'клиенту '.$r['client_link'].'.' : '').
 			'</div>'.
 			($r['prim'] ? '<div class="prim">'.$r['prim'].'</div>' : '').
 			'<div class="dtime" title="Внёс '.$viewer[$r['viewer_id_add']]['name'].'">'.FullDataTime($r['dtime_add']).'</div>'.
@@ -1514,7 +1492,7 @@ function history_types($v) {
 				($v['zp_id'] ? ' (Продажа запчасти '.$v['zp_link'].')' : '').
 				'.';
 		case 10: return 'Отдерактированы данные клиента '.$v['client_link'].($v['value'] ? ':<div class="changes">'.$v['value'].'</div>' : '.');
-		case 11: return 'Произвено объединение клиентов <i>'.$v['value'].'</i> и '.$v['client_link'].'.';
+		case 11: return 'Произведено объединение клиентов <i>'.$v['value'].'</i> и '.$v['client_link'].'.';
 		case 12: return 'Установлено значение в кассе: '.$v['value'].' руб.';
 		case 13: return 'Произведена установка запчасти '.$v['zp_link'].' по заявке '.$v['zayav_link'].'.';
 		case 14: return 'Продана запчасть '.$v['zp_link'].' на сумму <b>'.$v['value'].'</b> руб.';
@@ -1614,7 +1592,7 @@ function report_history_spisok($page=1, $filter=array(), $limit=30) {
 		$history[$r['id']] = $r;
 	}
 	$viewer = _viewer($viewer);
-	$history = _clientLink_($history);
+	$history = _clientLink($history);
 	_zayavNomerLink($zayav);
 	$zp = _zpLink($zp);
 	$send = '';
@@ -1691,16 +1669,13 @@ function remind_data($page=1, $filter=array()) {
 			ORDER BY `day` ASC,`id` DESC
 			LIMIT ".$start.",".$limit;
 	$q = query($sql);
-	$client = array();
 	$zayav = array();
 	while($r = mysql_fetch_assoc($q)) {
-		if($r['client_id'] > 0)
-			$client[$r['client_id']] = $r['client_id'];
 		if($r['zayav_id'])
 			$zayav[$r['zayav_id']] = $r['zayav_id'];
-		$send['spisok'][] = $r;
+		$send['spisok'][$r['id']] = $r;
 	}
-	$send['client'] = _clientLink($client);
+	$send['spisok'] = _clientLink($send['spisok']);
 	_zayavNomerLink($zayav);
 	if($start + $limit < $send['all'])
 		$send['page'] = ++$page;
@@ -1739,12 +1714,11 @@ function report_remind_spisok($data) {
 				$rem_cond = '<EM>Выполнить '.($day_leave == 0 ? '' : 'до ').'</EM>'.
 					($day_leave >= 0 && $day_leave < 3 ? $leave : FullData($r['day'], 1)).
 					($day_leave > 2 || $day_leave < 0 ? '<SPAN>, '.$leave.'</SPAN>' : '');
-
 		}
 		$send .= '<div class="remind_unit '.$color.'">'.
 			'<div class="txt">'.
 				($r['private'] ? '<u>Личное.</u> ' : '').
-				($r['client_id'] && empty($data['filter']['client']) ? 'Клиент '.$data['client'][$r['client_id']].': ' : '').
+				($r['client_id'] && empty($data['filter']['client']) ? 'Клиент '.$r['client_link'].': ' : '').
 				($r['zayav_id'] && empty($data['filter']['zayav']) ? 'Заявка '._zayavNomerLink($r['zayav_id']).': ' : '').
 				'<b>'.$r['txt'].'</b>'.
 			'</div>'.

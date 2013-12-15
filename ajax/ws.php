@@ -1622,10 +1622,8 @@ switch(@$_POST['op']) {
 		if(!$r = mysql_fetch_assoc(query($sql)))
 			jsonError();
 		$r['viewer'] = utf8(_viewer($r['viewer_id_add'], 'link'));
-		if($r['client_id'] > 0) {
-			$c = _clientLink(array($r['client_id']));
-			$r['client'] = utf8($c[$r['client_id']]);
-		}
+		if($r['client_id'] > 0)
+			$r['client'] = utf8(_clientLink($r['client_id']));
 		if($r['zayav_id'] > 0)
 			$r['zayav'] = utf8(_zayavNomerLink($r['zayav_id'], 1));
 		$r['txt'] = utf8($r['txt']);
