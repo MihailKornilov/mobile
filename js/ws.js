@@ -112,7 +112,8 @@ var AJAX_WS = SITE + '/ajax/ws.php?' + VALUES,
 		var v = {
 			fast:cFind.inp(),
 			dolg:$('#dolg').val(),
-			active:$('#active').val()
+			active:$('#active').val(),
+			comm:$('#comm').val()
 		};
 		$('.filter')[v.fast ? 'hide' : 'show']();
 		return v;
@@ -3316,6 +3317,7 @@ $(document)
 			}).click(clientAdd);
 			$('#dolg')._check(clientSpisokLoad)
 			$('#active')._check(clientSpisokLoad)
+			$('#comm')._check(clientSpisokLoad)
 			$('#dolg_check').vkHint({
 				msg:'<b>Список должников.</b><br /><br />' +
 					'Выводятся клиенты, у которых баланс менее 0. Также в результате отображается общая сумма долга.',

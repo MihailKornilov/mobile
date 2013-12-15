@@ -97,10 +97,13 @@ function clientFilter($v) {
 		$v['dolg'] = 0;
 	if(!preg_match(REGEXP_BOOL, $v['active']))
 		$v['active'] = 0;
+	if(!preg_match(REGEXP_BOOL, $v['comm']))
+		$v['comm'] = 0;
 	$filter = array(
 		'fast' => win1251(htmlspecialchars(trim($v['fast']))),
 		'dolg' => intval($v['dolg']),
-		'active' => intval($v['active'])
+		'active' => intval($v['active']),
+		'comm' => intval($v['comm'])
 	);
 	return $filter;
 }//clientFilter()
@@ -132,6 +135,16 @@ function client_data($page=1, $filter=array()) {
 			$ids = array();
 			while($r = mysql_fetch_assoc($q))
 				$ids[] = $r['client_id'];
+			$cond .= " AND `id` IN (".(empty($ids) ? 0 : implode(',', $ids)).")";
+		}
+		if(isset($filter['comm']) && $filter['comm'] == 1) {
+			$sql = "SELECT DISTINCT `table_id`
+				FROM `vk_comment`
+				WHERE `table_name`='client'";
+			$q = query($sql);
+			$ids = array();
+			while($r = mysql_fetch_assoc($q))
+				$ids[] = $r['table_id'];
 			$cond .= " AND `id` IN (".(empty($ids) ? 0 : implode(',', $ids)).")";
 		}
 	}
@@ -174,9 +187,21 @@ function client_data($page=1, $filter=array()) {
 	$q = query($sql);
 	while($r = mysql_fetch_assoc($q))
 		$spisok[$r['id']]['zayav_count'] = $r['count'];
+
+	$sql = "SELECT
+				`table_id` AS `id`
+			FROM `vk_comment`
+			WHERE `status`=1
+			  AND `table_name`='client'
+			  AND `table_id` IN (".implode(',', array_keys($spisok)).")
+			GROUP BY `table_id`";
+	$q = query($sql);
+	while($r = mysql_fetch_assoc($q))
+		$spisok[$r['id']]['comm'] = 1;
+
 	$send['spisok'] = '';
 	foreach($spisok as $r)
-		$send['spisok'] .= '<div class="unit">'.
+		$send['spisok'] .= '<div class="unit'.(isset($r['comm']) ? ' i' : '').'">'.
 			($r['balans'] ? '<div class="balans">Баланс: <b style=color:#'.($r['balans'] < 0 ? 'A00' : '090').'>'.$r['balans'].'</b></div>' : '').
 			'<table>'.
 			   '<tr><td class="label">Имя:<td><a href="'.URL.'&p=client&d=info&id='.$r['id'].'">'.$r['fio'].'</a>'.
@@ -202,6 +227,7 @@ function client_list($data) {
 					'<div class="filter">'.
 					   _check('dolg', 'Должники').
 					   _check('active', 'С активными заявками').
+					   _check('comm', 'Есть заметки').
 					'</div>'.
 		  '</table>'.
 		'</div>';
