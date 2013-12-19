@@ -856,7 +856,16 @@ $(document).ready(function() {
 		['2013-12-10', 10012, 307, 3.9],
 
 		['2013-12-11', 12749, 304, 3.5],
-		['2013-12-11', 9992, 293, 3.1]
+		['2013-12-11', 9992, 293, 3.1],
+
+		['2013-12-16', 5709, 311, 2.9],
+		['2013-12-16', 6220, 290, 3.4],
+
+		['2013-12-17', 9976, 315, 3.7],
+
+		['2013-12-18', 9840, 300, 3.7],
+
+		['2013-12-19', 10264, 313, 3.7]
 	];
 	var symbols = [],
 		speed = [],
@@ -891,28 +900,31 @@ $(document).ready(function() {
 		legend: {
 			enabled: true
 		},
-		series: [{
-			name: 'Скорость зн/мин',
-			color:'#22a',
-			data:speed,
-			tooltip: {
-				valueDecimals: 0
+		series: [
+			{
+				name: 'Скорость зн/мин',
+				color:'#22a',
+				data:speed,
+				tooltip: {
+					valueDecimals: 0
+				}
+			},
+			{
+				name: 'Символов',
+				color:'#2A2',
+				data:symbols,
+				tooltip: {
+					valueDecimals: 0
+				}
+			},
+			{
+				name: 'Ошибки %',
+				color:'#A22',
+				data:errors,
+				tooltip: {
+					valueDecimals: 1
+				}
 			}
-		},{
-			name: 'Символов',
-			color:'#2A2',
-			data:symbols,
-			tooltip: {
-				valueDecimals: 0
-			}
-		},{
-			name: 'Ошибки %',
-			color:'#A22',
-			data:errors,
-			tooltip: {
-				valueDecimals: 1
-			}
-		}
 
 		]
 	});

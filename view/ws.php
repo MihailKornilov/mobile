@@ -54,6 +54,27 @@ function _mainLinks() {
 	$html .= $send;
 }//_mainLinks()
 
+function _rashod($item_id=false) {//Список изделий для заявок
+	if(!defined('RASHOD_LOADED') || $item_id === false) {
+		$key = CACHE_PREFIX.'rashod';
+		$arr = xcache_get($key);
+		if(empty($arr)) {
+			$sql = "SELECT `id`,`name` FROM `setup_rashod_category` ORDER BY `name` ASC";
+			$q = query($sql);
+			while($r = mysql_fetch_assoc($q))
+				$arr[$r['id']] = $r['name'];
+			xcache_set($key, $arr, 86400);
+		}
+		if(!defined('RASHOD_LOADED')) {
+			foreach($arr as $id => $name)
+				define('RASHOD_'.$id, $name);
+			define('RASHOD_0', '');
+			define('RASHOD_LOADED', true);
+		}
+	}
+	return $item_id !== false ? constant('RASHOD_'.$item_id) : $arr;
+}//_rashod()
+
 // ---===! client !===--- Секция клиентов
 
 function _clientLink($arr, $fio=0) {//Добавление имени и ссылки клиента в массив или возврат по id
@@ -89,7 +110,6 @@ function _clientLink($arr, $fio=0) {//Добавление имени и ссылки клиента в массив
 	}
 	return $arr;
 }//_clientLink()
-
 function clientFilter($v) {
 	if(!preg_match(REGEXP_WORDFIND, win1251($v['fast'])))
 		$v['fast'] = '';
@@ -140,7 +160,7 @@ function client_data($page=1, $filter=array()) {
 		if(isset($filter['comm']) && $filter['comm'] == 1) {
 			$sql = "SELECT DISTINCT `table_id`
 				FROM `vk_comment`
-				WHERE `table_name`='client'";
+				WHERE `status`=1 AND `table_name`='client'";
 			$q = query($sql);
 			$ids = array();
 			while($r = mysql_fetch_assoc($q))
@@ -278,18 +298,14 @@ function client_info($client_id) {
 				  AND `client_id`=".$client_id;
 		$q = query($sql);
 		$moneyArr = array();
-		$zayav_ids = array();
-		while($r = mysql_fetch_assoc($q)) {
-			$moneyArr[] = $r;
-			if($r['zayav_id'])
-				$zayav_ids[$r['zayav_id']] = $r['zayav_id'];
-		}
-		_zayavNomerLink($zayav_ids);
+		while($r = mysql_fetch_assoc($q))
+			$moneyArr[$r['id']] = $r;
+		$moneyArr = _zayavNomerLink($moneyArr);
 		foreach($moneyArr as $r) {
 			$about = '';
-			if($r['zayav_id'] > 0)
-				$about .= 'Заявка '._zayavNomerLink($r['zayav_id']).'. ';
-			if($r['zp_id'] > 0)
+			if($r['zayav_id'])
+				$about .= 'Заявка '.$r['zayav_link'].'. ';
+			if($r['zp_id'])
 				$about = 'Продажа запчасти '.$r['zp_id'].'. ';
 			$about .= $r['prim'];
 			$money .= '<tr><td class="sum"><b>'.$r['sum'].'</b>'.
@@ -417,32 +433,42 @@ function _zayavStatusColor($id=false) {
 		$send[$id] = $r['color'];
 	return $send;
 }//_zayavStatusColor()
+function _zayavNomerLinkForming($id, $nomer, $noHint=false) {
+	return
+		'<a href="'.URL.'&p=zayav&d=info&id='.$id.'"'.(!$noHint ? ' class="zayav_link" val="'.$id.'"' : '').'>'.
+			'№'.$nomer.
+			(!$noHint ? '<div class="tooltip empty"></div>' : '').
+		'</a>';
+}//_zayavNomerLinkForming()
 function _zayavNomerLink($arr, $noHint=false) { //Вывод номеров заявок с возможностью отображения дополнительной информации при наведении
-	if(empty($arr))
-		return true;
-	if(!is_array($arr)) {
-		$zayav_id = $arr;
-		$arr = array($zayav_id);
+	$zayavArr = array(is_array($arr) ? 0 : $arr);
+	if(is_array($arr)) {
+		$ass = array();
+		foreach($arr as $r) {
+			$zayavArr[$r['zayav_id']] = $r['zayav_id'];
+			if($r['zayav_id'])
+				$ass[$r['zayav_id']][] = $r['id'];
+		}
+		unset($zayavArr[0]);
 	}
-	if(isset($zayav_id) && defined('ZAYAV_NOMER_'.$zayav_id))
-		return constant('ZAYAV_NOMER_'.$zayav_id);
-	foreach($arr as $n => $id)
-		if(defined('ZAYAV_NOMER_'.$id))
-			unset($arr[$n]);
-	if(empty($arr))
-		return true;
-	$sql = "SELECT `id`,`nomer` FROM `zayavki` WHERE `ws_id`=".WS_ID." AND `id` IN (".implode(',', $arr).")";
-	$q = query($sql);
-	while($r = mysql_fetch_assoc($q))
-		define('ZAYAV_NOMER_'.$r['id'],
-			'<a href="'.URL.'&p=zayav&d=info&id='.$r['id'].'"'.(!$noHint ? ' class="zayav_link" val="'.$r['id'].'"' : '').'>'.
-				'№'.$r['nomer'].
-				'<div class="tooltip empty"></div>'.
-				'</a>');
-	foreach($arr as $id)
-		if(!defined('ZAYAV_NOMER_'.$id))
-			define('ZAYAV_NOMER_'.$id, false);
-	return isset($zayav_id) ? constant('ZAYAV_NOMER_'.$zayav_id) : true;
+	if(!empty($zayavArr)) {
+		$sql = "SELECT
+	            `id`,
+	            `nomer`
+			FROM `zayavki`
+			WHERE `ws_id`=".WS_ID."
+			  AND `id` IN (".implode(',', $zayavArr).")";
+		$q = query($sql);
+		if(!is_array($arr)) {
+			if($r = mysql_fetch_assoc($q))
+				return _zayavNomerLinkForming($r['id'], $r['nomer'], $noHint);
+			return '';
+		}
+		while($r = mysql_fetch_assoc($q))
+			foreach($ass[$r['id']] as $id)
+				$arr[$id]['zayav_link'] = _zayavNomerLinkForming($r['id'], $r['nomer'], $noHint);
+	}
+	return $arr;
 }//_zayavNomerLink()
 function _zayavDeviveBaseIds($type='device', $client_id=0) { //список id устройств, производителей и моделей, которые используются в заявках
 	if($type == 'vendor' && !ZAYAV_BASE_DEVICE || $type == 'model' && !ZAYAV_BASE_VENDOR)
@@ -594,14 +620,15 @@ function zayav_data($page=1, $filter=array(), $limit=20) {
 
 	$send['all'] = query_value("SELECT COUNT(*) AS `all` FROM `zayavki` WHERE ".$cond." LIMIT 1");
 
+	$zayav = array();
+	$images = array();
 	if(isset($nomer)) {
-		$sql = "SELECT * FROM `zayavki` WHERE `nomer`=".$nomer." AND `zayav_status`>0 LIMIT 1";
+		$sql = "SELECT * FROM `zayavki` WHERE `ws_id`=".WS_ID." AND `zayav_status`>0 AND `nomer`=".$nomer." LIMIT 1";
 		if($r = mysql_fetch_assoc(query($sql))) {
 			$send['all']++;
 			$limit--;
 			$r['nomer_find'] = 1;
 			$zayav[$r['id']] = $r;
-			$client[$r['client_id']] = $r['client_id'];
 			$images['zayav'.$r['id']] = '"zayav'.$r['id'].'"';
 			if($r['base_model_id'] > 0)
 				$images['dev'.$r['base_model_id']] = '"dev'.$r['base_model_id'].'"';
@@ -617,8 +644,6 @@ function zayav_data($page=1, $filter=array(), $limit=20) {
 			ORDER BY `".$filter['sort']."` ".$filter['desc']."
 			LIMIT ".$start.",".$limit;
 	$q = query($sql);
-	$zayav = array();
-	$images = array();
 	while($r = mysql_fetch_assoc($q)) {
 		if(isset($nomer) && $nomer == $r['nomer'])
 			continue;
@@ -1023,19 +1048,30 @@ function zayav_zp_unit($r, $model) {
 // ---===! zp !===--- Секция запчастей
 
 function _zpLink($arr) {
-	if(empty($arr))
-		return array();
-	$sql = "SELECT * FROM `zp_catalog` WHERE `id` IN (".implode(',', $arr).")";
-	$q = query($sql);
-	$send = array();
-	while($r = mysql_fetch_assoc($q))
-		$send[$r['id']] = '<a href="'.URL.'&p=zp&d=info&id='.$r['id'].'">'.
-			'<b>'._zpName($r['name_id']).'</b> для '.
-			_deviceName($r['base_device_id'], 1).
-			_vendorName($r['base_vendor_id']).
-			_modelName($r['base_model_id']).
-			'</a>';
-	return $send;
+	$ids = array();
+	$ass = array();
+	foreach($arr as $r) {
+		$ids[$r['zp_id']] = $r['zp_id'];
+		if($r['zp_id'])
+			$ass[$r['zp_id']][] = $r['id'];
+	}
+	unset($ids[0]);
+	if(!empty($ids)) {
+		$sql = "SELECT *
+	        FROM `zp_catalog`
+	        WHERE `id` IN (".implode(',', $ids).")";
+		$q = query($sql);
+		while($r = mysql_fetch_assoc($q))
+			foreach($ass[$r['id']] as $id)
+				$arr[$id]['zp_link'] =
+					'<a href="'.URL.'&p=zp&d=info&id='.$r['id'].'">'.
+						'<b>'._zpName($r['name_id']).'</b> для '.
+						_deviceName($r['base_device_id'], 1).
+						_vendorName($r['base_vendor_id']).
+						_modelName($r['base_model_id']).
+					'</a>';
+	}
+	return $arr;
 }//_zpLink()
 
 function zpAddQuery($zp) {//Внесение новой запчасти из заявки и из списка запчастей
@@ -1146,7 +1182,11 @@ function zp_data($page=1, $filter=array(), $limit=20) {
 	}
 	$start = ($page - 1) * $limit;
 	$spisok = array();
-	$sql = "SELECT *
+	$sql = "SELECT
+	            *,
+	            0 AS `avai`,
+	            0 AS `zakaz`,
+	            '' AS `zz`
 			FROM `zp_catalog`
 			WHERE ".$cond."
 			ORDER BY `id` DESC
@@ -1168,6 +1208,7 @@ function zp_data($page=1, $filter=array(), $limit=20) {
 
 	_getImg('zp', $ids);
 
+	// Получение количества по наличию
 	$sql = "SELECT
 				`zp_id`,
 				`count`
@@ -1175,10 +1216,10 @@ function zp_data($page=1, $filter=array(), $limit=20) {
 			WHERE `ws_id`=".WS_ID."
 			  AND `zp_id` IN (".implode(',', $ids).")";
 	$q = query($sql);
-	$avai = array();
 	while($r = mysql_fetch_assoc($q))
-		$avai[$r['zp_id']] = $r['count'];
+		$spisok[$r['zp_id']]['avai'] = $r['count'];
 
+	// Получение количества по заказу
 	$sql = "SELECT
 				`zp_id`,
 				SUM(`count`) AS `count`
@@ -1187,11 +1228,12 @@ function zp_data($page=1, $filter=array(), $limit=20) {
 			  AND `zp_id` IN (".implode(',', $ids).")
 			GROUP BY `zp_id`";
 	$q = query($sql);
-	$zakaz = array();
 	while($r = mysql_fetch_assoc($q))
-		$zakaz[$r['zp_id']] = $r['count'];
+		$spisok[$r['zp_id']]['zakaz'] = $r['count'];
 
+	// Составление ссылок на заявки, для которых сделан заказ
 	$sql = "SELECT
+				`id`,
 				`zp_id`,
 				`zayav_id`
 			FROM `zp_zakaz`
@@ -1199,21 +1241,16 @@ function zp_data($page=1, $filter=array(), $limit=20) {
 			  AND `zp_id` IN (".implode(',', $ids).")
 			  AND `zayav_id`>0";
 	$q = query($sql);
-	$zakazZayav = array();
-	$zayav = array();
-	while($r = mysql_fetch_assoc($q)) {
-		$zakazZayav[$r['zp_id']][] = $r['zayav_id'];
-		$zayav[$r['zayav_id']] = $r['zayav_id'];
-	}
-	_zayavNomerLink($zayav);
-	foreach($zakazZayav as $id => $zz)
-		foreach($zz as $i => $zayav_id)
-			$zakazZayav[$id][$i] = _zayavNomerLink($zayav_id);
+	$zakaz = array();
+	while($r = mysql_fetch_assoc($q))
+		$zakaz[$r['id']] = $r;
+	$zakaz = _zayavNomerLink($zakaz);
+	foreach($zakaz as $r)
+		$spisok[$r['zp_id']]['zz'][] = $r['zayav_link'];
 
 	$send['spisok'] = '';
 	foreach($spisok as $id => $r) {
-		$zakazCount = isset($zakaz[$r['zp_id']]) ? $zakaz[$r['zp_id']] : 0;
-		$zakazEdit = '<span class="zzedit">ано: <tt>—</tt><b>'.$zakazCount.'</b><tt>+</tt></span>';
+		$zakazEdit = '<span class="zzedit">ано: <tt>—</tt><b>'.$r['zakaz'].'</b><tt>+</tt></span>';
 		$send['spisok'] .= '<div class="unit" val="'.$id.'">'.
 			'<table>'.
 				'<tr><td class="img">'._zpImg($r['zp_id']).
@@ -1228,10 +1265,10 @@ function zp_data($page=1, $filter=array(), $limit=20) {
 						($r['color_id'] ? '<div class="color"><span>Цвет:</span> '._colorName($r['color_id']).'</div>' : '').
 						//($r['compat_id'] == $id ? '<b>главная</b>' : '').
 						//($r['compat_id'] > 0 && $r['compat_id'] != $id ? '<b>совместимость</b>' : '').
-						(isset($zakazZayav[$id]) ? '<div class="zz">Заказано для заяв'.(count($zakazZayav[$id]) > 1 ? 'ок' : 'ки').' '.implode(', ', $zakazZayav[$id]).'</div>' : '').
+						($r['zz'] ? '<div class="zz">Заказано для заяв'.(count($r['zz']) > 1 ? 'ок' : 'ки').' '.implode(', ', $r['zz']).'</div>' : '').
 					'<td class="action">'.
-						(isset($avai[$r['zp_id']]) ? '<a class="avai avai_add">В наличии: <b>'.$avai[$r['zp_id']].'</b></a>' : '<a class="hid avai_add">Внести наличие</a>').
-						'<a class="zpzakaz'.($zakazCount ? '' : ' hid').'">Заказ<span class="cnt">'.($zakazCount ? 'ано: <b>'.$zakazCount.'</b>' : 'ать').'</span>'.$zakazEdit.'</a>'.
+						($r['avai'] ? '<a class="avai avai_add">В наличии: <b>'.$r['avai'].'</b></a>' : '<a class="hid avai_add">Внести наличие</a>').
+						'<a class="zpzakaz'.($r['zakaz'] ? '' : ' hid').'">Заказ<span class="cnt">'.($r['zakaz'] ? 'ано: <b>'.$r['zakaz'].'</b>' : 'ать').'</span>'.$zakazEdit.'</a>'.
 			'</table>'.
 		'</div>';
 	}
@@ -1378,16 +1415,10 @@ function zp_move($zp_id, $page=1) {
 			LIMIT ".$start.",".$limit;
 	$q = query($sql);
 	$spisok = array();
-	$viewer = array();
-	$zayav = array();
-	while($r = mysql_fetch_assoc($q)) {
+	while($r = mysql_fetch_assoc($q))
 		$spisok[$r['id']] = $r;
-		$viewer[$r['viewer_id_add']] = $r['viewer_id_add'];
-		if($r['zayav_id'] > 0)
-			$zayav[$r['zayav_id']] = $r['zayav_id'];
-	}
-	$viewer = _viewer($viewer);
-	_zayavNomerLink($zayav);
+	$spisok = _viewer($spisok);
+	$spisok = _zayavNomerLink($spisok);
 	$spisok = _clientLink($spisok);
 	$move = '';
 	$type = array(
@@ -1408,11 +1439,11 @@ function zp_move($zp_id, $page=1) {
 				(!$n++ && $page == 1 ? '<div class="img_del" val="'.$r['id'].'"></div>' : '').
 				$type[$r['type']].' <b>'.$count.'</b> шт. '.
 				($summa ? 'на сумму '.$summa.' руб.'.($count > 1 ? ' <span class="cenaed">('.$cena.' руб./шт.)</span> ' : '') : '').
-				($r['zayav_id'] ? 'по заявке '._zayavNomerLink($r['zayav_id']).'.' : '').
+				($r['zayav_id'] ? 'по заявке '.$r['zayav_link'].'.' : '').
 				($r['client_id'] ? 'клиенту '.$r['client_link'].'.' : '').
 			'</div>'.
 			($r['prim'] ? '<div class="prim">'.$r['prim'].'</div>' : '').
-			'<div class="dtime" title="Внёс '.$viewer[$r['viewer_id_add']]['name'].'">'.FullDataTime($r['dtime_add']).'</div>'.
+			'<div class="dtime" title="Внёс '.$r['viewer_name'].'">'.FullDataTime($r['dtime_add']).'</div>'.
 		'</div>';
 	}
 	if($start + $limit < $all) {
@@ -1478,8 +1509,8 @@ function history_insert($arr) {
 			) VALUES (
 				".WS_ID.",
 				".$arr['type'].",
-				'".(isset($arr['value']) ? $arr['value'] : '')."',
-				'".(isset($arr['value1']) ? $arr['value1'] : '')."',
+				'".(isset($arr['value']) ? addslashes($arr['value']) : '')."',
+				'".(isset($arr['value1']) ? addslashes($arr['value1']) : '')."',
 				".(isset($arr['client_id']) ? $arr['client_id'] : 0).",
 				".(isset($arr['zayav_id']) ? $arr['zayav_id'] : 0).",
 				".(isset($arr['zp_id']) ? $arr['zp_id'] : 0).",
@@ -1488,12 +1519,6 @@ function history_insert($arr) {
 	query($sql);
 }//history_insert()
 function history_types($v) {
-	if(empty($v['client_link']))
-		$v['client_link'] = '<i>удалённый клиент</i>';
-	if(!isset($v['zayav_link']))
-		$v['zayav_link'] = '<i>удалённая заявка</i>';
-	if(!isset($v['zp_link']))
-		$v['zp_link'] = '<i>удалённая запчасть</i>';
 	switch($v['type']) {
 		case 1: return 'Создана новая заявка '.$v['zayav_link'].' для клиента '.$v['client_link'].'.';
 		case 2: return 'Удалена заявка №'.$v['value'].'.';
@@ -1561,18 +1586,19 @@ function history_types_group($action) {
 	return 0;
 }//history_types_group()
 function report_history_right() {
-	$sql = "SELECT
-				DISTINCT `viewer_id_add` AS `id`
+	$sql = "SELECT DISTINCT `viewer_id_add`
 			FROM `history`
 			WHERE `ws_id`=".WS_ID;
-	$viewer = array();
 	$q = query($sql);
-	while($r = mysql_fetch_assoc($q))
-		$viewer[$r['id']] = $r['id'];
+	$viewer = array();
+	while($r = mysql_fetch_assoc($q)) {
+		$r['id'] = $r['viewer_id_add'];
+		$viewer[$r['viewer_id_add']] = $r;
+	}
 	$viewer = _viewer($viewer);
 	$workers = array();
 	foreach($viewer as $id => $w)
-		$workers[] = '{uid:'.$id.',title:"'.$w['name'].'"}';
+		$workers[] = '{uid:'.$id.',title:"'.$w['viewer_name'].'"}';
 	return '<script type="text/javascript">var workers = ['.implode(',', $workers).'];</script>'.
 		'<div class="report_history_rl">'.
 			'<div class="findHead">Сотрудник</div>'.
@@ -1599,53 +1625,46 @@ function report_history_spisok($page=1, $filter=array(), $limit=30) {
 	$all = $r['all'];
 	$start = ($page - 1) * $limit;
 
-	$sql = "SELECT *
+	$sql = "SELECT
+	            *,
+	            '<i>удалённый клиент</i>' AS `client_link`,
+	            '<i>удалённая заявка</i>' AS `zayav_link`,
+	            '<i>удалённая запчасть</i>' AS `zp_link`
 			FROM `history`
 			WHERE ".$cond."
 			ORDER BY `id` DESC
 			LIMIT ".$start.",".$limit;
 	$q = query($sql);
 	$history = array();
-	$viewer = array();
-	$zayav = array();
-	$zp = array();
-	while($r = mysql_fetch_assoc($q)) {
-		$viewer[$r['viewer_id_add']] = $r['viewer_id_add'];
-		if($r['zayav_id'] > 0)
-			$zayav[$r['zayav_id']] = $r['zayav_id'];
-		if($r['zp_id'] > 0)
-			$zp[$r['zp_id']] = $r['zp_id'];
+	while($r = mysql_fetch_assoc($q))
 		$history[$r['id']] = $r;
-	}
-	$viewer = _viewer($viewer);
+	$history = _viewer($history);
 	$history = _clientLink($history);
-	_zayavNomerLink($zayav);
-	$zp = _zpLink($zp);
+	$history = _zayavNomerLink($history);
+	$history = _zpLink($history);
+
 	$send = '';
-	$time = strtotime($history[key($history)]['dtime_add']);
 	$txt = '';
-	$viewer_id = $history[key($history)]['viewer_id_add'];
+	end($history);
+	$keyEnd = key($history);
+	reset($history);
 	foreach($history as $r) {
-		if(!$time) {
+		if(!$txt) {
 			$time = strtotime($r['dtime_add']);
-			$txt = '';
 			$viewer_id = $r['viewer_id_add'];
 		}
-		if($r['zayav_id'] && _zayavNomerLink($r['zayav_id']))
-			$r['zayav_link'] = _zayavNomerLink($r['zayav_id']);
-		if($r['zp_id'] && isset($zp[$r['zp_id']]))
-			$r['zp_link'] = $zp[$r['zp_id']];
 		$txt .= '<div class="txt">'.history_types($r).'</div>';
 		$key = key($history);
-		if(!$key
-		   || $time - strtotime($history[$key]['dtime_add']) > 900
-		   || $viewer_id != $history[$key]['viewer_id_add']) {
-			$time = 0;
+		if(!$key ||
+		   $key == $keyEnd ||
+		   $time - strtotime($history[$key]['dtime_add']) > 900 ||
+		   $viewer_id != $history[$key]['viewer_id_add']) {
 			$send .=
-			'<div class="history_unit">'.
-				'<div class="head">'.FullDataTime($r['dtime_add']).$viewer[$r['viewer_id_add']]['link'].'</div>'.
-				$txt.
-			'</div>';
+				'<div class="history_unit">'.
+					'<div class="head">'.FullDataTime($r['dtime_add']).$r['viewer_link'].'</div>'.
+					$txt.
+				'</div>';
+			$txt = '';
 		}
 		next($history);
 	}
@@ -1695,14 +1714,10 @@ function remind_data($page=1, $filter=array()) {
 			ORDER BY `day` ASC,`id` DESC
 			LIMIT ".$start.",".$limit;
 	$q = query($sql);
-	$zayav = array();
-	while($r = mysql_fetch_assoc($q)) {
-		if($r['zayav_id'])
-			$zayav[$r['zayav_id']] = $r['zayav_id'];
+	while($r = mysql_fetch_assoc($q))
 		$send['spisok'][$r['id']] = $r;
-	}
 	$send['spisok'] = _clientLink($send['spisok']);
-	_zayavNomerLink($zayav);
+	$send['spisok'] = _zayavNomerLink($send['spisok']);
 	if($start + $limit < $send['all'])
 		$send['page'] = ++$page;
 	$send['filter'] = $filter;
@@ -1745,7 +1760,7 @@ function report_remind_spisok($data) {
 			'<div class="txt">'.
 				($r['private'] ? '<u>Личное.</u> ' : '').
 				($r['client_id'] && empty($data['filter']['client']) ? 'Клиент '.$r['client_link'].': ' : '').
-				($r['zayav_id'] && empty($data['filter']['zayav']) ? 'Заявка '._zayavNomerLink($r['zayav_id']).': ' : '').
+				($r['zayav_id'] && empty($data['filter']['zayav']) ? 'Заявка '.$r['zayav_link'].': ' : '').
 				'<b>'.$r['txt'].'</b>'.
 			'</div>'.
 			'<div class="day">'.
@@ -1812,31 +1827,21 @@ function report_prihod_spisok($day_begin, $day_end, $del_show=0, $page=1) {
 			ORDER BY `dtime_add` ASC
 			LIMIT ".$start.",".$limit;
 	$q = query($sql);
-	$viewer = array();
 	$money = array();
-	$zayav = array();
-	$zp = array();
-	while($r = mysql_fetch_assoc($q)) {
-		$viewer[$r['viewer_id_add']] = $r['viewer_id_add'];
-		$viewer[$r['viewer_id_del']] = $r['viewer_id_del'];
-		if($r['zayav_id'])
-			$zayav[$r['zayav_id']] = $r['zayav_id'];
-		if($r['zp_id'] > 0)
-			$zp[$r['zp_id']] = $r['zp_id'];
-		$money[] = $r;
-	}
-	$viewer = _viewer($viewer);
-	_zayavNomerLink($zayav);
-	$zp = _zpLink($zp);
+	while($r = mysql_fetch_assoc($q))
+		$money[$r['id']] = $r;
+	$money = _viewer($money);
+	$money = _zayavNomerLink($money);
+	$money = _zpLink($money);
 	foreach($money as $r) {
 		$about = $r['prim'];
 		if($r['zayav_id'])
-			$about = 'Заявка '._zayavNomerLink($r['zayav_id']);
+			$about = 'Заявка '.$r['zayav_link'];
 		if($r['zp_id'] > 0)
-			$about = 'Продажа запчасти '.$zp[$r['zp_id']];
-		$dtimeTitle = 'Внёс: '.$viewer[$r['viewer_id_add']]['name'];
+			$about = 'Продажа запчасти '.$r['zp_link'];
+		$dtimeTitle = 'Внёс: '.$r['viewer_name'];
 		if($r['status'] == 0)
-			$dtimeTitle .= "\n".'Удалил: '.$viewer[$r['viewer_id_del']]['name'].
+			$dtimeTitle .= "\n".'Удалил: '.$r['viewer_del'].
 				"\n".FullDataTime($r['dtime_del']);
 		$send .= '<tr'.($r['status'] == 0 ? ' class="deleted"' : '').'>'.
 			'<td class="sum"><b>'.$r['sum'].'</b>'.
@@ -1853,7 +1858,21 @@ function report_prihod_spisok($day_begin, $day_end, $del_show=0, $page=1) {
 }//report_prihod_spisok()
 
 function report_rashod_right() {
-	return '<div class="findHead">Категория</div>'.
+	$sql = "SELECT DISTINCT `worker_id` AS `viewer_id_add`
+			FROM `money`
+			WHERE `ws_id`=".WS_ID." AND `sum`<0 AND `worker_id`>0";
+	$q = query($sql);
+	$viewer = array();
+	while($r = mysql_fetch_assoc($q)) {
+		$r['id'] = $r['viewer_id_add'];
+		$viewer[$r['viewer_id_add']] = $r;
+	}
+	$viewer = _viewer($viewer);
+	$workers = array();
+	foreach($viewer as $id => $w)
+		$workers[] = '{uid:'.$id.',title:"'.$w['viewer_name'].'"}';
+	return '<script type="text/javascript">var WORKERS=['.implode(',', $workers).'];</script>'.
+		'<div class="findHead">Категория</div>'.
 		'<input type="hidden" id="rashod_category">'.
 		'<div class="findHead">Сотрудник</div>'.
 		'<input type="hidden" id="rashod_worker">'.
@@ -1885,26 +1904,8 @@ function report_rashod_monthSum($year=0, $month=0, $category=0, $worker=0) {
 	return _radio('monthSum', $mon, $month, 1);
 }//report_rashod_monthSum()
 function report_rashod() {
-	$sql = "SELECT
-				`viewer_id`,
-				`first_name`,
-				`last_name`
-			FROM `vk_user`
-			WHERE `ws_id`=".WS_ID;
-	$q = query($sql);
-	$viewers = array();
-	while($r = mysql_fetch_assoc($q))
-		$viewers[] = '{uid:'.$r['viewer_id'].',title:"'.$r['first_name'].' '.$r['last_name'].'"}';
-
-	$sql = "SELECT `id`,`name` FROM `setup_rashod_category` ORDER BY `name` ASC";
-	$q = query($sql);
-	$cat = array();
-	while($r = mysql_fetch_assoc($q))
-		$cat[] = '{uid:'.$r['id'].',title:"'.$r['name'].'"}';
-
 	return '<script type="text/javascript">'.
-				'var rashodViewers = ['.implode(',', $viewers).'];'.
-				'var rashodCaregory = ['.implode(',', $cat).'];'.
+				'var RASHOD_VIEWER='.query_selJson("SELECT `viewer_id`,CONCAT(`first_name`,' ',`last_name`) FROM `vk_user` WHERE `ws_id`=".WS_ID).';'.
 			'</script>'.
 		'<div id="report_rashod">'.
 			'<div class="headName">Список расходов мастерской<a class="add">Внести новый расход</a></div>'.
@@ -1931,12 +1932,6 @@ function report_rashod_spisok($page=1, $month=false, $category=0, $worker=0) {
 	$all = $r['all'];
 	$start = ($page - 1) * $limit;
 
-	$rashodCat = array();
-	$sql = "SELECT `id`,`name` FROM `setup_rashod_category`";
-	$q = query($sql);
-	while($c = mysql_fetch_assoc($q))
-		$rashodCat[$c['id']] = $c['name'];
-
 	$send = '';
 	if($page == 1) {
 		$ex = explode('-', $month);
@@ -1957,25 +1952,20 @@ function report_rashod_spisok($page=1, $month=false, $category=0, $worker=0) {
 			ORDER BY `dtime_add` ASC
 			LIMIT ".$start.",".$limit;
 	$q = query($sql);
-	$viewer = array();
 	$rashod = array();
-	while($r = mysql_fetch_assoc($q)) {
-		$viewer[$r['viewer_id_add']] = $r['viewer_id_add'];
-		$viewer[$r['viewer_id_del']] = $r['viewer_id_del'];
-		$viewer[$r['worker_id']] = $r['worker_id'];
-		$rashod[] = $r;
-	}
-	$viewer = _viewer($viewer);
+	while($r = mysql_fetch_assoc($q))
+		$rashod[$r['id']] = $r;
+	$rashod = _viewer($rashod);
 	foreach($rashod as $r) {
-		$dtimeTitle = 'Внёс: '.$viewer[$r['viewer_id_add']]['name'];
+		$dtimeTitle = 'Внёс: '.$r['viewer_name'];
 		if($r['status'] == 0)
-			$dtimeTitle .= "\n".'Удалил: '.$viewer[$r['viewer_id_del']]['name'].
+			$dtimeTitle .= "\n".'Удалил: '.$r['viewer_del'].
 				"\n".FullDataTime($r['dtime_del']);
 		$send .= '<tr'.($r['status'] == 0 ? ' class="deleted"' : '').'>'.
 			'<td class="sum"><b>'.abs($r['sum']).'</b>'.
-			'<td>'.($r['rashod_category'] ? '<em>'.$rashodCat[$r['rashod_category']].($r['prim'] || $r['worker_id'] ? ':' : '').'</em>' : '').
-				   ($r['worker_id'] ? $viewer[$r['worker_id']]['link'].($r['prim'] ? ', ' : '') : '').
-				   $r['prim'].
+			'<td>'.($r['rashod_category'] ? '<em>'._rashod($r['rashod_category']).($r['prim'] || $r['worker_id'] ? ':' : '').'</em>' : '').
+				   ($r['worker_id'] ? _viewer($r['worker_id'], 'link').
+				   ($r['prim'] ? ', ' : '') : '').$r['prim'].
 			'<td class="dtime" title="'.$dtimeTitle.'">'.FullDataTime($r['dtime_add']).
 			'<td class="edit">'.($r['status'] == 1 ?
 				'<div class="img_edit" val="'.$r['id'].'" title="Редактировать"></div>'.
@@ -2045,18 +2035,15 @@ function report_kassa_spisok($page=1, $del_show=0) {
 				ORDER BY `dtime_add` ASC
 				LIMIT ".$start.",".$limit;
 		$q = query($sql);
-		$viewer = array();
 		$money = array();
-		while($r = mysql_fetch_assoc($q)) {
-			$viewer[$r['viewer_id_add']] = $r['viewer_id_add'];
-		$money[] = $r;
-	}
-	$viewer = _viewer($viewer);
+		while($r = mysql_fetch_assoc($q))
+			$money[$r['id']] = $r;
+	$money = _viewer($money);
 	foreach($money as $r) {
 		$send .= '<tr'.($r['status'] == 0 ? ' class="deleted"' : '').'>'.
 			'<td class="sum"><b>'.$r['sum'].'</b>'.
 			'<td>'.$r['txt'].
-			'<td class="dtime" title="Внёс: '.$viewer[$r['viewer_id_add']]['name'].'">'.FullDataTime($r['dtime_add']).
+			'<td class="dtime" title="Внёс: '.$r['viewer_name'].'">'.FullDataTime($r['dtime_add']).
 			'<td class="edit">'.($r['status'] == 1 ?
 				'<div class="img_del" val="'.$r['id'].'" title="Удалить"></div>' :
 				'<div class="img_rest" val="'.$r['id'].'" title="Восстановить"></div>');

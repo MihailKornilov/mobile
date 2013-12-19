@@ -14,7 +14,7 @@ function sa_cookie_back() {
 	$d1 = empty($_COOKIE['pre_d1']) ? '' :'&d1='.$_COOKIE['pre_d1'];
 	$id = empty($_COOKIE['pre_id']) ? '' :'&id='.$_COOKIE['pre_id'];
 	return '<a href="'.URL.'&p='.$_COOKIE['pre_p'].$d.$d1.$id.'">Назад</a> » ';
-}//end of sa_cookie_back()
+}//sa_cookie_back()
 
 function sa_index() {
 	$userCount = query_value("SELECT COUNT(`viewer_id`) FROM `vk_user`");
@@ -37,7 +37,7 @@ function sa_index() {
 		'<BR>'.
 		//'<A href="'.URL.'&p=sa&d=zp-name">Наименования запчастей</A><BR>'.
 	'</div>';
-}//end of sa_index()
+}//sa_index()
 
 function sa_ws() {
 	$wsSpisok =
@@ -62,7 +62,7 @@ function sa_ws() {
 		'<div class="count">Всего <b>'.$count.'</b> мастерск'._end($count, 'ая', 'их').'.</div>'.
 		'<table class="_spisok">'.$wsSpisok.'</table>'.
 	'</div>';
-}//end of sa_ws()
+}//sa_ws()
 function sa_ws_tables() {//Таблицы, которые задействуются в мастерских
 	return array(
 		'client' => 'Клиенты',
@@ -75,7 +75,7 @@ function sa_ws_tables() {//Таблицы, которые задействуются в мастерских
 		'history' => 'История действий',
 		'reminder' => 'Задания'
 	);
-}//end of sa_ws_tables()
+}//sa_ws_tables()
 function sa_ws_info($id) {
 	$sql = "SELECT * FROM `workshop` WHERE `id`=".$id;
 	if(!$ws = mysql_fetch_assoc(query($sql)))
@@ -126,7 +126,7 @@ function sa_ws_info($id) {
 		'<br />'.
 		'<div class="vkButton ws_zayav_balans" val="'.$ws['id'].'"><button>Обновить суммы начислений и платежей заявок</button></div>'.
 	'</div>';
-}//end of sa_ws_info()
+}//sa_ws_info()
 
 function sa_device() {
 	return '<div class="path">'.sa_cookie_back().'<a href="'.URL.'&p=sa">Администрирование</a> » Устройства</div>'.
@@ -135,7 +135,7 @@ function sa_device() {
 		'<div class="headName">Список устройств<a class="add">Добавить новое наименование</a></div>'.
 		'<div class="spisok">'.sa_device_spisok().'</div>'.
 	'</div>';
-}//end of sa_device()
+}//sa_device()
 function sa_device_spisok() {
 	$sql = "SELECT
 				`bd`.`id` AS `id`,
@@ -196,7 +196,7 @@ function sa_device_spisok() {
 			'</table>';
 	$spisok .= '</dl>';
 	return $spisok;
-}//end of sa_device_spisok()
+}//sa_device_spisok()
 function sa_vendor() {
 	if(empty($_GET['id']) || !preg_match(REGEXP_NUMERIC, $_GET['id']))
 		return 'Ошибка id. <a href="'.URL.'&p=sa&d=device">Назад</a>.';
@@ -216,7 +216,7 @@ function sa_vendor() {
 		'<div class="headName">Список производителей для "'.$dev['name'].'"<a class="add">Добавить</a></div>'.
 		'<div class="spisok">'.sa_vendor_spisok($device_id).'</div>'.
 	'</div>';
-}//end of sa_vendor()
+}//sa_vendor()
 function sa_vendor_spisok($device_id) {
 	$sql = "SELECT
 				`bv`.`id`,
@@ -270,7 +270,7 @@ function sa_vendor_spisok($device_id) {
 			'</table>';
 	$spisok .= '</dl>';
 	return $spisok;
-}//end of sa_vendor_spisok()
+}//sa_vendor_spisok()
 function sa_model() {
 	if(empty($_GET['vendor_id']) || !preg_match(REGEXP_NUMERIC, $_GET['vendor_id']))
 		return 'Ошибка vendor_id. <a href="'.URL.'&p=sa&d=device">Назад</a>.';
@@ -298,7 +298,7 @@ function sa_model() {
 			sa_model_spisok($vendor_id).
 		'</table>'.
 	'</div>';
-}//end of sa_model()
+}//sa_model()
 function sa_model_spisok($vendor_id, $page=1, $find='') {
 	$limit = 15;
 	$all = query_value("SELECT COUNT(`id`) FROM `base_model` WHERE `vendor_id`=".$vendor_id.($find ? " AND `name` LIKE '%".$find."%'" : ''));
@@ -340,7 +340,7 @@ function sa_model_spisok($vendor_id, $page=1, $find='') {
 			'<div class="ajaxNext" val="'.($page + 1).'"><span>Показать ещё '.$c.' модел'._end($c, 'ь', 'и', 'ей').'</span></div>';
 	}
 	return $send;
-}//end of sa_model_spisok()
+}//sa_model_spisok()
 
 
 function sa_equip() {
@@ -358,7 +358,7 @@ function sa_equip() {
 				'<td id="eq-spisok">'.sa_equip_spisok($default_id).
 		'</table>'.
 	'</div>';
-}//end of sa_equip()
+}//sa_equip()
 function sa_equip_spisok($device_id) {
 	$equip = query_value("SELECT `equip` FROM `base_device` WHERE `id`=".$device_id);
 	$arr = explode(',', $equip);

@@ -10,8 +10,8 @@ function jsonError($values=null) {
 	else
 		$send['text'] = utf8($values);
 	die(json_encode($send));
-}//end of jsonError()
+}//jsonError()
 function jsonSuccess($send=array()) {
 	$send['success'] = 1;
 	die(json_encode($send));
-}//end of jsonSuccess()
+}//jsonSuccess()

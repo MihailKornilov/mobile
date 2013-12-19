@@ -54,13 +54,13 @@ function _hashRead() {
 			}
 	}
 	_hashCookieSet();
-}//end of _hashRead()
+}//_hashRead()
 function _hashCookieSet() {
 	setcookie('p', $_GET['p'], time() + 2592000, '/');
 	setcookie('d', isset($_GET['d']) ? $_GET['d'] : '', time() + 2592000, '/');
 	setcookie('d1', isset($_GET['d1']) ? $_GET['d1'] : '', time() + 2592000, '/');
 	setcookie('id', isset($_GET['id']) ? $_GET['id'] : '', time() + 2592000, '/');
-}//end of _hashCookieSet()
+}//_hashCookieSet()
 function _cacheClear($ws_id=WS_ID) {
 	xcache_unset(CACHE_PREFIX.'setup_global');
 	xcache_unset(CACHE_PREFIX.'viewer_'.VIEWER_ID);
@@ -72,6 +72,7 @@ function _cacheClear($ws_id=WS_ID) {
 	xcache_unset(CACHE_PREFIX.'device_place');
 	xcache_unset(CACHE_PREFIX.'device_status');
 	xcache_unset(CACHE_PREFIX.'device_equip');
+	xcache_unset(CACHE_PREFIX.'rashod');
 	if($ws_id) {
 		xcache_unset(CACHE_PREFIX.'remind_active'.$ws_id);
 		xcache_unset(CACHE_PREFIX.'workshop_'.$ws_id);
@@ -85,7 +86,7 @@ function _header() {
 	global $html;
 	$html =
 		'<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">'.
-		//'<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">'.
+//		'<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">'.
 		'<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="ru" lang="ru">'.
 		'<head>'.
 		'<meta http-equiv="content-type" content="text/html; charset=windows-1251" />'.
@@ -127,9 +128,9 @@ function _header() {
 		'</head>'.
 		'<body>'.
 		'<div id="frameBody">'.
-		'<iframe id="frameHidden" name="frameHidden"></iframe>'.
-		(SA_VIEWER_ID ? '<div class="sa_viewer_msg">Вы вошли под пользователем '._viewer(SA_VIEWER_ID, 'link').'. <a class="leave">Выйти</a></div>' : '');
-}//end of _header()
+			'<iframe id="frameHidden" name="frameHidden"></iframe>'.
+			(SA_VIEWER_ID ? '<div class="sa_viewer_msg">Вы вошли под пользователем '._viewer(SA_VIEWER_ID, 'link').'. <a class="leave">Выйти</a></div>' : '');
+}//_header()
 
 function _footer() {
 	global $html, $sqlQuery, $sqlCount, $sqlTime;
@@ -180,7 +181,7 @@ function _footer() {
 				(SA ? '$("#admin EM").html(((new Date().getTime())-TIME)/1000);' : '').
 			 '</script>'.
 		 '</div></BODY></HTML>';
-}//end of _footer()
+}//_footer()
 
 function _dopLinks($p, $data, $d=false, $d1=false) {//Дополнительное меню на сером фоне
 	$s = $d1 ? $d1 : $d;
@@ -202,7 +203,7 @@ function _dopLinks($p, $data, $d=false, $d1=false) {//Дополнительное меню на сер
 	}
 	$send .= '</div>';
 	return $send;
-}//end of _dopLinks()
+}//_dopLinks()
 
 function GvaluesCreate() {//Составление файла G_values.js
 	$save = 'function SpisokToAss(s){var a=[];for(var n=0;n<s.length;a[s[n].uid]=s[n].title,n++);return a}'.
@@ -214,7 +215,9 @@ function GvaluesCreate() {//Составление файла G_values.js
 
 		'G.device_spisok='.query_selJson("SELECT `id`,`name` FROM base_device ORDER BY sort").';G.device_ass=SpisokToAss(G.device_spisok);'.
 		'G.device_rod_spisok='.query_selJson("SELECT `id`,name_rod FROM base_device ORDER BY sort").';G.device_rod_ass=SpisokToAss(G.device_rod_spisok);'.
-		'G.device_mn_spisok='.query_selJson("SELECT `id`,name_mn FROM base_device ORDER BY sort").';G.device_mn_ass=SpisokToAss(G.device_mn_spisok);';
+		'G.device_mn_spisok='.query_selJson("SELECT `id`,name_mn FROM base_device ORDER BY sort").';G.device_mn_ass=SpisokToAss(G.device_mn_spisok);'.
+		'var RASHOD_CATEGORY='.query_selJson("SELECT `id`,`name` FROM `setup_rashod_category` ORDER BY `name` ASC").';';
+
 
 	$sql = "SELECT * FROM `base_vendor` ORDER BY `device_id`,`sort`";
 	$q = query($sql);
@@ -260,7 +263,7 @@ function GvaluesCreate() {//Составление файла G_values.js
 
 	query("UPDATE `setup_global` SET `g_values`=`g_values`+1");
 	xcache_unset(CACHE_PREFIX.'setup_global');
-}//end of GvaluesCreate()
+}//GvaluesCreate()
 
 function _imageResize($x_cur, $y_cur, $x_new, $y_new) { // изменение размера изображения
 	$x = $x_new;
@@ -288,7 +291,7 @@ function _imageResize($x_cur, $y_cur, $x_new, $y_new) { // изменение размера изо
 	$send['x'] = $x;
 	$send['y'] = $y;
 	return $send;
-}//end of _imageResize()
+}//_imageResize()
 function _getImg($type, $arr, $size='small', $x_new=10000, $y_new=10000, $class=false) {
 	$id = false;
 	if(!is_array($arr)) {
@@ -339,7 +342,7 @@ function _getImg($type, $arr, $size='small', $x_new=10000, $y_new=10000, $class=
 			'img' => constant($id)
 		);
 	return $send;
-}//end of _getImg()
+}//_getImg()
 function _zayavImg($zayav_id, $size='small', $x_new=10000, $y_new=10000, $class=false) {
 	$res = _getImg('zayav', $zayav_id, $size, $x_new, $y_new, $class);
 	if($res['success'])
@@ -347,15 +350,15 @@ function _zayavImg($zayav_id, $size='small', $x_new=10000, $y_new=10000, $class=
 	$sql = "SELECT `base_model_id` FROM `zayavki` WHERE `id`=".$zayav_id." LIMIT 1";
 	$r = mysql_fetch_assoc(query($sql));
 	return _modelImg($r['base_model_id'], $size, $x_new, $y_new, $class);
-}//end of _zayavImg()
+}//_zayavImg()
 function _modelImg($model_id, $size='small', $x_new=10000, $y_new=10000, $class=false) {
 	$res = _getImg('dev', $model_id, $size, $x_new, $y_new, $class);
 	return $res['img'];
-}//end of _modelImg()
+}//_modelImg()
 function _zpImg($zp_id, $size='small', $x_new=10000, $y_new=10000, $class=false) {
 	$res = _getImg('zp', $zp_id, $size, $x_new, $y_new, $class);
 	return $res['img'];
-}//end of _modelImg()
+}//_modelImg()
 
 function _deviceName($device_id, $rod=false) {
 	if(!defined('DEVICE_LOADED')) {
@@ -377,7 +380,7 @@ function _deviceName($device_id, $rod=false) {
 		define('DEVICE_LOADED', true);
 	}
 	return constant('DEVICE_NAME_'.($rod ? 'ROD_' : '').$device_id).' ';
-}//end of _deviceName()
+}//_deviceName()
 function _vendorName($vendor_id) {
 	if(!defined('VENDOR_LOADED')) {
 		$key = CACHE_PREFIX.'vendor_name';
@@ -394,7 +397,7 @@ function _vendorName($vendor_id) {
 		define('VENDOR_LOADED', true);
 	}
 	return defined('VENDOR_NAME_'.$vendor_id) ? constant('VENDOR_NAME_'.$vendor_id).' ' : '';
-}//end of _vendorName()
+}//_vendorName()
 function _modelName($model_id) {
 	if(!defined('MODEL_LOADED')) {
 		$keyCount = CACHE_PREFIX.'model_name_count';
@@ -429,7 +432,7 @@ function _modelName($model_id) {
 		define('MODEL_LOADED', true);
 	}
 	return defined('MODEL_NAME_'.$model_id) ? constant('MODEL_NAME_'.$model_id) : '';
-}//end of _modelName()
+}//_modelName()
 function _zpName($name_id) {
 	if(!defined('ZP_NAME_LOADED')) {
 		$key = CACHE_PREFIX.'zp_name';
@@ -446,12 +449,12 @@ function _zpName($name_id) {
 		define('ZP_NAME_LOADED', true);
 	}
 	return constant('ZP_NAME_'.$name_id);
-}//end of _zpName()
+}//_zpName()
 function _zpCompatId($zp_id) {
 	$sql = "SELECT `id`,`compat_id` FROM `zp_catalog` WHERE `id`=".intval($zp_id);
 	$zp = mysql_fetch_assoc(query($sql));
 	return $zp['compat_id'] ? $zp['compat_id'] : $zp['id'];
-}//end of _zpCompatId()
+}//_zpCompatId()
 function _zpAvaiSet($zp_id) { // Обновление количества наличия запчасти
 	$zp_id = _zpCompatId($zp_id);
 	$count = query_value("SELECT IFNULL(SUM(`count`),0) FROM `zp_move` WHERE `ws_id`=".WS_ID." AND `zp_id`=".$zp_id." LIMIT 1");
@@ -459,7 +462,7 @@ function _zpAvaiSet($zp_id) { // Обновление количества наличия запчасти
 	if($count > 0)
 		query("INSERT INTO `zp_avai` (`ws_id`,`zp_id`,`count`) VALUES (".WS_ID.",".$zp_id.",".$count.")");
 	return $count;
-}//end of _zpAvaiSet()
+}//_zpAvaiSet()
 function _colorName($color_id) {
 	if(!defined('COLOR_LOADED')) {
 		$key = CACHE_PREFIX.'color_name';
@@ -477,7 +480,7 @@ function _colorName($color_id) {
 		define('COLOR_LOADED', true);
 	}
 	return constant('COLOR_'.$color_id);
-}//end of _colorName()
+}//_colorName()
 function _devPlace($place_id) {
 	if(!defined('PLACE_LOADED')) {
 		$key = CACHE_PREFIX.'device_place';
@@ -495,7 +498,7 @@ function _devPlace($place_id) {
 		define('PLACE_LOADED', true);
 	}
 	return constant('PLACE_'.$place_id);
-}//end of _devPlace()
+}//_devPlace()
 function _devStatus($status_id) {
 	if(!defined('DEV_STATUS_LOADED')) {
 		$key = CACHE_PREFIX.'device_status';
@@ -513,7 +516,7 @@ function _devStatus($status_id) {
 		define('DEV_STATUS_LOADED', true);
 	}
 	return constant('DEV_STATUS_'.$status_id);
-}//end of _devStatus()
+}//_devStatus()
 
 function equipCache() {
 	$key = CACHE_PREFIX.'device_equip';
@@ -530,7 +533,7 @@ function equipCache() {
 		xcache_set($key, $spisok, 86400);
 	}
 	return $spisok;
-}//end of equipCache()
+}//equipCache()
 function devEquipCheck($device_id=0, $ids='') {//Получение списка комплектаций в виде чекбоксов для внесения или редактирования заявки
 	if($device_id) {
 		$v = query_value("SELECT `equip` FROM `base_device` WHERE `id`=".$device_id);
@@ -550,7 +553,7 @@ function devEquipCheck($device_id=0, $ids='') {//Получение списка комплектаций в
 		if(isset($equip[$id]) || !$device_id)
 			$send .= _check('eq_'.$id, $r['name'], isset($sel[$id]) ? 1 : 0);
 	return $send;
-}//end of devEquipCheck()
+}//devEquipCheck()
 
 
 
@@ -575,7 +578,7 @@ function ws_create_info() {
 		'</div>'.
 		'<div class="vkButton"><button onclick="location.href=\''.URL.'&p=wscreate&d=step1\'">Приступить к созданию мастерской</button></div>'.
 	'</div>';
-}//end of ws_create_info()
+}//ws_create_info()
 function ws_create_step1() {
 	$sql = "SELECT `id`,`name_mn` FROM `base_device` ORDER BY `sort`";
 	$q = query($sql);
@@ -603,4 +606,4 @@ function ws_create_step1() {
 		'<div class="vkCancel"><button>Отмена</button></div>'.
 		'<script type="text/javascript" src="'.SITE.'/js/ws_create_step1'.(DEBUG ? '' : '.min').'.js?'.VERSION.'"></script>'.
 	'</div>';
-}//end of ws_create_step1()
+}//ws_create_step1()

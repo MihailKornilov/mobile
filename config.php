@@ -42,7 +42,7 @@ function _getSetupGlobal() {//Получение глобальных данных
 	}
 	define('VERSION', $g['script_style']);
 	define('G_VALUES', $g['g_values']);
-}//end of _getSetupGlobal()
+}//_getSetupGlobal()
 function _getVkUser() {//Получение данных о пользователе
 	$u = _viewer();
 	define('WS_ID', $u['ws_id'] && _getWorkshop($u['ws_id']) ? $u['ws_id'] : 0);
@@ -50,7 +50,7 @@ function _getVkUser() {//Получение данных о пользователе
 	define('VIEWER_COUNTRY_ID', $u['country_id']);
 	define('VIEWER_CITY_ID', $u['city_id']);
 	define('VIEWER_ADMIN', $u['admin']);
-}//end of _getVkUser()
+}//_getVkUser()
 function _getWorkshop($ws_id) {//Получение данных о мастерской
 	$ws = xcache_get(CACHE_PREFIX.'workshop_'.$ws_id);
 	if(empty($ws)) {
@@ -64,4 +64,4 @@ function _getWorkshop($ws_id) {//Получение данных о мастерской
 	define('WS_ADMIN', $ws['admin_id']);
 	define('KASSA_START', $ws['kassa_start']);
 	return true;
-}//end of _getWorkshop()
+}//_getWorkshop()

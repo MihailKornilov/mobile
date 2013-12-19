@@ -28,7 +28,7 @@ switch(@$_POST['op']) {
 		if(empty($name))
 			jsonError();
 
-		$sql = "SELECT `name` FROM `base_device` WHERE `name`='".$name."'";
+		$sql = "SELECT `name` FROM `base_device` WHERE `name`='".addslashes($name)."'";
 		if(mysql_num_rows(query($sql)))
 			jsonError();
 
@@ -40,9 +40,9 @@ switch(@$_POST['op']) {
 				`sort`,
 				`viewer_id_add`
 			) values (
-				'".$name."',
-				'".$name."',
-				'".$name."',
+				'".addslashes($name)."',
+				'".addslashes($name)."',
+				'".addslashes($name)."',
 				".$sort.",
 				".VIEWER_ID."
 			)";
@@ -66,7 +66,7 @@ switch(@$_POST['op']) {
 			jsonError();
 
 		$device_id = intval($_POST['device_id']);
-		$sql = "SELECT `name` FROM `base_vendor` WHERE `device_id`=".$device_id." AND `name`='".$name."'";
+		$sql = "SELECT `name` FROM `base_vendor` WHERE `device_id`=".$device_id." AND `name`='".addslashes($name)."'";
 		if(mysql_num_rows(query($sql)))
 			jsonError();
 
@@ -78,7 +78,7 @@ switch(@$_POST['op']) {
 				`viewer_id_add`
 			) values (
 				".$device_id.",
-				'".$name."',
+				'".addslashes($name)."',
 				".$sort.",
 				".VIEWER_ID."
 			)";
@@ -106,7 +106,7 @@ switch(@$_POST['op']) {
 				FROM `base_model`
 				WHERE `device_id`=".$device_id."
 				  AND `vendor_id`=".$vendor_id."
-				  AND `name`='".$name."'";
+				  AND `name`='".addslashes($name)."'";
 		if(mysql_num_rows(query($sql)))
 			jsonError();
 
@@ -118,7 +118,7 @@ switch(@$_POST['op']) {
 			) values (
 				".$device_id.",
 				".$vendor_id.",
-				'".$name."',
+				'".addslashes($name)."',
 				".VIEWER_ID."
 			)";
 		query($sql);
@@ -220,7 +220,9 @@ switch(@$_POST['op']) {
 			jsonError();
 		if($join && $client_id == $client2)
 			jsonError();
-		query("UPDATE `client` SET `fio`='".$fio."',`telefon`='".$telefon."' WHERE `id`=".$client_id);
+		query("UPDATE `client`
+			   SET `fio`='".addslashes($fio)."',`telefon`='".addslashes($telefon)."'
+			   WHERE `id`=".$client_id);
 		if($join) {
 			query("UPDATE `accrual`	SET `client_id`=".$client_id." WHERE `client_id`=".$client2);
 			query("UPDATE `money`	  SET `client_id`=".$client_id." WHERE `client_id`=".$client2);
@@ -346,19 +348,19 @@ switch(@$_POST['op']) {
 					".$model.",
 
 					'".$_POST['equip']."',
-					'".$imei."',
-					'".$serial."',
+					'".addslashes($imei)."',
+					'".addslashes($serial)."',
 					".$color.",
 
 					1,
 					current_timestamp,
 
 					1,
-					".$place.",
+					".addslashes($place).",
 					'".$place_other."',
 
 					".VIEWER_ID.",
-					'".$modelName." ".$imei." ".$serial."'
+					'".addslashes($modelName.' '.$imei.' '.$serial)."'
 				)";
 		query($sql);
 		$send['id'] = mysql_insert_id();
@@ -471,11 +473,11 @@ switch(@$_POST['op']) {
 					`base_device_id`=".$device.",
 					`base_vendor_id`=".$vendor.",
 					`base_model_id`=".$model.",
-					`imei`='".$imei."',
-					`serial`='".$serial."',
+					`imei`='".addslashes($imei)."',
+					`serial`='".addslashes($serial)."',
 					`color_id`=".$color_id.",
 					`equip`='".$equip."',
-					`find`='"._modelName($model)." ".$imei." ".$serial."'
+					`find`='".addslashes(_modelName($model).' '.$imei.' '.$serial)."'
 				WHERE `id`=".$zayav_id;
 		query($sql);
 
@@ -2080,12 +2082,16 @@ switch(@$_POST['op']) {
 		if(empty($_POST['name']))
 			jsonError();
 		$sql = "INSERT INTO `setup_rashod_category` (
-					`name`,`viewer_id_add`
+					`name`,
+					`viewer_id_add`
 				) VALUES (
-					'".win1251(htmlspecialchars(trim($_POST['name'])))."',".VIEWER_ID."
+					'".win1251(htmlspecialchars(trim($_POST['name'])))."',
+					".VIEWER_ID."
 				)";
 		query($sql);
 		$send['id'] = mysql_insert_id();
+		GvaluesCreate();
+		xcache_unset(CACHE_PREFIX.'rashod');
 		jsonSuccess($send);
 		break;
 	case 'tooltip_zayav_info_get':

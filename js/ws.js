@@ -2731,13 +2731,13 @@ $(document)
 		category.vkSel({
 			width:180,
 			title0:'Не указана',
-			spisok:rashodCaregory,
+			spisok:RASHOD_CATEGORY,
 			funcAdd:rashodCategoryAdd
 		});
 
 		worker.vkSel({
 			title0:'Не выбран',
-			spisok:rashodViewers
+			spisok:RASHOD_VIEWER
 		});
 
 		kassa._radio({
@@ -2831,13 +2831,13 @@ $(document)
 			category.vkSel({
 				width:180,
 				title0:'Не указана',
-				spisok:rashodCaregory,
+				spisok:RASHOD_CATEGORY,
 				funcAdd:rashodCategoryAdd
 			});
 
 			worker.vkSel({
 				title0:'Не выбран',
-				spisok:rashodViewers
+				spisok:RASHOD_VIEWER
 			});
 
 			kassa._radio({
@@ -3449,6 +3449,8 @@ $(document)
 				location.href = URL + '&p=' + $(this).attr('val');
 			});
 			$('.vkButton').click(function () {
+				if($(this).hasClass('busy'))
+					return;
 				var send = {
 					op:'zayav_add',
 					client:$('#client_id').val(),
@@ -3583,13 +3585,13 @@ $(document)
 			$('#rashod_category').vkSel({
 				width:140,
 				title0:'Любая категория',
-				spisok:rashodCaregory,
+				spisok:RASHOD_CATEGORY,
 				func:reportRashodLoad
 			});
 			$('#rashod_worker').vkSel({
 				width:140,
 				title0:'Все сотрудники',
-				spisok:rashodViewers,
+				spisok:WORKERS,
 				func:reportRashodLoad
 			});
 			$('#rashod_year').years({func:reportRashodLoad});
