@@ -8,7 +8,7 @@ if(count($spisok) > 0) {
     $dd[$	name_mn = iconv("WINDOWS-1251","UTF-8",$sp->name_mn);
     $dd[$n]-	dor=$VK->QRow("select count(id) from base_vendor where device_id=".$sp->id);
     $dd[$n]->mo	$VK->QRow("select count(id) from base_model where device_id=".$sp->id);
-    $dd[$n]->zayav	->QRow("select count(id) from zayavki where zayav_status>0 and base_device_id=".$sp->id);
+    $dd[$n]->zayav	->QRow("select count(id) from zayav where zayav_status>0 and base_device_id=".$sp->id);
     $dd[$n]->insert =	  }
 }
 include('incHeader.php');

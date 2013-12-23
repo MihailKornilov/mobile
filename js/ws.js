@@ -64,6 +64,39 @@ var AJAX_WS = SITE + '/ajax/ws.php?' + VALUES,
 		}
 	},
 
+	colorSel = function(spisok) {
+		$('#color_id').vkSel({
+			width:120,
+			display:'inline-block',
+			title0:'Цвет не указан',
+			spisok:spisok,
+			func:colorSelDop
+		});
+		window.color_dop = $('#color_dop').vkSel({
+			width:120,
+			display:'inline-block',
+			title0:'Цвет не указан',
+			spisok:COLOR_SPISOK,
+			func:function(id) {
+				if(id > 0)
+					colorSel(COLORPRE_SPISOK);
+				else
+					colorSel(COLOR_SPISOK);
+			}
+		}).o;
+	},
+	colorSelDop = function(id) {
+		if(id > 0) {
+			if($('#vkSel_color_id').length == 0)
+				colorSel(COLORPRE_SPISOK);
+			$('.color_dop').removeClass('dn');
+		} else {
+			colorSel(COLOR_SPISOK);
+			color_dop.val(0);
+			$('.color_dop').addClass('dn');
+		}
+	},
+
 	clientAdd = function(callback) {
 		var html = '<table style="border-spacing:10px">' +
 				'<tr><td class="label">Имя:<TD><input type="text" id="fio" style="width:220px;">' +
@@ -213,7 +246,7 @@ var AJAX_WS = SITE + '/ajax/ws.php?' + VALUES,
 	zayavImgUpdate = function() {
 		var send = {
 			op:'zayav_img_update',
-			zayav_id:G.zayavInfo.id
+			zayav_id:ZAYAV.id
 		};
 		$.post(AJAX_WS, send, function (res) {
 			if(res.success) {
@@ -1166,18 +1199,20 @@ $(document)
 
 	.on('click', '#zayavInfo .zedit', function() {
 		var html = '<TABLE class="zayav-info-edit">' +
-			'<tr><td class="label r">Клиент:		<TD><INPUT type="hidden" id="client_id" value="' + G.zayavInfo.client_id + '">' +
+			'<tr><td class="label r">Клиент:		<TD><INPUT type="hidden" id="client_id" value="' + ZAYAV.client_id + '">' +
 			'<tr><td class="label r top">Устройство:<TD><TABLE><TD id="dev"><TD id="device_image"></TABLE>' +
-			'<tr><td class="label r">IMEI:		  <TD><INPUT type="text" id="imei" maxlength="20" value="' + G.zayavInfo.imei + '">' +
-			'<tr><td class="label r">Серийный номер:<TD><INPUT type="text" id="serial" maxlength="30" value="' + G.zayavInfo.serial + '">' +
-			'<tr><td class="label r">Цвет:		  <TD><INPUT type="hidden" id="color_id" value="' + G.zayavInfo.color_id + '">' +
-			'<tr class="tr_equip' + (G.zayavInfo.equip ? '' : ' dn') + '">' +
-				'<td class="label r">Комплектация:  <TD class="equip_spisok">' + G.zayavInfo.equip +
+			'<tr><td class="label r">IMEI:		  <TD><INPUT type="text" id="imei" maxlength="20" value="' + ZAYAV.imei + '">' +
+			'<tr><td class="label r">Серийный номер:<TD><INPUT type="text" id="serial" maxlength="30" value="' + ZAYAV.serial + '">' +
+			'<tr><td class="label r">Цвет:' +
+				'<td><INPUT type="hidden" id="color_id" value="' + ZAYAV.color_id + '" />' +
+					'<span class="color_dop dn"><tt>-</tt><INPUT TYPE="hidden" id="color_dop" value="' + ZAYAV.color_dop + '" /></span>' +
+			'<tr class="tr_equip' + (ZAYAV.equip ? '' : ' dn') + '">' +
+				'<td class="label r">Комплектация:  <TD class="equip_spisok">' + ZAYAV.equip +
 		'</TABLE>',
 			dialog = _dialog({
 				width:410,
 				top:30,
-				head:'Заявка №' + G.zayavInfo.nomer + ' - Редактирование',
+				head:'Заявка №' + ZAYAV.nomer + ' - Редактирование',
 				content:html,
 				butSubmit:'Сохранить',
 				submit:submit
@@ -1193,21 +1228,21 @@ $(document)
 		});
 		$('#dev').device({
 			width:190,
-			device_id:G.zayavInfo.device,
-			vendor_id:G.zayavInfo.vendor,
-			model_id:G.zayavInfo.model,
+			device_id:ZAYAV.device,
+			vendor_id:ZAYAV.vendor,
+			model_id:ZAYAV.model,
 			device_ids:G.device_ids,
 			add:1,
 			func:zayavDevSelect
 		});
 		modelImageGet();
-		$('#color_id').vkSel({width:170, title0:'Цвет не указан', spisok:G.color_spisok});
+		colorSelDop(ZAYAV.color_id);
 
 		function submit() {
 			var msg,
 				send = {
 					op:'zayav_edit',
-					zayav_id:G.zayavInfo.id,
+					zayav_id:ZAYAV.id,
 					client_id:$('#client_id').val(),
 					device:$('#dev_device').val(),
 					vendor:$('#dev_vendor').val(),
@@ -1215,6 +1250,7 @@ $(document)
 					imei: $.trim($('#imei').val()),
 					serial:$.trim($('#serial').val()),
 					color_id:$('#color_id').val(),
+					color_dop:$('#color_dop').val(),
 					equip:''
 				};
 			if(!$('.tr_equip').hasClass('dn')) {
@@ -1258,7 +1294,7 @@ $(document)
 			submit:function() {
 				var send = {
 					op:'zayav_delete',
-					zayav_id:G.zayavInfo.id
+					zayav_id:ZAYAV.id
 				};
 				dialog.process();
 				$.post(AJAX_WS, send, function(res) {
@@ -1270,7 +1306,7 @@ $(document)
 	})
 	.on('click', '#zayavInfo .remind_add', function() {
 		var html = '<TABLE class="remind_add_tab">' +
-			'<tr><td class="label">Заявка:<TD>№<b>' + G.zayavInfo.nomer + '</b>' +
+			'<tr><td class="label">Заявка:<TD>№<b>' + ZAYAV.nomer + '</b>' +
 			'<tr><td class="label top">Описание задания:<TD><TEXTAREA id="txt"></TEXTAREA>' +
 			'<tr><td class="label">Крайний день выполнения:<TD><INPUT type="hidden" id="data">' +
 			'<tr><td class="label">Личное:<TD><INPUT type="hidden" id="private">' +
@@ -1301,7 +1337,7 @@ $(document)
 					op:'report_remind_add',
 					from_zayav:1,
 					client_id:0,
-					zayav_id:G.zayavInfo.id,
+					zayav_id:ZAYAV.id,
 					txt:txt.val(),
 					day:day.val(),
 					private:priv.val()
@@ -1346,7 +1382,7 @@ $(document)
 		var dialog = _dialog({
 			top:60,
 			width:420,
-			head:'Заявка №' + G.zayavInfo.nomer + ' - Начисление за выполненную работу',
+			head:'Заявка №' + ZAYAV.nomer + ' - Начисление за выполненную работу',
 			content:html,
 			submit:submit
 		});
@@ -1364,7 +1400,7 @@ $(document)
 			var msg,
 				send = {
 					op:'zayav_accrual_add',
-					zayav_id:G.zayavInfo.id,
+					zayav_id:ZAYAV.id,
 					sum:$('#sum').val(),
 					prim:$('#prim').val(),
 					status:$('#acc_status').val(),
@@ -1447,7 +1483,7 @@ $(document)
 		var dialog = _dialog({
 			top:60,
 			width:440,
-			head:'Заявка №' + G.zayavInfo.nomer + ' - Внесение платежа',
+			head:'Заявка №' + ZAYAV.nomer + ' - Внесение платежа',
 			content:html,
 			submit:submit
 		});
@@ -1470,7 +1506,7 @@ $(document)
 			var msg,
 				send = {
 					op:'zayav_oplata_add',
-					zayav_id:G.zayavInfo.id,
+					zayav_id:ZAYAV.id,
 					sum:$('#sum').val(),
 					kassa:$('#kassa').val(),
 					prim:$.trim($('#prim').val()),
@@ -1533,9 +1569,9 @@ $(document)
 	})
 	.on('click', '#zayavInfo .status_place', function() {
 		var html = '<TABLE style="border-spacing:8px">' +
-			'<TR><TD class="label r top">Статус заявки:<TD><input type="hidden" id="z_status" value="' + G.zayavInfo.z_status + '">' +
-			'<TR><TD class="label r top">Местонахождение устройства:<TD><input type="hidden" id="place" value="' + G.zayavInfo.dev_place + '">' +
-			'<TR><TD class="label r top">Состояние устройства:<TD><input type="hidden" id="dev_status" value="' + G.zayavInfo.dev_status + '">' +
+			'<TR><TD class="label r top">Статус заявки:<TD><input type="hidden" id="z_status" value="' + ZAYAV.z_status + '">' +
+			'<TR><TD class="label r top">Местонахождение устройства:<TD><input type="hidden" id="place" value="' + ZAYAV.dev_place + '">' +
+			'<TR><TD class="label r top">Состояние устройства:<TD><input type="hidden" id="dev_status" value="' + ZAYAV.dev_status + '">' +
 			'</TABLE>',
 			dialog = _dialog({
 				width:400,
@@ -1556,9 +1592,9 @@ $(document)
 		spisok.push({
 			uid:0,
 			title:'другое: <INPUT type="text" ' +
-								 'id="place_other" ' + (!G.zayavInfo.place_other ? 'class="dn" ' : '') +
+								 'id="place_other" ' + (!ZAYAV.place_other ? 'class="dn" ' : '') +
 								 'maxlength="20" ' +
-								 'value="' + G.zayavInfo.place_other + '">'
+								 'value="' + ZAYAV.place_other + '">'
 		});
 		$('#place')._radio({
 			spisok:spisok,
@@ -1579,7 +1615,7 @@ $(document)
 			var msg,
 				send = {
 				op:'zayav_status_place',
-				zayav_id:G.zayavInfo.id,
+				zayav_id:ZAYAV.id,
 				zayav_status:$('#z_status').val(),
 				dev_status:$('#dev_status').val(),
 				dev_place:$('#place').val(),
@@ -1604,10 +1640,10 @@ $(document)
 						$('#status_dtime').html(res.z_status.dtime)
 						$('.dev_status').html(res.dev_status);
 						$('.dev_place').html(res.dev_place);
-						G.zayavInfo.z_status = send.zayav_status;
-						G.zayavInfo.dev_status = send.dev_status;
-						G.zayavInfo.dev_place = send.dev_place;
-						G.zayavInfo.place_other = send.place_other;
+						ZAYAV.z_status = send.zayav_status;
+						ZAYAV.dev_status = send.dev_status;
+						ZAYAV.dev_place = send.dev_place;
+						ZAYAV.place_other = send.place_other;
 					}
 				}, 'json');
 			}
@@ -1627,7 +1663,7 @@ $(document)
 		var t = $(this),
 			send = {
 				op:'zayav_zp_zakaz',
-				zayav_id:G.zayavInfo.id,
+				zayav_id:ZAYAV.id,
 				zp_id:t.parent().parent().attr('val')
 			};
 		$.post(AJAX_WS, send, function(res) {
@@ -1644,9 +1680,9 @@ $(document)
 		var html = '<div class="zayav_zp_add">' +
 				'<CENTER>Добавление запчасти к устройству<br />' +
 					'<b>' +
-						G.device_ass[G.zayavInfo.device] + ' ' +
-						G.vendor_ass[G.zayavInfo.vendor] + ' ' +
-						G.model_ass[G.zayavInfo.model] +
+						G.device_ass[ZAYAV.device] + ' ' +
+						G.vendor_ass[ZAYAV.vendor] + ' ' +
+						G.model_ass[ZAYAV.model] +
 					'</b>.'+
 				'</CENTER>' +
 				'<TABLE style="border-spacing:6px">' +
@@ -1672,13 +1708,13 @@ $(document)
 		$('#color_id').vkSel({
 			width:130,
 			title0:'Цвет не указан',
-			spisok:G.color_spisok
+			spisok:COLOR_SPISOK
 		});
 		$('#bu')._check();
 		function submit() {
 			var send = {
 				op:'zayav_zp_add',
-				zayav_id: G.zayavInfo.id,
+				zayav_id: ZAYAV.id,
 				name_id:$('#name_id').val(),
 				version:$('#version').val(),
 				color_id:$('#color_id').val(),
@@ -1725,7 +1761,7 @@ $(document)
 			var send = {
 				op:'zayav_zp_set',
 				zp_id:unit.attr('val'),
-				zayav_id:G.zayavInfo.id
+				zayav_id:ZAYAV.id
 			};
 			dialog.process();
 			$.post(AJAX_WS, send, function(res) {
@@ -1841,7 +1877,7 @@ $(document)
 		$('#color_id').vkSel({
 			width:130,
 			title0:'Цвет не указан',
-			spisok:G.color_spisok
+			spisok:COLOR_SPISOK
 		});
 		$('#add_bu')._check();
 		$('#add_dev').device({
@@ -1930,7 +1966,7 @@ $(document)
 		$('#color_id').vkSel({
 			width:130,
 			title0:'Цвет не указан',
-			spisok:G.color_spisok
+			spisok:COLOR_SPISOK
 		});
 		$('#add_bu')._check();
 		$('#add_dev').device({
@@ -2540,7 +2576,7 @@ $(document)
 				day:curDay,
 				status:1,
 				history:$('#comment').val(),
-				from_zayav:G.zayavInfo ? G.zayavInfo.id : 0,
+				from_zayav:ZAYAV ? ZAYAV.id : 0,
 				from_client:G.clientInfo ? G.clientInfo.id : 0
 			};
 			switch(send.action) {
@@ -3427,7 +3463,7 @@ $(document)
 						$('#place_other').val('').focus();
 				}
 			});
-			$('#color_id').vkSel({width:120, title0:'Цвет не указан', spisok:G.color_spisok});
+			colorSelDop(0);
 			$(document).on('click', '#fault', function() {
 				var i = $(this).find('INPUT');
 				var arr = [];
@@ -3463,6 +3499,7 @@ $(document)
 					imei:$('#imei').val(),
 					serial:$('#serial').val(),
 					color:$('#color_id').val(),
+					color_dop:$('#color_dop').val(),
 					comm:$('#comm').val(),
 					reminder:$('#reminder').val()
 				};
@@ -3515,7 +3552,7 @@ $(document)
 				correct:0
 			});
 			$('.fotoUpload').fotoUpload({
-				owner:'zayav' + G.zayavInfo.id,
+				owner:'zayav' + ZAYAV.id,
 				func:zayavImgUpdate
 			});
 		}

@@ -115,6 +115,7 @@
 #place_other{width:100px;position:absolute;top:34px;left:60px}
 #zayavAdd #imei{width:130px}
 #zayavAdd #serial{width:200px}
+#zayavAdd .color_dop tt{display:inline-block;margin:0 4px;position:relative;top:-5px}
 #zayavAdd #fault .check0,#zayavAdd #fault .check1{white-space:nowrap;margin:4px 15px 0 0}
 #zayavAdd #comm{width:260px;height:40px}
 #zayavAdd #reminder_tab{display:none;border-spacing:8px;position:relative;top:-8px}
@@ -132,6 +133,7 @@
 #zayavInfo .dtime_add{cursor:help}
 .zayav-info-edit{border-spacing:8px}
 .zayav-info-edit .equip_spisok div{margin-right:7px}
+.zayav-info-edit .color_dop tt{display:inline-block;margin:0 4px;position:relative;top:-5px}
 #zayavInfo #status {
 	display:inline-block;
 	border:#DDD solid 1px;

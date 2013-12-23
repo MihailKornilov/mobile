@@ -96,7 +96,7 @@ switch(@$_POST['op']) {
 				  `z`.`id`,
 				  `z`.`accrual_sum`,
 				  IFNULL(SUM(`a`.`sum`),0) AS `acc`
-				FROM `zayavki` AS `z`
+				FROM `zayav` AS `z`
 				  LEFT JOIN `accrual` AS `a`
 				  ON `z`.`id`=`a`.`zayav_id`
 					AND `a`.`status`=1
@@ -111,7 +111,7 @@ switch(@$_POST['op']) {
 				  `z`.`id`,
 				  `z`.`oplata_sum`,
 				  IFNULL(SUM(`m`.`sum`),0) AS `opl`
-				FROM `zayavki` AS `z`
+				FROM `zayav` AS `z`
 				  LEFT JOIN `money` AS `m`
 				  ON `z`.`id`=`m`.`zayav_id`
 					AND `m`.`status`=1
@@ -130,7 +130,7 @@ switch(@$_POST['op']) {
 			}
 		}
 		if(!empty($upd)) {
-			$sql = "INSERT INTO `zayavki`
+			$sql = "INSERT INTO `zayav`
 						(`id`,`accrual_sum`, `oplata_sum`)
 					VALUES ".implode(',', $upd)."
 					ON DUPLICATE KEY UPDATE
@@ -224,7 +224,7 @@ switch(@$_POST['op']) {
 			jsonError();
 		if(query_value("SELECT COUNT(`id`) FROM `base_model` WHERE `device_id`=".$id))
 			jsonError();
-		if(query_value("SELECT COUNT(`id`) FROM `zayavki` WHERE `base_device_id`=".$id))
+		if(query_value("SELECT COUNT(`id`) FROM `zayav` WHERE `base_device_id`=".$id))
 			jsonError();
 		$sql = "DELETE FROM `base_device` WHERE `id`=".$id;
 		query($sql);
@@ -303,7 +303,7 @@ switch(@$_POST['op']) {
 
 		if(query_value("SELECT COUNT(`id`) FROM `base_model` WHERE `vendor_id`=".$vendor_id))
 			jsonError();
-		if(query_value("SELECT COUNT(`id`) FROM `zayavki` WHERE `base_vendor_id`=".$vendor_id))
+		if(query_value("SELECT COUNT(`id`) FROM `zayav` WHERE `base_vendor_id`=".$vendor_id))
 			jsonError();
 		$sql = "DELETE FROM `base_vendor` WHERE `id`=".$vendor_id;
 		query($sql);
@@ -401,7 +401,7 @@ switch(@$_POST['op']) {
 		if(!$r = mysql_fetch_assoc(query($sql)))
 			jsonError();
 
-		if(query_value("SELECT COUNT(`id`) FROM `zayavki` WHERE `base_model_id`=".$model_id))
+		if(query_value("SELECT COUNT(`id`) FROM `zayav` WHERE `base_model_id`=".$model_id))
 			jsonError();
 		$sql = "DELETE FROM `base_model` WHERE `id`=".$model_id;
 		query($sql);
@@ -500,6 +500,72 @@ switch(@$_POST['op']) {
 		query($sql);
 		xcache_unset(CACHE_PREFIX.'device_equip');
 		$send['html'] = utf8(sa_equip_spisok($device_id));
+		jsonSuccess($send);
+		break;
+
+	case 'color_add':
+		$predlog = win1251(htmlspecialchars(trim($_POST['predlog'])));
+		$name = win1251(htmlspecialchars(trim($_POST['name'])));
+		if(empty($name))
+			jsonError();
+		$sql = "INSERT INTO `setup_color_name` (
+					`predlog`,
+					`name`
+				) VALUES (
+					'".addslashes($predlog)."',
+					'".addslashes($name)."'
+				)";
+		query($sql);
+
+		xcache_unset(CACHE_PREFIX.'color_name');
+		GvaluesCreate();
+
+		$send['html'] = utf8(sa_color_spisok());
+		jsonSuccess($send);
+		break;
+	case 'color_edit':
+		if(!preg_match(REGEXP_NUMERIC, $_POST['id']) || !$_POST['id'])
+			jsonError();
+		$id = intval($_POST['id']);
+		$predlog = win1251(htmlspecialchars(trim($_POST['predlog'])));
+		$name = win1251(htmlspecialchars(trim($_POST['name'])));
+		if(empty($name))
+			jsonError();
+
+		$sql = "UPDATE `setup_color_name`
+				SET `predlog`='".addslashes($predlog)."',
+					`name`='".addslashes($name)."'
+				WHERE `id`=".$id;
+		query($sql);
+
+		xcache_unset(CACHE_PREFIX.'color_name');
+		GvaluesCreate();
+
+		$send['html'] = utf8(sa_color_spisok());
+		jsonSuccess($send);
+		break;
+	case 'color_del':
+		if(!preg_match(REGEXP_NUMERIC, $_POST['id']) || !$_POST['id'])
+			jsonError();
+		$id = intval($_POST['id']);
+
+		$sql = "SELECT * FROM `setup_color_name` WHERE `id`=".$id;
+		if(!$r = mysql_fetch_assoc(query($sql)))
+			jsonError();
+
+		if(query_value("SELECT COUNT(`id`) FROM `zayav` WHERE `color_id`=".$id))
+			jsonError();
+
+		if(query_value("SELECT COUNT(`id`) FROM `zp_catalog` WHERE `color_id`=".$id))
+			jsonError();
+
+		$sql = "DELETE FROM `setup_color_name` WHERE `id`=".$id;
+		query($sql);
+
+		xcache_unset(CACHE_PREFIX.'color_name');
+		GvaluesCreate();
+
+		$send['html'] = utf8(sa_color_spisok());
 		jsonSuccess($send);
 		break;
 }

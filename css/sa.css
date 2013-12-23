@@ -67,3 +67,9 @@
 .sa-equip .eq-head{margin-bottom:10px}
 .sa-equip-add{border-spacing:8px}
 .sa-equip-add input{width:200px}
+
+.sa-color ._spisok{margin:10px 20px}
+.sa-color .zayav{text-align:center}
+.sa-color .zp{text-align:center}
+.sa-color-add{border-spacing:8px}
+.sa-color-add input{width:200px}

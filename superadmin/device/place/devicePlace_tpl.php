@@ -6,7 +6,7 @@ include('incHeader.php');
 $zayav_count = array();
 $spisok = $VK->QueryRowArray("select id from setup_device_status order by sort");
 foreach($spisok as $sp) {
-  array_push($zayav_count, $VK->QRow("select count(id) from zayavki where device_place=".$sp[0]));
+  array_push($zayav_count, $VK->QRow("select count(id) from zayav where device_place=".$sp[0]));
 }
 
 ?>

@@ -10,7 +10,7 @@ if(!preg_match(REGEXP_NUMERIC, $_GET['id'])) {
 
 $id = intval($_GET['id']);
 
-$sql = "SELECT * FROM `zayavki` WHERE `ws_id`=".WS_ID." AND `zayav_status`>0 AND `id`=".$id." LIMIT 1";
+$sql = "SELECT * FROM `zayav` WHERE `ws_id`=".WS_ID." AND `zayav_status`>0 AND `id`=".$id." LIMIT 1";
 if(!$zayav = mysql_fetch_assoc(query($sql))) {
 	echo 'Заявки не существует';
 	exit;
@@ -23,7 +23,7 @@ $kvit =
 	'<table class="device-about">'.
 		'<tr><td class="label">Дата приёма:<td>'.FullData($zayav['dtime_add']).
 		'<tr><td class="label">Устройство:<td>'._deviceName($zayav['base_device_id'])._vendorName($zayav['base_vendor_id'])._modelName($zayav['base_model_id']).
-		($zayav['color_id'] ? '<tr><td class="label">Цвет:<td>'._colorName($zayav['color_id']) : '').
+		($zayav['color_id'] ? '<tr><td class="label">Цвет:<td>'._color($zayav['color_id']) : '').
 		($zayav['imei'] ? '<tr><td class="label">IMEI:<td>'.$zayav['imei'] : '').
 		($zayav['serial'] ? '<tr><td class="label">Serial:<td>'.$zayav['serial'] : '').
 		($zayav['equip'] ? '<tr><td class="label">Комплектация:<td>'.zayavEquipSpisok($zayav['equip']) : '').

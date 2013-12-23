@@ -4,10 +4,10 @@ if(!isset($SA[$_GET['viewer_id']])) header("Location:".$URL);
 include('incHeader.php');
 
 $zayav_count = array();
-array_push($zayav_count, $VK->QRow("select count(id) from zayavki where device_status=0"));
+array_push($zayav_count, $VK->QRow("select count(id) from zayav where device_status=0"));
 $spisok = $VK->QueryRowArray("select id from setup_device_status order by sort");
 foreach($spisok as $sp) {
-  array_push($zayav_count, $VK->QRow("select count(id) from zayavki where device_status=".$sp[0]));
+  array_push($zayav_count, $VK->QRow("select count(id) from zayav where device_status=".$sp[0]));
 }
 ?>
 

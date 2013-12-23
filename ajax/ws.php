@@ -10,7 +10,7 @@ switch(@$_POST['op']) {
 		if(!preg_match(REGEXP_WORD, $word))
 			jsonError();
 		$sql = "SELECT `id`
-				FROM `zayavki`
+				FROM `zayav`
 				WHERE `ws_id`=".WS_ID."
 				  AND (`imei`='".$word."'
 				   OR `serial`='".$word."')";
@@ -227,7 +227,7 @@ switch(@$_POST['op']) {
 			query("UPDATE `accrual`	SET `client_id`=".$client_id." WHERE `client_id`=".$client2);
 			query("UPDATE `money`	  SET `client_id`=".$client_id." WHERE `client_id`=".$client2);
 			query("UPDATE `vk_comment` SET `table_id`=".$client_id."  WHERE `table_name`='client' AND `table_id`=".$client2);
-			query("UPDATE `zayavki`	SET `client_id`=".$client_id." WHERE `client_id`=".$client2);
+			query("UPDATE `zayav`	SET `client_id`=".$client_id." WHERE `client_id`=".$client2);
 			query("UPDATE `zp_move`	SET `client_id`=".$client_id." WHERE `client_id`=".$client2);
 			query("UPDATE `client` SET `deleted`=1,`join_id`=".$client_id." WHERE `id`=".$client2);
 			clientBalansUpdate($client_id);
@@ -276,9 +276,9 @@ switch(@$_POST['op']) {
 		break;
 
 	case 'zayav_add':
-		if(!preg_match(REGEXP_NUMERIC, $_POST['client']) || $_POST['client'] == 0)
+		if(!preg_match(REGEXP_NUMERIC, $_POST['client']) || !$_POST['client'])
 			jsonError();
-		if(!preg_match(REGEXP_NUMERIC, $_POST['device']) || $_POST['device'] == 0)
+		if(!preg_match(REGEXP_NUMERIC, $_POST['device']) || !$_POST['device'])
 			jsonError();
 		$client = intval($_POST['client']);
 		$device = intval($_POST['device']);
@@ -295,6 +295,7 @@ switch(@$_POST['op']) {
 		$imei = win1251(htmlspecialchars(trim($_POST['imei'])));
 		$serial = win1251(htmlspecialchars(trim($_POST['serial'])));
 		$color = intval($_POST['color']);
+		$color_dop = $color ? intval($_POST['color_dop']) : 0;
 		$comm = win1251(htmlspecialchars(trim($_POST['comm'])));
 		$reminder = intval($_POST['reminder']);
 		$reminder_txt = win1251(htmlspecialchars(trim($_POST['reminder_txt'])));
@@ -311,11 +312,11 @@ switch(@$_POST['op']) {
 			$r = mysql_fetch_assoc(query($sql));
 			$modelName = $r['name'];
 		}
-		$sql = "SELECT IFNULL(MAX(`nomer`),0)+1 AS `nomer` FROM `zayavki` WHERE `ws_id`=".WS_ID." LIMIT 1";
+		$sql = "SELECT IFNULL(MAX(`nomer`),0)+1 AS `nomer` FROM `zayav` WHERE `ws_id`=".WS_ID." LIMIT 1";
 		$r = mysql_fetch_assoc(query($sql));
 		$nomer = $r['nomer'];
 
-		$sql = "INSERT INTO `zayavki` (
+		$sql = "INSERT INTO `zayav` (
 					`ws_id`,
 					`nomer`,
 					`client_id`,
@@ -328,6 +329,7 @@ switch(@$_POST['op']) {
 					`imei`,
 					`serial`,
 					`color_id`,
+					`color_dop`,
 
 					`zayav_status`,
 					`zayav_status_dtime`,
@@ -351,6 +353,7 @@ switch(@$_POST['op']) {
 					'".addslashes($imei)."',
 					'".addslashes($serial)."',
 					".$color.",
+					".$color_dop.",
 
 					1,
 					current_timestamp,
@@ -436,17 +439,19 @@ switch(@$_POST['op']) {
 		jsonSuccess($send);
 		break;
 	case 'zayav_edit':
-		if(!preg_match(REGEXP_NUMERIC, $_POST['zayav_id']) && $_POST['zayav_id'] == 0)
+		if(!preg_match(REGEXP_NUMERIC, $_POST['zayav_id']) && !$_POST['zayav_id'])
 			jsonError();
-		if(!preg_match(REGEXP_NUMERIC, $_POST['client_id']) && $_POST['client_id'] == 0)
+		if(!preg_match(REGEXP_NUMERIC, $_POST['client_id']) && !$_POST['client_id'])
 			jsonError();
-		if(!preg_match(REGEXP_NUMERIC, $_POST['device']) && $_POST['device'] == 0)
+		if(!preg_match(REGEXP_NUMERIC, $_POST['device']) && !$_POST['device'])
 			jsonError();
 		if(!preg_match(REGEXP_NUMERIC, $_POST['vendor']))
 			jsonError();
 		if(!preg_match(REGEXP_NUMERIC, $_POST['model']))
 			jsonError();
 		if(!preg_match(REGEXP_NUMERIC, $_POST['color_id']))
+			jsonError();
+		if(!preg_match(REGEXP_NUMERIC, $_POST['color_dop']))
 			jsonError();
 		$zayav_id = intval($_POST['zayav_id']);
 		$client_id = intval($_POST['client_id']);
@@ -456,6 +461,7 @@ switch(@$_POST['op']) {
 		$imei = win1251(htmlspecialchars(trim($_POST['imei'])));
 		$serial = win1251(htmlspecialchars(trim($_POST['serial'])));
 		$color_id = intval($_POST['color_id']);
+		$color_dop = $color_id ? intval($_POST['color_dop']) : 0;
 		if(!empty($_POST['equip'])) {
 			$ids = explode(',', $_POST['equip']);
 			for($n = 0; $n < count($ids); $n++)
@@ -464,11 +470,11 @@ switch(@$_POST['op']) {
 		}
 		$equip = $_POST['equip'];
 
-		$sql = "SELECT * FROM `zayavki` WHERE `ws_id`=".WS_ID." AND `id`=".$zayav_id." LIMIT 1";
+		$sql = "SELECT * FROM `zayav` WHERE `ws_id`=".WS_ID." AND `id`=".$zayav_id." LIMIT 1";
 		if(!$zayav = mysql_fetch_assoc(query($sql)))
 			jsonError();
 
-		$sql = "UPDATE `zayavki` SET
+		$sql = "UPDATE `zayav` SET
 					`client_id`=".$client_id.",
 					`base_device_id`=".$device.",
 					`base_vendor_id`=".$vendor.",
@@ -476,6 +482,7 @@ switch(@$_POST['op']) {
 					`imei`='".addslashes($imei)."',
 					`serial`='".addslashes($serial)."',
 					`color_id`=".$color_id.",
+					`color_dop`=".$color_dop.",
 					`equip`='".$equip."',
 					`find`='".addslashes(_modelName($model).' '.$imei.' '.$serial)."'
 				WHERE `id`=".$zayav_id;
@@ -517,7 +524,7 @@ switch(@$_POST['op']) {
 		if($zayav['serial'] != $serial)
 			$changes .= '<tr><th>Serial:<td>'.$zayav['serial'].'<td>»<td>'.$serial;
 		if($zayav['color_id'] != $color_id)
-			$changes .= '<tr><th>Цвет:<td>'._colorName($zayav['color_id']).'<td>»<td>'._colorName($color_id);
+			$changes .= '<tr><th>Цвет:<td>'._color($zayav['color_id']).'<td>»<td>'._color($color_id);
 		if($zayav['equip'] != $equip)
 			$changes .= '<tr><th>Комплект:<td>'.zayavEquipSpisok($zayav['equip']).'<td>»<td>'.zayavEquipSpisok($equip);
 		if($changes)
@@ -533,7 +540,7 @@ switch(@$_POST['op']) {
 		if(!preg_match(REGEXP_NUMERIC, $_POST['zayav_id']) && $_POST['zayav_id'] == 0)
 			jsonError();
 		$zayav_id = intval($_POST['zayav_id']);
-		$sql = "SELECT * FROM `zayavki` WHERE `ws_id`=".WS_ID." AND `id`=".$zayav_id." LIMIT 1";
+		$sql = "SELECT * FROM `zayav` WHERE `ws_id`=".WS_ID." AND `id`=".$zayav_id." LIMIT 1";
 		if(!$zayav = mysql_fetch_assoc(query($sql)))
 			jsonError();
 
@@ -556,7 +563,7 @@ switch(@$_POST['op']) {
 		if(query_value($sql) != 0)
 			jsonError();
 
-		$sql = "DELETE FROM `zayavki` WHERE `ws_id`=".WS_ID." AND `id`=".$zayav_id;
+		$sql = "DELETE FROM `zayav` WHERE `ws_id`=".WS_ID." AND `id`=".$zayav_id;
 		query($sql);
 
 		$sql = "DELETE FROM `reminder` WHERE `ws_id`=".WS_ID." AND `zayav_id`=".$zayav_id;
@@ -594,11 +601,11 @@ switch(@$_POST['op']) {
 		if($dev_place == 0 && !$place_other)
 			jsonError();
 
-		$sql = "SELECT * FROM `zayavki` WHERE `ws_id`=".WS_ID." AND `id`=".$zayav_id." LIMIT 1";
+		$sql = "SELECT * FROM `zayav` WHERE `ws_id`=".WS_ID." AND `id`=".$zayav_id." LIMIT 1";
 		if(!$zayav = mysql_fetch_assoc(query($sql)))
 			jsonError();
 
-		$sql = "UPDATE `zayavki`
+		$sql = "UPDATE `zayav`
 				SET `device_status`=".$dev_status.",
 					`device_place`=".$dev_place.",
 					`device_place_other`='".$place_other."'
@@ -656,7 +663,7 @@ switch(@$_POST['op']) {
 		$dev_status = intval($_POST['dev_status']);
 
 		$sql = "SELECT *
-				FROM `zayavki`
+				FROM `zayav`
 				WHERE `ws_id`=".WS_ID."
 				  AND `zayav_status`>0
 				  AND `id`=".$zayav_id;
@@ -696,7 +703,7 @@ switch(@$_POST['op']) {
 		));
 
 		//Обновление статуса заявки, если изменялся
-		$sql = "UPDATE `zayavki`
+		$sql = "UPDATE `zayav`
 				SET `device_status`=".$dev_status."
 					".($zayav['zayav_status'] != $status ? ",`zayav_status`=".$status.",`zayav_status_dtime`=CURRENT_TIMESTAMP" : "")."
 				WHERE `ws_id`=".WS_ID."
@@ -806,7 +813,7 @@ switch(@$_POST['op']) {
 		$prim = win1251(htmlspecialchars(trim($_POST['prim'])));
 
 		$sql = "SELECT *
-				FROM `zayavki`
+				FROM `zayav`
 				WHERE `ws_id`=".WS_ID."
 				  AND `zayav_status`>0
 				  AND `id`=".$zayav_id;
@@ -848,7 +855,7 @@ switch(@$_POST['op']) {
 		));
 
 		//Обновление местонахождения устройства
-		$sql = "UPDATE `zayavki`
+		$sql = "UPDATE `zayav`
 				SET `device_place`=".$dev_place.",
 					`device_place_other`=''
 				WHERE `ws_id`=".WS_ID."
@@ -930,7 +937,7 @@ switch(@$_POST['op']) {
 					`base_device_id` AS `device_id`,
 					`base_vendor_id` AS `vendor_id`,
 					`base_model_id` AS `model_id`
-				FROM `zayavki`
+				FROM `zayav`
 				WHERE `ws_id`=".WS_ID."
 				  AND `id`=".intval($_POST['zayav_id']);
 		if(!$zp = mysql_fetch_assoc(query($sql)))
@@ -1054,7 +1061,7 @@ switch(@$_POST['op']) {
 			jsonError();
 		$nomer = intval($_POST['nomer']);
 		$sql = "SELECT *
-				FROM `zayavki`
+				FROM `zayav`
 				WHERE `ws_id`=".WS_ID."
 				  AND `nomer`=".$nomer."
 				  AND `zayav_status`>0
@@ -2098,7 +2105,7 @@ switch(@$_POST['op']) {
 		if(!preg_match(REGEXP_NUMERIC, $_POST['id']))
 			jsonError();
 		$id = intval($_POST['id']);
-		$sql = "SELECT * FROM `zayavki` WHERE `id`=".$id;
+		$sql = "SELECT * FROM `zayav` WHERE `id`=".$id;
 		$zayav = mysql_fetch_assoc(query($sql));
 
 		$sql = "SELECT `fio` FROM `client` WHERE `deleted`=0 AND `id`=".$zayav['client_id'];

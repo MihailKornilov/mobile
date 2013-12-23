@@ -33,7 +33,7 @@ function sa_index() {
 		//'<A href="'.URL.'&p=sa&d=dev-status">Статусы устройств в заявках</A><BR>'.
 		//'<A href="'.URL.'&p=sa&d=dev-place">Местонахождения устройств в заявках</A><BR>'.
 		'<BR>'.
-		//'<A href="'.URL.'&p=sa&d=color">Цвета для устройств и запчастей</A><BR>'.
+		'<A href="'.URL.'&p=sa&d=color">Цвета для устройств и запчастей</A><BR>'.
 		'<BR>'.
 		//'<A href="'.URL.'&p=sa&d=zp-name">Наименования запчастей</A><BR>'.
 	'</div>';
@@ -66,7 +66,7 @@ function sa_ws() {
 function sa_ws_tables() {//Таблицы, которые задействуются в мастерских
 	return array(
 		'client' => 'Клиенты',
-		'zayavki' => 'Заявки',
+		'zayav' => 'Заявки',
 		'accrual' => 'Начисления',
 		'money' => 'Оплаты',
 		'zp_avai' => 'Наличие запчастей',
@@ -167,7 +167,7 @@ function sa_device_spisok() {
 	$sql = "SELECT
 				`bd`.`id` AS `id`,
 				COUNT(`z`.`id`) AS `count`
-			FROM `base_device` AS `bd`,`zayavki` AS `z`
+			FROM `base_device` AS `bd`,`zayav` AS `z`
 			WHERE `bd`.`id`=`z`.`base_device_id` AND `z`.`zayav_status`>0
 			GROUP BY `bd`.`id`";
 	$q = query($sql);
@@ -241,7 +241,7 @@ function sa_vendor_spisok($device_id) {
 				`v`.`id` AS `id`,
 				COUNT(`z`.`id`) AS `count`
 			FROM `base_vendor` AS `v`,
-				 `zayavki` AS `z`
+				 `zayav` AS `z`
 			WHERE `v`.`device_id`=".$device_id."
 			  AND `v`.`id`=`z`.`base_vendor_id`
 			  AND `z`.`zayav_status`>0
@@ -311,7 +311,7 @@ function sa_model_spisok($vendor_id, $page=1, $find='') {
 				`m`.`name`,
 				COUNT(`z`.`id`) AS `zayav_count`
 			FROM `base_model` AS `m`
-				 LEFT JOIN `zayavki` AS `z`
+				 LEFT JOIN `zayav` AS `z`
 				 ON `m`.`id`=`z`.`base_model_id`
 			WHERE `m`.`vendor_id`=".$vendor_id.
 				($find ? " AND `m`.`name` LIKE '%".$find."%'" : '')."
@@ -386,4 +386,60 @@ function sa_equip_spisok($device_id) {
 	}
 	return '<div class="eq-head">Используемые комплектации для <b>'._deviceName($device_id).'</b>:</div>'.
 		($spisok ? $spisok : 'Вариантов комплектаций нет');
-}
+}//sa_equip_spisok()
+
+function sa_color() {
+	return '<div class="path">'.sa_cookie_back().'<a href="'.URL.'&p=sa">Администрирование</a> » Цвета</div>'.
+	'<div class="sa-color">'.
+		'<div class="headName">Цвета для устройств и запчастей<a class="add">Новый цвет</a></div>'.
+		'<div class="spisok">'.sa_color_spisok().'</div>'.
+	'</div>';
+}//sa_color()
+function sa_color_spisok() {
+	$sql = "SELECT
+				`c`.*,
+				COUNT(`z`.`id`) AS `zayav`,
+				0 AS `zp`
+			FROM `setup_color_name` AS `c`
+				LEFT JOIN `zayav` AS `z`
+				ON `c`.`id`=`z`.`color_id`
+			GROUP BY `c`.`id`
+			ORDER BY `c`.`name`";
+	$q = query($sql);
+	if(!mysql_num_rows($q))
+		return 'Цвета не внесены.';
+	$color = array();
+	while($r = mysql_fetch_assoc($q))
+		$color[$r['id']] = $r;
+
+	$sql = "SELECT
+				`c`.`id` AS `id`,
+				COUNT(`zp`.`id`) AS `zp`
+			FROM `setup_color_name` AS `c`,
+				 `zp_catalog` AS `zp`
+			WHERE `c`.`id`=`zp`.`color_id`
+			GROUP BY `c`.`id`";
+	$q = query($sql);
+	while($r = mysql_fetch_assoc($q))
+		$color[$r['id']]['zp'] = $r['zp'];
+
+	$send =
+		'<table class="_spisok">'.
+			'<tr><th>Предлог'.
+				'<th>Цвет'.
+				'<th>Кол-во<BR>заявок'.
+				'<th>Кол-во<BR>запчастей'.
+				'<th>';
+	foreach($color as $id => $r)
+		$send .=
+			'<tr val="'.$id.'">'.
+				'<td class="pre">'.$r['predlog'].
+				'<td class="name">'.$r['name'].
+				'<td class="zayav">'.($r['zayav'] ? $r['zayav'] : '').
+				'<td class="zp">'.($r['zp'] ? $r['zp'] : '').
+				'<td><div class="img_edit"></div>'.
+					($r['zayav'] || $r['zp'] ? '' : '<div class="img_del"></div>');
+	$send .= '</table>';
+	return $send;
+}//sa_color_spisok()
+

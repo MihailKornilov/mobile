@@ -212,6 +212,7 @@ switch($_GET['p']) {
 			case 'vendor': $html .= sa_vendor(); break;
 			case 'model': $html .= sa_model(); break;
 			case 'equip': $html .= sa_equip(); break;
+			case 'color': $html .= sa_color(); break;
 			default: $html .= sa_index();
 		}
 		break;

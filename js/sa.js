@@ -679,6 +679,140 @@ $(document)
 		}, 'json');
 	})
 
+	.on('click', '.sa-color .add', function() {
+		var html = '<table class="sa-color-add">' +
+				'<tr><td class="label">Предлог:<td><input id="predlog" type="text" maxlength="100" />' +
+				'<tr><td class="label">Цвет:<td><input id="name" type="text" maxlength="100" />' +
+				'</table>',
+			dialog = _dialog({
+				top:90,
+				width:310,
+				head:'Добавление нового цвета',
+				content:html,
+				submit:submit
+			});
+		$('#name,#predlog').keyEnter(submit);
+		$('#predlog').focus();
+		function submit() {
+			var send = {
+				op:'color_add',
+				predlog:$('#predlog').val(),
+				name:$('#name').val()
+			};
+			if(!send.predlog) {
+				err('Не указан предлог');
+				$('#predlog').focus();
+			} else if(!send.name) {
+				err('Не указан цвет');
+				$('#name').focus();
+			} else {
+				dialog.process();
+				$.post(AJAX_SA, send, function(res) {
+					if(res.success) {
+						$('.spisok').html(res.html);
+						dialog.close();
+						_msg('Внесено!');
+					} else
+						dialog.abort();
+				}, 'json');
+			}
+		}
+		function err(msg) {
+			dialog.bottom.vkHint({
+				msg:'<SPAN class=red>' + msg + '</SPAN>',
+				top:-47,
+				left:57,
+				indent:50,
+				show:1,
+				remove:1
+			});
+		}
+	})
+	.on('click', '.sa-color .img_edit', function() {
+		var t = $(this);
+		while(t[0].tagName != 'TR')
+			t = t.parent();
+		var predlog = t.find('.pre').html(),
+			name = t.find('.name').html(),
+			html = '<table class="sa-color-add">' +
+				'<tr><td class="label">Предлог:<td><input id="predlog" type="text" maxlength="100" value="' + predlog + '" />' +
+				'<tr><td class="label">Цвет:<td><input id="name" type="text" maxlength="100" value="' + name + '" />' +
+				'</table>',
+			dialog = _dialog({
+				top:90,
+				width:310,
+				head:'Редактирование цвета',
+				content:html,
+				butSubmit:'Сохранить',
+				submit:submit
+			});
+		$('#name,#predlog').keyEnter(submit);
+		$('#predlog').focus();
+		function submit() {
+			var send = {
+				op:'color_edit',
+				id:t.attr('val'),
+				predlog:$('#predlog').val(),
+				name:$('#name').val()
+			};
+			if(!send.predlog) {
+				err('Не указан предлог');
+				$('#predlog').focus();
+			} else if(!send.name) {
+				err('Не указан цвет');
+				$('#name').focus();
+			} else {
+				dialog.process();
+				$.post(AJAX_SA, send, function(res) {
+					if(res.success) {
+						$('.spisok').html(res.html);
+						dialog.close();
+						_msg('Изменено.');
+					} else
+						dialog.abort();
+				}, 'json');
+			}
+		}
+		function err(msg) {
+			dialog.bottom.vkHint({
+				msg:'<SPAN class=red>' + msg + '</SPAN>',
+				top:-47,
+				left:57,
+				indent:50,
+				show:1,
+				remove:1
+			});
+		}
+	})
+	.on('click', '.sa-color .img_del', function() {
+		var t = $(this),
+			dialog = _dialog({
+				top:90,
+				width:300,
+				head:'Удаление цвета',
+				content:'<center><b>Подтвердите удаление цвета.</b></center>',
+				butSubmit:'Удалить',
+				submit:submit
+			});
+		function submit() {
+			while(t[0].tagName != 'TR')
+				t = t.parent();
+			var send = {
+				op:'color_del',
+				id:t.attr('val')
+			};
+			dialog.process();
+			$.post(AJAX_SA, send, function(res) {
+				if(res.success) {
+					$('.spisok').html(res.html);
+					dialog.close();
+					_msg('Удалено!');
+				} else
+					dialog.abort();
+			}, 'json');
+		}
+	})
+
 	.ready(function() {
 		if($('.sa-model').length > 0) {
 			window.find = $('#find')._search({

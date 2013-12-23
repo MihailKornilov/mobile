@@ -207,16 +207,17 @@ function _dopLinks($p, $data, $d=false, $d1=false) {//Дополнительное меню на сер
 
 function GvaluesCreate() {//Составление файла G_values.js
 	$save = 'function SpisokToAss(s){var a=[];for(var n=0;n<s.length;a[s[n].uid]=s[n].title,n++);return a}'.
-		'G.color_spisok='.query_selJson("SELECT `id`,`name` FROM setup_color_name ORDER BY name").';G.color_ass=SpisokToAss(G.color_spisok);'.
-		'G.fault_spisok='.query_selJson("SELECT `id`,`name` FROM setup_fault ORDER BY sort").';G.fault_ass=SpisokToAss(G.fault_spisok);'.
-		'G.zp_name_spisok='.query_selJson("SELECT `id`,`name` FROM setup_zp_name ORDER BY name").';G.zp_name_ass=SpisokToAss(G.zp_name_spisok);'.
-		'G.device_status_spisok='.query_selJson("SELECT `id`,`name` FROM setup_device_status ORDER BY sort").';G.device_status_spisok.unshift({uid:0, title:"не известно"});G.device_status_ass=SpisokToAss(G.device_status_spisok);'.
-		'G.device_place_spisok='.query_selJson("SELECT `id`,`name` FROM setup_device_place ORDER BY sort").';G.device_place_ass=SpisokToAss(G.device_place_spisok);'.
+		'var COLOR_SPISOK='.query_selJson("SELECT `id`,`name` FROM `setup_color_name` ORDER BY `name` ASC").','.
+			'COLORPRE_SPISOK='.query_selJson("SELECT `id`,`predlog` FROM `setup_color_name` ORDER BY `predlog` ASC").','.
+			'RASHOD_CATEGORY='.query_selJson("SELECT `id`,`name` FROM `setup_rashod_category` ORDER BY `name` ASC").';'.
+		'G.fault_spisok='.query_selJson("SELECT `id`,`name` FROM setup_fault ORDER BY `sort`").';G.fault_ass=SpisokToAss(G.fault_spisok);'.
+		'G.zp_name_spisok='.query_selJson("SELECT `id`,`name` FROM setup_zp_name ORDER BY `name`").';G.zp_name_ass=SpisokToAss(G.zp_name_spisok);'.
+		'G.device_status_spisok='.query_selJson("SELECT `id`,`name` FROM `setup_device_status` ORDER BY `sort`").';G.device_status_spisok.unshift({uid:0, title:"не известно"});G.device_status_ass=SpisokToAss(G.device_status_spisok);'.
+		'G.device_place_spisok='.query_selJson("SELECT `id`,`name` FROM `setup_device_place` ORDER BY `sort`").';G.device_place_ass=SpisokToAss(G.device_place_spisok);'.
 
-		'G.device_spisok='.query_selJson("SELECT `id`,`name` FROM base_device ORDER BY sort").';G.device_ass=SpisokToAss(G.device_spisok);'.
-		'G.device_rod_spisok='.query_selJson("SELECT `id`,name_rod FROM base_device ORDER BY sort").';G.device_rod_ass=SpisokToAss(G.device_rod_spisok);'.
-		'G.device_mn_spisok='.query_selJson("SELECT `id`,name_mn FROM base_device ORDER BY sort").';G.device_mn_ass=SpisokToAss(G.device_mn_spisok);'.
-		'var RASHOD_CATEGORY='.query_selJson("SELECT `id`,`name` FROM `setup_rashod_category` ORDER BY `name` ASC").';';
+		'G.device_spisok='.query_selJson("SELECT `id`,`name` FROM `base_device` ORDER BY `sort`").';G.device_ass=SpisokToAss(G.device_spisok);'.
+		'G.device_rod_spisok='.query_selJson("SELECT `id`,`name_rod` FROM `base_device` ORDER BY `sort`").';G.device_rod_ass=SpisokToAss(G.device_rod_spisok);'.
+		'G.device_mn_spisok='.query_selJson("SELECT `id`,`name_mn` FROM `base_device` ORDER BY `sort`").';G.device_mn_ass=SpisokToAss(G.device_mn_spisok);';
 
 
 	$sql = "SELECT * FROM `base_vendor` ORDER BY `device_id`,`sort`";
@@ -257,7 +258,7 @@ function GvaluesCreate() {//Составление файла G_values.js
 			 'G.model_ass[0]="";'.
 			 'for(var k in G.model_spisok){for(var n=0;n<G.model_spisok[k].length;n++){var sp=G.model_spisok[k][n];G.model_ass[sp.uid]=sp.title;}}';
 
-	$fp = fopen(PATH_FILES.'../js/G_values.js','w+');
+	$fp = fopen(PATH_FILES.'../js/G_values.js', 'w+');
 	fwrite($fp, $save);
 	fclose($fp);
 
@@ -347,7 +348,7 @@ function _zayavImg($zayav_id, $size='small', $x_new=10000, $y_new=10000, $class=
 	$res = _getImg('zayav', $zayav_id, $size, $x_new, $y_new, $class);
 	if($res['success'])
 		return $res['img'];
-	$sql = "SELECT `base_model_id` FROM `zayavki` WHERE `id`=".$zayav_id." LIMIT 1";
+	$sql = "SELECT `base_model_id` FROM `zayav` WHERE `id`=".$zayav_id." LIMIT 1";
 	$r = mysql_fetch_assoc(query($sql));
 	return _modelImg($r['base_model_id'], $size, $x_new, $y_new, $class);
 }//_zayavImg()
@@ -463,24 +464,32 @@ function _zpAvaiSet($zp_id) { // Обновление количества наличия запчасти
 		query("INSERT INTO `zp_avai` (`ws_id`,`zp_id`,`count`) VALUES (".WS_ID.",".$zp_id.",".$count.")");
 	return $count;
 }//_zpAvaiSet()
-function _colorName($color_id) {
+function _color($color_id, $color_dop=0) {
 	if(!defined('COLOR_LOADED')) {
 		$key = CACHE_PREFIX.'color_name';
 		$zp = xcache_get($key);
 		if(empty($zp)) {
-			$sql = "SELECT `id`,`name` FROM `setup_color_name` ORDER BY `id` ASC";
+			$sql = "SELECT * FROM `setup_color_name`";
 			$q = query($sql);
 			while($r = mysql_fetch_assoc($q))
-				$zp[$r['id']] = $r['name'];
+				$zp[$r['id']] = array(
+					'predlog' => $r['predlog'],
+					'name' => $r['name']
+				);
 			xcache_set($key, $zp, 86400);
 		}
-		foreach($zp as $id => $name)
-			define('COLOR_'.$id, $name);
+		foreach($zp as $id => $r) {
+			define('COLORPRE_'.$id, $r['predlog']);
+			define('COLOR_'.$id, $r['name']);
+		}
+		define('COLORPRE_0', '');
 		define('COLOR_0', '');
 		define('COLOR_LOADED', true);
 	}
+	if($color_dop)
+		return constant('COLORPRE_'.$color_id).' - '.strtolower(constant('COLOR_'.$color_dop));;
 	return constant('COLOR_'.$color_id);
-}//_colorName()
+}//_color()
 function _devPlace($place_id) {
 	if(!defined('PLACE_LOADED')) {
 		$key = CACHE_PREFIX.'device_place';
