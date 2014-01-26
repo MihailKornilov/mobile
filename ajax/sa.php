@@ -46,7 +46,7 @@ switch(@$_POST['op']) {
 				  IFNULL(SUM(`m`.`sum`),0) AS `money`
 				FROM `client` AS `c`
 				  LEFT JOIN `money` AS `m`
-				  ON `m`.`status`=1
+				  ON `m`.`deleted`=0
 					AND `c`.`id`=`m`.`client_id`
 					AND `m`.`sum`>0
 				WHERE `c`.`ws_id`=".$ws_id."
@@ -114,7 +114,7 @@ switch(@$_POST['op']) {
 				FROM `zayav` AS `z`
 				  LEFT JOIN `money` AS `m`
 				  ON `z`.`id`=`m`.`zayav_id`
-					AND `m`.`status`=1
+					AND `m`.`deleted`=0
 					AND `m`.`sum`>0
 				WHERE `z`.`ws_id`=".$ws_id."
 				GROUP BY `z`.`id`

@@ -114,59 +114,7 @@ switch($_GET['p']) {
 		if(!WS_ID)
 			header('Location:'.URL.'&p=wscreate');
 		_mainLinks();
-		$rl = reportMenu(@$_GET['d']);
-		$dl = '';
-		switch(@$_GET['d']) {
-			case 'remind':
-				$report = report_remind();
-				$rl .= report_remind_right();
-				break;
-			case 'money':
-				switch(@$_GET['d1']) {
-					case 'rashod':
-						$report = report_rashod();
-						$rl .= report_rashod_right();
-						break;
-					case 'kassa':
-						$report = report_kassa();
-						$rl .= report_kassa_right();
-						break;
-					case 'stat': $report = statistic(); break;
-					default: // prihod
-						$report = report_prihod();
-						$rl .= report_prihod_right();
-				}
-				$links = array(
-					array(
-						'name' => 'Поступления',
-						'd' => 'prihod',
-						'sel' => 1
-					),
-					array(
-						'name' => 'Расходы',
-						'd' => 'rashod'
-					),
-					array(
-						'name' => 'Касса',
-						'd' => 'kassa'
-					),
-					array(
-						'name' => 'Статистика',
-						'd' => 'stat'
-					)
-				);
-				$d1 = isset($_GET['d1']) ? $_GET['d1'] : 'prihod';
-				$dl = _dopLinks('report', $links, 'money', $d1);
-				break;
-			default: // history
-				$report = report_history();
-				$rl .= report_history_right();
-		}
-		if(@$_GET['d1'] != 'stat')
-			$report = '<table class="tabLR"><tr><td class="left">'.$dl.$report.'<td class="right">'.$rl.'</table>';
-		else
-			$report = $dl.$report;
-		$html .= $report;
+		$html .= report();
 		break;
 	case 'setup':
 		if(!WS_ID)

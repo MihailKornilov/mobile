@@ -289,9 +289,7 @@ table.zayavNomerTab td{vertical-align:top}
 
 
 
-#report_history{margin:8px}
-.report_history_rl .label{display:inline-block;width:20px}
-.report_history_rl .cal{margin-top:5px}
+.history .left{padding:8px}
 .history_unit{margin-bottom:12px;padding-bottom:8px;border-bottom:#dae1e8 solid 1px}
 .history_unit .head{font-size:10px;color:#777}
 .history_unit .head a{font-size:10px;margin-left:10px}
@@ -305,9 +303,11 @@ table.zayavNomerTab td{vertical-align:top}
 .history_unit .prim{font:italic 11px Arial;color:#555}
 
 
+.remind .left{padding:0 8px}
+.remind #private_check{margin-top:20px}
+.remind ._empty{margin:8px 0}
+#remind_next{margin-bottom:10px}
 
-#remind_private_check{margin-top:20px}
-#report_remind #remind_spisok{margin:0 8px}
 .remind_unit{font-size:12px;margin:8px 0}
 .remind_unit B{font-size:12px;color:#555}
 .remind_unit .txt{font-size:12px;padding:4px 6px 5px 6px}
@@ -349,8 +349,6 @@ table.zayavNomerTab td{vertical-align:top}
 .remind_unit.grey .txt{background-color:#DDD}
 .remind_unit.grey .day{background-color:#F7F7F7}
 .remind_unit.grey em{color:#444}
-#report_remind .ajaxNext{margin-bottom:10px}
-#report_remind ._empty{margin:0}
 /* плюсик добавления напоминания */
 .rightLink a:not(.sel) .report_remind_add{display:none}
 .report_remind_add{float:right;margin:1px 0}
@@ -378,43 +376,30 @@ table.zayavNomerTab td{vertical-align:top}
 .remind_action_tab #comment{width:240px; height:40px}
 
 
+/* Итоговая сумма для списка платежей */
+._moneysum{margin-bottom:7px}
 
-#report_prihod{margin:12px}
-#report_prihod .headName{margin:10px 0}
-#report_prihod ._spisok{width:100%}
-#report_prihod .sum{width:30px;text-align:right;white-space:nowrap}
-#report_prihod .dtime{width:70px;color:#666;font-size:10px;text-align:right;white-space:nowrap;cursor:help}
-#report_prihod .edit{padding:0;text-align:center;width:19px}
-#report_prihod .img_del{margin:0 0 -3px 2px}
-#report_prihod .deleting{text-align:center;color:#555}
-#report_prihod .deleted{background-color:#eee}
-#report_prihod .deleted *{color:#999}
-#report_prihod .summa{margin-bottom:7px}
-#report_prihod_add{border-spacing:8px}
-#report_prihod_add #kassa_radio div{display:inline-block;margin-right:15px}
-#report_prihod_add #about{width:170px}
-.report_prihod_rl .label{display:inline-block;width:20px}
-.report_prihod_rl .cal{margin-top:5px}
-#prihodShowDel_check{margin-top:15px}
+.income .headName{margin:15px 10px}
+.income .inc-path{margin:0 10px}
+.income .spisok{margin:10px}
+.income ._spisok:not(._money){margin:10px 10px 15px 10px}
+.income ._empty{margin:0}
+.income .right{width:160px}
+.income ._calendarFilter{margin-top:20px}
+.income  #del_check{margin-top:20px}
+#income-add-tab{border-spacing:8px}
+#income-add-tab #kassa_radio div{display:inline-block;margin-right:15px}
+#income-add-tab #about{width:170px}
 
-
-#report_rashod{margin:12px}
-#report_rashod .headName{margin:10px 0}
-#report_rashod ._spisok{width:100%;margin-top:5px}
-#report_rashod .sum{width:30px;text-align:right;white-space:nowrap}
-#report_rashod .dtime{width:70px;color:#666;font-size:10px;text-align:right;white-space:nowrap;cursor:help}
-#report_rashod .edit{padding:0 0 0 4px;text-align:center;width:11px;white-space:nowrap}
-#report_rashod .img_edit{margin:0 2px -3px 0}
-#report_rashod .img_del{margin:0 2px -3px 0}
-#report_rashod .deleting{text-align:center;color:#555}
-#report_rashod em{margin-right:5px;color:#770}
-#years_rashod_year{margin-top:20px}
-#monthSum_radio .sum{float:right}
-#monthSum_radio .off .sum{color:#888}
-#report_rashod_add{border-spacing:8px}
-#report_rashod_add #kassa_radio div{display:inline-block;margin-right:15px}
-#report_rashod_add #about{width:190px}
-#rashod_category_name{width:190px}
+.expense .headName{margin:15px 10px}
+.expense #spisok{margin:10px}
+.expense ._spisok{margin-top:5px}
+.expense .years{margin-top:20px}
+.expense #monthSum_radio .sum{float:right}
+.expense #monthSum_radio .off .sum{color:#888}
+#expense-add-tab{border-spacing:8px}
+#expense-add-tab #kassa_radio div{display:inline-block;margin-right:15px}
+#expense-add-tab #about{width:190px}
 
 
 

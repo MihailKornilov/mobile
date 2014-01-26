@@ -25,6 +25,7 @@ require_once(DOCUMENT_ROOT.'/syncro.php');
 require_once(VKPATH.'/vk.php');
 _appAuth();
 require_once(DOCUMENT_ROOT.'/view/main.php');
+require_once(DOCUMENT_ROOT.'/view/ws.php');
 
 
 _dbConnect();
