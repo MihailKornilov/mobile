@@ -1869,6 +1869,7 @@ switch(@$_POST['op']) {
 		));
 		jsonSuccess();
 		break;
+
 	case 'report_kassa_set':
 		if(!preg_match(REGEXP_NUMERIC, $_POST['sum']))
 			jsonError();

@@ -232,7 +232,7 @@ function client_data($page=1, $filter=array()) {
 	if($start + $limit < $send['all']) {
 		$c = $send['all'] - $start - $limit;
 		$c = $c > $limit ? $limit : $c;
-		$send['spisok'] .= '<div class="ajaxNext" val="'.($page + 1).'"><span>Показать ещё '.$c.' клиент'._end($c, 'а', 'а', 'ов').'</span></div>';
+		$send['spisok'] .= '<div class="_next" val="'.($page + 1).'"><span>Показать ещё '.$c.' клиент'._end($c, 'а', 'а', 'ов').'</span></div>';
 	}
 	return $send;
 }//client_data()
@@ -819,7 +819,7 @@ function zayav_spisok($data) {
 		'</div>';
 	}
 	if(isset($data['next']))
-		$send .= '<div class="ajaxNext" val="'.($data['next']).'"><span>Следующие '.$data['limit'].' заявок</span></div>';
+		$send .= '<div class="_next" val="'.($data['next']).'"><span>Следующие '.$data['limit'].' заявок</span></div>';
 	return $send;
 }//zayav_spisok()
 
@@ -1284,7 +1284,7 @@ function zp_data($page=1, $filter=array(), $limit=20) {
 	if($start + $limit < $send['all']) {
 		$c = $send['all'] - $start - $limit;
 		$c = $c > $limit ? $limit : $c;
-		$send['spisok'] .= '<div class="ajaxNext" val="'.($page + 1).'"><span>Показать ещё '.$c.' запчаст'._end($c, 'ь', 'и', 'ей').'</span></div>';
+		$send['spisok'] .= '<div class="_next" val="'.($page + 1).'"><span>Показать ещё '.$c.' запчаст'._end($c, 'ь', 'и', 'ей').'</span></div>';
 	}
 	return $send;
 }//zp_data()
@@ -1458,7 +1458,7 @@ function zp_move($zp_id, $page=1) {
 	if($start + $limit < $all) {
 		$c = $all - $start - $limit;
 		$c = $c > $limit ? $limit : $c;
-		$move .= '<div class="ajaxNext" val="'.($page + 1).'"><span>Показать ещё '.$c.' запис'._end($c, 'ь', 'и', 'ей').'</span></div>';
+		$move .= '<div class="_next" val="'.($page + 1).'"><span>Показать ещё '.$c.' запис'._end($c, 'ь', 'и', 'ей').'</span></div>';
 	}
 	return $move;
 }//zp_move()
@@ -1738,7 +1738,7 @@ function history_spisok($page=1, $filter=array(), $limit=30) {
 		next($history);
 	}
 	if($start + $limit < $all)
-		$send .= '<div class="ajaxNext" id="history_next" val="'.($page + 1).'"><span>Далее...</span></div>';
+		$send .= '<div class="_next" id="history_next" val="'.($page + 1).'"><span>Далее...</span></div>';
 	return $send;
 }//history_spisok()
 
@@ -1841,7 +1841,7 @@ function remind_spisok($data) {
 		'</div>';
 	}
 	if(isset($data['page']))
-		$send .= '<div class="ajaxNext" id="remind_next" val="'.$data['page'].'">'.
+		$send .= '<div class="_next" id="remind_next" val="'.$data['page'].'">'.
 					'<span>Показать ещё '.$data['c'].' задани'._end($data['c'], 'е', 'я', 'й').'</span>'.
 				 '</div>';
 	return $send;
@@ -2056,7 +2056,7 @@ function income_spisok($filter=array()) {
 		$c = $all - $start - $limit;
 		$c = $c > $limit ? $limit : $c;
 		$send['spisok'] .=
-			'<tr class="ajaxNext" val="'.($page + 1).'" id="income_next"><td colspan="4">'.
+			'<tr class="_next" val="'.($page + 1).'" id="income_next"><td colspan="4">'.
 				'<span>Показать ещё '.$c.' платеж'._end($c, '', 'а', 'ей').'</span>';
 	}
 	if($page == 1)
@@ -2198,7 +2198,7 @@ function expense_spisok($page=1, $month=false, $category=0, $worker=0) {
 				'<div class="img_rest" val="'.$r['id'].'" title="Восстановить"></div>');
 	}
 	if($start + $limit < $all)
-		$send .= '<tr class="ajaxNext" val="'.($page + 1).'"><td colspan="4"><span>Показать далее...</span></td></tr>';
+		$send .= '<tr class="_next" val="'.($page + 1).'"><td colspan="4"><span>Показать далее...</span></td></tr>';
 	if($page == 1)
 		$send .= '</table>';
 	return $send;
@@ -2274,7 +2274,7 @@ function report_kassa_spisok($page=1, $del_show=0) {
 				'<div class="img_rest" val="'.$r['id'].'" title="Восстановить"></div>');
 	}
 	if($start + $limit < $all)
-		$send .= '<tr class="ajaxNext" id="report_kassa_next" val="'.($page + 1).'"><td colspan="4"><span>Показать ещё платежи...</span></td></tr>';
+		$send .= '<tr class="_next" id="report_kassa_next" val="'.($page + 1).'"><td colspan="4"><span>Показать ещё платежи...</span></td></tr>';
 	if($page == 1) $send .= '</table>';
 	return $send;
 }//report_kassa_spisok()

@@ -369,7 +369,7 @@ $(document)
 		}
 	})
 
-	.on('click', '.sa-model .ajaxNext', function() {
+	.on('click', '.sa-model ._next', function() {
 		var t = $(this);
 		if(t.hasClass('busy'))
 			return;

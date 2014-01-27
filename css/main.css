@@ -35,7 +35,7 @@
 #client .unit.i{
 	background:url("data:image/gif;base64,R0lGODlhDgAOAKIAAAAAAP///9Pd6GuNsf///wAAAAAAAAAAACH5BAEAAAQALAAAAAAOAA4AAAMiSLoi+681CKWjyk68d+0eA17iSBJWJpVairraC7d0K9dOAgA7") no-repeat 428px 21px;
 }
-#client .ajaxNext{margin:0 10px}
+#client ._next{margin:0 10px}
 
 /* Информация о клиенте */
 #clientInfo .left{padding-bottom:10px}
@@ -52,12 +52,12 @@
 #clientInfo #dopLinks.busy{background-position:right center}
 #clientInfo #zayav_result{color:#777;text-align:center}
 #clientInfo .zayav_unit{margin-right:10px}
-#clientInfo #zayav_spisok .ajaxNext{margin:5px 10px 0 10px}
+#clientInfo #zayav_spisok ._next{margin:5px 10px 0 10px}
 #clientInfo #money_spisok,#clientInfo #histories{margin:10px;display:none}
 #clientInfo #money_spisok ._empty{margin:0;padding:60px 10px}
 #clientInfo #comments,#clientInfo #remind_spisok{margin:0 10px;display:none}
 #clientInfo #remind_spisok ._empty{margin:10px 0;padding:60px 10px}
-#clientInfo #histories .ajaxNext{margin:0}
+#clientInfo #histories ._next{margin:0}
 #clientInfo .right{width:145px}
 #clientInfo #zayav_filter{margin-top:30px}
 #clientInfo #diff_check{margin-top:15px}
@@ -97,7 +97,7 @@
 	border-left:#DDD solid 1px;
 	background-color:#FFF;
 }
-#zayav .ajaxNext{margin:6px 5px 0 8px}
+#zayav ._next{margin:6px 5px 0 8px}
 #zayav #find{margin-top:15px}
 #zayav #desc_check{margin-top:10px}
 #zayav #diff_check{margin-top:15px}
@@ -244,7 +244,7 @@
 .avaiAddTab #cena{width:65px}
 .avaiAddTab span{color:#aaa;margin-left:5px}
 #zp #find{margin-bottom:10px}
-#zp .ajaxNext{margin:0 8px 10px 8px}
+#zp ._next{margin:0 8px 10px 8px}
 
 
 
@@ -273,7 +273,7 @@
 #zpInfo .move .dtime{display:inline-block;margin-top:4px;font-size:10px;color:#888;cursor:help}
 #zpInfo .move .cenaed{color:#777}
 #zpInfo .move .prim{color:#774;font:italic 12px Arial;margin-top:2px}
-#zpInfo .move .ajaxNext *{font-size:11px}
+#zpInfo .move ._next *{font-size:11px}
 #zpInfo .right{width:160px;vertical-align:top}
 #zpInfo #foto{text-align:center;margin-bottom:10px}
 .zp_dec_dialog{border-spacing:8px}

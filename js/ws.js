@@ -953,7 +953,7 @@ $(document)
 		}, 'json');
 	})
 
-	.on('click', '#client .ajaxNext', function() {
+	.on('click', '#client ._next', function() {
 		if($(this).hasClass('busy'))
 			return;
 		var next = $(this),
@@ -1049,7 +1049,7 @@ $(document)
 				});
 		}
 	})
-	.on('click', '#clientInfo #zayav_spisok .ajaxNext', function() {
+	.on('click', '#clientInfo #zayav_spisok ._next', function() {
 		if($(this).hasClass('busy'))
 			return;
 		var next = $(this),
@@ -1125,7 +1125,7 @@ $(document)
 			}
 		}//submit()
 	})
-	.on('click', '#clientInfo #histories .ajaxNext', function() {
+	.on('click', '#clientInfo #histories ._next', function() {
 		if($(this).hasClass('busy'))
 			return;
 		var next = $(this),
@@ -1144,7 +1144,7 @@ $(document)
 	})
 
 
-	.on('click', '#zayav .ajaxNext', function() {
+	.on('click', '#zayav ._next', function() {
 		if($(this).hasClass('busy'))
 			return;
 		var next = $(this),
@@ -1749,7 +1749,7 @@ $(document)
 	})
 
 	.on('click', '#zp #bu_check', zpSpisokLoad)
-	.on('click', '#zp .ajaxNext', function() {
+	.on('click', '#zp ._next', function() {
 		if($(this).hasClass('busy'))
 			return;
 		var next = $(this),
@@ -2187,7 +2187,7 @@ $(document)
 			}
 		});
 	})
-	.on('click', '#zpInfo .move .ajaxNext', function() {
+	.on('click', '#zpInfo .move ._next', function() {
 		if($(this).hasClass('busy'))
 			return;
 		var next = $(this),
@@ -2690,7 +2690,7 @@ $(document)
 		}, 'json');
 	})
 
-	.on('click', '.expense .ajaxNext', function() {
+	.on('click', '.expense ._next', function() {
 		var next = $(this),
 			send = {
 				op:'expense_next',

@@ -337,7 +337,7 @@ function sa_model_spisok($vendor_id, $page=1, $find='') {
 		$c = $all - $start - $limit;
 		$c = $c > $limit ? $limit : $c;
 		$send .= '<tr class="tr"><td colspan="4" class="next">'.
-			'<div class="ajaxNext" val="'.($page + 1).'"><span>Показать ещё '.$c.' модел'._end($c, 'ь', 'и', 'ей').'</span></div>';
+			'<div class="_next" val="'.($page + 1).'"><span>Показать ещё '.$c.' модел'._end($c, 'ь', 'и', 'ей').'</span></div>';
 	}
 	return $send;
 }//sa_model_spisok()
