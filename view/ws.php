@@ -516,16 +516,16 @@ function zayav_add($v=array()) {
 		'<div class="headName">Внесение новой заявки</div>'.
 		'<table style="border-spacing:8px">'.
 			'<tr><td class="label">Клиент:		<td><INPUT TYPE="hidden" id="client_id" value="'.$client_id.'" />'.
-			'<tr><td class="label top">Устройство:<td><table><td id="dev"><td id="device_image"></table>'.
+			'<tr><td class="label topi">Устройство:<td><table><td id="dev"><td id="device_image"></table>'.
 			'<tr><td class="label">IMEI:		  <td><INPUT type="text" id="imei" maxlength="20"'.(isset($v['imei']) ? ' value="'.$v['imei'].'"' : '').' />'.
 			'<tr><td class="label">Серийный номер:<td><INPUT type="text" id="serial" maxlength="30"'.(isset($v['serial']) ? ' value="'.$v['serial'].'"' : '').' />'.
 			'<tr><td class="label">Цвет:'.
 				'<td><INPUT TYPE="hidden" id="color_id" />'.
 					'<span class="color_dop dn"><tt>-</tt><INPUT TYPE="hidden" id="color_dop" /></span>'.
 			'<tr class="tr_equip dn"><td class="label">Комплектация:<td class="equip_spisok">'.
-			'<tr><td class="label top">Местонахождение устройства<br />после внесения заявки:<td><INPUT type="hidden" id="place" value="-1" />'.
+			'<tr><td class="label topi">Местонахождение устройства<br />после внесения заявки:<td><INPUT type="hidden" id="place" value="-1" />'.
 			'<tr><td class="label top">Неисправности: <td id="fault">'.$fault.
-			'<tr><td class="label top">Заметка:	   <td><textarea id="comm"></textarea>'.
+			'<tr><td class="label topi">Заметка:	   <td><textarea id="comm"></textarea>'.
 			'<tr><td class="label">Добавить напоминание:<td>'._check('reminder').
 		'</table>'.
 
@@ -946,6 +946,17 @@ function zayav_info($zayav_id) {
 			'color_id:'.$zayav['color_id'].','.
 			'color_dop:'.$zayav['color_dop'].','.
 			'equip:\''.devEquipCheck($zayav['base_device_id'], $zayav['equip']).'\''.
+		'},
+		PRINT={'.
+			'dtime:"'.FullDataTime($zayav['dtime_add']).'",'.
+			'device:"'._deviceName($zayav['base_device_id']).'<b>'._vendorName($zayav['base_vendor_id'])._modelName($zayav['base_model_id']).'</b>",'.
+			'color:"'._color($zayav['color_id'], $zayav['color_dop']).'",'.
+			($zayav['imei'] ? 'imei:"'.$zayav['imei'].'",' : '').
+			($zayav['serial'] ? 'serial:"'.$zayav['serial'].'",' : '').
+			($zayav['equip'] ? 'equip:"'.zayavEquipSpisok($zayav['equip']).'",' : '').
+			'client:"'._clientLink($zayav['client_id'], 1).'",'.
+			'telefon:"'.query_value("SELECT `telefon` FROM `client` WHERE id=".$zayav['client_id']).'",'.
+			'defect:"'.query_value("SELECT `txt` FROM `vk_comment` WHERE `status`=1 AND `table_name`='zayav' AND `table_id`=".$zayav_id." AND `parent_id`=0 ORDER BY `id` DESC").'"'.
 		'};'.
 	'</script>'.
 	'<div id="zayavInfo">'.
@@ -960,7 +971,8 @@ function zayav_info($zayav_id) {
 			'<tr><td id="left">'.
 				'<div class="headName">'.
 					'Заявка №'.$zayav['nomer'].
-					'<a href="'.SITE.'/view/kvit.php?'.VALUES.'&id='.$zayav_id.'" class="img_word" title="Распечатать квитанцию в Microsoft Word"></a>'.
+					'<a class="img_print" title="Распечатать квитанцию"></a>'.
+					//'<a href="'.SITE.'/view/_kvit.php?'.VALUES.'&id='.$zayav_id.'" class="img_word" title="Распечатать квитанцию в Microsoft Word"></a>'.
 				'</div>'.
 				'<table class="tabInfo">'.
 					'<tr><td class="label">Устройство: <td>'._deviceName($zayav['base_device_id']).'<a><b>'.$model.'</b></a>'.

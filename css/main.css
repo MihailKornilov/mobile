@@ -110,13 +110,13 @@
 #device_image{padding-left:5px;vertical-align:top;min-width:50px}
 #device_image img{height:72px;display:none}
 #zayavAdd .equip_spisok div{margin-right:7px}
-#zayavAdd #place_radio{margin-bottom:10px}
+#zayavAdd #place_radio{margin-bottom:4px}
 #place_radio{position:relative}
 #place_other{width:100px;position:absolute;top:34px;left:60px}
 #zayavAdd #imei{width:130px}
 #zayavAdd #serial{width:200px}
 #zayavAdd .color_dop tt{display:inline-block;margin:0 4px;position:relative;top:-5px}
-#zayavAdd #fault .check0,#zayavAdd #fault .check1{white-space:nowrap;margin:4px 15px 0 0}
+#zayavAdd #fault .check0,#zayavAdd #fault .check1{white-space:nowrap;margin:0 15px 4px 0}
 #zayavAdd #comm{width:260px;height:40px}
 #zayavAdd #reminder_tab{display:none;border-spacing:8px;position:relative;top:-8px}
 #zayavAdd #reminder_txt{width:260px}
@@ -127,12 +127,12 @@
 #zayavInfo .itab{width:100%;border-spacing:10px}
 #zayavInfo #left{vertical-align:top}
 #zayavInfo .headName{margin:0;padding:4px 3px}
-#zayavInfo .img_word{float:right}
-#zayavInfo .tabInfo{margin:2px 10px 15px 10px;border-spacing:4px}
-#zayavInfo .label{width:85px}
+#zayavInfo .img_print{float:right}
+#zayavInfo .tabInfo{margin:2px 10px 15px 4px;border-spacing:8px}
+#zayavInfo .label{width:75px}
 #zayavInfo .dtime_add{cursor:help}
 .zayav-info-edit{border-spacing:8px}
-.zayav-info-edit .equip_spisok div{margin-right:7px}
+.zayav-info-edit .equip_spisok div{display:block;margin-bottom:5px}
 .zayav-info-edit .color_dop tt{display:inline-block;margin:0 4px;position:relative;top:-5px}
 #zayavInfo #status {
 	display:inline-block;
@@ -202,6 +202,10 @@
 	padding:5px;
 	text-align:center;
 }
+.zayav-print{border-spacing:10px}
+.zayav-print .label{width:90px}
+.zayav-print textarea{width:220px;height:40px}
+
 
 /* Список запчастей */
 #zp .right{width:155px}

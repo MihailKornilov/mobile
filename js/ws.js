@@ -1209,7 +1209,7 @@ $(document)
 				'<td><INPUT type="hidden" id="color_id" value="' + ZAYAV.color_id + '" />' +
 					'<span class="color_dop dn"><tt>-</tt><INPUT TYPE="hidden" id="color_dop" value="' + ZAYAV.color_dop + '" /></span>' +
 			'<tr class="tr_equip' + (ZAYAV.equip ? '' : ' dn') + '">' +
-				'<td class="label r">Комплектация:  <TD class="equip_spisok">' + ZAYAV.equip +
+				'<td class="label r top">Комплектация:<TD class="equip_spisok">' + ZAYAV.equip +
 		'</TABLE>',
 			dialog = _dialog({
 				width:410,
@@ -1390,8 +1390,8 @@ $(document)
 		});
 		$('#sum').focus();
 		$('#sum,#prim,#reminder_txt').keyEnter(submit);
-		$('#acc_status').linkMenu({spisok:STATUS});
-		$('#acc_dev_status').linkMenu({spisok:G.device_status_spisok});
+		$('#acc_status')._dropdown({spisok:STATUS});
+		$('#acc_dev_status')._dropdown({spisok:G.device_status_spisok});
 		$('#acc_remind')._check();
 		$('#acc_remind_check').click(function(id) {
 			$('.zayav_accrual_add.remind').toggle();
@@ -1503,7 +1503,7 @@ $(document)
 			left:-60,
 			delayShow:1000
 		});
-		$('#dev_place').linkMenu({spisok:G.device_place_spisok});
+		$('#dev_place')._dropdown({spisok:G.device_place_spisok});
 		function submit() {
 			var msg,
 				send = {
@@ -3429,7 +3429,7 @@ $(document)
 			$('#place')._radio({
 				spisok:G.device_place_spisok,
 				func:function(val) {
-					$('#place_other')[(val == 0 ? 'remove' : 'add') + 'Class']('dn');
+					$('#place_other')[(val != 0 ? 'add' : 'remove') + 'Class']('dn');
 					if(val == 0)
 						$('#place_other').val('').focus();
 				}
@@ -3525,6 +3525,29 @@ $(document)
 			$('.fotoUpload').fotoUpload({
 				owner:'zayav' + ZAYAV.id,
 				func:zayavImgUpdate
+			});
+			$('.img_print').click(function() {
+				var html = '<table class="zayav-print">' +
+						'<tr><td class="label">Дата приёма:<td>' + PRINT.dtime +
+						'<tr><td class="label top">Устройство:<td>' + PRINT.device +
+		 (PRINT.color ? '<tr><td class="label">Цвет:<td>' + PRINT.color : '') +
+		  (PRINT.imei ? '<tr><td class="label">IMEI:<td>' + PRINT.imei : '') +
+		(PRINT.serial ? '<tr><td class="label">Серийный номер:<td>' + PRINT.serial : '') +
+		 (PRINT.equip ? '<tr><td class="label">Комплектация:<td>' + PRINT.equip : '') +
+						'<tr><td class="label">Заказчик:<td><b>' + PRINT.client + '</b>' +
+	   (PRINT.telefon ? '<tr><td class="label">Телефон:<td>' + PRINT.telefon : '') +
+						'<tr><td class="label top">Неисправность:<td><textarea id="defect">' + PRINT.defect + '</textarea>' +
+						'</table>',
+					dialog = _dialog({
+						width:380,
+						top:30,
+						head:'Заявка №' + ZAYAV.nomer + ' - Печать квитанции',
+						content:html,
+						butSubmit:'',
+						submit:submit
+					});
+				$('#defect').focus().autosize();
+				function submit() {}
 			});
 		}
 
