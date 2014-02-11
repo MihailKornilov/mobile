@@ -80,6 +80,7 @@ function _cacheClear($ws_id=WS_ID) {
 		xcache_unset(CACHE_PREFIX.'zayav_base_vendor'.$ws_id);
 		xcache_unset(CACHE_PREFIX.'zayav_base_model'.$ws_id);
 	}
+	GvaluesCreate();
 }//ens of _cacheClear()
 
 function _header() {
@@ -206,19 +207,53 @@ function _dopLinks($p, $data, $d=false, $d1=false) {//Дополнительное меню на сер
 }//_dopLinks()
 
 function GvaluesCreate() {//Составление файла G_values.js
-	$save = 'function SpisokToAss(s){var a=[];for(var n=0;n<s.length;a[s[n].uid]=s[n].title,n++);return a}'.
-		'var COLOR_SPISOK='.query_selJson("SELECT `id`,`name` FROM `setup_color_name` ORDER BY `name` ASC").','.
-			'COLORPRE_SPISOK='.query_selJson("SELECT `id`,`predlog` FROM `setup_color_name` ORDER BY `predlog` ASC").','.
-			'RASHOD_CATEGORY='.query_selJson("SELECT `id`,`name` FROM `setup_rashod_category` ORDER BY `name` ASC").';'.
-		'G.fault_spisok='.query_selJson("SELECT `id`,`name` FROM setup_fault ORDER BY `sort`").';G.fault_ass=SpisokToAss(G.fault_spisok);'.
-		'G.zp_name_spisok='.query_selJson("SELECT `id`,`name` FROM setup_zp_name ORDER BY `name`").';G.zp_name_ass=SpisokToAss(G.zp_name_spisok);'.
-		'G.device_status_spisok='.query_selJson("SELECT `id`,`name` FROM `setup_device_status` ORDER BY `sort`").';G.device_status_spisok.unshift({uid:0, title:"не известно"});G.device_status_ass=SpisokToAss(G.device_status_spisok);'.
-		'G.device_place_spisok='.query_selJson("SELECT `id`,`name` FROM `setup_device_place` ORDER BY `sort`").';G.device_place_ass=SpisokToAss(G.device_place_spisok);'.
-
-		'G.device_spisok='.query_selJson("SELECT `id`,`name` FROM `base_device` ORDER BY `sort`").';G.device_ass=SpisokToAss(G.device_spisok);'.
-		'G.device_rod_spisok='.query_selJson("SELECT `id`,`name_rod` FROM `base_device` ORDER BY `sort`").';G.device_rod_ass=SpisokToAss(G.device_rod_spisok);'.
-		'G.device_mn_spisok='.query_selJson("SELECT `id`,`name_mn` FROM `base_device` ORDER BY `sort`").';G.device_mn_ass=SpisokToAss(G.device_mn_spisok);';
-
+	$save = 'function _toAss(s){var a=[];for(var n=0;n<s.length;a[s[n].uid]=s[n].title,n++);return a}'.
+	"\n".'var COLOR_SPISOK='.query_selJson("SELECT `id`,`name` FROM `setup_color_name` ORDER BY `name` ASC").','.
+		"\n".'COLORPRE_SPISOK='.query_selJson("SELECT `id`,`predlog` FROM `setup_color_name` ORDER BY `predlog` ASC").','.
+		"\n".'RASHOD_CATEGORY='.query_selJson("SELECT `id`,`name` FROM `setup_rashod_category` ORDER BY `name` ASC").','.
+		//"\n".'FAULT_SPISOK='.query_selJson("SELECT `id`,`name` FROM setup_fault ORDER BY `sort`").';G.fault_ass=_toAss(FAULT_SPISOK),'.
+		"\n".'ZPNAME_SPISOK='.query_selJson("SELECT `id`,`name` FROM setup_zp_name ORDER BY `name`").','.
+		"\n".'DEVSTATUS_SPISOK='.query_selJson("SELECT `id`,`name` FROM `setup_device_status` ORDER BY `sort`").','.
+		"\n".'DEVPLACE_SPISOK='.query_selJson("SELECT `id`,`name` FROM `setup_device_place` ORDER BY `sort`").','.
+		"\n".'DEV_SPISOK='.query_selJson("SELECT `id`,`name` FROM `base_device` ORDER BY `sort`").',DEV_ASS=_toAss(DEV_SPISOK),'.
+		"\n".'COUNTRY_SPISOK=['.
+			'{uid:1,title:"Россия"},'.
+			'{uid:2,title:"Украина"},'.
+			'{uid:3,title:"Беларусь"},'.
+			'{uid:4,title:"Казахстан"},'.
+			'{uid:5,title:"Азербайджан"},'.
+			'{uid:6,title:"Армения"},'.
+			'{uid:7,title:"Грузия"},'.
+			'{uid:8,title:"Израиль"},'.
+			'{uid:11,title:"Кыргызстан"},'.
+			'{uid:12,title:"Латвия"},'.
+			'{uid:13,title:"Литва"},'.
+			'{uid:14,title:"Эстония"},'.
+			'{uid:15,title:"Молдова"},'.
+			'{uid:16,title:"Таджикистан"},'.
+			'{uid:17,title:"Туркмения"},'.
+			'{uid:18,title:"Узбекистан"}],'.
+		'COUNTRY_ASS=_toAss(COUNTRY_SPISOK),'.
+		"\n".'CITY_SPISOK=['.
+			'{uid:1,title:"Москва",content:"<b>Москва</b>"},'.
+			'{uid:2,title:"Санкт-Петербург",content:"<b>Санкт-Петербург</b>"},'.
+			'{uid:35,title:"Великий Новгород"},'.
+			'{uid:10,title:"Волгоград"},'.
+			'{uid:49,title:"Екатеринбург"},'.
+			'{uid:60,title:"Казань"},'.
+			'{uid:61,title:"Калининград"},'.
+			'{uid:72,title:"Краснодар"},'.
+			'{uid:73,title:"Красноярск"},'.
+			'{uid:87,title:"Мурманск"},'.
+			'{uid:95,title:"Нижний Новгород"},'.
+			'{uid:99,title:"Новосибирск"},'.
+			'{uid:104,title:"Омск"},'.
+			'{uid:110,title:"Пермь"},'.
+			'{uid:119,title:"Ростов-на-Дону"},'.
+			'{uid:123,title:"Самара"},'.
+			'{uid:125,title:"Саратов"},'.
+			'{uid:151,title:"Уфа"},'.
+			'{uid:158,title:"Челябинск"}];';
 
 	$sql = "SELECT * FROM `base_vendor` ORDER BY `device_id`,`sort`";
 	$q = query($sql);
@@ -235,12 +270,9 @@ function GvaluesCreate() {//Составление файла G_values.js
 	$v = array();
 	foreach($vendor as $n => $sp)
 		$v[] = $n.':['.implode(',', $vendor[$n]).']';
-	$save .= 'G.vendor_spisok={'.implode(',', $v).'};'.
-			 'G.vendor_ass=[];'.
-			 'G.vendor_ass[0]="";'.
-			 'for(var k in G.vendor_spisok){for(var n=0;n<G.vendor_spisok[k].length;n++){var sp=G.vendor_spisok[k][n];G.vendor_ass[sp.uid]=sp.title;}}';
-
-
+	$save .= "\n".'VENDOR_SPISOK={'.implode(',', $v).'};'.
+		"\n".'VENDOR_ASS={0:""};'.
+		"\n".'for(k in VENDOR_SPISOK){for(n=0;n<VENDOR_SPISOK[k].length;n++){var sp=VENDOR_SPISOK[k][n];VENDOR_ASS[sp.uid]=sp.title;}}';
 
 	$sql = "SELECT * FROM `base_model` ORDER BY `vendor_id`,`name`";
 	$q = query($sql);
@@ -252,11 +284,10 @@ function GvaluesCreate() {//Составление файла G_values.js
 	}
 	$m = array();
 	foreach($model as $n => $sp)
-		$m[] =  $n.':['.implode(',',$model[$n]).']';
-	$save .= 'G.model_spisok={'.implode(',',$m).'};'.
-			 'G.model_ass=[];'.
-			 'G.model_ass[0]="";'.
-			 'for(var k in G.model_spisok){for(var n=0;n<G.model_spisok[k].length;n++){var sp=G.model_spisok[k][n];G.model_ass[sp.uid]=sp.title;}}';
+		$m[] = $n.':['.implode(',',$model[$n]).']';
+	$save .= "\n".'MODEL_SPISOK={'.implode(',',$m).'};'.
+		"\n".'MODEL_ASS={0:""};'.
+		"\n".'for(k in MODEL_SPISOK){for(n=0;n<MODEL_SPISOK[k].length;n++){var sp=MODEL_SPISOK[k][n];MODEL_ASS[sp.uid]=sp.title;}}';
 
 	$fp = fopen(PATH_FILES.'../js/G_values.js', 'w+');
 	fwrite($fp, $save);
@@ -608,7 +639,7 @@ function ws_create_step1() {
 			'<TR><TD class="label">Страна:<TD><INPUT type="hidden" id="countries" value="'.VIEWER_COUNTRY_ID.'">'.
 			'<TR><TD class="label">Город:<TD><INPUT type="hidden" id="cities" value="0">'.
 			'<TR><TD class="label">Главный администратор:<TD><b>'.VIEWER_NAME.'</b>'.
-			'<TR><TD class="label top">Категории устройств,<br />ремонтом которых<br />Вы занимаетесь:<TD id="devs">'.$checkDevs.
+			'<TR><TD class="label topi">Категории устройств,<br />ремонтом которых<br />Вы занимаетесь:<TD id="devs">'.$checkDevs.
 		'</TABLE>'.
 
 		'<div class="vkButton"><button>Готово</button></div>'.

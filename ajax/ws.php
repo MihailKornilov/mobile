@@ -130,10 +130,11 @@ switch(@$_POST['op']) {
 		break;
 
 	case 'client_sel':
-		if(!preg_match(REGEXP_WORDFIND, win1251($_POST['val'])))
-			$_POST['val'] = '';
+		$send['spisok'] = array();
+		if(!empty($_POST['val']) && !preg_match(REGEXP_WORDFIND, win1251($_POST['val'])))
+			jsonSuccess($send);
 		if(!preg_match(REGEXP_NUMERIC, $_POST['client_id']))
-			$_POST['client_id'] = 0;
+			jsonSuccess($send);
 		$val = win1251($_POST['val']);
 		$client_id = intval($_POST['client_id']);
 		$sql = "SELECT *
@@ -145,14 +146,13 @@ switch(@$_POST['op']) {
 				ORDER BY `id` DESC
 				LIMIT 50";
 		$q = query($sql);
-		$send['spisok'] = array();
 		while($r = mysql_fetch_assoc($q)) {
 			$unit = array(
 				'uid' => $r['id'],
-				'title' => utf8($r['fio'])
+				'title' => utf8(htmlspecialchars_decode($r['fio']))
 			);
 			if($r['telefon'])
-				$unit['content'] = utf8($r['fio'].'<div class="pole2">'.$r['telefon'].'</div>');
+				$unit['content'] = utf8($r['fio'].'<span>'.$r['telefon'].'</span>');
 			$send['spisok'][] = $unit;
 		}
 		jsonSuccess($send);
@@ -176,7 +176,8 @@ switch(@$_POST['op']) {
 		query($sql);
 		$send = array(
 			'uid' => mysql_insert_id(),
-			'title' => utf8($fio)
+			'title' => utf8($fio),
+			'content' => utf8($fio.'<span>'.$telefon.'</span>')
 		);
 		history_insert(array(
 			'type' => 3,

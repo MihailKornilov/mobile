@@ -50,7 +50,7 @@ switch(@$_POST['op']) {
 					AND `c`.`id`=`m`.`client_id`
 					AND `m`.`sum`>0
 				WHERE `c`.`ws_id`=".$ws_id."
-				  AND `deleted`=0
+				  AND `c`.`deleted`=0
 				GROUP BY `c`.`id`
 				ORDER BY `c`.`id`";
 		$q = query($sql);
@@ -65,7 +65,7 @@ switch(@$_POST['op']) {
 				  ON `a`.`status`=1
 					AND `c`.`id`=`a`.`client_id`
 				WHERE `c`.`ws_id`=".$ws_id."
-				  AND `deleted`=0
+				  AND `c`.`deleted`=0
 				GROUP BY `c`.`id`
 				ORDER BY `c`.`id`";
 		$q = query($sql);

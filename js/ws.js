@@ -64,37 +64,29 @@ var AJAX_WS = SITE + '/ajax/ws.php?' + VALUES,
 	},
 
 	colorSel = function(spisok) {
-		$('#color_id').vkSel({
+		$('#color_id')._select({
 			width:120,
-			display:'inline-block',
 			title0:'Цвет не указан',
 			spisok:spisok,
 			func:colorSelDop
 		});
-		window.color_dop = $('#color_dop').vkSel({
+		$('#color_dop')._select({
 			width:120,
-			display:'inline-block',
 			title0:'Цвет не указан',
 			spisok:COLOR_SPISOK,
 			func:function(id) {
-				if(id > 0)
-					colorSel(COLORPRE_SPISOK);
-				else
-					colorSel(COLOR_SPISOK);
+				colorSel(id ? COLORPRE_SPISOK : COLOR_SPISOK);
 			}
-		}).o;
+		});
 	},
 	colorSelDop = function(id) {
-		if(id > 0) {
-			if($('#vkSel_color_id').length == 0)
-				if($('#color_dop').val() > 0)
-					colorSel(COLORPRE_SPISOK);
-				else
-					colorSel(COLOR_SPISOK);
+		if(id) {
+			if($('#color_id_select').length == 0)
+				colorSel($('#color_dop').val() > 0 ? COLORPRE_SPISOK : COLOR_SPISOK);
 			$('.color_dop').removeClass('dn');
 		} else {
 			colorSel(COLOR_SPISOK);
-			color_dop.val(0);
+			$('#color_dop')._select(0);
 			$('.color_dop').addClass('dn');
 		}
 	},
@@ -523,53 +515,60 @@ var AJAX_WS = SITE + '/ajax/ws.php?' + VALUES,
 		}, 'json');
 	};
 
-$.fn.clientSel = function(obj) {
+$.fn.clientSel = function(o) {
 	var t = $(this);
-	obj = $.extend({
-		width:240,
+	o = $.extend({
+		width:260,
 		add:null,
-		client_id:t.val() || 0
-	}, obj);
+		client_id:t.val() || 0,
+		func:function() {}
+	}, o);
 
-	if(obj.add)
-		obj.add = function() {
+	if(o.add)
+		o.add = function() {
 			clientAdd(function(res) {
-				sel.add(res).val(res.uid)
+				var arr = [];
+				arr.push(res);
+				t._select(arr);
+				t._select(res.uid);
 			});
 		};
 
-	var sel = t.vkSel({
-		width:obj.width,
+	t._select({
+		width:o.width,
 		title0:'Начните вводить данные клиента...',
 		spisok:[],
-		ro:0,
+		write:1,
 		nofind:'Клиентов не найдено',
-		funcAdd:obj.add,
+		func:o.func,
+		funcAdd:o.add,
 		funcKeyup:clientsGet
-	}).o;
-	sel.process();
+	});
 	clientsGet();
 
 	function clientsGet(val) {
 		var send = {
 			op:'client_sel',
-			val:val ? val : '',
-			client_id:obj.client_id
+			val:val || '',
+			client_id:o.client_id
 		};
+		t._select('process');
 		$.post(AJAX_WS, send, function(res) {
+			t._select('cancel');
 			if(res.success) {
-				sel.spisok(res.spisok);
-				if(obj.client_id > 0) {
-					sel.val(obj.client_id)
-					obj.client_id = 0;
+				t._select(res.spisok);
+				if(o.client_id) {
+					t._select(o.client_id);
+					o.client_id = 0;
 				}
 			}
 		}, 'json');
 	}
 	return t;
 };
-$.fn.device = function(obj) {
-	obj = $.extend({
+
+$.fn.device = function(o) {
+	o = $.extend({
 		width:150,
 		func:function() {},
 		type_no:0,
@@ -583,66 +582,65 @@ $.fn.device = function(obj) {
 		device_funcAdd:null, // функции пусты, если нельзя добавлять новые элементы
 		vendor_funcAdd:null,
 		model_funcAdd:null
-	},obj);
+	},o);
 
 	var t = $(this),
 		id = t.attr('id'),
-		html = '<input type="hidden" id="' + id + '_device" value="' + obj.device_id + '">' +
-			'<input type="hidden" id="' + id + '_vendor" value="' + obj.vendor_id + '">' +
-			'<input type="hidden" id="' + id + '_model" value="' + obj.model_id + '">',
+		html = '<input type="hidden" id="' + id + '_device" value="' + o.device_id + '">' +
+			'<input type="hidden" id="' + id + '_vendor" value="' + o.vendor_id + '">' +
+			'<input type="hidden" id="' + id + '_model" value="' + o.model_id + '">',
 		device_no = ['Устройство не выбрано','Любое устройство'],
 		vendor_no = ['Производитель не выбран','Любой производитель'],
 		model_no = ['Модель не выбрана','Любая модель'],
-		vk_device,
-		vk_vendor,
-		vk_model,
 		dialog;
 	t.html(html);
+	var devSel = $('#' + id + '_device'),
+		venSel = $('#' + id + '_vendor'),
+		modSel = $('#' + id + '_model');
 
 	// создание нового списка устройств, которые нужно выводить в списке
-	if(obj.device_ids) {
-		G.device_spisok = [];
-		for(var n = 0; n < obj.device_ids.length; n++) {
-			var uid = obj.device_ids[n];
-			G.device_spisok.push({uid:uid, title:G.device_ass[uid]});
+	if(o.device_ids) {
+		DEV_SPISOK = [];
+		for(n = 0; n < o.device_ids.length; n++) {
+			var uid = o.device_ids[n];
+			DEV_SPISOK.push({uid:uid, title:DEV_ASS[uid]});
 		}
 	}
 
 	// создание нового списка производителей, которые нужно выводить в списке
-	if(obj.vendor_ids) {
+	if(o.vendor_ids) {
 		var vendors = {};
-		for(var k in G.vendor_spisok) {
-			for(var n = 0; n < G.vendor_spisok[k].length; n++) {
-				var sp = G.vendor_spisok[k][n];
-				if(obj.vendor_ids.indexOf(sp.uid) >= 0) {
+		for(k in VENDOR_SPISOK) {
+			for(n = 0; n < VENDOR_SPISOK[k].length; n++) {
+				var sp = VENDOR_SPISOK[k][n];
+				if(o.vendor_ids.indexOf(sp.uid) >= 0) {
 					if(vendors[k] == undefined)
 						vendors[k] = [];
 					vendors[k].push(sp);
 				}
 			}
 		}
-		G.vendor_spisok = vendors;
+		VENDOR_SPISOK = vendors;
 	}
 
 	// создание нового списка моделей, которые нужно выводить в списке
-	if(obj.model_ids) {
+	if(o.model_ids) {
 		var models = {};
-		for(var k in G.model_spisok) {
-			for(var n = 0; n < G.model_spisok[k].length; n++) {
-				var sp = G.model_spisok[k][n];
-				if(obj.model_ids.indexOf(sp.uid) >= 0) {
-					if(models[k] == undefined)
+		for(k in MODEL_SPISOK)
+			for(n = 0; n < MODEL_SPISOK[k].length; n++) {
+				var sp = MODEL_SPISOK[k][n];
+				if(o.model_ids.indexOf(sp.uid) >= 0) {
+					if(!models[k])
 						models[k] = [];
 					models[k].push(sp);
 				}
 			}
-		}
-		G.model_spisok = models;
+		MODEL_SPISOK = models;
 	}
 
 	// добавление новых устройств
-	if (obj.add > 0) {
-		obj.device_funcAdd = function() {
+	if (o.add > 0) {
+		o.device_funcAdd = function() {
 			var html = '<table class="device-add-tab">' +
 				'<tr><td class="label">Название:<TD><input type="text" id="daname">' +
 				'</table>';
@@ -656,7 +654,7 @@ $.fn.device = function(obj) {
 				.focus()
 				.keyEnter(deviceAddSubmit);
 		};
-		obj.vendor_funcAdd = function () {
+		o.vendor_funcAdd = function () {
 			var html ='<TABLE class="device-add-tab">' +
 				'<TR><TD class="label">Название:<TD><input type="text" id="vaname">' +
 				'</TABLE>';
@@ -670,7 +668,7 @@ $.fn.device = function(obj) {
 				.focus()
 				.keyEnter(vendorAddSubmit);
 		};
-		obj.model_funcAdd = function(){
+		o.model_funcAdd = function(){
 			var html = '<TABLE class="device-add-tab">' +
 				'<TR><TD class="label">Название:<TD><input type="text" id="maname">' +
 				'</TABLE>';
@@ -694,33 +692,36 @@ $.fn.device = function(obj) {
 		};
 		if(!send.name)
 			addHint('Не указано название устройства.');
-		else if(name_test(vk_device.spisok(), send.name))
+		else if(name_test(DEV_SPISOK, send.name))
 			addHint();
 		else {
 			dialog.process();
 			$.post(AJAX_WS, send, function(res) {
 				dialog.abort();
 				if(res.success) {
-					vk_device.add({uid:res.id, title:send.name}).val(res.id);
-					G.device_ass[res.id] = name;
+					DEV_SPISOK.push({uid:res.id, title:send.name});
+					DEV_ASS[res.id] = name;
+					devSel
+						._select(DEV_SPISOK)
+						._select(res.id);
 					getVendor(0);
-					if(vk_model)
-						vk_model.val(0).remove(); //Удаляется селект модели и устанавливается в 0
-					obj.func(getIds());
+					modSel.val(0)._select('remove'); //Удаляется селект модели и устанавливается в 0
+					o.func(getIds());
 					dialog.close();
 				}
 			} ,'json');
 		}
 	}
 	function vendorAddSubmit() {
-		var send = {
+		var dv = devSel.val(),
+			send = {
 			op:'base_vendor_add',
-			device_id:vk_device.val(),
+			device_id:dv,
 			name:$('#vaname').focus().val()
 		};
 		if(!send.name)
 			addHint('Не указано название производителя.');
-		else if(name_test(vk_vendor.spisok(), send.name))
+		else if(name_test(VENDOR_SPISOK[dv], send.name))
 			addHint();
 		else {
 			dialog.process();
@@ -728,12 +729,13 @@ $.fn.device = function(obj) {
 				dialog.abort();
 				if(res.success) {
 					// если у устройства нет производителей, сначала создаётся пустой массив
-					if (!G.vendor_spisok[vk_device.val()]) {
-						G.vendor_spisok[vk_device.val()] = [];
-						G.vendor_spisok[vk_device.val()].unshift({uid:res.id, title:send.name});
-					}
-					vk_vendor.add({uid:res.id, title:send.name}).val(res.id);
-					G.vendor_ass[res.id] = send.name;
+					if(!VENDOR_SPISOK[dv])
+						VENDOR_SPISOK[dv] = [];
+					VENDOR_SPISOK[dv].push({uid:res.id, title:send.name});
+					VENDOR_ASS[res.id] = send.name;
+					venSel
+						._select(VENDOR_SPISOK[dv])
+						._select(res.id);
 					getModel();
 					dialog.close();
 				}
@@ -741,15 +743,16 @@ $.fn.device = function(obj) {
 		}
 	}
 	function modelAddSubmit() {
-		var send = {
+		var vv = venSel.val(),
+			send = {
 			op:'base_model_add',
-			device_id:vk_device.val(),
-			vendor_id:vk_vendor.val(),
+			device_id:devSel.val(),
+			vendor_id:vv,
 			name:$('#maname').focus().val()
 		};
 		if(!send.name)
 			addHint('Не указано название модели.');
-		else if(name_test(vk_model.spisok(), send.name)) {
+		else if(name_test(MODEL_SPISOK[vv], send.name)) {
 			addHint();
 		} else {
 			dialog.process();
@@ -757,12 +760,13 @@ $.fn.device = function(obj) {
 				dialog.abort();
 				if(res.success) {
 					// если у производителя нет моделей, сначала создаётся пустой массив
-					if(!G.model_spisok[vk_vendor.val()]) {
-						G.model_spisok[vk_vendor.val()] = [];
-						G.model_spisok[vk_vendor.val()].unshift({uid:res.id, title:send.name});
-					}
-					vk_model.add({uid:res.id, title:send.name}).val(res.id);
-					G.model_ass[res.id] = send.name;
+					if(!MODEL_SPISOK[vv])
+						MODEL_SPISOK[vv] = [];
+					MODEL_SPISOK[vv].push({uid:res.id, title:send.name});
+					MODEL_ASS[res.id] = send.name;
+					modSel
+						._select(MODEL_SPISOK[vv])
+						._select(res.id);
 					dialog.close();
 				}
 			}, 'json');
@@ -781,66 +785,69 @@ $.fn.device = function(obj) {
 	}
 
 	// вывод списка устройств
-	vk_device = $('#' + id + '_device').vkSel({
-		width:obj.width,
-		title0:device_no[obj.type_no],
-		value:obj.device_id,
-		spisok:G.device_spisok,
+	devSel._select({
+		width:o.width,
+		block:1,
+		title0:device_no[o.type_no],
+		spisok:DEV_SPISOK,
 		func:function(id) {
-			if(id == 0) {
-				if(vk_vendor)
-					vk_vendor.val(0).remove();
-			} else
+			venSel.val(0);
+			modSel.val(0)._select('remove'); //Удаляется селект модели и устанавливается в 0, если был ранее
+			if(!id)
+				venSel._select('remove');
+			else
 				getVendor(0);
-			if(vk_model)
-				vk_model.val(0).remove(); //Удаляется селект модели и устанавливается в 0, если был ранее
-			obj.func(getIds());
+			o.func(getIds());
 		},
-		funcAdd:obj.device_funcAdd,
+		funcAdd:o.device_funcAdd,
 		bottom:3
-	}).o;
-	if(obj.device_id > 0)
+	});
+	if(o.device_id)
 		getVendor();
 
 	// вывод списка производителей
 	function getVendor(vendor_id) {
 		if(vendor_id != undefined)
-			obj.vendor_id = vendor_id; // изменяется значение производителя, если нужно
-		vk_vendor = $('#' + id + '_vendor').vkSel({
-			width:obj.width,
-			title0:vendor_no[obj.type_no],
-			value:obj.vendor_id,
-			spisok:G.vendor_spisok[vk_device.val()], // значение устройства получено из его объекта
+			o.vendor_id = vendor_id; // изменяется значение производителя, если нужно
+		venSel.val(o.vendor_id);
+		venSel._select({
+			width:o.width,
+			block:1,
+			title0:vendor_no[o.type_no],
+			spisok:VENDOR_SPISOK[devSel.val()], // значение устройства получено из его объекта
 			func:function(id) {
-				if(id == 0) {
-					if(vk_model)
-						vk_model.val(0).remove(); //Удаляется селект модели и устанавливается в 0
-				} else
+				modSel.val(0);
+				if(!id)
+					modSel._select('remove'); //Удаляется селект модели и устанавливается в 0
+				else
 					getModel(0);
-				obj.func(getIds());
+				o.func(getIds());
 			},
-			funcAdd:obj.vendor_funcAdd,
+			funcAdd:o.vendor_funcAdd,
 			bottom:3
-		}).o;
-		if(obj.vendor_id > 0)
+		});
+		venSel._select(o.vendor_id);
+		if(o.vendor_id)
 			getModel();
 	}
 
 	// вывод списка моделей
 	function getModel(model_id) {
 		if(model_id != undefined)
-			obj.model_id = model_id; //Изменяется значение модели, если нужно
-		vk_model = $('#' + id + '_model').vkSel({
-			width:obj.width,
-			ro:0,
-			title0:model_no[obj.type_no],
-			value:obj.model_id,
-			spisok:G.model_spisok[vk_vendor.val()],
+			o.model_id = model_id; //Изменяется значение модели, если нужно
+		modSel.val(o.model_id);
+		modSel._select({
+			width:o.width,
+			block:1,
+			write:1,
+			title0:model_no[o.type_no],
+			spisok:MODEL_SPISOK[venSel.val()],
 			limit:50,
-			funcAdd:obj.model_funcAdd,
+			funcAdd:o.model_funcAdd,
 			bottom:10,
-			func:function() { obj.func(getIds()); }
-		}).o;
+			func:function() { o.func(getIds()); }
+		});
+		modSel._select(o.model_id);
 	}
 
 	// проверка на совпадение имени при внесении нового элемента
@@ -854,9 +861,9 @@ $.fn.device = function(obj) {
 
 	function getIds() {
 		return {
-			device_id:vk_device.val(),
-			vendor_id:vk_vendor ? vk_vendor.val() : 0,
-			model_id:vk_model ? vk_model.val() : 0
+			device_id:devSel.val(),
+			vendor_id:venSel.val(),
+			model_id:modSel.val()
 		};
 	}
 };
@@ -1003,7 +1010,7 @@ $(document)
 				left:-79,
 				indent:80
 			});
-		$('#client2').clientSel();
+		$('#client2').clientSel({width:240});
 		function submit() {
 			var msg,
 				send = {
@@ -1194,8 +1201,8 @@ $(document)
 			model_ids:G.model_ids,
 			func:zayavSpisokLoad
 		});
-		G.vkSel_device_place.val(0);
-		G.vkSel_device_status.val(0);
+		$('#device_place')._select(0);
+		$('#devstatus')._select(0);
 		zayavSpisokLoad();
 	})
 
@@ -1220,7 +1227,7 @@ $(document)
 				submit:submit
 			});
 		$('#client_id').clientSel();
-		$('#vkSel_client_id').vkHint({
+		$('#client_id_select').vkHint({
 			msg:'Если изменяется клиент, то начисления и платежи заявки применяются на нового клиента.',
 			width:200,
 			top:-83,
@@ -1391,7 +1398,7 @@ $(document)
 		$('#sum').focus();
 		$('#sum,#prim,#reminder_txt').keyEnter(submit);
 		$('#acc_status')._dropdown({spisok:STATUS});
-		$('#acc_dev_status')._dropdown({spisok:G.device_status_spisok});
+		$('#acc_dev_status')._dropdown({spisok:DEVSTATUS_SPISOK});
 		$('#acc_remind')._check();
 		$('#acc_remind_check').click(function(id) {
 			$('.zayav_accrual_add.remind').toggle();
@@ -1503,7 +1510,7 @@ $(document)
 			left:-60,
 			delayShow:1000
 		});
-		$('#dev_place')._dropdown({spisok:G.device_place_spisok});
+		$('#dev_place')._dropdown({spisok:DEVPLACE_SPISOK});
 		function submit() {
 			var msg,
 				send = {
@@ -1560,8 +1567,8 @@ $(document)
 		});
 
 		var spisok = [];
-		for(var n = 0; n < G.device_place_spisok.length; n++)
-			spisok.push(G.device_place_spisok[n]);
+		for(var n = 0; n < DEVPLACE_SPISOK.length; n++)
+			spisok.push(DEVPLACE_SPISOK[n]);
 		spisok.push({
 			uid:0,
 			title:'другое: <INPUT type="text" ' +
@@ -1578,9 +1585,9 @@ $(document)
 					$('#place_other').val('').focus();
 			}
 		});
-		G.device_status_spisok.splice(0, 1);
+		DEVSTATUS_SPISOK.splice(0, 1);
 		$('#dev_status')._radio({
-			spisok:G.device_status_spisok,
+			spisok:DEVSTATUS_SPISOK,
 			light:1
 		});
 
@@ -1653,9 +1660,9 @@ $(document)
 		var html = '<div class="zayav_zp_add">' +
 				'<CENTER>Добавление запчасти к устройству<br />' +
 					'<b>' +
-						G.device_ass[ZAYAV.device] + ' ' +
-						G.vendor_ass[ZAYAV.vendor] + ' ' +
-						G.model_ass[ZAYAV.model] +
+						DEV_ASS[ZAYAV.device] + ' ' +
+						VENDOR_ASS[ZAYAV.vendor] + ' ' +
+						MODEL_ASS[ZAYAV.model] +
 					'</b>.'+
 				'</CENTER>' +
 				'<TABLE style="border-spacing:6px">' +
@@ -1673,12 +1680,12 @@ $(document)
 				submit:submit
 			});
 
-		$('#name_id').vkSel({
+		$('#name_id')._select({
 			width:200,
 			title0:'Наименование не выбрано',
-			spisok:G.zp_name_spisok
+			spisok:ZPNAME_SPISOK
 		});
-		$('#color_id').vkSel({
+		$('#color_id')._select({
 			width:130,
 			title0:'Цвет не указан',
 			spisok:COLOR_SPISOK
@@ -1842,20 +1849,18 @@ $(document)
 				content:html,
 				submit:submit
 			});
-		$('#name_id').vkSel({
+		$('#name_id')._select({
 			width:200,
 			title0:'Наименование не выбрано',
-			spisok:G.zp_name_spisok
+			spisok:ZPNAME_SPISOK
 		});
-		$('#color_id').vkSel({
+		$('#color_id')._select({
 			width:130,
 			title0:'Цвет не указан',
 			spisok:COLOR_SPISOK
 		});
 		$('#add_bu')._check();
-		$('#add_dev').device({
-			width:200
-		});
+		$('#add_dev').device({width:200});
 
 		function submit() {
 			var msg,
@@ -1879,7 +1884,7 @@ $(document)
 					dialog.abort();
 					if(res.success) {
 						dialog.close();
-						window.zp_name.val(send.name_id);
+						$("#zp_name")._select(send.name_id);
 						$("#dev").device({
 							width:153,
 							type_no:1,
@@ -1931,12 +1936,12 @@ $(document)
 				butSubmit:'Сохранить',
 				submit:submit
 			});
-		$('#name_id').vkSel({
+		$('#name_id')._select({
 			width:200,
 			title0:'Наименование не выбрано',
-			spisok:G.zp_name_spisok
+			spisok:ZPNAME_SPISOK
 		});
-		$('#color_id').vkSel({
+		$('#color_id')._select({
 			width:130,
 			title0:'Цвет не указан',
 			spisok:COLOR_SPISOK
@@ -2062,7 +2067,7 @@ $(document)
 			});
 
 		$('#count').focus().select();
-		$('#client_id').clientSel({add:1});
+		$('#client_id').clientSel({add:1,width:240});
 		$('#kassa')._radio({
 			spisok:[
 				{uid:1, title:'да'},
@@ -2371,13 +2376,13 @@ $(document)
 	.on('click', '.report_remind_add', function() {
 		var html = '<TABLE class="remind_add_tab">' +
 			'<tr><td class="label">Назначение:<TD><INPUT type="hidden" id="destination" />' +
-			'<tr><td class="label top" id="target_name"><TD id="target">' +
+			'<tr><td class="label topi" id="target_name"><TD id="target">' +
 			'</TABLE>' +
 
 			'<TABLE class="remind_add_tab" id="tab_content">' +
 			'<tr><td class="label top">Задание:<TD><TEXTAREA id=txt></TEXTAREA>' +
 			'<tr><td class="label">Крайний день выполнения:<TD><INPUT type="hidden" id="data" />' +
-			'<tr><td class="label">Личное:<TD><INPUT type="hidden" id="private" />' +
+			'<tr><td class="label">Личное:<TD><INPUT type="hidden" id="priv" />' +
 			'</TABLE>';
 		var dialog = _dialog({
 			top:30,
@@ -2388,7 +2393,7 @@ $(document)
 			submit:submit
 		});
 
-		var dest = $('#destination').vkSel({
+		$('#destination')._select({
 			width:150,
 			title0:'Не указано',
 			spisok:[
@@ -2397,12 +2402,12 @@ $(document)
 				{uid:3,title:'Произвольное задание'}
 			],
 			func:destination
-		}).o;
+		});
 
 		$('#txt').autosize();
 		$('#data')._calendar();
-		$('#private')._check();
-		$('#private_check').vkHint({
+		$('#priv')._check();
+		$('#priv_check').vkHint({
 			msg:'Задание сможете<br />видеть только Вы.',
 			top:-71,
 			left:-11,
@@ -2428,7 +2433,7 @@ $(document)
 		}
 
 		function submit() {
-			var client_id = dest.val() == 1 ? $('#client_id').val() : 0,
+			var client_id = $('#destination').val() == 1 ? $('#client_id').val() : 0,
 				zayav_id = $('#zayavNomerId').length > 0 ? $('#zayavNomerId').val() : 0,
 				send = {
 					op:'report_remind_add',
@@ -2436,12 +2441,12 @@ $(document)
 					zayav_id:zayav_id,
 					txt:$('#txt').val(),
 					day:$('#data').val(),
-					private:$('#private').val()
+					private:$('#priv').val()
 				},
 				msg;
-			if(dest.val() == 0) msg = 'Не выбрано назначение.';
-			else if(dest.val() == 1 && send.client_id == 0) msg = 'Не выбран клиент.';
-			else if(dest.val() == 2 && send.zayav_id == 0) {
+			if($('#destination').val() == 0) msg = 'Не выбрано назначение.';
+			else if($('#destination').val() == 1 && send.client_id == 0) msg = 'Не выбран клиент.';
+			else if($('#destination').val() == 2 && send.zayav_id == 0) {
 				msg = 'Не указан номер заявки.';
 				$('#zayavNomer').focus();
 			} else if(!send.txt) msg = 'Не указано содержание напоминания.';
@@ -3397,24 +3402,24 @@ $(document)
 			// Нахождение устройства
 			for(n = 0; n < G.place_other.length; n++) {
 				var sp = G.place_other[n];
-				G.device_place_spisok.push({uid:encodeURI(sp), title:sp});
+				DEVPLACE_SPISOK.push({uid:encodeURI(sp), title:sp});
 			}
-			G.device_place_spisok.push({uid:-1, title:'не известно', content:'<B>не известно</B>'});
-			G.vkSel_device_place = $('#device_place').vkSel({
+			DEVPLACE_SPISOK.push({uid:-1, title:'не известно', content:'<B>не известно</B>'});
+			$('#device_place')._select({
 				width:155,
 				title0:'Любое местонахождение',
-				spisok:G.device_place_spisok,
+				spisok:DEVPLACE_SPISOK,
 				func:zayavSpisokLoad
-			}).o;
+			});
 			// Состояние устройства
-			G.device_status_spisok.splice(0, 1);
-			G.device_status_spisok.push({uid:-1, title:'не известно', content:'<B>не известно</B>'});
-			G.vkSel_device_status = $('#devstatus').vkSel({
+			DEVSTATUS_SPISOK.splice(0, 1);
+			DEVSTATUS_SPISOK.push({uid:-1, title:'не известно', content:'<B>не известно</B>'});
+			$('#devstatus')._select({
 				width:155,
 				title0:'Любое состояние',
-				spisok:G.device_status_spisok,
+				spisok:DEVSTATUS_SPISOK,
 				func:zayavSpisokLoad
-			}).o;
+			});
 			zayavFilter();
 		}
 		if($('#zayavAdd').length) {
@@ -3425,9 +3430,9 @@ $(document)
 				device_ids:WS_DEVS,
 				func:zayavDevSelect
 			});
-			G.device_place_spisok.push({uid:0, title:'другое: <input type="text" id="place_other" class="dn" maxlength="20" />'});
+			DEVPLACE_SPISOK.push({uid:0, title:'другое: <input type="text" id="place_other" class="dn" maxlength="20" />'});
 			$('#place')._radio({
-				spisok:G.device_place_spisok,
+				spisok:DEVPLACE_SPISOK,
 				func:function(val) {
 					$('#place_other')[(val != 0 ? 'add' : 'remove') + 'Class']('dn');
 					if(val == 0)
@@ -3565,10 +3570,10 @@ $(document)
 				$('#menu').rightLink($(this).attr('val'));
 				zpSpisokLoad();
 			});
-			window.zp_name = $("#zp_name").vkSel({
+			$("#zp_name")._select({
 				width:153,
 				title0:'Любое наименование',
-				spisok:G.zp_name_spisok,
+				spisok:ZPNAME_SPISOK,
 				func:zpSpisokLoad
 			}).o;
 			$("#dev").device({
