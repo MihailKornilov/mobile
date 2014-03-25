@@ -40,7 +40,7 @@ function _mainLinks() {
 			'show' => VIEWER_ADMIN
 		),
 		array(
-			'name' => 'Установки',
+			'name' => 'Настройки',
 			'page' => 'setup',
 			'show' => VIEWER_ADMIN
 		)
@@ -322,14 +322,15 @@ function client_info($client_id) {
 							   WHERE `ws_id`=".WS_ID."
 								 AND `client_id`=".$client_id);
 
-	return '<script type="text/javascript">'.
-		'G.clientInfo = {'.
-			'id:'.$client_id.','.
-			'fio:"'.$client['fio'].'"'.
-		'};'.
-		'G.device_ids = ['._zayavDeviveBaseIds('device', $client_id).'];'.
-		'G.vendor_ids = ['._zayavDeviveBaseIds('vendor', $client_id).'];'.
-		'G.model_ids = ['._zayavDeviveBaseIds('model', $client_id).'];'.
+	return
+		'<script type="text/javascript">'.
+			'var CLIENT={'.
+					'id:'.$client_id.','.
+					'fio:"'.addslashes($client['fio']).'"'.
+				'},'.
+				'DEVICE_IDS=['._zayavBaseDeviceIds($client_id).'],'.
+				'VENDOR_IDS=['._zayavBaseVendorIds($client_id).'],'.
+				'MODEL_IDS=['._zayavBaseModelIds($client_id).'];'.
 		'</script>'.
 		'<div id="clientInfo">'.
 			'<table class="tabLR">'.
@@ -470,32 +471,55 @@ function _zayavNomerLink($arr, $noHint=false) { //Вывод номеров заявок с возможн
 	}
 	return $arr;
 }//_zayavNomerLink()
-function _zayavDeviveBaseIds($type='device', $client_id=0) { //список id устройств, производителей и моделей, которые используются в заявках
-	if($type == 'vendor' && !ZAYAV_BASE_DEVICE || $type == 'model' && !ZAYAV_BASE_VENDOR)
-		return '';
-	$key = CACHE_PREFIX.'zayav_base_'.$type.WS_ID;
-	if(!$client_id)
-		$cache = xcache_get($key);
-	if(empty($cache)) {
-		$ids = array();
-		$sql = "SELECT DISTINCT `base_".$type."_id` AS `id`
-			FROM `zayav`
-			WHERE `base_".$type."_id`>0
-			  AND `zayav_status`>0
-			  ".($client_id ? " AND `client_id`=".$client_id : '')."
-			  AND `ws_id`=".WS_ID;
-		$q = query($sql);
-		while($r = mysql_fetch_assoc($q))
-			$ids[] = $r['id'];
-		$cache = implode(',', $ids);
-		if(!$client_id)
-			xcache_set($key, $cache, 86400);
-	}
-	define('ZAYAV_BASE_'.strtoupper($type), !empty($cache));
-	if(!ZAYAV_BASE_DEVICE)
-		define('ZAYAV_BASE_VENDOR', false);
-	return $cache;
-}//_zayavDeviveBaseIds()
+function _zayavBaseDeviceIds($client_id=0) { //список id устройств, которые используются в заявках
+	$ids = array();
+	$sql = "SELECT `b`.`id`
+			FROM `zayav` `z`,
+				 `base_device` `b`
+			WHERE `b`.`id`=`z`.`base_device_id`
+			  AND `z`.`zayav_status`
+			  AND `z`.`ws_id`=".WS_ID."
+			  ".($client_id ? "AND `z`.`client_id`=".$client_id : '')."
+			GROUP BY `b`.`id`
+			ORDER BY `b`.`sort`";
+	$q = query($sql);
+	while($r = mysql_fetch_assoc($q))
+		$ids[] = $r['id'];
+	return implode(',', $ids);
+}//_zayavBaseDeviceIds()
+function _zayavBaseVendorIds($client_id=0) { //список id производителей, которые используются в заявках
+	$ids = array();
+	$sql = "SELECT `b`.`id`
+			FROM `zayav` `z`,
+				 `base_vendor` `b`
+			WHERE `b`.`id`=`z`.`base_vendor_id`
+			  AND `z`.`zayav_status`
+			  AND `z`.`ws_id`=".WS_ID."
+			  ".($client_id ? "AND `z`.`client_id`=".$client_id : '')."
+			GROUP BY `b`.`id`
+			ORDER BY `b`.`sort`";
+	$q = query($sql);
+	while($r = mysql_fetch_assoc($q))
+		$ids[] = $r['id'];
+	return implode(',', $ids);
+}//_zayavBaseVendorIds()
+function _zayavBaseModelIds($client_id=0) { //список id производителей, которые используются в заявках
+	$ids = array();
+	$sql = "SELECT `b`.`id`
+			FROM `zayav` `z`,
+				 `base_model` `b`
+			WHERE `b`.`id`=`z`.`base_model_id`
+			  AND `z`.`zayav_status`
+			  AND `z`.`ws_id`=".WS_ID."
+			  ".($client_id ? "AND `z`.`client_id`=".$client_id : '')."
+			GROUP BY `b`.`id`";
+	$q = query($sql);
+	while($r = mysql_fetch_assoc($q))
+		$ids[] = $r['id'];
+	return implode(',', $ids);
+}//_zayavBaseModelIds()
+
+
 
 function zayav_add($v=array()) {
 	$sql = "SELECT `id`,`name` FROM `setup_fault` ORDER BY SORT";
@@ -779,9 +803,9 @@ function zayav_list($data, $values) {
 					'</div>'.
 		'</table>'.
 		'<script type="text/javascript">'.
-			'G.device_ids = ['._zayavDeviveBaseIds().'];'.
-			'G.vendor_ids = ['._zayavDeviveBaseIds('vendor').'];'.
-			'G.model_ids = ['._zayavDeviveBaseIds('model').'];'.
+			'var DEVICE_IDS=['._zayavBaseDeviceIds().'],'.
+				'VENDOR_IDS=['._zayavBaseVendorIds().'],'.
+				'MODEL_IDS=['._zayavBaseModelIds().'];'.
 			'G.place_other = ['.implode(',', $place_other).'];'.
 			'G.zayav_find = "'.unescape($values['find']).'";'.
 			'G.zayav_device = '.$values['device'].';'.
@@ -1361,7 +1385,7 @@ function zp_info($zp_id) {
 
 	return
 	'<script type="text/javascript">'.
-		'G.zpInfo = {'.
+		'var ZP={'.
 			'id:'.$zp_id.','.
 			'compat_id:'.$compat_id.','.
 			'name_id:'.$zp['name_id'].','.
@@ -1666,6 +1690,8 @@ function history_types($v) {
 			return 'Восстановлено начисление на сумму <b>'.$v['value'].'</b> руб. '.
 				($v['value1'] ? '('.$v['value1'].')' : '').
 				' у заявки '.$v['zayav_link'].'.';
+		case 28: return 'В настройках: добавление нового сотрудника <u>'._viewer($v['value'], 'name').'</u>.';
+		case 29: return 'В настройках: удаление сотрудника <u>'._viewer($v['value'], 'name').'</u>.';
 
 		default: return $v['type'];
 	}
@@ -1746,7 +1772,7 @@ function history_spisok($page=1, $filter=array(), $limit=30) {
 		   $viewer_id != $history[$key]['viewer_id_add']) {
 			$send .=
 				'<div class="history_unit">'.
-					'<div class="head">'.FullDataTime($r['dtime_add']).$r['viewer_link'].'</div>'.
+					'<div class="head"><span>'.FullDataTime($r['dtime_add']).'</span>'.$r['viewer_name'].'</div>'.
 					'<ul>'.$txt.'</ul>'.
 				'</div>';
 			$txt = '';
@@ -2333,7 +2359,67 @@ function statistic() {
 
 
 
-// ---===! setup !===--- Секция установок
+// ---===! setup !===--- Секция настроек
+
+function setup() {
+	$pages = array(
+		'my' => 'Мои настройки',
+		'info' => 'Информация о мастерской',
+		'worker' => 'Сотрудники',
+		'invoice' => 'Счета',
+		'expense' => 'Категории расходов'
+	);
+
+	$d = empty($_GET['d']) ? 'my' : $_GET['d'];
+
+	switch($d) {
+		default: $d = 'my';
+		case 'my': $left = 'Мои настройки'; break;
+		case 'worker': $left = setup_worker(); break;
+		case 'info': $left = 'Информация о мастерской'; break;
+		case 'invoice': $left = 'Счета'; break;
+		case 'expense': $left = 'Категории расходов'; break;
+	}
+	$links = '';
+	foreach($pages as $p => $name)
+		$links .= '<a href="'.URL.'&p=setup&d='.$p.'"'.($d == $p ? ' class="sel"' : '').'>'.$name.'</a>';
+	return
+	'<div id="setup">'.
+		'<table class="tabLR">'.
+			'<tr><td class="left">'.$left.
+				'<td class="right"><div class="rightLink">'.$links.'</div>'.
+		'</table>'.
+	'</div>';
+}//setup()
+
+function setup_worker() {
+	return
+	'<div id="setup_worker">'.
+		'<div class="headName">Управление сотрудниками<a class="add">Новый сотрудник</a></div>'.
+		'<div id="spisok">'.setup_worker_spisok().'</div>'.
+	'</div>';
+}//setup_worker()
+function setup_worker_spisok() {
+	$sql = "SELECT *,
+				   CONCAT(`first_name`,' ',`last_name`) AS `name`
+			FROM `vk_user`
+			WHERE `ws_id`=".WS_ID."
+			ORDER BY `dtime_add`";
+	$q = query($sql);
+	$send = '';
+	while($r = mysql_fetch_assoc($q)) {
+		$send .=
+		'<table class="unit" val="'.$r['viewer_id'].'">'.
+			'<tr><td class="photo"><a href="'.URL.'&p=setup&d=worker&id='.$r['viewer_id'].'"><img src="'.$r['photo'].'"></a>'.
+				'<td>'.($r['viewer_id'] == WS_ADMIN ? '' : '<div class="img_del'._tooltip('Удалить сотрудника', -66).'</div>').
+					'<a href="'.URL.'&p=setup&d=worker&id='.$r['viewer_id'].'" class="name">'.$r['name'].'</a>'.
+					($r['enter_last'] != '0000-00-00 00:00:00' ? '<div class="activity">Заходил'.($r['sex'] == 1 ? 'a' : '').' в приложение '.FullDataTime($r['enter_last']).'</div>' : '').
+		'</table>';
+	}
+	return $send;
+}//setup_worker_spisok()
+
+
 
 function setup_main() {
 	$sql = "SELECT * FROM `workshop` WHERE `id`=".WS_ID." LIMIT 1";

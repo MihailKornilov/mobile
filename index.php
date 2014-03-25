@@ -120,28 +120,7 @@ switch($_GET['p']) {
 		if(!WS_ID)
 			header('Location:'.URL.'&p=wscreate');
 		_mainLinks();
-		$d = isset($_GET['d']) ? $_GET['d'] : 'main';
-		$links = array(
-			array(
-				'name' => 'Основные настройки',
-				'd' => 'main',
-				'sel' => 1
-			),
-			array(
-				'name' => 'Сотрудники',
-				'd' => 'workers'
-			)
-		);
-		$html .= _dopLinks('setup', $links, $d);
-		switch($d) {
-			case 'main':
-			default:
-				$html .= setup_main();
-				break;
-			case 'workers':
-				$html .= setup_workers();
-				break;
-		}
+		$html .= setup();
 		break;
 
 	case 'sa':

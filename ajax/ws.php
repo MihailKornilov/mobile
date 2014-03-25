@@ -367,9 +367,6 @@ switch(@$_POST['op']) {
 				)";
 		query($sql);
 		$send['id'] = mysql_insert_id();
-		xcache_unset(CACHE_PREFIX.'zayav_base_device'.WS_ID);
-		xcache_unset(CACHE_PREFIX.'zayav_base_vendor'.WS_ID);
-		xcache_unset(CACHE_PREFIX.'zayav_base_model'.WS_ID);
 
 		if($comm) {
 			$sql = "INSERT INTO `vk_comment` (
@@ -488,10 +485,6 @@ switch(@$_POST['op']) {
 				WHERE `id`=".$zayav_id;
 		query($sql);
 
-		xcache_unset(CACHE_PREFIX.'zayav_base_device'.WS_ID);
-		xcache_unset(CACHE_PREFIX.'zayav_base_vendor'.WS_ID);
-		xcache_unset(CACHE_PREFIX.'zayav_base_model'.WS_ID);
-
 		if($zayav['client_id'] != $client_id) {
 			$sql = "UPDATE `accrual`
 					SET `client_id`=".$client_id."
@@ -571,10 +564,6 @@ switch(@$_POST['op']) {
 
 		$sql = "DELETE FROM `vk_comment` WHERE `table_name`='zayav' AND `table_id`=".$zayav_id;
 		query($sql);
-
-		xcache_unset(CACHE_PREFIX.'zayav_base_device'.WS_ID);
-		xcache_unset(CACHE_PREFIX.'zayav_base_vendor'.WS_ID);
-		xcache_unset(CACHE_PREFIX.'zayav_base_model'.WS_ID);
 
 		history_insert(array(
 			'type' => 2,
@@ -1963,6 +1952,84 @@ switch(@$_POST['op']) {
 		jsonSuccess($send);
 		break;
 
+	case 'setup_worker_add':
+		if(!preg_match(REGEXP_NUMERIC, $_POST['viewer_id']))
+			jsonError();
+		$viewer_id = intval($_POST['viewer_id']);
+		if($viewer_id) {
+			$sql = "SELECT * FROM `vk_user` WHERE `viewer_id`=".$viewer_id." LIMIT 1";
+			if($r = mysql_fetch_assoc(query($sql))) {
+				if($r['ws_id'] == WS_ID)
+					jsonError('Этот пользователь уже является</br >сотрудником этой мастерской.');
+				if($r['ws_id'])
+					jsonError('Этот пользователь уже является</br >сотрудником другой мастерской.');
+			}
+			_viewer($viewer_id);
+			query("UPDATE `vk_user` SET `ws_id`=".WS_ID." WHERE `viewer_id`=".$viewer_id);
+			xcache_unset(CACHE_PREFIX.'viewer_'.$viewer_id);
+		} else {
+			if(!preg_match(REGEXP_NUMERIC, $_POST['sex']) || !$_POST['sex'])
+				jsonError();
+			$first_name = win1251(htmlspecialchars(trim($_POST['first_name'])));
+			$last_name = win1251(htmlspecialchars(trim($_POST['last_name'])));
+			$sex = intval($_POST['sex']);
+			if(!$first_name || !$last_name)
+				jsonError();
+			$viewer_id = _maxSql('vk_user', 'viewer_id');
+			if($viewer_id < VIEWER_MAX)
+				$viewer_id = VIEWER_MAX;
+			$sql = "INSERT INTO `vk_user` (
+				`ws_id`,
+				`viewer_id`,
+				`first_name`,
+				`last_name`,
+				`sex`,
+				`photo`
+			) VALUES (
+				".WS_ID.",
+				".$viewer_id.",
+				'".addslashes($first_name)."',
+				'".addslashes($last_name)."',
+				".$sex.",
+				'http://vk.com/images/camera_c.gif'
+			)";
+			query($sql);
+		}
+
+		history_insert(array(
+			'type' => 28,
+			'value' => $viewer_id
+		));
+
+		GvaluesCreate();
+
+		$send['html'] = utf8(setup_worker_spisok());
+		jsonSuccess($send);
+		break;
+	case 'setup_worker_del':
+		if(!preg_match(REGEXP_NUMERIC, $_POST['viewer_id']))
+			jsonError();
+		$viewer_id = intval($_POST['viewer_id']);
+		$sql = "SELECT * FROM `vk_user` WHERE `ws_id`=".WS_ID." AND `viewer_id`=".$viewer_id;
+		if(!$r = mysql_fetch_assoc(query($sql)))
+			jsonError();
+		if($r['viewer_id'] == WS_ADMIN)
+			jsonError();
+
+		query("UPDATE `vk_user` SET `ws_id`=0 WHERE `viewer_id`=".$viewer_id);
+		xcache_unset(CACHE_PREFIX.'viewer_'.$viewer_id);
+		GvaluesCreate();
+
+		history_insert(array(
+			'type' => 29,
+			'value' => $viewer_id
+		));
+
+		$send['html'] = utf8(setup_worker_spisok());
+		jsonSuccess($send);
+		break;
+
+
 	case 'setup_org_name_save':
 		if(!VIEWER_ADMIN)
 			jsonError();
@@ -1992,7 +2059,7 @@ switch(@$_POST['op']) {
 		_cacheClear();
 		jsonSuccess();
 		break;
-	case 'setup_worker_add':
+	case 'setup_worker_add_':
 		if(!preg_match(REGEXP_NUMERIC, $_POST['id']))
 			jsonError();
 		$id = intval($_POST['id']);
@@ -2006,15 +2073,6 @@ switch(@$_POST['op']) {
 		_vkUserUpdate($id);
 		query("UPDATE `vk_user` SET `ws_id`=".WS_ID." WHERE `viewer_id`=".$id);
 		xcache_unset(CACHE_PREFIX.'viewer_'.$id);
-		$send['html'] = utf8(setup_workers_spisok());
-		jsonSuccess($send);
-		break;
-	case 'setup_worker_del':
-		if(!preg_match(REGEXP_NUMERIC, $_POST['viewer_id']))
-			jsonError();
-		$viewer_id = intval($_POST['viewer_id']);
-		query("UPDATE `vk_user` SET `ws_id`=0,`admin`=0 WHERE `viewer_id`=".$viewer_id);
-		xcache_unset(CACHE_PREFIX.'viewer_'.$viewer_id);
 		$send['html'] = utf8(setup_workers_spisok());
 		jsonSuccess($send);
 		break;

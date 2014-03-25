@@ -295,8 +295,8 @@ table.zayavNomerTab td{vertical-align:top}
 
 .history .left{padding:8px}
 .history_unit{margin-bottom:12px;padding-bottom:8px;border-bottom:#dae1e8 solid 1px}
-.history_unit .head{font-size:10px;color:#777}
-.history_unit .head a{font-size:10px;margin-left:10px}
+.history_unit .head{font-size:10px}
+.history_unit .head span{color:#777;font-size:10px;margin-right:10px}
 .history_unit ul{margin:5px 0 7px 25px}
 .history_unit li{margin:0 0 8px}
 .history_unit .li{margin-left:-4px}
@@ -446,6 +446,45 @@ table.zayavNomerTab td{vertical-align:top}
 
 
 
+
+
+#setup .left{padding:15px}
+#setup .headName{margin:0 0 15px}
+#setup .right{padding:0;width:170px;border-left:0}
+#setup .rightLink a.sel{border-color:#6B8EB5}
+
+#setup_worker .headName{margin-bottom:15px}
+#setup_worker .unit,#setup_worker_add .res{border-spacing:10px;border:#DDE solid 1px;width:300px;margin:6px 0 6px 20px}
+#setup_worker .unit td,#setup_worker_add .res td{vertical-align:top}
+#setup_worker .photo,#setup_worker_add .photo{width:50px}
+#setup_worker .photo img,#setup_worker_add .photo img{width:50px;height:50px}
+#setup_worker .img_del{float:right;margin-top:2px}
+#setup_worker .name,#setup_worker_add .name{font-weight:bold;font-size:12px;color:#45688e}
+#setup_worker .activity{margin-top:5px;color:#888;font-size:10px}
+#setup_worker_add h1{font-weight:bold;color:#31618C}
+#setup_worker_add h2{
+	border:#ddd solid 1px;
+	margin:7px 0;
+	padding:10px;
+	background-color:#ffe;
+	color:#333;
+}
+#setup_worker_add #viewer_id{width:240px;padding:5px;height:13px;margin:7px 5px 0 0}
+#setup_worker_add .vkButton{margin:0}
+#setup_worker_add .res{margin:10px 0 0 15px}
+#setup_worker_add .manual{display:inline-block;margin-top:15px}
+#setup_worker_add .manual_tab{border-spacing:8px;margin-top:25px;display:none}
+#setup_worker_add .manual_tab input{width:230px}
+#setup_worker_add #sex_radio div{display:inline-block;margin-right:15px}
+
+
+
+
+
+
+
+
+
 #setup_main{margin:20px 0}
 #setup_main .tab{margin:10px 0 30px 40px;border-spacing:10px}
 #setup_main #org_name{width:300px;margin-right:5px}
@@ -464,22 +503,6 @@ table.zayavNomerTab td{vertical-align:top}
 #setup_main #devs em.err{color:#f44}
 #setup_main .del_inf{margin:2px 0 10px 20px}
 #setup_main #ws_del{margin-left:189px}
-
-#setup_workers{margin:20px 0;min-height:400px}
-#setup_workers .headName{margin-bottom:15px}
-#setup_workers .unit,#setup_worker_add table{border-spacing:10px;border:#DDE solid 1px;width:300px;margin:6px 0 6px 159px}
-#setup_workers .unit td,#setup_worker_add td{vertical-align:top}
-#setup_workers .photo,#setup_worker_add .photo{width:50px}
-#setup_workers .photo img,#setup_worker_add .photo img{width:50px;height:50px}
-#setup_workers .img_del{float:right;margin-top:2px}
-#setup_workers .name,#setup_worker_add .name{font-weight:bold;font-size:12px;color:#45688e}
-#setup_workers .adm{margin-top:5px;color:#555}
-#setup_workers .adm a{font-size:10px}
-#setup_worker_add{margin:10px 0}
-#setup_worker_add h1{font-weight:bold;color:#31618C}
-#setup_worker_add input{width:240px;padding:5px;height:13px;margin:7px 5px 0 0}
-#setup_worker_add .res{margin:10px 0 0 20px}
-
 
 .sa_viewer_msg{padding:10px 20px;border:#c99 solid 1px;background-color:#fdd}
 .sa_viewer_msg .leave{float:right}

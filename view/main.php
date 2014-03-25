@@ -76,9 +76,6 @@ function _cacheClear($ws_id=WS_ID) {
 	if($ws_id) {
 		xcache_unset(CACHE_PREFIX.'remind_active'.$ws_id);
 		xcache_unset(CACHE_PREFIX.'workshop_'.$ws_id);
-		xcache_unset(CACHE_PREFIX.'zayav_base_device'.$ws_id);
-		xcache_unset(CACHE_PREFIX.'zayav_base_vendor'.$ws_id);
-		xcache_unset(CACHE_PREFIX.'zayav_base_model'.$ws_id);
 	}
 	GvaluesCreate();
 }//ens of _cacheClear()
@@ -120,6 +117,7 @@ function _header() {
 		'<script type="text/javascript" src="'.SITE.'/js/main'.(DEBUG ? '' : '.min').'.js?'.VERSION.'"></script>'.
 
 		(WS_ID ? '<script type="text/javascript" src="'.SITE.'/js/ws'.(DEBUG ? '' : '.min').'.js?'.VERSION.'"></script>' : '').
+		(@$_GET['p'] == 'setup' ? '<script type="text/javascript" src="'.SITE.'/js/setup'.(DEBUG ? '' : '.min').'.js?'.VERSION.'"></script>' : '').
 
 		//Скрипты и стили для суперадминистратора
 		(@$_GET['p'] == 'sa' ? '<link href="'.SITE.'/css/sa'.(DEBUG ? '' : '.min').'.css?'.VERSION.'" rel="stylesheet" type="text/css" />' : '').

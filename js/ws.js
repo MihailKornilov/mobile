@@ -162,7 +162,7 @@ var AJAX_WS = SITE + '/ajax/ws.php?' + VALUES,
 	},
 	clientZayavFilter = function() {
 		return {
-			client:G.clientInfo.id,
+			client:CLIENT.id,
 			status:$('#status').val(),
 			diff:$('#diff').val(),
 			device:$('#dev_device').val(),
@@ -315,7 +315,7 @@ var AJAX_WS = SITE + '/ajax/ws.php?' + VALUES,
 	zpImgUpdate = function() {
 		var send = {
 			op:'zp_img_update',
-			zp_id:G.zpInfo.compat_id
+			zp_id:ZP.compat_id
 		};
 		$.post(AJAX_WS, send, function (res) {
 			if(res.success) {
@@ -396,11 +396,11 @@ var AJAX_WS = SITE + '/ajax/ws.php?' + VALUES,
 	zpAvaiUpdate = function() {
 		var send = {
 			op:'zp_avai_update',
-			zp_id: G.zpInfo.id
+			zp_id: ZP.id
 		};
 		$.post(AJAX_WS, send, function(res) {
 			if(res.success) {
-				G.zpInfo.count = res.count;
+				ZP.count = res.count;
 				$('.move').html(res.move);
 				$('.avai')
 					[(res.count == 0 ? 'add' : 'remove') + 'Class']('no')
@@ -1015,7 +1015,7 @@ $(document)
 			var msg,
 				send = {
 					op:'client_edit',
-					client_id:G.clientInfo.id,
+					client_id:CLIENT.id,
 					fio:$.trim($('#fio').val()),
 					telefon:$.trim($('#telefon').val()),
 					join:$('#join').val(),
@@ -1028,7 +1028,7 @@ $(document)
 				$("#fio").focus();
 			} else if(send.join == 1 && send.client2 == 0)
 				msg = 'Укажите второго клиента.';
-			else if(send.join == 1 && send.client2 == G.clientInfo.id)
+			else if(send.join == 1 && send.client2 == CLIENT.id)
 				msg = 'Выберите другого клиента.';
 			else {
 				dialog.process();
@@ -1037,7 +1037,7 @@ $(document)
 					if(res.success) {
 						$('.fio').html(send.fio);
 						$('.telefon').html(send.telefon);
-						G.clientInfo.fio = send.fio;
+						CLIENT.fio = send.fio;
 						if(send.client2 > 0)
 							document.location.reload();
 						dialog.close();
@@ -1073,7 +1073,7 @@ $(document)
 	})
 	.on('click', '#clientInfo .remind_add', function() {
 		var html = '<TABLE class="remind_add_tab">' +
-			'<tr><td class="label">Клиент:<TD><b>' + G.clientInfo.fio + '</b>' +
+			'<tr><td class="label">Клиент:<TD><b>' + CLIENT.fio + '</b>' +
 			'<tr><td class="label top">Описание задания:<TD><TEXTAREA id="txt"></TEXTAREA>' +
 			'<tr><td class="label">Крайний день выполнения:<TD><INPUT type="hidden" id="data">' +
 			'<tr><td class="label">Личное:<TD><INPUT type="hidden" id="private">' +
@@ -1103,7 +1103,7 @@ $(document)
 			var send = {
 				op:'report_remind_add',
 				from_client:1,
-				client_id:G.clientInfo.id,
+				client_id:CLIENT.id,
 				zayav_id:0,
 				txt:txt.val(),
 				day:day.val(),
@@ -1139,7 +1139,7 @@ $(document)
 			send = {
 				op:'client_history_next',
 				page:$(this).attr('val'),
-				client_id:G.clientInfo.id
+				client_id:CLIENT.id
 			};
 		next.addClass('busy');
 		$.post(AJAX_WS, send, function (res) {
@@ -1196,9 +1196,9 @@ $(document)
 		$('#dev').device({
 			width:155,
 			type_no:1,
-			device_ids:G.device_ids,
-			vendor_ids:G.vendor_ids,
-			model_ids:G.model_ids,
+			device_ids:DEVICE_IDS,
+			vendor_ids:VENDOR_IDS,
+			model_ids:MODEL_IDS,
 			func:zayavSpisokLoad
 		});
 		$('#device_place')._select(0);
@@ -1240,7 +1240,6 @@ $(document)
 			device_id:ZAYAV.device,
 			vendor_id:ZAYAV.vendor,
 			model_id:ZAYAV.model,
-			device_ids:G.device_ids,
 			add:1,
 			func:zayavDevSelect
 		});
@@ -1911,7 +1910,7 @@ $(document)
 	})
 
 	.on('click', '#zpInfo .avai_add', function() {
-		var obj = G.zpInfo;
+		var obj = ZP;
 		obj.zp_id = obj.id;
 		obj.callback = zpAvaiUpdate;
 		zpAvaiAdd(obj);
@@ -1921,11 +1920,11 @@ $(document)
 	})
 	.on('click', '#zpInfo .edit', function() {
 		var html = '<table class="zp_add_dialog">' +
-				'<tr><td class="label">Наименование запчасти:<td><input type="hidden" id="name_id" value="' + G.zpInfo.name_id + '">' +
+				'<tr><td class="label">Наименование запчасти:<td><input type="hidden" id="name_id" value="' + ZP.name_id + '">' +
 				'<tr><td class="label top">Устройство:<td id="add_dev">' +
-				'<tr><td class="label">Версия:<td><input type="text" id="version" value="' + G.zpInfo.version + '">' +
-				'<tr><td class="label">Б/у:<td><input type="hidden" id="add_bu" value="' + G.zpInfo.bu + '">' +
-				'<tr><td class="label">Цвет:<td><input type="hidden" id="color_id" value="' + G.zpInfo.color_id + '">' +
+				'<tr><td class="label">Версия:<td><input type="text" id="version" value="' + ZP.version + '">' +
+				'<tr><td class="label">Б/у:<td><input type="hidden" id="add_bu" value="' + ZP.bu + '">' +
+				'<tr><td class="label">Цвет:<td><input type="hidden" id="color_id" value="' + ZP.color_id + '">' +
 			'</table>',
 			dialog = _dialog({
 				top:30,
@@ -1948,16 +1947,16 @@ $(document)
 		$('#add_bu')._check();
 		$('#add_dev').device({
 			width:200,
-			device_id:G.zpInfo.device,
-			vendor_id:G.zpInfo.vendor,
-			model_id:G.zpInfo.model
+			device_id:ZP.device,
+			vendor_id:ZP.vendor,
+			model_id:ZP.model
 		});
 
 		function submit() {
 			var msg,
 				send = {
 					op:'zp_edit',
-					zp_id:G.zpInfo.id,
+					zp_id:ZP.id,
 					name_id:$('#name_id').val(),
 					device_id:$('#add_dev_device').val(),
 					vendor_id:$('#add_dev_vendor').val(),
@@ -1994,10 +1993,10 @@ $(document)
 		}
 	})
 	.on('click', '#zpInfo .set', function() {
-		if(zpAvaiNo(G.zpInfo.count))
+		if(zpAvaiNo(ZP.count))
 			return;
 		var html = '<table class="zp_dec_dialog">' +
-				'<tr><td class="label r">Количество:<td><input type="text" id="count" value="1"><span>(max: <b>' + G.zpInfo.count + '</b>)</span>' +
+				'<tr><td class="label r">Количество:<td><input type="text" id="count" value="1"><span>(max: <b>' + ZP.count + '</b>)</span>' +
 				'<tr><td class="label r top">Номер заявки:<td><input type="text" id="zayavNomer">' +
 				'<tr><td class="label r top">Примечание:<td><textarea id="prim"></textarea>' +
 			'</table>',
@@ -2013,12 +2012,12 @@ $(document)
 			var msg,
 				send = {
 					op:'zayav_zp_set',
-					zp_id:G.zpInfo.id,
+					zp_id:ZP.id,
 					count:$('#count').val(),
 					zayav_id:$('#zayavNomerId').length > 0 ? $('#zayavNomerId').val() : 0,
 					prim:$('#prim').val()
 				};
-			if(!REGEXP_NUMERIC.test(send.count) || send.count > G.zpInfo.count || send.count == 0) {
+			if(!REGEXP_NUMERIC.test(send.count) || send.count > ZP.count || send.count == 0) {
 				msg = 'Некорректно указано количество.';
 				$('#count').focus();
 			} else if(send.zayav_id == 0) {
@@ -2048,10 +2047,10 @@ $(document)
 		}
 	})
 	.on('click', '#zpInfo .sale', function() {
-		if(zpAvaiNo(G.zpInfo.count))
+		if(zpAvaiNo(ZP.count))
 			return;
 		var html = '<table class="zp_dec_dialog">' +
-				'<tr><td class="label r">Количество:<td><input type="text" id="count" value="1"><span>(max: <b>' + G.zpInfo.count + '</b>)</span>' +
+				'<tr><td class="label r">Количество:<td><input type="text" id="count" value="1"><span>(max: <b>' + ZP.count + '</b>)</span>' +
 				'<tr><td class="label r">Цена за ед.:<td><input type="text" id="cena" maxlength="8"> руб.' +
 				'<tr><td class="label r">Деньги поступили в кассу?:<td><input type="hidden" id="kassa" value="-1">' +
 				'<tr><td class="label r">Клиент:<td><input type="hidden" id="client_id">' +
@@ -2078,14 +2077,14 @@ $(document)
 			var msg,
 				send = {
 					op:'zp_sale',
-					zp_id:G.zpInfo.id,
+					zp_id:ZP.id,
 					count:$('#count').val(),
 					cena:$('#cena').val(),
 					kassa:$('#kassa').val(),
 					client_id:$('#client_id').val(),
 					prim:$('#prim').val()
 				};
-			if(!REGEXP_NUMERIC.test(send.count) || send.count > G.zpInfo.count || send.count == 0) {
+			if(!REGEXP_NUMERIC.test(send.count) || send.count > ZP.count || send.count == 0) {
 				msg = 'Некорректно указано количество.';
 				$('#count').focus();
 			} else if(!REGEXP_CENA.test(send.cena)) {
@@ -2116,13 +2115,13 @@ $(document)
 		}
 	})
 	.on('click', '#zpInfo .defect,#zpInfo .return,#zpInfo .writeoff', function() {
-		if(zpAvaiNo(G.zpInfo.count))
+		if(zpAvaiNo(ZP.count))
 			return;
 		var rus = {defect:'Забраковка', return:'Возврат', 'writeoff':'Списание'},
 			end = {defect:'ена', return:'ён', 'writeoff':'ено'},
 			type = $(this).attr('class'),
 			html = '<table class="zp_dec_dialog">' +
-				'<tr><td class="label r">Количество:<td><input type="text" id="count" value="1"><span>(max: <b>' + G.zpInfo.count + '</b>)</span>' +
+				'<tr><td class="label r">Количество:<td><input type="text" id="count" value="1"><span>(max: <b>' + ZP.count + '</b>)</span>' +
 				'<tr><td class="label r top">Примечание:<td><textarea id="prim"></textarea>' +
 				'</table>',
 			dialog = _dialog({
@@ -2138,12 +2137,12 @@ $(document)
 		function submit() {
 			var send = {
 				op:'zp_other',
-				zp_id:G.zpInfo.id,
+				zp_id:ZP.id,
 				type:type,
 				count:$('#count').val(),
 				prim:$('#prim').val()
 			};
-			if(!REGEXP_NUMERIC.test(send.count) || send.count > G.zpInfo.count || send.count == 0) {
+			if(!REGEXP_NUMERIC.test(send.count) || send.count > ZP.count || send.count == 0) {
 				dialog.bottom.vkHint({
 					msg:'<SPAN class="red">Некорректно указано количество.</SPAN>',
 					left:73,
@@ -2197,7 +2196,7 @@ $(document)
 		var next = $(this),
 			send = {
 				op:'zp_move_next',
-				zp_id:G.zpInfo.id,
+				zp_id:ZP.id,
 				page:$(this).attr('val')
 			};
 		next.addClass('busy');
@@ -2209,7 +2208,7 @@ $(document)
 		}, 'json');
 	})
 	.on('click', '#zpInfo .compat_add', function() {
-		var sp = G.zpInfo,
+		var sp = ZP,
 			html = '<div class="compatAddTab">' +
 				'<div class="name">' +
 					(sp.bu == 1 ? '<span class="bu">Б/y</span>' : '') +
@@ -2333,7 +2332,7 @@ $(document)
 				var send = {
 					op:'zp_compat_del',
 					id:id,
-					zp_id:G.zpInfo.id
+					zp_id:ZP.id
 				};
 				dialog.process();
 				$.post(AJAX_WS, send, function(res) {
@@ -2554,7 +2553,7 @@ $(document)
 				status:1,
 				history:$('#comment').val(),
 				from_zayav:typeof ZAYAV == 'undefined' ? 0 : ZAYAV.id,
-				from_client:G.clientInfo ? G.clientInfo.id : 0
+				from_client:window.CLIENT ? CLIENT.id : 0
 			};
 			switch(send.action) {
 				case 1: send.day = $('#data').val(); break;
@@ -3085,226 +3084,6 @@ $(document)
 	})
 	.on('click', '#kassaShowDel_check', reportKassaLoad)
 
-	.on('blur', '#setup_main #org_name', function() {
-		var t = $(this),
-			send = {
-				op:'setup_org_name_save',
-				name:t.val()
-			};
-		if(t.hasClass('busy') || G.org_name == send.name)
-			return;
-		t.addClass('busy').next('span').remove();
-		t.after('<img src="/img/upload.gif">');
-		$.post(AJAX_WS, send, function(res) {
-			t.removeClass('busy').next('img').remove();
-			if(res.success) {
-				G.org_name = send.name;
-				t.after('<span class="saved">Сохранено.</span>')
-				 .next('span')
-				 .delay(1500)
-				 .fadeOut(1500, function() {
-					 $(this).remove();
-				 });
-			}
-		}, 'json');
-	})
-	.on('click', '#setup_main #devs div', function() {
-		var t = $(this),
-			inp = t.parent().find('input'),
-			devs = [];
-		for(var n = 0; n < inp.length; n++) {
-			var u = inp.eq(n);
-			if(u.val() == 1)
-				devs.push(u.attr('id'));
-		}
-		if(devs.length == 0) {
-			spanShow('Не сохранено!<br />Необходимо выбрать<br />минимум одну категорию', true);
-			return;
-		}
-		var send = {
-			op:'setup_devs_set',
-			devs:devs.join()
-		};
-		$.post(AJAX_WS, send, function(res) {
-			if(res.success)
-				spanShow('Изменения сохранены');
-		}, 'json');
-
-		function spanShow(msg, err) {
-			$('#setup_main #devs span').remove();
-			err = err ? ' class="err"' : '';
-			t.prepend('<span><em' + err + '>' + msg + '</em></span>')
-			 .find('span')
-			 .delay(1500)
-			 .fadeOut(1500, function() {
-				 $(this).remove();
-			 });
-		}
-	})
-	.on('click', '#setup_main #ws_del', function() {
-		var dialog = _dialog({
-			top:150,
-			width:300,
-			head:'Удаление мастерской',
-			content:'<center>Вы действительно хотите<BR>удалить мастерскую и все данные?</center>',
-			butSubmit:'&nbsp;&nbsp;&nbsp;&nbsp;Да&nbsp;&nbsp;&nbsp;&nbsp;',
-			submit:function() {
-				dialog.process();
-				$.post(AJAX_WS, {op:'setup_ws_del'}, function(res) {
-					if(res.success)
-						location.href = URL;
-					else
-						dialog.abort();
-				}, 'json');
-			}
-		});
-	})
-
-	.on('click', '#setup_workers .add', function() {
-		var html = '<div id="setup_worker_add">' +
-				'<h1>Ссылка на страницу или ID пользователя ВКонтакте:</h1>' +
-				'<input type="text" />' +
-				'<DIV class="vkButton"><BUTTON>Найти</BUTTON></DIV>' +
-			'</div>',
-			dialog = _dialog({
-				top:50,
-				width:360,
-				head:'Добавление нового сотрудника',
-				content:html,
-				butSubmit:'Добавить',
-				submit:submit
-			}),
-			user_id,
-			input = dialog.content.find('input'),
-			but = input.next();
-		input.focus().keyEnter(user_find);
-		but.click(user_find);
-
-		function user_find() {
-			if(but.hasClass('busy'))
-				return;
-			user_id = false;
-			var send = {
-				user_ids:$.trim(input.val()),
-				fields:'photo_50',
-				v:5.2
-			};
-			if(!send.user_ids)
-				return;
-			but.addClass('busy').next('.res').remove();
-			VK.api('users.get', send, function(data) {
-				but.removeClass('busy');
-				if(data.response) {
-					var u = data.response[0],
-						html = '<TABLE class="res">' +
-							'<TR><TD class="photo"><IMG src=' + u.photo_50 + '>' +
-							'<TD class="name">' + u.first_name + ' ' + u.last_name +
-							'</TABLE>';
-					but.after(html);
-					user_id = u.id;
-				}
-			});
-		}
-		function submit() {
-			if(!user_id) {
-				dialog.bottom.vkHint({
-					msg:'<SPAN class="red">Не выбран пользователь</SPAN>',
-					remove:1,
-					indent:40,
-					show:1,
-					top:-48,
-					left:92
-				});
-				return;
-			}
-			var send = {
-				op:'setup_worker_add',
-				id:user_id
-			};
-			dialog.process();
-			$.post(AJAX_WS, send, function(res) {
-				dialog.abort();
-				if(res.success) {
-					dialog.close();
-					_msg('Новый сотрудник успешно добавлен.');
-					$('#spisok').html(res.html);
-				} else
-					dialog.bottom.vkHint({
-						msg:'<SPAN class="red">' + res.text + '</SPAN>',
-						remove:1,
-						indent:40,
-						show:1,
-						top:-60,
-						left:92
-					});
-			}, 'json');
-		}
-	})
-	.on('click', '#setup_workers .img_del', function() {
-		var u = $(this);
-		while(!u.hasClass('unit'))
-			u = u.parent();
-		var dialog = _dialog({
-			top:110,
-			width:250,
-			head:'Удаление сотрудника',
-			content:'<center>Подтвердите удаление сотрудника.</center>',
-			butSubmit:'Удалить',
-			submit:submit
-		});
-		function submit() {
-			var send = {
-				op:'setup_worker_del',
-				viewer_id:u.attr('val')
-			};
-			dialog.process();
-			$.post(AJAX_WS, send, function(res) {
-				if(res.success) {
-					dialog.close();
-					_msg('Сотрудник удален.');
-					$('#spisok').html(res.html);
-				} else
-					dialog.abort();
-			}, 'json');
-		}
-	})
-	.on('click', '#setup_workers .adm_set', function() {
-		var u = $(this),
-			adm = $(this).parent();
-		while(!u.hasClass('unit'))
-			u = u.parent();
-		var send = {
-			op:'setup_worker_admin_set',
-			viewer_id:u.attr('val')
-		};
-		if(adm.hasClass('busy'))
-			return;
-		adm.html('&nbsp;').addClass('busy');
-		$.post(AJAX_WS, send, function(res) {
-			adm.removeClass('busy')
-			if(res.success)
-				adm.html('Администратор <a class="adm_cancel">отменить</a>');
-		}, 'json');
-	})
-	.on('click', '#setup_workers .adm_cancel', function() {
-		var u = $(this),
-			adm = $(this).parent();
-		while(!u.hasClass('unit'))
-			u = u.parent();
-		var send = {
-			op:'setup_worker_admin_cancel',
-			viewer_id:u.attr('val')
-		};
-		if(adm.hasClass('busy'))
-			return;
-		adm.html('&nbsp;').addClass('busy');
-		$.post(AJAX_WS, send, function(res) {
-			adm.removeClass('busy')
-			if(res.success)
-				adm.html('<a class="adm_set">Назначить администратором</a>');
-		}, 'json');
-	})
-
 	.ready(function() {
 		if($('#client').length) {
 			window.cFind = $('#find')._search({
@@ -3359,9 +3138,9 @@ $(document)
 			$('#dev').device({
 				width:145,
 				type_no:1,
-				device_ids:G.device_ids,
-				vendor_ids:G.vendor_ids,
-				model_ids:G.model_ids,
+				device_ids:DEVICE_IDS,
+				vendor_ids:VENDOR_IDS,
+				model_ids:MODEL_IDS,
 				func:clientZayavSpisok
 			});
 		}
@@ -3393,9 +3172,9 @@ $(document)
 				device_id:G.zayav_device,
 				vendor_id:G.zayav_vendor,
 				model_id:G.zayav_model,
-				device_ids:G.device_ids,
-				vendor_ids:G.vendor_ids,
-				model_ids:G.model_ids,
+				device_ids:DEVICE_IDS,
+				vendor_ids:VENDOR_IDS,
+				model_ids:MODEL_IDS,
 				func:zayavSpisokLoad
 			});
 			// Нахождение устройства
@@ -3587,7 +3366,7 @@ $(document)
 		}
 		if($('#zpInfo').length) {
 			$('.fotoUpload').fotoUpload({
-				owner:'zp' + G.zpInfo.compat_id,
+				owner:'zp' + ZP.compat_id,
 				func:zpImgUpdate
 			});
 		}
