@@ -211,7 +211,8 @@ function GvaluesCreate() {//Составление файла G_values.js
 	"\n".'var COLOR_SPISOK='.query_selJson("SELECT `id`,`name` FROM `setup_color_name` ORDER BY `name` ASC").','.
 		"\n".'COLORPRE_SPISOK='.query_selJson("SELECT `id`,`predlog` FROM `setup_color_name` ORDER BY `predlog` ASC").','.
 		"\n".'RASHOD_CATEGORY='.query_selJson("SELECT `id`,`name` FROM `setup_rashod_category` ORDER BY `name` ASC").','.
-		//"\n".'FAULT_SPISOK='.query_selJson("SELECT `id`,`name` FROM setup_fault ORDER BY `sort`").';G.fault_ass=_toAss(FAULT_SPISOK),'.
+		"\n".'FAULT_SPISOK='.query_selJson("SELECT `id`,`name` FROM setup_fault ORDER BY `sort`").','.
+		"\n".'FAULT_ASS=_toAss(FAULT_SPISOK),'.
 		"\n".'ZPNAME_SPISOK='.query_selJson("SELECT `id`,`name` FROM setup_zp_name ORDER BY `name`").','.
 		"\n".'DEVSTATUS_SPISOK='.query_selJson("SELECT `id`,`name` FROM `setup_device_status` ORDER BY `sort`").','.
 		"\n".'DEVPLACE_SPISOK='.query_selJson("SELECT `id`,`name` FROM `setup_device_place` ORDER BY `sort`").','.

@@ -623,7 +623,8 @@ switch(@$_POST['op']) {
 			history_insert(array(
 				'type' => 4,
 				'zayav_id' => $zayav_id,
-				'value' => $zayav_status
+				'value' => $zayav_status,
+				'value1' => $zayav['zayav_status']
 			));
 			$send['z_status']['dtime'] = utf8(FullDataTime(curTime(), 1));
 		}

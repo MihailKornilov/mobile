@@ -1585,7 +1585,6 @@ $(document)
 					$('#place_other').val('').focus();
 			}
 		});
-		DEVSTATUS_SPISOK.splice(0, 1);
 		$('#dev_status')._radio({
 			spisok:DEVSTATUS_SPISOK,
 			light:1
@@ -3441,14 +3440,13 @@ $(document)
 			});
 			colorSelDop(0);
 			$(document).on('click', '#fault', function() {
-				var i = $(this).find('INPUT');
-				var arr = [];
-				for(var n = 0; n < i.length; n++) {
+				var i = $(this).find('INPUT'),
+					arr = [];
+				for(var n = 0; n < i.length; n++)
 					if(i.eq(n).val() == 1) {
 						var uid = i.eq(n).attr('id').split('_')[1];
-						arr.push(G.fault_ass[uid]);
+						arr.push(FAULT_ASS[uid]);
 					}
-				}
 				$('#comm').val(arr.join(', '));
 			});
 			$('#comm').autosize();

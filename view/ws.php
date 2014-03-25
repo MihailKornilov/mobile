@@ -945,9 +945,9 @@ function zayav_info($zayav_id) {
 			'serial:"'.$zayav['serial'].'",'.
 			'color_id:'.$zayav['color_id'].','.
 			'color_dop:'.$zayav['color_dop'].','.
-			'equip:\''.devEquipCheck($zayav['base_device_id'], $zayav['equip']).'\''.
-		'},
-		PRINT={'.
+			'equip:"'.addslashes(devEquipCheck($zayav['base_device_id'], $zayav['equip'])).'"'.
+		'},'.
+		'PRINT={'.
 			'dtime:"'.FullDataTime($zayav['dtime_add']).'",'.
 			'device:"'._deviceName($zayav['base_device_id']).'<b>'._vendorName($zayav['base_vendor_id'])._modelName($zayav['base_model_id']).'</b>",'.
 			'color:"'._color($zayav['color_id'], $zayav['color_dop']).'",'.
@@ -956,7 +956,7 @@ function zayav_info($zayav_id) {
 			($zayav['equip'] ? 'equip:"'.zayavEquipSpisok($zayav['equip']).'",' : '').
 			'client:"'._clientLink($zayav['client_id'], 1).'",'.
 			'telefon:"'.query_value("SELECT `telefon` FROM `client` WHERE id=".$zayav['client_id']).'",'.
-			'defect:"'.query_value("SELECT `txt` FROM `vk_comment` WHERE `status`=1 AND `table_name`='zayav' AND `table_id`=".$zayav_id." AND `parent_id`=0 ORDER BY `id` DESC").'"'.
+			'defect:"'.addslashes(str_replace("\n", ' ', query_value("SELECT `txt` FROM `vk_comment` WHERE `status`=1 AND `table_name`='zayav' AND `table_id`=".$zayav_id." AND `parent_id`=0 ORDER BY `id` DESC"))).'"'.
 		'};'.
 	'</script>'.
 	'<div id="zayavInfo">'.
@@ -1614,8 +1614,12 @@ function history_types($v) {
 		case 2: return 'Удалена заявка №'.$v['value'].'.';
 		case 3: return 'Внесён новый клиент '.$v['client_link'].'.';
 		case 4:
+			$statusPrev = $v['value1'] ? _zayavStatus($v['value1']) : '';
 			$status = _zayavStatus($v['value']);
-			return 'Изменён статус заявки '.$v['zayav_link'].' на <span style="background-color:#'.$status['color'].'">'.$status['name'].'</span>.';
+			return 'Изменён статус заявки '.$v['zayav_link'].
+					($v['value1'] ? ':<br />' : ' на ').
+					($v['value1'] ? '<span style="background-color:#'.$statusPrev['color'].'" class="zstatus">'.$statusPrev['name'].'</span> » ' : '').
+					'<span style="background-color:#'.$status['color'].'" class="zstatus">'.$status['name'].'</span>';
 		case 5: return 'Произведено начисление на сумму <b>'.$v['value'].'</b> руб. для заявки '.$v['zayav_link'].'.';
 		case 6: return
 			'Внесён платёж на сумму <b>'.$v['value'].'</b> руб.'.
@@ -1734,7 +1738,7 @@ function history_spisok($page=1, $filter=array(), $limit=30) {
 			$time = strtotime($r['dtime_add']);
 			$viewer_id = $r['viewer_id_add'];
 		}
-		$txt .= '<div class="txt">'.history_types($r).'</div>';
+		$txt .= '<li><div class="li">'.history_types($r).'</div>';
 		$key = key($history);
 		if(!$key ||
 		   $key == $keyEnd ||
@@ -1743,7 +1747,7 @@ function history_spisok($page=1, $filter=array(), $limit=30) {
 			$send .=
 				'<div class="history_unit">'.
 					'<div class="head">'.FullDataTime($r['dtime_add']).$r['viewer_link'].'</div>'.
-					$txt.
+					'<ul>'.$txt.'</ul>'.
 				'</div>';
 			$txt = '';
 		}
