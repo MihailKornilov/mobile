@@ -28,7 +28,7 @@ function sa_index() {
 		'<div><B>Устройства и запчасти:</B></div>'.
 		'<A href="'.URL.'&p=sa&d=device">Устройства / Производители / Модели</A><BR>'.
 		'<A href="'.URL.'&p=sa&d=equip">Комплектация устройств</A><BR>'.
-		//'<A href="'.URL.'&p=sa&d=fault">Виды неисправностей</A><BR>'.
+		'<A href="'.URL.'&p=sa&d=fault">Виды неисправностей</A><BR>'.
 		//'<A href="'.URL.'&p=sa&d=dev-spec">Характеристики устройств для информации</A><BR>'.
 		//'<A href="'.URL.'&p=sa&d=dev-status">Статусы устройств в заявках</A><BR>'.
 		//'<A href="'.URL.'&p=sa&d=dev-place">Местонахождения устройств в заявках</A><BR>'.
@@ -387,6 +387,38 @@ function sa_equip_spisok($device_id) {
 	return '<div class="eq-head">Используемые комплектации для <b>'._deviceName($device_id).'</b>:</div>'.
 		($spisok ? $spisok : 'Вариантов комплектаций нет');
 }//sa_equip_spisok()
+
+function sa_fault() {
+	return '<div class="path">'.sa_cookie_back().'<a href="'.URL.'&p=sa">Администрирование</a> » Комплектация устройств</div>'.
+	'<div class="sa-fault">'.
+		'<div class="headName">Виды неисправностей<a class="add">Новая неисправность</a></div>'.
+		'<div class="spisok">'.sa_fault_spisok().'</div>'.
+	'</div>';
+
+}//sa_fault()
+function sa_fault_spisok() {
+	$sql = "SELECT * FROM `setup_fault` ORDER BY `sort`";
+	$q = query($sql);
+	if(!mysql_num_rows($q))
+		return 'Список пуст.';
+
+	$send =
+		'<table class="_spisok">'.
+			'<tr><th class="name">Наименование'.
+				'<th class="set">'.
+		'</table>'.
+		'<dl class="_sort" val="setup_fault">';
+	while($r = mysql_fetch_assoc($q))
+		$send .= '<dd val="'.$r['id'].'">'.
+			'<table class="_spisok">'.
+				'<tr><td class="name">'.$r['name'].
+					'<td class="set">'.
+						'<div class="img_edit"></div>'.
+						'<div class="img_del"></div>'.
+			'</table>';
+	$send .= '</dl>';
+	return $send;
+}//sa_fault_spisok()
 
 function sa_color() {
 	return '<div class="path">'.sa_cookie_back().'<a href="'.URL.'&p=sa">Администрирование</a> » Цвета</div>'.

@@ -1763,30 +1763,45 @@ switch(@$_POST['op']) {
 		jsonSuccess($send);
 		break;
 	case 'expense_add':
-		if(!preg_match(REGEXP_NUMERIC, $_POST['category']))
+		if(!preg_match(REGEXP_NUMERIC, $_POST['expense_id']))
 			jsonError();
-		if(!preg_match(REGEXP_NUMERIC, $_POST['worker']))
+		if(!preg_match(REGEXP_NUMERIC, $_POST['worker_id']))
 			jsonError();
-		if(!preg_match(REGEXP_NUMERIC, $_POST['sum']))
+		if(!preg_match(REGEXP_NUMERIC, $_POST['invoice_id']) || !$_POST['invoice_id'])
 			jsonError();
-		if(!preg_match(REGEXP_BOOL, $_POST['kassa']))
+		if(!preg_match(REGEXP_CENA, $_POST['sum']))
 			jsonError();
-		$category = intval($_POST['category']);
-		$about = win1251(htmlspecialchars(trim($_POST['about'])));
-		if($category == 0 && empty($about))
+		$expense_id = intval($_POST['expense_id']);
+		$prim = win1251(htmlspecialchars(trim($_POST['prim'])));
+		if(!$expense_id && empty($prim))
 			jsonError();
-		$sum = intval($_POST['sum']) * -1;
-		$kassa = intval($_POST['kassa']);
-		$worker = intval($_POST['worker']);
-		$sql = "INSERT INTO `money`
-					(`ws_id`,`sum`,   `prim`,   `kassa`,  `rashod_category`,  `worker_id`,`viewer_id_add`)
-				VALUES
-					(".WS_ID.",".$sum.",'".$about."',".$kassa.",".$category.",".$worker.",".VIEWER_ID.")";
+		$invoice_id = intval($_POST['invoice_id']);
+		$sum = str_replace(',', '.', $_POST['sum']);
+		$worker_id = intval($_POST['worker_id']);
+		$sql = "INSERT INTO `money` (
+					`ws_id`,
+					`sum`,
+					`prim`,
+					`invoice_id`,
+					`expense_id`,
+					`worker_id`,
+					`viewer_id_add`
+				) VALUES (
+					".WS_ID.",
+					-".$sum.",
+					'".addslashes($prim)."',
+					".$invoice_id.",
+					".$expense_id.",
+					".$worker_id.",
+					".VIEWER_ID."
+				)";
 		query($sql);
 		history_insert(array(
 			'type' => 21,
 			'value' => abs($sum),
-			'value1' => $about
+			'value1' => $prim,
+			'value2' => $expense_id ? $expense_id : '',
+			'value3' => $worker_id ? $worker_id : ''
 		));
 		jsonSuccess();
 		break;
@@ -1818,7 +1833,7 @@ switch(@$_POST['op']) {
 					`prim` AS `about`,
 					`kassa`,
 					`worker_id`,
-					`rashod_category` AS `category`
+					`expense_id` AS `category`
 				FROM `money`
 				WHERE `deleted`=0
 				  AND `id`=".intval($_POST['id'])."
@@ -1849,7 +1864,7 @@ switch(@$_POST['op']) {
 					`sum`=".$sum.",
 					`prim`='".$about."',
 					`kassa`=".$kassa.",
-					`rashod_category`=".$category.",
+					`expense_id`=".$category.",
 					`worker_id`=".$worker."
 				WHERE `id`=".$id;
 		query($sql);
@@ -1952,165 +1967,6 @@ switch(@$_POST['op']) {
 		jsonSuccess($send);
 		break;
 
-	case 'setup_worker_add':
-		if(!preg_match(REGEXP_NUMERIC, $_POST['viewer_id']))
-			jsonError();
-		$viewer_id = intval($_POST['viewer_id']);
-		if($viewer_id) {
-			$sql = "SELECT * FROM `vk_user` WHERE `viewer_id`=".$viewer_id." LIMIT 1";
-			if($r = mysql_fetch_assoc(query($sql))) {
-				if($r['ws_id'] == WS_ID)
-					jsonError('Этот пользователь уже является</br >сотрудником этой мастерской.');
-				if($r['ws_id'])
-					jsonError('Этот пользователь уже является</br >сотрудником другой мастерской.');
-			}
-			_viewer($viewer_id);
-			query("UPDATE `vk_user` SET `ws_id`=".WS_ID." WHERE `viewer_id`=".$viewer_id);
-			xcache_unset(CACHE_PREFIX.'viewer_'.$viewer_id);
-		} else {
-			if(!preg_match(REGEXP_NUMERIC, $_POST['sex']) || !$_POST['sex'])
-				jsonError();
-			$first_name = win1251(htmlspecialchars(trim($_POST['first_name'])));
-			$last_name = win1251(htmlspecialchars(trim($_POST['last_name'])));
-			$sex = intval($_POST['sex']);
-			if(!$first_name || !$last_name)
-				jsonError();
-			$viewer_id = _maxSql('vk_user', 'viewer_id');
-			if($viewer_id < VIEWER_MAX)
-				$viewer_id = VIEWER_MAX;
-			$sql = "INSERT INTO `vk_user` (
-				`ws_id`,
-				`viewer_id`,
-				`first_name`,
-				`last_name`,
-				`sex`,
-				`photo`
-			) VALUES (
-				".WS_ID.",
-				".$viewer_id.",
-				'".addslashes($first_name)."',
-				'".addslashes($last_name)."',
-				".$sex.",
-				'http://vk.com/images/camera_c.gif'
-			)";
-			query($sql);
-		}
-
-		history_insert(array(
-			'type' => 28,
-			'value' => $viewer_id
-		));
-
-		GvaluesCreate();
-
-		$send['html'] = utf8(setup_worker_spisok());
-		jsonSuccess($send);
-		break;
-	case 'setup_worker_del':
-		if(!preg_match(REGEXP_NUMERIC, $_POST['viewer_id']))
-			jsonError();
-		$viewer_id = intval($_POST['viewer_id']);
-		$sql = "SELECT * FROM `vk_user` WHERE `ws_id`=".WS_ID." AND `viewer_id`=".$viewer_id;
-		if(!$r = mysql_fetch_assoc(query($sql)))
-			jsonError();
-		if($r['viewer_id'] == WS_ADMIN)
-			jsonError();
-
-		query("UPDATE `vk_user` SET `ws_id`=0 WHERE `viewer_id`=".$viewer_id);
-		xcache_unset(CACHE_PREFIX.'viewer_'.$viewer_id);
-		GvaluesCreate();
-
-		history_insert(array(
-			'type' => 29,
-			'value' => $viewer_id
-		));
-
-		$send['html'] = utf8(setup_worker_spisok());
-		jsonSuccess($send);
-		break;
-
-
-	case 'setup_org_name_save':
-		if(!VIEWER_ADMIN)
-			jsonError();
-		$name = win1251(htmlspecialchars(trim($_POST['name'])));
-		query("UPDATE `workshop` SET `org_name`='".$name."' WHERE `id`=".WS_ID);
-		jsonSuccess();
-		break;
-	case 'setup_devs_set':
-		if(!VIEWER_ADMIN)
-			jsonError();
-		$ex = explode(',', $_POST['devs']);
-		foreach($ex as $id)
-			if(!preg_match(REGEXP_NUMERIC, $id))
-				jsonError();
-		query("UPDATE `workshop` SET `devs`='".$_POST['devs']."' WHERE `id`=".WS_ID);
-		jsonSuccess();
-		break;
-	case 'setup_ws_del':
-		if(!VIEWER_ADMIN)
-			jsonError();
-		$sql = "SELECT `viewer_id` FROM `vk_user` WHERE `ws_id`=".WS_ID;
-		$q = query($sql);
-		while($r = mysql_fetch_assoc($q))
-			xcache_unset(CACHE_PREFIX.'viewer_'.$r['viewer_id']);
-		query("UPDATE `workshop` SET `status`=0,`dtime_del`=CURRENT_TIMESTAMP WHERE `id`=".WS_ID);
-		query("UPDATE `vk_user` SET `ws_id`=0,`admin`=0 WHERE `ws_id`=".WS_ID);
-		_cacheClear();
-		jsonSuccess();
-		break;
-	case 'setup_worker_add_':
-		if(!preg_match(REGEXP_NUMERIC, $_POST['id']))
-			jsonError();
-		$id = intval($_POST['id']);
-		$sql = "SELECT * FROM `vk_user` WHERE `viewer_id`=".$id;
-		if($r = mysql_fetch_assoc(query($sql))) {
-			if($r['ws_id'] == WS_ID)
-				jsonError('Этот пользователь уже является</br >сотрудником этой мастерской.');
-			if($r['ws_id'] > 0)
-				jsonError('Этот пользователь уже является</br >сотрудником другой мастерской.');
-		}
-		_vkUserUpdate($id);
-		query("UPDATE `vk_user` SET `ws_id`=".WS_ID." WHERE `viewer_id`=".$id);
-		xcache_unset(CACHE_PREFIX.'viewer_'.$id);
-		$send['html'] = utf8(setup_workers_spisok());
-		jsonSuccess($send);
-		break;
-	case 'setup_worker_admin_set':
-		if(!preg_match(REGEXP_NUMERIC, $_POST['viewer_id']))
-			jsonError();
-		$viewer_id = intval($_POST['viewer_id']);
-		query("UPDATE `vk_user` SET `admin`=1 WHERE `ws_id`=".WS_ID." AND`viewer_id`=".$viewer_id);
-		xcache_unset(CACHE_PREFIX.'viewer_'.$viewer_id);
-		jsonSuccess();
-		break;
-	case 'setup_worker_admin_cancel':
-		if(!preg_match(REGEXP_NUMERIC, $_POST['viewer_id']))
-			jsonError();
-		$viewer_id = intval($_POST['viewer_id']);
-		if(WS_ADMIN == $viewer_id)
-			jsonError();
-		query("UPDATE `vk_user` SET `admin`=0 WHERE `ws_id`=".WS_ID." AND`viewer_id`=".$viewer_id);
-		xcache_unset(CACHE_PREFIX.'viewer_'.$viewer_id);
-		jsonSuccess();
-		break;
-
-	case 'setup_expense_category_add':
-		if(empty($_POST['name']))
-			jsonError();
-		$sql = "INSERT INTO `setup_rashod_category` (
-					`name`,
-					`viewer_id_add`
-				) VALUES (
-					'".win1251(htmlspecialchars(trim($_POST['name'])))."',
-					".VIEWER_ID."
-				)";
-		query($sql);
-		$send['id'] = mysql_insert_id();
-		GvaluesCreate();
-		xcache_unset(CACHE_PREFIX.'rashod');
-		jsonSuccess($send);
-		break;
 	case 'tooltip_zayav_info_get':
 		if(!preg_match(REGEXP_NUMERIC, $_POST['id']))
 			jsonError();

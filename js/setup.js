@@ -1,28 +1,7 @@
+var AJAX_SETUP = SITE + '/ajax/setup.php?' + VALUES;
+
 $(document)
-	.on('blur', '#setup_main #org_name', function() {
-		var t = $(this),
-			send = {
-				op:'setup_org_name_save',
-				name:t.val()
-			};
-		if(t.hasClass('busy') || G.org_name == send.name)
-			return;
-		t.addClass('busy').next('span').remove();
-		t.after('<img src="/img/upload.gif">');
-		$.post(AJAX_WS, send, function(res) {
-			t.removeClass('busy').next('img').remove();
-			if(res.success) {
-				G.org_name = send.name;
-				t.after('<span class="saved">Сохранено.</span>')
-				 .next('span')
-				 .delay(1500)
-				 .fadeOut(1500, function() {
-					 $(this).remove();
-				 });
-			}
-		}, 'json');
-	})
-	.on('click', '#setup_main #devs div', function() {
+	.on('click', '#setup_info #devs div', function() {
 		var t = $(this),
 			inp = t.parent().find('input'),
 			devs = [];
@@ -36,42 +15,24 @@ $(document)
 			return;
 		}
 		var send = {
-			op:'setup_devs_set',
+			op:'info_devs_set',
 			devs:devs.join()
 		};
-		$.post(AJAX_WS, send, function(res) {
+		$.post(AJAX_SETUP, send, function(res) {
 			if(res.success)
 				spanShow('Изменения сохранены');
 		}, 'json');
 
 		function spanShow(msg, err) {
-			$('#setup_main #devs span').remove();
+			$('#devs span').remove();
 			err = err ? ' class="err"' : '';
 			t.prepend('<span><em' + err + '>' + msg + '</em></span>')
-			 .find('span')
-			 .delay(1500)
-			 .fadeOut(1500, function() {
-				 $(this).remove();
-			 });
+				.find('span')
+				.delay(1500)
+				.fadeOut(1500, function() {
+					$(this).remove();
+				});
 		}
-	})
-	.on('click', '#setup_main #ws_del', function() {
-		var dialog = _dialog({
-			top:150,
-			width:300,
-			head:'Удаление мастерской',
-			content:'<center>Вы действительно хотите<BR>удалить мастерскую и все данные?</center>',
-			butSubmit:'&nbsp;&nbsp;&nbsp;&nbsp;Да&nbsp;&nbsp;&nbsp;&nbsp;',
-			submit:function() {
-				dialog.process();
-				$.post(AJAX_WS, {op:'setup_ws_del'}, function(res) {
-					if(res.success)
-						location.href = URL;
-					else
-						dialog.abort();
-				}, 'json');
-			}
-		});
 	})
 
 	.on('click', '#setup_worker .add', function() {
@@ -152,7 +113,7 @@ $(document)
 		}
 		function submit() {
 			var send = {
-				op:'setup_worker_add',
+				op:'worker_add',
 				viewer_id:viewer_id,
 				first_name:$('#first_name').val(),
 				last_name:$('#last_name').val(),
@@ -162,7 +123,7 @@ $(document)
 			else if(send.first_name && send.last_name && send.sex == 0) err('Не указан пол', -47);
 			else {
 				dialog.process();
-				$.post(AJAX_WS, send, function(res) {
+				$.post(AJAX_SETUP, send, function(res) {
 					if(res.success) {
 						dialog.close();
 						_msg('Новый сотрудник успешно добавлен.');
@@ -199,11 +160,11 @@ $(document)
 		});
 		function submit() {
 			var send = {
-				op:'setup_worker_del',
+				op:'worker_del',
 				viewer_id:u.attr('val')
 			};
 			dialog.process();
-			$.post(AJAX_WS, send, function(res) {
+			$.post(AJAX_SETUP, send, function(res) {
 				if(res.success) {
 					dialog.close();
 					_msg('Сотрудник удален.');
@@ -214,150 +175,436 @@ $(document)
 		}
 	})
 
-	.on('click', '#setup_workers .add', function() {
-		var html = '<div id="setup_worker_add">' +
-				'<h1>Ссылка на страницу или ID пользователя ВКонтакте:</h1>' +
-				'<input type="text" />' +
-				'<DIV class="vkButton"><BUTTON>Найти</BUTTON></DIV>' +
-			'</div>',
+	.on('click', '#setup_invoice .add', function() {
+		var t = $(this),
+			html = '<table class="setup-tab">' +
+				'<tr><td class="label">Наименование:<td><input id="name" type="text" maxlength="50" />' +
+				'<tr><td class="label topi">Описание:<td><textarea id="about"></textarea>' +
+				'<tr><td class="label topi">Виды платежей:<td><input type="hidden" id="types" />' +
+				'</table>',
 			dialog = _dialog({
-				top:50,
-				width:360,
-				head:'Добавление нового сотрудника',
+				width:400,
+				head:'Добавление нового счёта',
 				content:html,
-				butSubmit:'Добавить',
 				submit:submit
-			}),
-			user_id,
-			input = dialog.content.find('input'),
-			but = input.next();
-		input.focus().keyEnter(user_find);
-		but.click(user_find);
-
-		function user_find() {
-			if(but.hasClass('busy'))
-				return;
-			user_id = false;
-			var send = {
-				user_ids:$.trim(input.val()),
-				fields:'photo_50',
-				v:5.2
-			};
-			if(!send.user_ids)
-				return;
-			but.addClass('busy').next('.res').remove();
-			VK.api('users.get', send, function(data) {
-				but.removeClass('busy');
-				if(data.response) {
-					var u = data.response[0],
-						html = '<TABLE class="res">' +
-							'<TR><TD class="photo"><IMG src=' + u.photo_50 + '>' +
-							'<TD class="name">' + u.first_name + ' ' + u.last_name +
-							'</TABLE>';
-					but.after(html);
-					user_id = u.id;
-				}
 			});
-		}
-		function submit() {
-			if(!user_id) {
-				dialog.bottom.vkHint({
-					msg:'<SPAN class="red">Не выбран пользователь</SPAN>',
-					remove:1,
-					indent:40,
-					show:1,
-					top:-48,
-					left:92
-				});
-				return;
-			}
-			var send = {
-				op:'setup_worker_add',
-				id:user_id
-			};
-			dialog.process();
-			$.post(AJAX_WS, send, function(res) {
-				dialog.abort();
-				if(res.success) {
-					dialog.close();
-					_msg('Новый сотрудник успешно добавлен.');
-					$('#spisok').html(res.html);
-				} else
-					dialog.bottom.vkHint({
-						msg:'<SPAN class="red">' + res.text + '</SPAN>',
-						remove:1,
-						indent:40,
-						show:1,
-						top:-60,
-						left:92
-					});
-			}, 'json');
-		}
-	})
-	.on('click', '#setup_workers .img_del', function() {
-		var u = $(this);
-		while(!u.hasClass('unit'))
-			u = u.parent();
-		var dialog = _dialog({
-			top:110,
-			width:250,
-			head:'Удаление сотрудника',
-			content:'<center>Подтвердите удаление сотрудника.</center>',
-			butSubmit:'Удалить',
-			submit:submit
+		$('#name').focus().keyEnter(submit);
+		$('#types')._select({
+			width:218,
+			multiselect:1,
+			spisok:INCOME_SPISOK
 		});
 		function submit() {
 			var send = {
-				op:'setup_worker_del',
-				viewer_id:u.attr('val')
+				op:'invoice_add',
+				name:$('#name').val(),
+				about:$('#about').val(),
+				types:$('#types').val()
+			};
+			if(!send.name) {
+				err('Не указано наименование');
+				$('#name').focus();
+			} else {
+				dialog.process();
+				$.post(AJAX_SETUP, send, function(res) {
+					if(res.success) {
+						$('.spisok').html(res.html);
+						dialog.close();
+						_msg('Внесено!');
+					} else {
+						dialog.abort();
+						err(res.text);
+					}
+				}, 'json');
+			}
+		}
+		function err(msg) {
+			dialog.bottom.vkHint({
+				msg:'<SPAN class=red>' + msg + '</SPAN>',
+				top:-47,
+				left:100,
+				indent:50,
+				show:1,
+				remove:1
+			});
+		}
+	})
+	.on('click', '#setup_invoice .img_edit', function() {
+		var t = $(this);
+		while(t[0].tagName != 'TR')
+			t = t.parent();
+		var id = t.attr('val'),
+			name = t.find('.name div').html(),
+			about = t.find('.name pre').html(),
+			types = t.find('.type_id').val(),
+			html = '<table class="setup-tab">' +
+				'<tr><td class="label r">Наименование:<td><input id="name" type="text" maxlength="100" value="' + name + '" />' +
+				'<tr><td class="label r top">Описание:<td><textarea id="about">' + about + '</textarea>' +
+				'<tr><td class="label topi">Виды платежей:<td><input type="hidden" id="types" value="' + types + '" />' +
+				'</table>',
+			dialog = _dialog({
+				width:400,
+				head:'Редактирование данных счёта',
+				content:html,
+				butSubmit:'Сохранить',
+				submit:submit
+			});
+		$('#name').focus().keyEnter(submit);
+		$('#types')._select({
+			width:218,
+			multiselect:1,
+			spisok:INCOME_SPISOK
+		});
+		function submit() {
+			var send = {
+				op:'invoice_edit',
+				id:id,
+				name:$('#name').val(),
+				about:$('#about').val(),
+				types:$('#types').val()
+			};
+			if(!send.name) {
+				err('Не указано наименование');
+				$('#name').focus();
+			} else {
+				dialog.process();
+				$.post(AJAX_SETUP, send, function(res) {
+					if(res.success) {
+						$('.spisok').html(res.html);
+						dialog.close();
+						_msg('Сохранено!');
+					} else {
+						dialog.abort();
+						err(res.text);
+					}
+				}, 'json');
+			}
+		}
+		function err(msg) {
+			dialog.bottom.vkHint({
+				msg:'<SPAN class=red>' + msg + '</SPAN>',
+				top:-47,
+				left:100,
+				indent:50,
+				show:1,
+				remove:1
+			});
+		}
+	})
+	.on('click', '#setup_invoice .img_del', function() {
+		var t = $(this),
+			dialog = _dialog({
+				top:90,
+				width:300,
+				head:'Удаление счёта',
+				content:'<center><b>Подтвердите удаление счёта.</b></center>',
+				butSubmit:'Удалить',
+				submit:submit
+			});
+		function submit() {
+			while(t[0].tagName != 'TR')
+				t = t.parent();
+			var send = {
+				op:'setup_invoice_del',
+				id:t.attr('val')
 			};
 			dialog.process();
-			$.post(AJAX_WS, send, function(res) {
+			$.post(AJAX_MAIN, send, function(res) {
 				if(res.success) {
+					$('.spisok').html(res.html);
 					dialog.close();
-					_msg('Сотрудник удален.');
-					$('#spisok').html(res.html);
+					_msg('Удалено!');
 				} else
 					dialog.abort();
 			}, 'json');
 		}
 	})
-	.on('click', '#setup_workers .adm_set', function() {
-		var u = $(this),
-			adm = $(this).parent();
-		while(!u.hasClass('unit'))
-			u = u.parent();
-		var send = {
-			op:'setup_worker_admin_set',
-			viewer_id:u.attr('val')
-		};
-		if(adm.hasClass('busy'))
-			return;
-		adm.html('&nbsp;').addClass('busy');
-		$.post(AJAX_WS, send, function(res) {
-			adm.removeClass('busy')
-			if(res.success)
-				adm.html('Администратор <a class="adm_cancel">отменить</a>');
-		}, 'json');
+
+	.on('click', '#setup_income .add', function() {
+		var t = $(this),
+			html = '<table class="setup-tab">' +
+				'<tr><td class="label r">Наименование:<td><input id="name" type="text" maxlength="100" />' +
+				'</table>',
+			dialog = _dialog({
+				head:'Добавление нового вида платежа',
+				content:html,
+				submit:submit
+			});
+		$('#name').focus().keyEnter(submit);
+		function submit() {
+			var send = {
+				op:'income_add',
+				name:$('#name').val()
+			};
+			if(!send.name) {
+				dialog.bottom.vkHint({
+					msg:'<SPAN class=red>Не указано наименование</SPAN>',
+					top:-47,
+					left:131,
+					indent:50,
+					show:1,
+					remove:1
+				});
+				$('#name').focus();
+			} else {
+				dialog.process();
+				$.post(AJAX_SETUP, send, function(res) {
+					if(res.success) {
+						$('.spisok').html(res.html);
+						dialog.close();
+						_msg('Внесено!');
+						sortable();
+					} else
+						dialog.abort();
+				}, 'json');
+			}
+		}
 	})
-	.on('click', '#setup_workers .adm_cancel', function() {
-		var u = $(this),
-			adm = $(this).parent();
-		while(!u.hasClass('unit'))
-			u = u.parent();
-		var send = {
-			op:'setup_worker_admin_cancel',
-			viewer_id:u.attr('val')
-		};
-		if(adm.hasClass('busy'))
-			return;
-		adm.html('&nbsp;').addClass('busy');
-		$.post(AJAX_WS, send, function(res) {
-			adm.removeClass('busy')
-			if(res.success)
-				adm.html('<a class="adm_set">Назначить администратором</a>');
-		}, 'json');
+	.on('click', '#setup_income .img_edit', function() {
+		var t = $(this);
+		while(t[0].tagName != 'DD')
+			t = t.parent();
+		var id = t.attr('val'),
+			name = t.find('.name').html(),
+			html = '<table class="setup-tab">' +
+				'<tr><td class="label r">Наименование:<td><input id="name" type="text" maxlength="100" value="' + name + '" />' +
+				'</table>',
+			dialog = _dialog({
+				width:440,
+				head:'Редактирование вида платежа',
+				content:html,
+				butSubmit:'Сохранить',
+				submit:submit
+			});
+		$('#name').focus().keyEnter(submit);
+		function submit() {
+			var send = {
+				op:'income_edit',
+				id:id,
+				name:$('#name').val()
+			};
+			if(!send.name) {
+				dialog.bottom.vkHint({
+					msg:'<SPAN class=red>Не указано наименование</SPAN>',
+					top:-47,
+					left:131,
+					indent:50,
+					show:1,
+					remove:1
+				});
+				$('#name').focus();
+			} else {
+				dialog.process();
+				$.post(AJAX_SETUP, send, function(res) {
+					if(res.success) {
+						$('.spisok').html(res.html);
+						dialog.close();
+						_msg('Сохранено!');
+						sortable();
+					} else
+						dialog.abort();
+				}, 'json');
+			}
+		}
+	})
+	.on('click', '#setup_income .img_del', function() {
+		var t = $(this),
+			dialog = _dialog({
+				top:90,
+				width:300,
+				head:'Удаление вида платежа',
+				content:'<center><b>Подтвердите удаление вида платежа.</b></center>',
+				butSubmit:'Удалить',
+				submit:submit
+			});
+		function submit() {
+			while(t[0].tagName != 'DD')
+				t = t.parent();
+			var send = {
+				op:'income_del',
+				id:t.attr('val')
+			};
+			dialog.process();
+			$.post(AJAX_SETUP, send, function(res) {
+				if(res.success) {
+					$('.spisok').html(res.html);
+					dialog.close();
+					_msg('Удалено!');
+					sortable();
+				} else
+					dialog.abort();
+			}, 'json');
+		}
+	})
+
+	.on('click', '#setup_expense .add', function() {
+		var t = $(this),
+			html = '<table class="setup-tab">' +
+				'<tr><td class="label r">Наименование:<td><input id="name" type="text" maxlength="100" />' +
+				'<tr><td class="label r">Список сотрудников:<td><input id="show_worker" type="hidden" />' +
+				'</table>',
+			dialog = _dialog({
+				width:400,
+				head:'Добавление новой категории расхода мастерской',
+				content:html,
+				submit:submit
+			});
+		$('#name').focus().keyEnter(submit);
+		$('#show_worker')._check();
+		function submit() {
+			var send = {
+				op:'expense_add',
+				name:$('#name').val(),
+				show_worker:$('#show_worker').val()
+			};
+			if(!send.name) {
+				dialog.bottom.vkHint({
+					msg:'<span class=red>Не указано наименование</span>',
+					top:-47,
+					left:131,
+					indent:50,
+					show:1,
+					remove:1
+				});
+				$('#name').focus();
+			} else {
+				dialog.process();
+				$.post(AJAX_SETUP, send, function(res) {
+					if(res.success) {
+						$('#spisok').html(res.html);
+						dialog.close();
+						_msg('Внесено!');
+						sortable();
+					} else
+						dialog.abort();
+				}, 'json');
+			}
+		}
+	})
+	.on('click', '#setup_expense .img_edit', function() {
+		var t = $(this);
+		while(t[0].tagName != 'DD')
+			t = t.parent();
+		var id = t.attr('val'),
+			name = t.find('.name').html(),
+			worker = t.find('.worker').html() ? 1 : 0,
+			html = '<table class="setup-tab">' +
+				'<tr><td class="label r">Наименование:<td><input id="name" type="text" maxlength="50" value="' + name + '" />' +
+				'<tr><td class="label r">Список сотрудников:<td><input id="show_worker" type="hidden" value="' + worker + '" />' +
+				'</table>',
+			dialog = _dialog({
+				width:400,
+				head:'Редактирование категории расхода мастерской',
+				content:html,
+				butSubmit:'Сохранить',
+				submit:submit
+			});
+		$('#name').focus().keyEnter(submit);
+		$('#show_worker')._check();
+		function submit() {
+			var send = {
+				op:'expense_edit',
+				id:id,
+				name:$('#name').val(),
+				show_worker:$('#show_worker').val()
+			};
+			if(!send.name) {
+				dialog.bottom.vkHint({
+					msg:'<span class="red">Не указано наименование</span>',
+					top:-47,
+					left:131,
+					indent:50,
+					show:1,
+					remove:1
+				});
+				$('#name').focus();
+			} else {
+				dialog.process();
+				$.post(AJAX_SETUP, send, function(res) {
+					if(res.success) {
+						$('#spisok').html(res.html);
+						dialog.close();
+						_msg('Сохранено!');
+						sortable();
+					} else
+						dialog.abort();
+				}, 'json');
+			}
+		}
+	})
+	.on('click', '#setup_expense .img_del', function() {
+		var t = $(this),
+			dialog = _dialog({
+				top:90,
+				head:'Удаление категории расхода мастерской',
+				content:'<center><b>Подтвердите удаление.</b></center>',
+				butSubmit:'Удалить',
+				submit:submit
+			});
+		function submit() {
+			while(t[0].tagName != 'DD')
+				t = t.parent();
+			var send = {
+				op:'expense_del',
+				id:t.attr('val')
+			};
+			dialog.process();
+			$.post(AJAX_SETUP, send, function(res) {
+				if(res.success) {
+					$('#spisok').html(res.html);
+					dialog.close();
+					_msg('Удалено!');
+					sortable();
+				} else
+					dialog.abort();
+			}, 'json');
+		}
 	})
 
 	.ready(function() {
+		if($('#setup_info').length) {
+			$('#info_save').click(function() {
+				var t = $(this),
+					send = {
+						op:'info_save',
+						org_name: $.trim($('#org_name').val())
+					};
+				if(!send.org_name) {
+					t.vkHint({
+						msg:'<span class="red">Не указано название организации</span>',
+						remove:1,
+						indent:40,
+						show:1,
+						top:-57,
+						left:-5
+					});
+					$('#org_name').focus();
+					return;
+				}
+				t.addClass('busy');
+				$.post(AJAX_SETUP, send, function(res) {
+					t.removeClass('busy');
+					if(res.success)
+						_msg('Сохранено.');
+				}, 'json');
+			});
+			$('#info_del').click(function() {
+				var dialog = _dialog({
+					top:150,
+					width:300,
+					head:'Удаление мастерской',
+					content:'<center>Вы действительно хотите<BR>удалить мастерскую и все данные?</center>',
+					butSubmit:'&nbsp;&nbsp;&nbsp;&nbsp;Да&nbsp;&nbsp;&nbsp;&nbsp;',
+					submit:function() {
+						dialog.process();
+						$.post(AJAX_SETUP, {op:'info_del'}, function(res) {
+							if(res.success)
+								location.href = URL;
+							else
+								dialog.abort();
+						}, 'json');
+					}
+				});
+			});
+		}
 	});

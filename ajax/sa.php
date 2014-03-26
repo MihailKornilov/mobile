@@ -503,6 +503,60 @@ switch(@$_POST['op']) {
 		jsonSuccess($send);
 		break;
 
+	case 'fault_add':
+		$name = win1251(htmlspecialchars(trim($_POST['name'])));
+		if(empty($name))
+			jsonError();
+		$sql = "INSERT INTO `setup_fault` (
+					`name`,
+					`sort`
+				) VALUES (
+					'".addslashes($name)."',
+					"._maxSql('setup_fault')."
+				)";
+		query($sql);
+
+		GvaluesCreate();
+
+		$send['html'] = utf8(sa_fault_spisok());
+		jsonSuccess($send);
+		break;
+	case 'fault_edit':
+		if(!preg_match(REGEXP_NUMERIC, $_POST['id']) || !$_POST['id'])
+			jsonError();
+		$id = intval($_POST['id']);
+		$name = win1251(htmlspecialchars(trim($_POST['name'])));
+		if(empty($name))
+			jsonError();
+
+		$sql = "UPDATE `setup_fault`
+				SET `name`='".addslashes($name)."'
+				WHERE `id`=".$id;
+		query($sql);
+
+		GvaluesCreate();
+
+		$send['html'] = utf8(sa_fault_spisok());
+		jsonSuccess($send);
+		break;
+	case 'fault_del':
+		if(!preg_match(REGEXP_NUMERIC, $_POST['id']) || !$_POST['id'])
+			jsonError();
+		$id = intval($_POST['id']);
+
+		$sql = "SELECT * FROM `setup_fault` WHERE `id`=".$id;
+		if(!$r = mysql_fetch_assoc(query($sql)))
+			jsonError();
+
+		$sql = "DELETE FROM `setup_fault` WHERE `id`=".$id;
+		query($sql);
+
+		GvaluesCreate();
+
+		$send['html'] = utf8(sa_fault_spisok());
+		jsonSuccess($send);
+		break;
+
 	case 'color_add':
 		$predlog = win1251(htmlspecialchars(trim($_POST['predlog'])));
 		$name = win1251(htmlspecialchars(trim($_POST['name'])));

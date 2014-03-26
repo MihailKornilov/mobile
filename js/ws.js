@@ -463,46 +463,6 @@ var AJAX_WS = SITE + '/ajax/ws.php?' + VALUES,
 			}
 		}, 'json');
 	},
-	expenseCategoryAdd = function(spisok, obj) {
-		var html = '<TABLE>' +
-			'<tr><td class="label">Наименование:<TD><INPUT type="text" id="name" style="width:190px" />' +
-			'</TABLE>',
-			dialog = _dialog({
-				width:320,
-				head:'Новая категория для расходов',
-				content:html,
-				submit:submit
-			}),
-			name = $('#name');
-		name.focus();
-
-		function submit() {
-			var send = {
-				op:'setup_expense_category_add',
-				name:name.val()
-			};
-			if(!send.name) {
-				dialog.bottom.vkHint({
-					msg:'<SPAN class="red">Не указано наименование.</SPAN>',
-					remove:1,
-					indent:40,
-					show:1,
-					top:-51,
-					left:73
-				});
-				name.focus();
-			} else {
-				dialog.process();
-				$.post(AJAX_WS, send, function(res) {
-					if(res.success) {
-						dialog.close();
-						_msg('Новая категория внесена.');
-						obj.add({uid:res.id,title:send.name}).val(res.id);
-					}
-				}, 'json');
-			}
-		}
-	},
 	reportKassaLoad = function() {
 		var send = {
 			op:'report_kassa_load',
@@ -2715,57 +2675,56 @@ $(document)
 	})
 	.on('click', '.expense .add', function() {
 		var html = '<TABLE id="expense-add-tab">' +
-				'<tr><td class="label">Категория:<TD><INPUT type="hidden" id="cat" value="0">' +
-				'<tr><td class="label">Описание:<TD><INPUT type="text" id="about" maxlength="100">' +
-				'<tr><td class="label">Сотрудник:<TD><INPUT type="hidden" id="work" value="0">' +
-				'<tr><td class="label">Сумма:<TD><INPUT type="text" id="sum" class="money" maxlength="8"> руб.' +
-				'<tr><td class="label">Деньги взяты из кассы?:<TD><INPUT type="hidden" id="kassa" value="-1">' +
+				'<tr><td class="label">Категория:<TD><INPUT type="hidden" id="expense_id" />' +
+					'<a href="' + URL + '&p=setup&d=expense" class="img_edit' + _tooltip('Настройка категорий расходов', -95) + '</a>' +
+				'<tr class="tr-work dn"><td class="label">Сотрудник:<TD><INPUT type="hidden" id="worker_id" />' +
+				'<tr><td class="label">Описание:<TD><INPUT type="text" id="prim" maxlength="100">' +
+				'<tr><td class="label">Счёт:<TD><INPUT type="hidden" id="invoice_id" />' +
+				'<tr><td class="label">Сумма:<TD><INPUT type="text" id="sum" class="money" maxlength="11" /> руб.' +
 			'</TABLE>',
 			dialog = _dialog({
 				width:380,
 				head:'Внесение расхода',
 				content:html,
 				submit:submit
-			}),
-			category = $('#cat'),
-			worker = $('#work'),
-			kassa = $('#kassa'),
-			sum = $('#sum'),
-			about = $('#about');
+			});
 
-		category._select({
-			width:180,
+		$('#expense_id')._select({
+			width:200,
 			title0:'Не указана',
-			spisok:RASHOD_CATEGORY,
-			funcAdd:expenseCategoryAdd
+			spisok:EXPENSE_SPISOK,
+			func:function(id) {
+				$('#worker_id')._select(0);
+				$('.tr-work')[(EXPENSE_WORKER[id] ? 'remove' : 'add') + 'Class']('dn');
+			}
 		});
-
-		worker._select({
+		$('#worker_id')._select({
+			width:200,
 			title0:'Не выбран',
-			spisok:RASHOD_VIEWER
+			spisok:WORKERS
 		});
-
-		kassa._radio({
-			spisok:[
-				{uid:1, title:'да'},
-				{uid:0, title:'нет'}
-			]
+		$('#prim').focus();
+		$('#invoice_id')._select({
+			width:200,
+			title0:'Не выбран',
+			spisok:INVOICE_SPISOK,
+			func:function() {
+				$('#sum').focus();
+			}
 		});
-		about.focus();
 
 		function submit() {
 			var send = {
 				op:'expense_add',
-				category:category.val(),
-				about:about.val(),
-				worker:worker.val(),
-				sum:sum.val(),
-				kassa:kassa.val()
+				expense_id:$('#expense_id').val(),
+				worker_id:$('#worker_id').val(),
+				prim:$('#prim').val(),
+				invoice_id:$('#invoice_id').val(),
+				sum:$('#sum').val()
 			};
-			var msg;
-			if(!send.about && send.category == 0) { msg = 'Выберите категорию или укажите описание.'; about.focus(); }
-			else if(!REGEXP_NUMERIC.test(send.sum)) { msg = 'Некорректно указана сумма.'; sum.focus(); }
-			else if(send.kassa == -1) msg = 'Укажите, деньги взяты из кассы или нет.';
+			if(!send.prim && send.expense_id == 0) { err('Выберите категорию или укажите описание.'); $('#prim').focus(); }
+			else if(send.invoice_id == 0) err('Укажите с какого счёта производится оплата.');
+			else if(!REGEXP_CENA.test(send.sum)) { err('Некорректно указана сумма.'); $('#sum').focus(); }
 			else {
 				dialog.process();
 				$.post(AJAX_WS, send, function (res) {
@@ -2776,16 +2735,16 @@ $(document)
 					}
 				}, 'json');
 			}
-			if(msg)
-				dialog.bottom.vkHint({
-					msg:'<SPAN class="red">' + msg + '</SPAN>',
-					remove:1,
-					indent:40,
-					show:1,
-					top:-53,
-					left:103,
-					correct:0
-				});
+		}
+		function err(msg) {
+			dialog.bottom.vkHint({
+				msg:'<SPAN class="red">' + msg + '</SPAN>',
+				remove:1,
+				indent:40,
+				show:1,
+				top:-47,
+				left:103
+			});
 		}
 	})
 	.on('click', '.expense .img_del', function() {
@@ -2839,13 +2798,13 @@ $(document)
 			category._select({
 				width:180,
 				title0:'Не указана',
-				spisok:RASHOD_CATEGORY,
+				spisok:EXPENSE_SPISOK,
 				funcAdd:expenseCategoryAdd
 			});
 
 			worker._select({
 				title0:'Не выбран',
-				spisok:RASHOD_VIEWER
+				spisok:WORKERS
 			});
 
 			kassa._radio({
@@ -3402,7 +3361,7 @@ $(document)
 			$('#category')._select({
 				width:140,
 				title0:'Любая категория',
-				spisok:RASHOD_CATEGORY,
+				spisok:EXPENSE_SPISOK,
 				func:expenseSpisok
 			});
 			$('#worker')._select({

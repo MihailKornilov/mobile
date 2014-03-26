@@ -1,5 +1,9 @@
 .sa-index{padding:20px 0 100px 20px}
 
+.sa-tab{border-spacing:10px}
+.sa-tab .label{text-align:right}
+.sa-tab #name{width:250px}
+
 .sa-ws{padding:10px 15px}
 .sa-ws .count{margin-bottom:5px}
 .sa-ws .id{text-align:right}
@@ -67,6 +71,12 @@
 .sa-equip .eq-head{margin-bottom:10px}
 .sa-equip-add{border-spacing:8px}
 .sa-equip-add input{width:200px}
+
+.sa-fault{margin-bottom:20px}
+.sa-fault ._spisok{margin:1px 20px}
+.sa-fault .name{width:250px}
+.sa-fault td.name{cursor:move}
+.sa-fault .set{width:35px}
 
 .sa-color ._spisok{margin:10px 20px}
 .sa-color .zayav{text-align:center}

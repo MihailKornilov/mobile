@@ -72,7 +72,9 @@ function _cacheClear($ws_id=WS_ID) {
 	xcache_unset(CACHE_PREFIX.'device_place');
 	xcache_unset(CACHE_PREFIX.'device_status');
 	xcache_unset(CACHE_PREFIX.'device_equip');
-	xcache_unset(CACHE_PREFIX.'rashod');
+	xcache_unset(CACHE_PREFIX.'invoice');
+	xcache_unset(CACHE_PREFIX.'income');
+	xcache_unset(CACHE_PREFIX.'expense');
 	if($ws_id) {
 		xcache_unset(CACHE_PREFIX.'remind_active'.$ws_id);
 		xcache_unset(CACHE_PREFIX.'workshop_'.$ws_id);
@@ -208,10 +210,13 @@ function GvaluesCreate() {//Составление файла G_values.js
 	$save = 'function _toAss(s){var a=[];for(var n=0;n<s.length;a[s[n].uid]=s[n].title,n++);return a}'.
 	"\n".'var COLOR_SPISOK='.query_selJson("SELECT `id`,`name` FROM `setup_color_name` ORDER BY `name` ASC").','.
 		"\n".'COLORPRE_SPISOK='.query_selJson("SELECT `id`,`predlog` FROM `setup_color_name` ORDER BY `predlog` ASC").','.
-		"\n".'RASHOD_CATEGORY='.query_selJson("SELECT `id`,`name` FROM `setup_rashod_category` ORDER BY `name` ASC").','.
-		"\n".'FAULT_SPISOK='.query_selJson("SELECT `id`,`name` FROM setup_fault ORDER BY `sort`").','.
-		"\n".'FAULT_ASS=_toAss(FAULT_SPISOK),'.
-		"\n".'ZPNAME_SPISOK='.query_selJson("SELECT `id`,`name` FROM setup_zp_name ORDER BY `name`").','.
+		"\n".'INVOICE_SPISOK='.query_selJson("SELECT `id`,`name` FROM `invoice` ORDER BY `id`").','.
+		"\n".'INCOME_SPISOK='.query_selJson("SELECT `id`,`name` FROM `setup_income` ORDER BY `sort`").','.
+		"\n".'EXPENSE_SPISOK='.query_selJson("SELECT `id`,`name` FROM `setup_expense` ORDER BY `sort` ASC").','.
+		"\n".'EXPENSE_WORKER='.query_ptpJson("SELECT `id`,`show_worker` FROM `setup_expense` WHERE `show_worker`").','.
+		//"\n".'FAULT_SPISOK='.query_selJson("SELECT `id`,`name` FROM `setup_fault` ORDER BY `sort`").','.
+		"\n".'FAULT_ASS='.query_ptpJson("SELECT `id`,`name` FROM `setup_fault` ORDER BY `sort`").','.
+		"\n".'ZPNAME_SPISOK='.query_selJson("SELECT `id`,`name` FROM `setup_zp_name` ORDER BY `name`").','.
 		"\n".'DEVSTATUS_SPISOK='.query_selJson("SELECT `id`,`name` FROM `setup_device_status` ORDER BY `sort`").','.
 		"\n".'DEVPLACE_SPISOK='.query_selJson("SELECT `id`,`name` FROM `setup_device_place` ORDER BY `sort`").','.
 		"\n".'DEV_SPISOK='.query_selJson("SELECT `id`,`name` FROM `base_device` ORDER BY `sort`").',DEV_ASS=_toAss(DEV_SPISOK),'.

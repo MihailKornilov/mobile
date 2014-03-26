@@ -404,9 +404,10 @@ table.zayavNomerTab td{vertical-align:top}
 .expense .years{margin-top:20px}
 .expense #monthSum_radio .sum{float:right}
 .expense #monthSum_radio .off .sum{color:#888}
-#expense-add-tab{border-spacing:8px}
-#expense-add-tab #kassa_radio div{display:inline-block;margin-right:15px}
-#expense-add-tab #about{width:190px}
+#expense-add-tab{border-spacing:10px}
+#expense-add-tab .label{text-align:right}
+#expense-add-tab #prim{width:250px}
+#expense-add-tab .img_edit{position:relative;top:-4px;left:4px}
 
 
 
@@ -453,6 +454,11 @@ table.zayavNomerTab td{vertical-align:top}
 #setup .right{padding:0;width:170px;border-left:0}
 #setup .rightLink a.sel{border-color:#6B8EB5}
 
+.setup-tab{border-spacing:10px}
+.setup-tab .label{text-align:right}
+.setup-tab #name{width:210px}
+.setup-tab textarea{width:210px;height:70px}
+
 #setup_worker .headName{margin-bottom:15px}
 #setup_worker .unit,#setup_worker_add .res{border-spacing:10px;border:#DDE solid 1px;width:300px;margin:6px 0 6px 20px}
 #setup_worker .unit td,#setup_worker_add .res td{vertical-align:top}
@@ -478,21 +484,13 @@ table.zayavNomerTab td{vertical-align:top}
 #setup_worker_add #sex_radio div{display:inline-block;margin-right:15px}
 
 
-
-
-
-
-
-
-
-#setup_main{margin:20px 0}
-#setup_main .tab{margin:10px 0 30px 40px;border-spacing:10px}
-#setup_main #org_name{width:300px;margin-right:5px}
-#setup_main .saved{color:#777}
-#setup_main #devs{margin:15px 250px 40px 189px}
-#setup_main #devs div{display:block;margin-bottom:4px}
-#setup_main #devs span{position:absolute}
-#setup_main #devs em{
+#setup_info .tab{margin:10px 0 30px 0;border-spacing:10px}
+#setup_info .tab .label{text-align:right}
+#setup_info #org_name{width:230px}
+#setup_info #devs{margin:15px 0 40px 149px}
+#setup_info #devs div{display:block;margin-bottom:4px}
+#setup_info #devs span{position:absolute}
+#setup_info #devs em{
 	display:inline-block;
 	width:140px;
 	text-align:right;
@@ -500,9 +498,31 @@ table.zayavNomerTab td{vertical-align:top}
 	left:-163px;
 	color:#777
 }
-#setup_main #devs em.err{color:#f44}
-#setup_main .del_inf{margin:2px 0 10px 20px}
-#setup_main #ws_del{margin-left:189px}
+#setup_info #devs em.err{color:#f44}
+#setup_info .del_inf{margin:2px 0 10px 20px}
+#setup_info #info_del{margin-left:149px}
+
+#setup_invoice .name{vertical-align:top;width:170px}
+#setup_invoice .type{vertical-align:top}
+#setup_invoice pre{color:#777;font-size:10px;margin:3px 7px}
+
+#setup_income .name{width:160px}
+#setup_income td.name{cursor:move}
+#setup_income .money{width:60px;text-align:center}
+#setup_income .del{color:#888;cursor:help}
+#setup_income .set{width:40px}
+
+#setup_expense .name{width:180px}
+#setup_expense td.name{cursor:move}
+#setup_expense .worker{width:80px;text-align:center}
+#setup_expense .use{width:55px;text-align:center}
+#setup_expense .set{width:35px}
+
+
+
+
+
+
 
 .sa_viewer_msg{padding:10px 20px;border:#c99 solid 1px;background-color:#fdd}
 .sa_viewer_msg .leave{float:right}

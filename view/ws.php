@@ -54,26 +54,39 @@ function _mainLinks() {
 	$html .= $send;
 }//_mainLinks()
 
-function _rashod($item_id=false) {//Список изделий для заявок
-	if(!defined('RASHOD_LOADED') || $item_id === false) {
-		$key = CACHE_PREFIX.'rashod';
+function _expense($type_id=false, $i='name') {//Список изделий для заявок
+	if(!defined('EXPENSE_LOADED') || $type_id === false) {
+		$key = CACHE_PREFIX.'expense';
 		$arr = xcache_get($key);
 		if(empty($arr)) {
-			$sql = "SELECT `id`,`name` FROM `setup_rashod_category` ORDER BY `name` ASC";
+			$sql = "SELECT * FROM `setup_expense` ORDER BY `sort`";
 			$q = query($sql);
 			while($r = mysql_fetch_assoc($q))
-				$arr[$r['id']] = $r['name'];
+				$arr[$r['id']] = array(
+					'name' => $r['name'],
+					'worker' => $r['show_worker']
+				);
 			xcache_set($key, $arr, 86400);
 		}
-		if(!defined('RASHOD_LOADED')) {
-			foreach($arr as $id => $name)
-				define('RASHOD_'.$id, $name);
-			define('RASHOD_0', '');
-			define('RASHOD_LOADED', true);
+		if(!defined('EXPENSE_LOADED')) {
+			foreach($arr as $id => $r) {
+				define('EXPENSE_'.$id, $r['name']);
+				define('EXPENSE_WORKER_'.$id, $r['worker']);
+			}
+			define('EXPENSE_0', '');
+			define('EXPENSE_WORKER_0', 0);
+			define('EXPENSE_LOADED', true);
 		}
 	}
-	return $item_id !== false ? constant('RASHOD_'.$item_id) : $arr;
-}//_rashod()
+	if($type_id === false)
+		return $arr;
+	if($i == 'worker')
+		return constant('EXPENSE_WORKER_'.$type_id);
+	return constant('EXPENSE_'.$type_id);
+}//_expense()
+
+
+
 
 // ---===! client !===--- Секция клиентов
 
@@ -1616,6 +1629,8 @@ function history_insert($arr) {
 			   `type`,
 			   `value`,
 			   `value1`,
+			   `value2`,
+			   `value3`,
 			   `client_id`,
 			   `zayav_id`,
 			   `zp_id`,
@@ -1625,6 +1640,8 @@ function history_insert($arr) {
 				".$arr['type'].",
 				'".(isset($arr['value']) ? addslashes($arr['value']) : '')."',
 				'".(isset($arr['value1']) ? addslashes($arr['value1']) : '')."',
+				'".(isset($arr['value2']) ? addslashes($arr['value2']) : '')."',
+				'".(isset($arr['value3']) ? addslashes($arr['value3']) : '')."',
 				".(isset($arr['client_id']) ? $arr['client_id'] : 0).",
 				".(isset($arr['zayav_id']) ? $arr['zayav_id'] : 0).",
 				".(isset($arr['zp_id']) ? $arr['zp_id'] : 0).",
@@ -1690,8 +1707,21 @@ function history_types($v) {
 			return 'Восстановлено начисление на сумму <b>'.$v['value'].'</b> руб. '.
 				($v['value1'] ? '('.$v['value1'].')' : '').
 				' у заявки '.$v['zayav_link'].'.';
-		case 28: return 'В настройках: добавление нового сотрудника <u>'._viewer($v['value'], 'name').'</u>.';
-		case 29: return 'В настройках: удаление сотрудника <u>'._viewer($v['value'], 'name').'</u>.';
+
+
+		case 1001: return 'В настройках: добавление нового сотрудника <u>'._viewer($v['value'], 'name').'</u>.';
+		case 1002: return 'В настройках: удаление сотрудника <u>'._viewer($v['value'], 'name').'</u>.';
+		case 1003: return 'В настройках: изменение названия мастерской:<div class="changes">'.$v['value'].'</div>';
+		case 1004: return 'В настройках: мастерская удалена.';
+		case 1005: return 'В настройках: внесение новой категории расходов мастерской <u>'.$v['value'].'</u>.';
+		case 1006: return 'В настройках: изменение данных категории расходов мастерской <u>'.$v['value'].'</u>:<div class="changes">'.$v['value1'].'</div>';
+		case 1007: return 'В настройках: удаление категории расходов мастерской <u>'.$v['value'].'</u>.';
+		case 1008: return 'В настройках: внесение нового счёта <u>'.$v['value'].'</u>.';
+		case 1009: return 'В настройках: изменение данных счёта <u>'.$v['value'].'</u>:<div class="changes">'.$v['value1'].'</div>';
+		case 1010: return 'В настройках: удаление счёта <u>'.$v['value'].'</u>.';
+		case 1011: return 'В настройках: внесение нового вида платежа "'.$v['value'].'".';
+		case 1012: return 'В настройках: изменение вида платежа "'.$v['value'].'":<div class="changes">'.$v['value1'].'</div>';
+		case 1013: return 'В настройках: удаление вида платежа "'.$v['value'].'".';
 
 		default: return $v['type'];
 	}
@@ -2157,7 +2187,7 @@ function expenseMonthSum($year=0, $month=0, $category=0, $worker=0) {
 			  AND `sum`<0
 			  AND `dtime_add` LIKE '".$year."-%'
 			  ".($worker ? " AND `worker_id`=".$worker : '')."
-			  ".($category ? " AND `rashod_category`=".$category : '')."
+			  ".($category ? " AND `expense_id`=".$category : '')."
 			GROUP BY DATE_FORMAT(`dtime_add`,'%m')
 			ORDER BY `dtime_add` ASC";
 	$q = query($sql);
@@ -2172,7 +2202,7 @@ function expenseMonthSum($year=0, $month=0, $category=0, $worker=0) {
 function expense() {
 	return
 	'<script type="text/javascript">'.
-		'var RASHOD_VIEWER='.query_selJson("SELECT `viewer_id`,CONCAT(`first_name`,' ',`last_name`) FROM `vk_user` WHERE `ws_id`=".WS_ID).';'.
+		'var WORKERS='.query_selJson("SELECT `viewer_id`,CONCAT(`first_name`,' ',`last_name`) FROM `vk_user` WHERE `ws_id`=".WS_ID).';'.
 	'</script>'.
 	'<div class="headName">Список расходов мастерской<a class="add">Внести новый расход</a></div>'.
 	'<div id="spisok">'.expense_spisok().'</div>';
@@ -2182,11 +2212,11 @@ function expense_spisok($page=1, $month=false, $category=0, $worker=0) {
 		$month = strftime('%Y-%m', time());
 	$limit = 30;
 	$cond = "`ws_id`=".WS_ID."
-		AND `deleted`=0
+		AND !`deleted`
 		AND `sum`<0
 		AND `dtime_add` LIKE '".$month."-%'
 		".($worker ? " AND `worker_id`=".$worker : '')."
-		".($category ? ' AND `rashod_category`='.$category : '');
+		".($category ? ' AND `expense_id`='.$category : '');
 	$sql = "SELECT
 				COUNT(`id`) AS `all`,
 				SUM(`sum`) AS `sum`
@@ -2229,7 +2259,7 @@ function expense_spisok($page=1, $month=false, $category=0, $worker=0) {
 			$dtimeTitle .= "\n".'Удалил: '.$r['viewer_del']."\n".FullDataTime($r['dtime_del']);
 		$send .= '<tr'.($r['deleted'] ? ' class="deleted"' : '').'>'.
 			'<td class="sum"><b>'.abs($r['sum']).'</b>'.
-			'<td>'.($r['rashod_category'] ? '<span class="type">'._rashod($r['rashod_category']).($r['prim'] || $r['worker_id'] ? ':' : '').'</span> ' : '').
+			'<td>'.($r['expense_id'] ? '<span class="type">'._expense($r['expense_id']).($r['prim'] || $r['worker_id'] ? ':' : '').'</span> ' : '').
 				   ($r['worker_id'] ? _viewer($r['worker_id'], 'link').
 				   ($r['prim'] ? ', ' : '') : '').$r['prim'].
 			'<td class="dtime" title="'.$dtimeTitle.'">'.FullDataTime($r['dtime_add']).
@@ -2367,6 +2397,7 @@ function setup() {
 		'info' => 'Информация о мастерской',
 		'worker' => 'Сотрудники',
 		'invoice' => 'Счета',
+		'income' => 'Виды платежей',
 		'expense' => 'Категории расходов'
 	);
 
@@ -2375,10 +2406,11 @@ function setup() {
 	switch($d) {
 		default: $d = 'my';
 		case 'my': $left = 'Мои настройки'; break;
+		case 'info': $left = setup_info(); break;
 		case 'worker': $left = setup_worker(); break;
-		case 'info': $left = 'Информация о мастерской'; break;
-		case 'invoice': $left = 'Счета'; break;
-		case 'expense': $left = 'Категории расходов'; break;
+		case 'invoice': $left = setup_invoice(); break;
+		case 'income': $left = setup_income(); break;
+		case 'expense': $left = setup_expense(); break;
 	}
 	$links = '';
 	foreach($pages as $p => $name)
@@ -2391,6 +2423,41 @@ function setup() {
 		'</table>'.
 	'</div>';
 }//setup()
+
+function setup_info() {
+	$sql = "SELECT * FROM `workshop` WHERE `id`=".WS_ID." LIMIT 1";
+	if(!$ws = mysql_fetch_assoc(query($sql))) {
+		_cacheClear();
+		header('Location:'.URL);
+	}
+
+	$devs = array();
+	foreach(explode(',', $ws['devs']) as $d)
+		$devs[$d] = $d;
+
+	$sql = "SELECT `id`,`name_mn` FROM `base_device` ORDER BY `sort`";
+	$q = query($sql);
+	$checkDevs = '';
+	while($r = mysql_fetch_assoc($q))
+		$checkDevs .= _check($r['id'], $r['name_mn'], isset($devs[$r['id']]) ? 1 : 0);
+	return
+	'<div id="setup_info">'.
+		'<div class="headName">Основная информация</div>'.
+		'<TABLE class="tab">'.
+			'<TR><TD class="label">Название организации:<TD><INPUT type="text" id="org_name" maxlength="100" value="'.$ws['org_name'].'">'.
+			'<TR><TD class="label">Город:<TD>'.$ws['city_name'].', '.$ws['country_name'].
+			'<TR><TD class="label">Главный администратор:<TD><B>'._viewer($ws['admin_id'], 'name').'</B>'.
+			'<TR><TD><TD><div class="vkButton" id="info_save"><button>Сохранить</button></div>'.
+		'</TABLE>'.
+
+		'<div class="headName">Категории ремонтируемых устройств</div>'.
+		'<div id="devs">'.$checkDevs.'</div>'.
+
+		'<div class="headName">Удаление мастерской</div>'.
+		'<div class="del_inf">Мастерская, а также все данные удаляются без возможности восстановления.</div>'.
+		'<div class="vkButton" id="info_del"><button>Удалить мастерскую</button></div>'.
+	'</div>';
+}//setup_info()
 
 function setup_worker() {
 	return
@@ -2419,71 +2486,153 @@ function setup_worker_spisok() {
 	return $send;
 }//setup_worker_spisok()
 
-
-
-function setup_main() {
-	$sql = "SELECT * FROM `workshop` WHERE `id`=".WS_ID." LIMIT 1";
-	if(!$ws = mysql_fetch_assoc(query($sql))) {
-		_cacheClear();
-		header('Location:'.URL);
-	}
-
-	$ex = explode(',', $ws['devs']);
-	$devs = array();
-	foreach($ex as $d)
-		$devs[$d] = $d;
-
-	$sql = "SELECT `id`,`name_mn` FROM `base_device` ORDER BY `sort`";
+function setup_invoice() {
+	return
+	'<div id="setup_invoice">'.
+		'<div class="headName">Управление счетами<a class="add">Новый счёт</a></div>'.
+		'<div class="spisok">'.setup_invoice_spisok().'</div>'.
+	'</div>';
+}//setup_invoice()
+function setup_invoice_spisok() {
+	$sql = "SELECT * FROM `invoice` WHERE `ws_id`=".WS_ID." ORDER BY `id`";
 	$q = query($sql);
-	$checkDevs = '';
+	if(!mysql_num_rows($q))
+		return 'Список пуст.';
+
+	$spisok = array();
 	while($r = mysql_fetch_assoc($q))
-		$checkDevs .= _check($r['id'], $r['name_mn'], isset($devs[$r['id']]) ? 1 : 0);
+		$spisok[$r['id']] = $r;
 
-	return
-	'<script type="text/javascript">'.
-		'G.org_name = "'.$ws['org_name'].'";'.
-	'</script>'.
-	'<DIV id="setup_main">'.
-		'<DIV class="headName" id="headName">Информация о мастерской</DIV>'.
-		'<TABLE class="tab">'.
-			'<TR><TD class="label">Название организации:<TD><INPUT type="text" id="org_name" maxlength="100" value="'.$ws['org_name'].'">'.
-			'<TR><TD class="label">Город:<TD>'.$ws['city_name'].', '.$ws['country_name'].
-			'<TR><TD class="label">Главный администратор:<TD><B>'._viewer($ws['admin_id'], 'name').'</B>'.
-		'</TABLE>'.
-
-		'<DIV class="headName">Категории ремонтируемых устройств</DIV>'.
-		'<DIV id="devs">'.$checkDevs.'</DIV>'.
-
-		'<DIV class="headName">Удаление мастерской</DIV>'.
-		'<div class="del_inf">Мастерская, а также все данные удаляются без возможности восстановления.</div>'.
-		'<DIV class="vkButton" id="ws_del"><BUTTON>Удалить мастерскую</BUTTON></DIV>'.
-	'</DIV>';
-}//setup_main()
-
-function setup_workers() {
-	return
-	'<DIV id="setup_workers">'.
-		'<DIV class="headName">Сотрудники мастерской<a class="add">Добавить нового сотрудника</a></DIV>'.
-		'<DIV id="spisok">'.setup_workers_spisok().'</DIV>'.
-	'</DIV>';
-}//setup_workers()
-function setup_workers_spisok() {
-	$sql = "SELECT * FROM `vk_user` WHERE `ws_id`=".WS_ID." ORDER BY `dtime_add`";
+	$sql = "SELECT *
+	        FROM `setup_income`
+	        WHERE `ws_id`=".WS_ID."
+	          AND `invoice_id`
+	        ORDER BY `sort`";
 	$q = query($sql);
-	$send = '';
 	while($r = mysql_fetch_assoc($q)) {
-		$send .=
-		'<table class="unit" val="'.$r['viewer_id'].'">'.
-			'<tr><td class="photo"><img src="'.$r['photo'].'">'.
-				'<td>'.
-					(WS_ADMIN != $r['viewer_id'] ? '<div class="img_del"></div>' : '').
-					'<a class="name">'.$r['first_name'].' '.$r['last_name'].'</a>'.
-					'<div class="adm">'.
-						($r['admin'] ?
-							'Администратор'.(WS_ADMIN != $r['viewer_id'] ? ' <a class="adm_cancel">отменить</a>' : '')
-							: '<a class="adm_set">Назначить администратором</a>').
-					'</div>'.
-		'</table>';
+		$spisok[$r['invoice_id']]['type_name'][] = $r['name'];
+		$spisok[$r['invoice_id']]['type_id'][] = $r['id'];
 	}
+
+	$send =
+		'<table class="_spisok">'.
+			'<tr><th class="name">Наименование'.
+				'<th class="type">Виды платежей'.
+				'<th class="set">';
+	foreach($spisok as $id => $r)
+		$send .=
+			'<tr val="'.$id.'">'.
+				'<td class="name">'.
+					'<div>'.$r['name'].'</div>'.
+					'<pre>'.$r['about'].'</pre>'.
+				'<td class="type">'.
+					(isset($r['type_name']) ? implode('<br />', $r['type_name']) : '').
+					'<input type="hidden" class="type_id" value="'.(isset($r['type_id']) ? implode(',', $r['type_id']) : 0).'" />'.
+				'<td class="set">'.
+					'<div class="img_edit'._tooltip('Изменить', -33).'</div>';
+					//'<div class="img_del"></div>'
+	$send .= '</table>';
 	return $send;
-}//setup_workers()
+}//setup_invoice_spisok()
+
+function setup_income() {
+	return
+	'<div id="setup_income">'.
+		'<div class="headName">Настройки видов платежей<a class="add">Добавить</a></div>'.
+		'<div class="spisok">'.setup_income_spisok().'</div>'.
+	'</div>';
+}//setup_income()
+function setup_income_spisok() {
+	$sql = "SELECT `i`.*,
+				   COUNT(`m`.`id`) AS `money`
+			FROM `setup_income` AS `i`
+			  LEFT JOIN `money` AS `m`
+			  ON `i`.`id`=`m`.`income_id`
+			WHERE `i`.`ws_id`=".WS_ID."
+			GROUP BY `i`.`id`
+			ORDER BY `i`.`sort`";
+	$q = query($sql);
+	if(!mysql_num_rows($q))
+		return 'Список пуст.';
+
+	$income = array();
+	while($r = mysql_fetch_assoc($q))
+		$income[$r['id']] = $r;
+
+	$sql = "SELECT `i`.`id`,
+				   COUNT(`m`.`id`) AS `del`
+			FROM `setup_income` AS `i`,
+				 `money` AS `m`
+			WHERE `i`.`ws_id`=".WS_ID."
+			  AND `i`.`id`=`m`.`income_id`
+			  AND `m`.`deleted`
+			GROUP BY `i`.`id`";
+	$q = query($sql);
+	while($r = mysql_fetch_assoc($q))
+		$income[$r['id']]['del'] = $r['del'];
+
+	$send =
+		'<table class="_spisok">'.
+			'<tr><th class="name">Наименование'.
+				'<th class="money">Кол-во<br />платежей'.
+				'<th class="set">'.
+		'</table>'.
+		'<dl class="_sort" val="setup_income">';
+	foreach($income as $id => $r) {
+		$money = $r['money'] ? '<b>'.$r['money'].'</b>' : '';
+		$money .= isset($r['del']) ? ' <span class="del" title="В том числе удалённые">('.$r['del'].')</span>' : '';
+		$send .='<dd val="'.$id.'">'.
+			'<table class="_spisok">'.
+				'<tr><td class="name">'.$r['name'].
+					'<td class="money">'.$money.
+					'<td class="set">'.
+						'<div class="img_edit'._tooltip('Изменить', -33).'</div>'.
+						(!$r['money'] && $id > 1 ? '<div class="img_del'._tooltip('Удалить', -29).'</div>' : '').
+			'</table>';
+	}
+	$send .= '</dl>';
+	return $send;
+}//setup_income_spisok()
+
+function setup_expense() {
+	return
+	'<div id="setup_expense">'.
+		'<div class="headName">Категории расходов мастерской<a class="add">Новая категория</a></div>'.
+		'<div id="spisok">'.setup_expense_spisok().'</div>'.
+	'</div>';
+}//setup_expense()
+function setup_expense_spisok() {
+	$sql = "SELECT `s`.*,
+				   COUNT(`m`.`id`) AS `use`
+			FROM `setup_expense` AS `s`
+			  LEFT JOIN `money` AS `m`
+			  ON `s`.`id`=`m`.`expense_id` AND !`m`.`deleted`
+			WHERE `s`.`ws_id`=".WS_ID."
+			GROUP BY `s`.`id`
+			ORDER BY `s`.`sort`";
+	$q = query($sql);
+	if(!mysql_num_rows($q))
+		return 'Список пуст.';
+
+	$send =
+		'<table class="_spisok">'.
+			'<tr><th class="name">Наименование'.
+				'<th class="worker">Показывать<br />список<br />сотрудников'.
+				'<th class="use">Кол-во<br />записей'.
+				'<th class="set">'.
+		'</table>'.
+		'<dl class="_sort" val="setup_expense">';
+
+	while($r = mysql_fetch_assoc($q))
+		$send .='<dd val="'.$r['id'].'">'.
+			'<table class="_spisok">'.
+				'<tr><td class="name">'.$r['name'].
+					'<td class="worker">'.($r['show_worker'] ? 'да' : '').
+					'<td class="use">'.($r['use'] ? $r['use'] : '').
+					'<td class="set">'.
+						'<div class="img_edit'._tooltip('Изменить', -33).'</div>'.
+						(!$r['use'] ? '<div class="img_del"></div>' : '').
+			'</table>';
+	$send .= '</dl>';
+	return $send;
+}//setup_expense_spisok()
