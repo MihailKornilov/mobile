@@ -462,17 +462,6 @@ var AJAX_WS = SITE + '/ajax/ws.php?' + VALUES,
 				$('#monthList').html(res.mon);
 			}
 		}, 'json');
-	},
-	reportKassaLoad = function() {
-		var send = {
-			op:'report_kassa_load',
-			del_show:$('#kassaShowDel').val() == 1 ? 1 : 0
-		};
-		$('#mainLinks').addClass('busy');
-		$.post(AJAX_WS, send, function (res) {
-			$('#report_kassa #spisok').html(res.html);
-			$('#mainLinks').removeClass('busy');
-		}, 'json');
 	};
 
 $.fn.clientSel = function(o) {
@@ -1035,8 +1024,8 @@ $(document)
 		var html = '<TABLE class="remind_add_tab">' +
 			'<tr><td class="label">Клиент:<TD><b>' + CLIENT.fio + '</b>' +
 			'<tr><td class="label top">Описание задания:<TD><TEXTAREA id="txt"></TEXTAREA>' +
-			'<tr><td class="label">Крайний день выполнения:<TD><INPUT type="hidden" id="data">' +
-			'<tr><td class="label">Личное:<TD><INPUT type="hidden" id="private">' +
+			'<tr><td class="label">Крайний день выполнения:<td><input type="hidden" id="data">' +
+			'<tr><td class="label">Личное:<td><input type="hidden" id="private">' +
 			'</TABLE>';
 		var dialog = _dialog({
 				top:60,
@@ -1168,10 +1157,10 @@ $(document)
 
 	.on('click', '#zayavInfo .zedit', function() {
 		var html = '<TABLE class="zayav-info-edit">' +
-			'<tr><td class="label r">Клиент:		<TD><INPUT type="hidden" id="client_id" value="' + ZAYAV.client_id + '">' +
+			'<tr><td class="label r">Клиент:		<td><input type="hidden" id="client_id" value="' + ZAYAV.client_id + '">' +
 			'<tr><td class="label r top">Устройство:<TD><TABLE><TD id="dev"><TD id="device_image"></TABLE>' +
-			'<tr><td class="label r">IMEI:		  <TD><INPUT type="text" id="imei" maxlength="20" value="' + ZAYAV.imei + '">' +
-			'<tr><td class="label r">Серийный номер:<TD><INPUT type="text" id="serial" maxlength="30" value="' + ZAYAV.serial + '">' +
+			'<tr><td class="label r">IMEI:		  <td><input type="text" id="imei" maxlength="20" value="' + ZAYAV.imei + '">' +
+			'<tr><td class="label r">Серийный номер:<td><input type="text" id="serial" maxlength="30" value="' + ZAYAV.serial + '">' +
 			'<tr><td class="label r">Цвет:' +
 				'<td><INPUT type="hidden" id="color_id" value="' + ZAYAV.color_id + '" />' +
 					'<span class="color_dop dn"><tt>-</tt><INPUT TYPE="hidden" id="color_dop" value="' + ZAYAV.color_dop + '" /></span>' +
@@ -1276,8 +1265,8 @@ $(document)
 		var html = '<TABLE class="remind_add_tab">' +
 			'<tr><td class="label">Заявка:<TD>№<b>' + ZAYAV.nomer + '</b>' +
 			'<tr><td class="label top">Описание задания:<TD><TEXTAREA id="txt"></TEXTAREA>' +
-			'<tr><td class="label">Крайний день выполнения:<TD><INPUT type="hidden" id="data">' +
-			'<tr><td class="label">Личное:<TD><INPUT type="hidden" id="private">' +
+			'<tr><td class="label">Крайний день выполнения:<td><input type="hidden" id="data">' +
+			'<tr><td class="label">Личное:<td><input type="hidden" id="private">' +
 		'</TABLE>';
 		var dialog = _dialog({
 				top:60,
@@ -1338,14 +1327,14 @@ $(document)
 		var html = '<TABLE class="zayav_accrual_add">' +
 				'<tr><td class="label">Сумма: <TD><input type="text" id="sum" class="money" maxlength="5" /> руб.' +
 				'<tr><td class="label">Примечание:<em>(не обязательно)</em><TD><input type="text" id="prim" maxlength="100" />' +
-				'<tr><td class="label">Статус заявки: <TD><INPUT type="hidden" id="acc_status" value="2" />' +
-				'<tr><td class="label">Состояние устройства:<TD><INPUT type="hidden" id="acc_dev_status" value="5" />' +
-				'<tr><td class="label">Добавить напоминание:<TD><INPUT type="hidden" id="acc_remind" />' +
+				'<tr><td class="label">Статус заявки: <td><input type="hidden" id="acc_status" value="2" />' +
+				'<tr><td class="label">Состояние устройства:<td><input type="hidden" id="acc_dev_status" value="5" />' +
+				'<tr><td class="label">Добавить напоминание:<td><input type="hidden" id="acc_remind" />' +
 			'</TABLE>' +
 
 			'<TABLE class="zayav_accrual_add remind">' +
 				'<tr><td class="label">Содержание:<TD><input type="text" id="reminder_txt" value="Позвонить и сообщить о готовности.">' +
-				'<tr><td class="label">Дата:<TD><INPUT type="hidden" id="reminder_day">' +
+				'<tr><td class="label">Дата:<td><input type="hidden" id="reminder_day">' +
 			'</TABLE>';
 		var dialog = _dialog({
 			top:60,
@@ -1440,71 +1429,6 @@ $(document)
 				zayavInfoMoneyUpdate(res);
 			}
 		}, 'json');
-	})
-	.on('click', '#zayavInfo .op_add', function() {
-		var html = '<TABLE class="zayav_oplata_add">' +
-			'<TR><TD class="label">Сумма:<TD><input type="text" id="sum" class="money" maxlength="5"> руб.' +
-			'<TR><TD class="label">Деньги поступили в кассу?:<TD><input type="hidden" id="kassa" value="-1">' +
-			'<TR><TD class="label">Местонахождение устройства:<TD><input type="hidden" id="dev_place" value="2">' +
-			'<TR><TD class="label">Примечание:<em>(не обязательно)</em><TD><input type="text" id="prim">' +
-		'</TABLE>';
-		var dialog = _dialog({
-			top:60,
-			width:440,
-			head:'Заявка №' + ZAYAV.nomer + ' - Внесение платежа',
-			content:html,
-			submit:submit
-		});
-		$('#sum').focus();
-		$('#sum,#prim').keyEnter(submit);
-		$('#kassa')._radio({
-			spisok:[
-				{uid:1, title:'да'},
-				{uid:0, title:'нет'}
-			]
-		});
-		$('#kassa_radio').vkHint({
-			msg:'Если это наличный платёж<br />и деньги остаются в мастерской,<br />укажите "да".',
-			top:-83,
-			left:-60,
-			delayShow:1000
-		});
-		$('#dev_place')._dropdown({spisok:DEVPLACE_SPISOK});
-		function submit() {
-			var msg,
-				send = {
-					op:'zayav_oplata_add',
-					zayav_id:ZAYAV.id,
-					sum:$('#sum').val(),
-					kassa:$('#kassa').val(),
-					prim:$.trim($('#prim').val()),
-					dev_place:$('#dev_place').val()
-				};
-			if(!REGEXP_NUMERIC.test(send.sum)) { msg = 'Некорректно указана сумма.'; $('#sum').focus(); }
-			else if(send.kassa == -1) msg = 'Укажите, деньги поступили в кассу или нет.';
-			else {
-				dialog.process();
-				$.post(AJAX_WS, send, function (res) {
-					dialog.abort();
-					if(res.success) {
-						dialog.close();
-						_msg('Платёж успешно внесён!');
-						$('._spisok._money').append(res.html);
-						zayavInfoMoneyUpdate(res);
-					}
-				}, 'json');
-			}
-
-			if(msg)
-				dialog.bottom.vkHint({
-					msg:'<SPAN class="red">' + msg + '</SPAN>',
-					remove:1,
-					indent:40,
-					show:1,
-					top:-48,
-					left:135
-				});
-		}
 	})
 	.on('click', '#zayavInfo .status_place', function() {
 		var html = '<TABLE style="border-spacing:8px">' +
@@ -2010,11 +1934,13 @@ $(document)
 		if(zpAvaiNo(ZP.count))
 			return;
 		var html = '<table class="zp_dec_dialog">' +
-				'<tr><td class="label r">Количество:<td><input type="text" id="count" value="1"><span>(max: <b>' + ZP.count + '</b>)</span>' +
-				'<tr><td class="label r">Цена за ед.:<td><input type="text" id="cena" maxlength="8"> руб.' +
-				'<tr><td class="label r">Деньги поступили в кассу?:<td><input type="hidden" id="kassa" value="-1">' +
-				'<tr><td class="label r">Клиент:<td><input type="hidden" id="client_id">' +
-				'<tr><td class="label r top">Примечание:<td><textarea id="prim"></textarea>' +
+				'<tr><td class="label">Вид платежа:<td><input type="hidden" id="income_id" value="' + (INCOME_SPISOK.length == 1 ? INCOME_SPISOK[0].uid : 0) + '" />' +
+				'<tr><td class="label">Цена за ед.:<td><input type="text" id="cena" class="money" maxlength="11" /> руб.' +
+				'<tr><td class="label">Количество:' +
+					'<td><input type="text" id="count" value="1" maxlength="11" />' +
+						'<span>(max: <b>' + ZP.count + '</b>)</span>' +
+				'<tr><td class="label">Клиент:<td><input type="hidden" id="client_id">' +
+				'<tr><td class="label top">Примечание:<td><textarea id="prim"></textarea>' +
 				'</table>',
 			dialog = _dialog({
 				top:40,
@@ -2024,54 +1950,56 @@ $(document)
 				submit:submit
 			});
 
-		$('#count').focus().select();
-		$('#client_id').clientSel({add:1,width:240});
-		$('#kassa')._radio({
-			spisok:[
-				{uid:1, title:'да'},
-				{uid:0, title:'нет'}
-			]
+		$('#income_id')._select({
+			width:240,
+			title0:'Не выбран',
+			spisok:INCOME_SPISOK,
+			func:function() {
+				$('#cena').focus();
+			}
 		});
+		$('#cena').focus();
+		$('#client_id').clientSel({add:1,width:240});
+		$('#prim').autosize();
 
 		function submit() {
-			var msg,
-				send = {
-					op:'zp_sale',
-					zp_id:ZP.id,
-					count:$('#count').val(),
-					cena:$('#cena').val(),
-					kassa:$('#kassa').val(),
-					client_id:$('#client_id').val(),
-					prim:$('#prim').val()
-				};
-			if(!REGEXP_NUMERIC.test(send.count) || send.count > ZP.count || send.count == 0) {
-				msg = 'Некорректно указано количество.';
+			var send = {
+				op:'zp_sale',
+				zp_id:ZP.id,
+				income_id:$('#income_id').val(),
+				count:$('#count').val(),
+				cena:$('#cena').val(),
+				client_id:$('#client_id').val(),
+				prim:$('#prim').val()
+			};
+			if(send.income_id == 0) err('Не указан вид платежа');
+			else if(!REGEXP_NUMERIC.test(send.count) || send.count > ZP.count || send.count == 0) {
+				err('Некорректно указано количество');
 				$('#count').focus();
-			} else if(!REGEXP_CENA.test(send.cena)) {
-				msg = 'Некорректно указана цена.';
+			} else if(!REGEXP_CENA.test(send.cena) || send.cena == 0) {
+				err('Некорректно указана цена');
 				$('#cena').focus();
-			} else if(send.kassa == '-1') msg = 'Укажите, поступили деньги в кассу или нет.';
-			else {
+			} else {
 				dialog.process();
 				$.post(AJAX_WS, send, function(res) {
-					dialog.abort();
 					if(res.success) {
 						zpAvaiUpdate();
 						dialog.close();
 						_msg('Продажа запчасти произведена.');
-					}
+					} else
+						dialog.abort();
 				},'json');
 			}
-
-			if(msg)
-				dialog.bottom.vkHint({
-					msg:'<SPAN class="red">' + msg + '</SPAN>',
-					left:123,
-					top:-47,
-					indent:50,
-					show:1,
-					remove:1
-				});
+		}
+		function err(msg) {
+			dialog.bottom.vkHint({
+				msg:'<SPAN class="red">' + msg + '</SPAN>',
+				left:123,
+				top:-47,
+				indent:50,
+				show:1,
+				remove:1
+			});
 		}
 	})
 	.on('click', '#zpInfo .defect,#zpInfo .return,#zpInfo .writeoff', function() {
@@ -2333,14 +2261,14 @@ $(document)
 	})
 	.on('click', '.report_remind_add', function() {
 		var html = '<TABLE class="remind_add_tab">' +
-			'<tr><td class="label">Назначение:<TD><INPUT type="hidden" id="destination" />' +
+			'<tr><td class="label">Назначение:<td><input type="hidden" id="destination" />' +
 			'<tr><td class="label topi" id="target_name"><TD id="target">' +
 			'</TABLE>' +
 
 			'<TABLE class="remind_add_tab" id="tab_content">' +
 			'<tr><td class="label top">Задание:<TD><TEXTAREA id=txt></TEXTAREA>' +
-			'<tr><td class="label">Крайний день выполнения:<TD><INPUT type="hidden" id="data" />' +
-			'<tr><td class="label">Личное:<TD><INPUT type="hidden" id="priv" />' +
+			'<tr><td class="label">Крайний день выполнения:<td><input type="hidden" id="data" />' +
+			'<tr><td class="label">Личное:<td><input type="hidden" id="priv" />' +
 			'</TABLE>';
 		var dialog = _dialog({
 			top:30,
@@ -2470,7 +2398,7 @@ $(document)
 					'<TD>' + (res.client ? res.client : '') + (res.zayav ? res.zayav : '') +
 				'<tr><td class="label">Задание:<TD><B>' + res.txt + '</B>' +
 				'<tr><td class="label">Внёс:<TD>' + res.viewer + ', ' + res.dtime +
-				'<tr><td class="label top">Действие:<TD><INPUT type="hidden" id=action value="0">' +
+				'<tr><td class="label top">Действие:<td><input type="hidden" id=action value="0">' +
 				'</TABLE>' +
 
 				'<TABLE class="remind_action_tab" id="new_action">' +
@@ -2565,61 +2493,65 @@ $(document)
 				next.removeClass('busy');
 		}, 'json');
 	})
-	.on('click', '.income .add', function() {
+	.on('click', '.income-add', function() {
 		var html = '<TABLE id="income-add-tab">' +
-			'<tr><td class="label">Содержание:<TD><INPUT type="text" id="about" maxlength="100">' +
-			'<tr><td class="label">Сумма:<TD><INPUT type="text" id="sum" class="money" maxlength="8"> руб.' +
-			'<tr><td class="label">Деньги поступили в кассу?:<TD><INPUT type="hidden" id="kassa" value="-1">' +
+			'<input type="hidden" id="zayav_id" value="' + (window.ZAYAV ? ZAYAV.id : 0) + '" />' +
+			(window.ZAYAV ? '<tr><td class="label">Заявка:<td><b>№' + ZAYAV.nomer + '</b>' : '') +
+			'<tr><td class="label">Вид платежа:<td><input type="hidden" id="income_id" value="' + (INCOME_SPISOK.length == 1 ? INCOME_SPISOK[0].uid : 0) + '" />' +
+			'<tr><td class="label">Сумма:<td><input type="text" id="sum" class="money" maxlength="11" /> руб.' +
+			'<tr><td class="label">Описание:<td><input type="text" id="prim" maxlength="100" />' +
 			'</TABLE>';
 		var dialog = _dialog({
 				width:380,
-				head:'Внесение поступления средств',
+				head:'Внесение платежа',
 				content:html,
 				submit:submit
-			}),
-			kassa = $('#kassa'),
-			sum = $('#sum'),
-			about = $('#about');
-
-		kassa._radio({
-			spisok:[
-				{uid:1, title:'да'},
-				{uid:0, title:'нет'}
-			]
+			});
+		$('#income_id')._select({
+			width:218,
+			title0:'Не выбран',
+			spisok:INCOME_SPISOK,
+			func:function() {
+				$('#sum').focus();
+			}
 		});
-		about.focus();
+		$('#sum').focus();
+		$('#sum,#prim').keyEnter(submit);
 
 		function submit() {
 			var send = {
 				op:'income_add',
-				about:about.val(),
-				sum:sum.val(),
-				kassa:kassa.val()
+				zayav_id:$('#zayav_id').val(),
+				income_id:$('#income_id').val(),
+				sum:$('#sum').val(),
+				prim:$('#prim').val()
 			};
-			var msg;
-			if(!send.about) { msg = 'Не указано содержание.'; about.focus(); }
-			else if(!REGEXP_NUMERIC.test(send.sum)) { msg = 'Некорректно указана сумма.'; sum.focus(); }
-			else if(send.kassa == -1) msg = 'Укажите, деньги поступили в кассу?';
+			if(send.income_id == 0) err('Не указан вид платежа');
+			else if(!REGEXP_CENA.test(send.sum)) { err('Некорректно указана сумма'); $('#sum').focus(); }
+			else if(!window.ZAYAV && !send.prim) { err('Не указано описание'); $('#prim').focus(); }
 			else {
 				dialog.process();
 				$.post(AJAX_WS, send, function (res) {
 					if(res.success) {
 						dialog.close();
-						_msg('Новое поступление внесено.');
-						incomeSpisok();
+						_msg('Новое платёж внесён.');
+						if(window.ZAYAV)
+							$('#money_spisok').html(res.html);
+						else
+							incomeSpisok();
 					}
 				}, 'json');
 			}
-			if(msg)
-				dialog.bottom.vkHint({
-					msg:'<SPAN class="red">' + msg + '</SPAN>',
-					remove:1,
-					indent:40,
-					show:1,
-					top:-53,
-					left:103,
-					correct:0
-				});
+		}
+		function err(msg) {
+			dialog.bottom.vkHint({
+				msg:'<SPAN class="red">' + msg + '</SPAN>',
+				remove:1,
+				indent:40,
+				show:1,
+				top:-47,
+				left:103
+			});
 		}
 	})
 	.on('click', '.income-del', function() {
@@ -2675,12 +2607,12 @@ $(document)
 	})
 	.on('click', '.expense .add', function() {
 		var html = '<TABLE id="expense-add-tab">' +
-				'<tr><td class="label">Категория:<TD><INPUT type="hidden" id="expense_id" />' +
+				'<tr><td class="label">Категория:<td><input type="hidden" id="expense_id" />' +
 					'<a href="' + URL + '&p=setup&d=expense" class="img_edit' + _tooltip('Настройка категорий расходов', -95) + '</a>' +
-				'<tr class="tr-work dn"><td class="label">Сотрудник:<TD><INPUT type="hidden" id="worker_id" />' +
-				'<tr><td class="label">Описание:<TD><INPUT type="text" id="prim" maxlength="100">' +
-				'<tr><td class="label">Счёт:<TD><INPUT type="hidden" id="invoice_id" />' +
-				'<tr><td class="label">Сумма:<TD><INPUT type="text" id="sum" class="money" maxlength="11" /> руб.' +
+				'<tr class="tr-work dn"><td class="label">Сотрудник:<td><input type="hidden" id="worker_id" />' +
+				'<tr><td class="label">Описание:<td><input type="text" id="prim" maxlength="100">' +
+				'<tr><td class="label">Счёт:<td><input type="hidden" id="invoice_id" />' +
+				'<tr><td class="label">Сумма:<td><input type="text" id="sum" class="money" maxlength="11" /> руб.' +
 			'</TABLE>',
 			dialog = _dialog({
 				width:380,
@@ -2761,287 +2693,6 @@ $(document)
 			}
 		}, 'json');
 	})
-	.on('click', '.expense .img_edit', function() {
-		var dialog = _dialog({
-				top:60,
-				width:380,
-				head:'Редактирование расхода',
-				load:1,
-				butSubmit:'Сохранить',
-				submit:submit
-			}),
-			id = $(this).attr('val'),
-			category,
-			worker,
-			kassa,
-			sum,
-			about,
-			send = {
-				op:'expense_get',
-				id:id
-			};
-		$.post(AJAX_WS, send, function(res) {
-			var html = '<TABLE id="expense-add-tab">' +
-				'<tr><td class="label">Категория:<TD><INPUT type="hidden" id="cat" value="' + res.category + '">' +
-				'<tr><td class="label">Описание:<TD><INPUT type="text" id="about" maxlength="150" value="' + res.about + '">' +
-				'<tr><td class="label">Сотрудник:<TD><INPUT type="hidden" id="work" value="' + res.worker_id + '">' +
-				'<tr><td class="label">Сумма:<TD><INPUT type="text" id="sum" class="money" maxlength="8" value="' + res.sum + '"> руб.' +
-				'<tr><td class="label">Деньги взяты из кассы?:<TD><INPUT type="hidden" id="kassa" value="' + res.kassa + '">' +
-				'</TABLE>';
-			dialog.content.html(html);
-			category = $('#cat');
-			worker = $('#work');
-			kassa = $('#kassa');
-			sum = $('#sum');
-			about = $('#about');
-
-			category._select({
-				width:180,
-				title0:'Не указана',
-				spisok:EXPENSE_SPISOK,
-				funcAdd:expenseCategoryAdd
-			});
-
-			worker._select({
-				title0:'Не выбран',
-				spisok:WORKERS
-			});
-
-			kassa._radio({
-				spisok:[
-					{uid:1, title:'да'},
-					{uid:0, title:'нет'}
-				]
-			});
-			about.focus();
-		}, 'json');
-
-		function submit() {
-			var send = {
-				id:id,
-				op:'expense_edit',
-				category:category.val(),
-				about:about.val(),
-				worker:worker.val(),
-				sum:sum.val(),
-				kassa:kassa.val()
-			};
-			var msg;
-			if(!send.about && send.category == 0) { msg = 'Выберите категорию или укажите описание.'; about.focus(); }
-			else if(!REGEXP_NUMERIC.test(send.sum)) { msg = 'Некорректно указана сумма.'; sum.focus(); }
-			else if(send.kassa == -1) msg = 'Укажите, деньги взяты из кассы или нет.';
-			else {
-				dialog.process();
-				$.post(AJAX_WS, send, function (res) {
-					if(res.success) {
-						dialog.close();
-						_msg('Расход изменён.');
-						expenseSpisok();
-					}
-				}, 'json');
-			}
-			if(msg)
-				dialog.bottom.vkHint({
-					msg:'<SPAN class="red">' + msg + '</SPAN>',
-					remove:1,
-					indent:40,
-					show:1,
-					top:-53,
-					left:103,
-					correct:0
-				});
-		}
-	})
-
-	.on('click', '#report_kassa #set_go', function() {
-		if($(this).hasClass('busy'))
-			return;
-		var t = $(this),
-			sum = $('#set_summa'),
-			send = {
-				op:'report_kassa_set',
-				sum:sum.val()
-			};
-		if(!REGEXP_NUMERIC.test(send.sum)) {
-			sum.vkHint({
-				msg:'<SPAN class=red>Некорректно введена сумма.</SPAN>',
-				remove:1,
-				indent:40,
-				show:1,
-				top:-70,
-				left:16,
-				correct:0
-			});
-			sum.focus();
-		} else {
-			t.addClass('busy');
-			$.post(AJAX_WS, send, function (res) {
-				if(res.success) {
-					location.reload();
-				} else
-					t.removeClass('busy');
-			}, 'json');
-		}
-	})
-	.on('click', '#report_kassa_next', function() {
-		if($(this).hasClass('busy'))
-			return;
-		var next = $(this),
-			send = {
-				op:'report_kassa_next',
-				page:$(this).attr('val')
-			};
-		next.addClass('busy');
-		$.post(AJAX_WS, send, function (res) {
-			if(res.success) {
-				next.remove();
-				$('#report_kassa ._spisok').append(res.html);
-			} else
-				next.removeClass('busy');
-		}, 'json');
-	})
-	.on('click', '#report_kassa .actions a:first', function() {
-		var kassa = $('#kassa_summa'),
-			kassa_sum = parseInt(kassa.html()),
-			html = '<TABLE style="border-spacing:8px">' +
-				'<tr><td class="label r">Сумма:<TD><INPUT type="text" class="money" id="kassa_down_sum" maxlength="8" />' +
-				'<tr><td class="label r">Комментарий:<TD><INPUT type="text" id="kassa_down_txt" />' +
-				'</TABLE>',
-			dialog = _dialog({
-				head:'Внесение денег в кассу',
-				content:html,
-				submit:submit
-			}),
-			sum = $('#kassa_down_sum'),
-			txt = $('#kassa_down_txt');
-
-		sum.focus();
-
-		function submit() {
-			var send = {
-				op:'report_kassa_action',
-				txt:txt.val(),
-				sum:sum.val(),
-				down:0
-			};
-			var msg;
-			if(!REGEXP_NUMERIC.test(send.sum)) { msg = 'Некорректно указана сумма.'; sum.focus(); }
-			else if(!send.txt) { msg = 'Не указан комментарий.'; txt.focus(); }
-			else {
-				dialog.process();
-				$.post(AJAX_WS, send, function (res) {
-					if(res.success) {
-						dialog.close();
-						_msg('Новая запись внесёна.');
-						kassa.html(kassa_sum += parseInt(send.sum));
-						reportKassaLoad();
-					}
-				}, 'json');
-			}
-			if(msg)
-				dialog.bottom.vkHint({
-					msg:'<SPAN class="red">' + msg + '</SPAN>',
-					remove:1,
-					indent:40,
-					show:1,
-					top:-47,
-					left:92,
-					correct:0
-				});
-		}
-	})
-	.on('click', '#report_kassa .actions a:last', function() {
-		var kassa = $('#kassa_summa'),
-			kassa_sum = kassa.html(),
-			html = '<TABLE style="border-spacing:8px">' +
-				'<tr><td class="label r">Сумма:' +
-					'<TD><INPUT type="text" class="money" id="kassa_down_sum" maxlength="8" /> max: ' + kassa_sum +
-				'<tr><td class="label r">Комментарий:<TD><INPUT type="text" id="kassa_down_txt" />' +
-				'</TABLE>',
-			dialog = _dialog({
-				head:'Взятие денег из кассы',
-				content:html,
-				submit:submit
-			}),
-			sum = $('#kassa_down_sum'),
-			txt = $('#kassa_down_txt');
-
-		sum.focus();
-
-		function submit() {
-			var send = {
-				op:'report_kassa_action',
-				txt:txt.val(),
-				sum:sum.val(),
-				down:1
-			};
-			var msg;
-			if(!REGEXP_NUMERIC.test(send.sum)) { msg = 'Некорректно указана сумма.'; sum.focus(); }
-			else if(send.sum > kassa_sum) { msg = 'Введённая сумма превышает сумму в кассе.'; sum.focus(); }
-			else if(!send.txt) { msg = 'Не указан комментарий.'; txt.focus(); }
-			else {
-				dialog.process();
-				$.post(AJAX_WS, send, function (res) {
-					if(res.success) {
-						dialog.close();
-						_msg('Новая запись внесёна.');
-						kassa.html(kassa_sum -= send.sum);
-						reportKassaLoad();
-					}
-				}, 'json');
-			}
-			if(msg)
-				dialog.bottom.vkHint({
-					msg:'<SPAN class="red">' + msg + '</SPAN>',
-					remove:1,
-					indent:40,
-					show:1,
-					top:-47,
-					left:92,
-					correct:0
-				});
-		}
-	})
-	.on('click', '#report_kassa .img_del', function() {
-		var send = {
-			op:'report_kassa_del',
-			id:$(this).attr('val')
-		};
-		var tr = $(this).parent().parent(),
-			trSave = tr.html();
-		tr.html('<td colspan="4" class="deleting">Удаление... <img src=/img/upload.gif></td>');
-		$.post(AJAX_WS, send, function(res) {
-			if(res.success) {
-				_msg('Удаление произведено.');
-				if($('#kassaShowDel').val() == 1)
-					tr.addClass('deleted')
-						.html(trSave)
-						.find('.img_del').attr('class', 'img_rest').attr('title', 'Восстановить');
-				else
-					tr.remove();
-				$('#kassa_summa').html(res.sum);
-			}
-		}, 'json');
-	})
-	.on('click', '#report_kassa .img_rest', function() {
-		var send = {
-			op:'report_kassa_rest',
-			id:$(this).attr('val')
-		};
-		var tr = $(this).parent().parent(),
-			trSave = tr.html();
-		tr.html('<td colspan="4" class="deleting">Восстановление... <img src=/img/upload.gif></td>');
-		$.post(AJAX_WS, send, function(res) {
-			if(res.success) {
-				_msg('Восстановление произведено.');
-				tr.removeClass('deleted')
-					.html(trSave)
-					.find('.img_rest').attr('class', 'img_del').attr('title', 'Удалить платёж');
-				$('#kassa_summa').html(res.sum);
-			}
-		}, 'json');
-	})
-	.on('click', '#kassaShowDel_check', reportKassaLoad)
 
 	.ready(function() {
 		if($('#client').length) {

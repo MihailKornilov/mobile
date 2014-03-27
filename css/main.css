@@ -143,24 +143,18 @@
 	color:#666;
 	cursor:pointer;
 }
-#zayavInfo #status:hover{border-color:#BBD; color:#444}
-#zayavInfo #status_dtime{display:inline-block;color:#AAA;font-size:10px;margin-left:10px}
-#zayavInfo .dopl{margin-left:10px;color:#888;cursor:help}
+#zayavInfo #status:hover{border-color:#bbd; color:#444}
+#zayavInfo #status_dtime{display:inline-block;color:#aaa;font-size:10px;margin-left:10px}
+#zayavInfo .dopl{margin-left:10px;color:#888;cursor:default}
 #zayavInfo #remind_spisok{margin:8px 0}
 #zayavInfo .headBlue.mon{margin-top:10px}
 #zayavInfo .headBlue.mon em{float:right;margin:0 5px;}
-#zayavInfo .acc{color:#07a;cursor:help}
-#zayavInfo .op{color:#090;cursor:help}
-#zayavInfo ._money .del{width:20px;padding:0}
-#zayavInfo ._money .img_del{margin:0 0 -2px 4px}
+#zayavInfo .acc{color:#07a;cursor:default}
+#zayavInfo .op{color:#090;cursor:default}
 .zayav_accrual_add{border-spacing:8px}
 .zayav_accrual_add .label{width:140px;text-align:right}
 .zayav_accrual_add #prim,.zayav_accrual_add #reminder_txt { width:200px; }
 .zayav_accrual_add.remind{display:none;margin-top:-8px;}
-.zayav_oplata_add{border-spacing:8px}
-.zayav_oplata_add #kassa_radio div{display:inline-block;margin-right:15px}
-.zayav_oplata_add .label{width:165px;text-align:right}
-.zayav_oplata_add #prim{width:200px}
 #zayavInfo .deleting{text-align:center;color:#555}
 #zayavInfo #right{vertical-align:top;width:200px}
 #zayavInfo #foto{text-align:center}
@@ -280,12 +274,12 @@
 #zpInfo .move ._next *{font-size:11px}
 #zpInfo .right{width:160px;vertical-align:top}
 #zpInfo #foto{text-align:center;margin-bottom:10px}
-.zp_dec_dialog{border-spacing:8px}
+.zp_dec_dialog{border-spacing:10px}
+.zp_dec_dialog .label{width:100px;text-align:right}
 .zp_dec_dialog #count{width:45px;font:bold 12px Tahoma;text-align:right}
 .zp_dec_dialog span{margin-left:5px;color:#888}
-.zp_dec_dialog #cena{width:45px;text-align:right}
-.zp_dec_dialog #kassa_radio div{display:inline-block;margin-right:15px}
-.zp_dec_dialog textarea{width:200px;height:40px;resize:none}
+.zp_dec_dialog #cena{text-align:right}
+.zp_dec_dialog textarea{width:232px;height:40px}
 #zayavNomer{width:60px;margin-right:5px}
 span.zayavNomerTab{color:#955}
 table.zayavNomerTab{border-spacing:5px}
@@ -305,6 +299,7 @@ table.zayavNomerTab td{vertical-align:top}
 .history_unit .changes table{border-collapse:collapse;margin-top:3px}
 .history_unit .changes th{text-align:right;font-weight:700}
 .history_unit .changes th,.history_unit .changes td{border:#ddd solid 1px;padding:2px 4px;vertical-align:top}
+.history_unit .oplata{color:#770}
 .history_unit a.deleted{color:#a66}
 .history_unit .zstatus{display:inline-block;padding:2px 5px}
 .history_unit .prim{font:italic 11px Arial;color:#555}
@@ -389,14 +384,14 @@ table.zayavNomerTab td{vertical-align:top}
 .income .headName{margin:15px 10px}
 .income .inc-path{margin:0 10px}
 .income .spisok{margin:10px}
-.income ._spisok:not(._money){margin:10px 10px 15px 10px}
+.income ._spisok:not(._money){margin:10px 10px 15px}
 .income ._empty{margin:0}
 .income .right{width:160px}
 .income ._calendarFilter{margin-top:20px}
 .income  #del_check{margin-top:20px}
-#income-add-tab{border-spacing:8px}
-#income-add-tab #kassa_radio div{display:inline-block;margin-right:15px}
-#income-add-tab #about{width:170px}
+#income-add-tab{border-spacing:10px}
+#income-add-tab .label{width:80px;text-align:right}
+#income-add-tab #prim{width:210px}
 
 .expense .headName{margin:15px 10px}
 .expense #spisok{margin:10px}
@@ -405,43 +400,19 @@ table.zayavNomerTab td{vertical-align:top}
 .expense #monthSum_radio .sum{float:right}
 .expense #monthSum_radio .off .sum{color:#888}
 #expense-add-tab{border-spacing:10px}
-#expense-add-tab .label{text-align:right}
+#expense-add-tab .label{width:60px;text-align:right}
 #expense-add-tab #prim{width:250px}
 #expense-add-tab .img_edit{position:relative;top:-4px;left:4px}
 
+.invoice#report .headName{margin:15px 10px}
+.invoice#report .headName span{display:inline-block;float:right;margin:0 6px}
+.invoice#report .transfer{color:#d33}
+.invoice #invoice-spisok{margin:10px 10px 25px}
+.invoice #invoice-spisok .name{width:150px}
+.invoice #invoice-spisok .about{color:#777;font-size:10px;margin:3px 7px}
+.invoice .invoice_set{display:block;text-align:center}
 
 
-#report_kassa .set_info{
-	margin:15px;
-	background-color:#FFE;
-	border:#EED solid 1px;
-	padding:6px 8px;
-	text-align:justify;
-}
-#report_kassa #set_summa{
-	padding:0 3px;
-	width:70px;
-	height:24px;
-	font-size:13px;
-	font-weight:bold;
-}
-#report_kassa .set_tab{margin:0 0 20px 100px}
-#report_kassa #set_go{margin-left:10px}
-#report_kassa .in{padding:15px 10px 5px 10px;border-bottom:#dae1e8 solid 1px;}
-#report_kassa .actions{float:right}
-#report_kassa #spisok{margin:0 10px 20px 10px}
-#report_kassa .all{margin:15px 0 4px 0}
-#report_kassa ._spisok{width:100%}
-#report_kassa .sum{width:30px;text-align:right;white-space:nowrap}
-#report_kassa .dtime{width:70px;color:#666;font-size:10px;text-align:right;white-space:nowrap;cursor:help}
-#report_kassa .edit{padding:0 0 0 3px;text-align:center;width:11px;white-space:nowrap}
-#report_kassa .img_del{margin:0 2px -3px 0}
-#report_kassa .img_rest{margin:0 2px -3px 0}
-#report_kassa .deleting{text-align:center;color:#555}
-#report_kassa .deleted{background-color:#eee}
-#report_kassa .deleted *{color:#999}
-#kassa_down_txt{width:220px}
-#kassaShowDel_check{margin-top:22px}
 
 
 

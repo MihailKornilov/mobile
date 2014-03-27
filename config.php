@@ -63,6 +63,5 @@ function _getWorkshop($ws_id) {//Получение данных о мастерской
 	}
 	define('WS_DEVS', $ws['devs']);
 	define('WS_ADMIN', $ws['admin_id']);
-	define('KASSA_START', $ws['kassa_start']);
 	return true;
 }//_getWorkshop()

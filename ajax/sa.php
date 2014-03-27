@@ -46,11 +46,11 @@ switch(@$_POST['op']) {
 				  IFNULL(SUM(`m`.`sum`),0) AS `money`
 				FROM `client` AS `c`
 				  LEFT JOIN `money` AS `m`
-				  ON `m`.`deleted`=0
+				  ON !`m`.`deleted`
 					AND `c`.`id`=`m`.`client_id`
 					AND `m`.`sum`>0
 				WHERE `c`.`ws_id`=".$ws_id."
-				  AND `c`.`deleted`=0
+				  AND !`c`.`deleted`
 				GROUP BY `c`.`id`
 				ORDER BY `c`.`id`";
 		$q = query($sql);
@@ -62,10 +62,10 @@ switch(@$_POST['op']) {
 				  IFNULL(SUM(`a`.`sum`),0) AS `acc`
 				FROM `client` AS `c`
 				  LEFT JOIN `accrual` AS `a`
-				  ON `a`.`status`=1
+				  ON !`a`.`deleted`
 					AND `c`.`id`=`a`.`client_id`
 				WHERE `c`.`ws_id`=".$ws_id."
-				  AND `c`.`deleted`=0
+				  AND !`c`.`deleted`
 				GROUP BY `c`.`id`
 				ORDER BY `c`.`id`";
 		$q = query($sql);
@@ -99,7 +99,7 @@ switch(@$_POST['op']) {
 				FROM `zayav` AS `z`
 				  LEFT JOIN `accrual` AS `a`
 				  ON `z`.`id`=`a`.`zayav_id`
-					AND `a`.`status`=1
+					AND !`a`.`deleted`
 				WHERE `z`.`ws_id`=".$ws_id."
 				GROUP BY `z`.`id`
 				ORDER BY `z`.`id`";
@@ -114,7 +114,7 @@ switch(@$_POST['op']) {
 				FROM `zayav` AS `z`
 				  LEFT JOIN `money` AS `m`
 				  ON `z`.`id`=`m`.`zayav_id`
-					AND `m`.`deleted`=0
+					AND !`m`.`deleted`
 					AND `m`.`sum`>0
 				WHERE `z`.`ws_id`=".$ws_id."
 				GROUP BY `z`.`id`

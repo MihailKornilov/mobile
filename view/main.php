@@ -75,10 +75,8 @@ function _cacheClear($ws_id=WS_ID) {
 	xcache_unset(CACHE_PREFIX.'invoice');
 	xcache_unset(CACHE_PREFIX.'income');
 	xcache_unset(CACHE_PREFIX.'expense');
-	if($ws_id) {
-		xcache_unset(CACHE_PREFIX.'remind_active'.$ws_id);
-		xcache_unset(CACHE_PREFIX.'workshop_'.$ws_id);
-	}
+	xcache_unset(CACHE_PREFIX.'remind_active'.$ws_id);
+	xcache_unset(CACHE_PREFIX.'workshop_'.$ws_id);
 	GvaluesCreate();
 }//ens of _cacheClear()
 
