@@ -3,7 +3,7 @@ require_once('config.php');
 
 switch(@$_POST['op']) {
 	case 'info_save':
-		if(!VIEWER_ADMIN)
+		if(!RULES_INFO)
 			jsonError();
 		$name = win1251(htmlspecialchars(trim($_POST['org_name'])));
 
@@ -24,7 +24,7 @@ switch(@$_POST['op']) {
 		jsonSuccess();
 		break;
 	case 'info_devs_set':
-		if(!VIEWER_ADMIN)
+		if(!RULES_INFO)
 			jsonError();
 		foreach(explode(',', $_POST['devs']) as $id)
 			if(!preg_match(REGEXP_NUMERIC, $id))
@@ -122,6 +122,38 @@ switch(@$_POST['op']) {
 
 		$send['html'] = utf8(setup_worker_spisok());
 		jsonSuccess($send);
+		break;
+	case 'worker_dop_save':
+		if(!RULES_WORKER)
+			jsonError();
+		if(!preg_match(REGEXP_NUMERIC, $_POST['viewer_id']))
+			jsonError();
+
+		$viewer_id = intval($_POST['viewer_id']);
+
+		$u = _viewer($viewer_id);
+		if($u['ws_id'] != WS_ID)
+			jsonError();
+
+		setup_worker_rules_save($_POST, $viewer_id);
+		jsonSuccess();
+		break;
+	case 'worker_rules_save':
+		if(!RULES_RULES)
+			jsonError();
+		if(!preg_match(REGEXP_NUMERIC, $_POST['viewer_id']))
+			jsonError();
+
+		$viewer_id = intval($_POST['viewer_id']);
+
+		$u = _viewer($viewer_id);
+		if($u['admin'])
+			jsonError();
+		if($u['ws_id'] != WS_ID)
+			jsonError();
+
+		setup_worker_rules_save($_POST, $viewer_id);
+		jsonSuccess();
 		break;
 
 	case 'invoice_add':

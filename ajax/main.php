@@ -6,7 +6,6 @@ switch(@$_POST['op']) {
 	case 'cache_clear':
 		if(!SA)
 			jsonError();
-		query("UPDATE `setup_global` SET `script_style`=`script_style`+1");
 		_cacheClear();
 		jsonSuccess();
 		break;

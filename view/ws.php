@@ -37,12 +37,12 @@ function _mainLinks() {
 		array(
 			'name' => 'Отчёты'.REMIND_ACTIVE,
 			'page' => 'report',
-			'show' => VIEWER_ADMIN
+			'show' => 1
 		),
 		array(
 			'name' => 'Настройки',
 			'page' => 'setup',
-			'show' => VIEWER_ADMIN
+			'show' => 1
 		)
 	);
 
@@ -89,6 +89,7 @@ function _invoice($type_id=false, $i='name') {//Список изделий для заявок
 		$key = CACHE_PREFIX.'invoice';
 		$arr = xcache_get($key);
 		if(empty($arr)) {
+			$arr = array();
 			$sql = "SELECT * FROM `invoice` ORDER BY `id`";
 			$q = query($sql);
 			while($r = mysql_fetch_assoc($q)) {
@@ -1789,6 +1790,20 @@ function history_types($v) {
 			return 'Восстановлено начисление на сумму <b>'.$v['value'].'</b> руб. '.
 				($v['value1'] ? '('.$v['value1'].')' : '').
 				' у заявки '.$v['zayav_link'].'.';
+		case 28: return 'Установка текущей суммы для счёта <span class="oplata">'._invoice($v['value1']).'</span>: <b>'.$v['value'].'</b> руб.';
+
+		case 39:
+			return 'Перевод '.
+					($v['value1'] > 100 ?
+						'от сотрудника <u>'._viewer($v['value1'], 'name').'</u> ' :
+						'со счёта <span class="oplata">'._invoice($v['value1']).'</span> '
+					).
+					($v['value2'] > 100 ?
+						'сотруднику <u>'._viewer($v['value2'], 'name').'</u> ' :
+						'на счёт <span class="oplata">'._invoice($v['value2']).'</span> '
+					).
+					'в сумме <b>'.$v['value'].'</b> руб. '.
+					($v['value3'] ? '<span class="prim">('.$v['value3'].')</span>' : '');
 
 
 		case 1001: return 'В настройках: добавление нового сотрудника <u>'._viewer($v['value'], 'name').'</u>.';
@@ -1801,9 +1816,9 @@ function history_types($v) {
 		case 1008: return 'В настройках: внесение нового счёта <u>'.$v['value'].'</u>.';
 		case 1009: return 'В настройках: изменение данных счёта <u>'.$v['value'].'</u>:<div class="changes">'.$v['value1'].'</div>';
 		case 1010: return 'В настройках: удаление счёта <u>'.$v['value'].'</u>.';
-		case 1011: return 'В настройках: внесение нового вида платежа "'.$v['value'].'".';
-		case 1012: return 'В настройках: изменение вида платежа "'.$v['value'].'":<div class="changes">'.$v['value1'].'</div>';
-		case 1013: return 'В настройках: удаление вида платежа "'.$v['value'].'".';
+		case 1011: return 'В настройках: внесение нового вида платежа <u>'.$v['value'].'</u>.';
+		case 1012: return 'В настройках: изменение вида платежа <u>'.$v['value'].'</u>:<div class="changes">'.$v['value1'].'</div>';
+		case 1013: return 'В настройках: удаление вида платежа <u>'.$v['value'].'</u>.';
 
 		default: return $v['type'];
 	}
@@ -2273,6 +2288,12 @@ function income_insert($v) {
 			)";
 	query($sql);
 
+	invoice_history_insert(array(
+		'action' => 1,
+		'table' => 'money',
+		'id' => mysql_insert_id()
+	));
+
 	history_insert(array(
 		'type' => 6,
 		'client_id' => $v['client_id'],
@@ -2415,7 +2436,18 @@ function _invoiceBalans($invoice_id, $start=false) {// Получение текущего баланс
 	return round($income - $start - $from + $to, 2);
 }//_invoiceBalans()
 function invoice() {
+	$sql = "SELECT `viewer_id` FROM `vk_user_rules` WHERE `key`='RULES_GETMONEY' AND `value`";
+	$q = query($sql);
+	$worker_getmoney = array();
+	while($r = mysql_fetch_assoc($q))
+		$worker_getmoney[] = '{'.
+				'uid:'.$r['viewer_id'].','.
+				'title:"'.addslashes(_viewer($r['viewer_id'], 'name')).'"'.
+			'}';
 	return
+		'<script type="text/javascript">'.
+			'var W_GETMONEY=['.implode(',', $worker_getmoney).'];'.
+		'</script>'.
 		'<div class="headName">'.
 			'Счета'.
 			'<a class="add transfer">Перевод между счетами</a>'.
@@ -2423,8 +2455,8 @@ function invoice() {
 			'<a href="'.URL.'&p=setup&d=invoice" class="add">Управление счетами</a>'.
 		'</div>'.
 		'<div id="invoice-spisok">'.invoice_spisok().'</div>'.
-		'<div class="headName">История переводов</div>';
-//		'<div class="transfer-spisok">'.transfer_spisok().'</div>';
+		'<div class="headName">История переводов</div>'.
+		'<div class="transfer-spisok">'.transfer_spisok().'</div>';
 }//invoice()
 function invoice_spisok() {
 	$invoice = _invoice();
@@ -2445,6 +2477,233 @@ function invoice_spisok() {
 	$send .= '</table>';
 	return $send;
 }//invoice_spisok()
+function transfer_spisok($v=array()) {
+	$v = array(
+		//	'page' => !empty($v['page']) && preg_match(REGEXP_NUMERIC, $v['page']) ? $v['page'] : 1,
+		//	'limit' => !empty($v['limit']) && preg_match(REGEXP_NUMERIC, $v['limit']) ? $v['limit'] : 15,
+	);
+	$sql = "SELECT *
+	        FROM `invoice_transfer`
+	        WHERE `id`
+	        ORDER BY `id` DESC";
+	$q = query($sql);
+	$send = '<table class="_spisok _money">'.
+		'<tr><th>Cумма'.
+			'<th>Со счёта'.
+			'<th>На счёт'.
+			'<th>Подробно'.
+			'<th>Дата';
+	while($r = mysql_fetch_assoc($q))
+		$send .=
+			'<tr><td class="sum">'._sumSpace($r['sum']).
+				'<td>'.($r['invoice_from'] ? '<span class="type">'._invoice($r['invoice_from']).'</span>' : '').
+					($r['worker_from'] && $r['invoice_from'] ? '<br />' : '').
+					($r['worker_from'] ? _viewer($r['worker_from'], 'name') : '').
+				'<td>'.($r['invoice_to'] ? '<span class="type">'._invoice($r['invoice_to']).'</span>' : '').
+					($r['worker_to'] && $r['invoice_to'] ? '<br />' : '').
+					($r['worker_to'] ? _viewer($r['worker_to'], 'name') : '').
+				'<td class="about">'.$r['about'].
+				'<td class="dtime">'.FullDataTime($r['dtime_add'], 1);
+	$send .= '</table>';
+	return $send;
+}//transfer_spisok()
+function invoice_history($v) {
+	$v = array(
+		'page' => !empty($v['page']) && preg_match(REGEXP_NUMERIC, $v['page']) ? $v['page'] : 1,
+		'limit' => !empty($v['limit']) && preg_match(REGEXP_NUMERIC, $v['limit']) ? $v['limit'] : 15,
+		'invoice_id' => intval($v['invoice_id'])
+	);
+	$send = '';
+	if($v['page'] == 1)
+		$send = '<div>Счёт <u>'._invoice($v['invoice_id']).'</u>:</div>'.
+				'<input type="hidden" id="invoice_history_id" value="'.$v['invoice_id'].'" />';
+
+	$all = query_value("SELECT COUNT(*) FROM `invoice_history` WHERE `invoice_id`=".$v['invoice_id']);
+	if(!$all)
+		return $send.'<br />Истории нет.';
+
+	$start = ($v['page'] - 1) * $v['limit'];
+	$sql = "SELECT `h`.*,
+				   IFNULL(`m`.`zayav_id`,0) AS `zayav_id`,
+				   IFNULL(`m`.`zp_id`,0) AS `zp_id`,
+				   IFNULL(`m`.`income_id`,0) AS `income_id`,
+				   IFNULL(`m`.`expense_id`,0) AS `expense_id`,
+				   IFNULL(`m`.`worker_id`,0) AS `worker_id`,
+				   IFNULL(`m`.`prim`,'') AS `prim`,
+				   IFNULL(`i`.`invoice_from`,0) AS `invoice_from`,
+				   IFNULL(`i`.`invoice_to`,0) AS `invoice_to`,
+				   IFNULL(`i`.`worker_from`,0) AS `worker_from`,
+				   IFNULL(`i`.`worker_to`,0) AS `worker_to`
+			FROM `invoice_history` `h`
+				LEFT JOIN `money` `m`
+				ON `h`.`table`='money' AND `h`.`table_id`=`m`.`id`
+				LEFT JOIN `invoice_transfer` `i`
+				ON `h`.`table`='invoice_transfer' AND `h`.`table_id`=`i`.`id`
+			WHERE `h`.`invoice_id`=".$v['invoice_id']."
+			ORDER BY `h`.`id` DESC
+			LIMIT ".$start.",".$v['limit'];
+	$q = query($sql);
+	$history = array();
+	while($r = mysql_fetch_assoc($q))
+		$history[$r['id']] = $r;
+
+	$history = _zayavNomerLink($history);
+	$history = _zpLink($history);
+
+	if($v['page'] == 1)
+		$send .= '<table class="_spisok _money invoice-history">'.
+			'<tr><th>Действие'.
+				'<th>Сумма'.
+				'<th>Баланс'.
+				'<th>Описание'.
+				'<th>Дата';
+	foreach($history as $r) {
+		$about = '';
+		if($r['zayav_id'])
+			$about = 'Заявка '.$r['zayav_link'].'. ';
+		if($r['zp_id'])
+			$about = 'Продажа запчасти '.$r['zp_link'].'. ';
+		$about .= $r['prim'].' ';
+		$worker = $r['worker_id'] ? '<u>'._viewer($r['worker_id'], 'name').'</u> ' : '';
+		$expense = $r['expense_id'] ? '<span class="type">'._expense($r['expense_id']).(!trim($about) && !$worker ? '' : ': ').'</span> ' : '';
+		if($r['invoice_from'] != $r['invoice_to']) {//Счета не равны, перевод внешний
+			if(!$r['invoice_to'])//Деньги были переданы руководителю
+				$about .= 'Передача сотруднику '._viewer($r['worker_to'], 'name');
+			elseif(!$r['invoice_from'])//Деньги были получены от руководителя
+				$about .= 'Получение от сотрудника '._viewer($r['worker_from'], 'name');
+			elseif($r['invoice_id'] == $r['invoice_from'])//Просматриваемый счёт общий - оправитель
+				$about .= 'Отправление на счёт <span class="type">'._invoice($r['invoice_to']).'</span>';
+			elseif($r['invoice_id'] == $r['invoice_to'])//Просматриваемый счёт общий - получатель
+				$about .= 'Поступление со счёта <span class="type">'._invoice($r['invoice_from']).'</span>';;
+		} else {//Счета равны, перевод внутренний
+			if($r['invoice_id'] == $r['worker_from'])//Просматриваемый счёт сотрудника - оправитель
+				$about .= 'Отправление на счёт <span class="type">'._invoice($r['invoice_to']).'</span> '._viewer($r['worker_to'], 'name');
+			if($r['invoice_id'] == $r['worker_to'])//Просматриваемый счёт сотрудника - получатель
+				$about .= 'Поступление со счёта <span class="type">'._invoice($r['invoice_from']).'</span> '._viewer($r['worker_from'], 'name');
+		}
+		$send .=
+			'<tr><td class="action">'.invoiceHistoryAction($r['action']).
+				'<td class="sum">'.($r['sum'] != 0 ? _sumSpace($r['sum']) : '').
+				'<td class="balans">'._sumSpace($r['balans']).
+				'<td>'.$expense.$worker.$about.
+				'<td class="dtime">'.FullDataTime($r['dtime_add']);
+	}
+
+	if($start + $v['limit'] < $all) {
+		$c = $all - $start - $v['limit'];
+		$c = $c > $v['limit'] ? $v['limit'] : $c;
+		$send .=
+			'<tr class="_next" val="'.($v['page'] + 1).'"><td colspan="5">'.
+			'<span>Показать ещё '.$c.' запис'._end($c, 'ь', 'и', 'ей').'</span>';
+	}
+	if($v['page'] == 1)
+		$send .= '</table>';
+	return $send;
+}//invoice_history()
+function invoiceHistoryAction($id, $i='name') {//Варианты действий в истории счетов
+	$action = array(
+		1 => array(
+			'name' => 'Внесение платежа',
+			'znak' => ''
+		),
+		2 => array(
+			'name' => 'Удаление платежа',
+			'znak' => '-'
+		),
+		3 => array(
+			'name' => 'Восстановление платежа',
+			'znak' => ''
+		),
+		4 => array(
+			'name' => 'Перевод между счетами',
+			'znak' => ''
+		),
+		5 => array(
+			'name' => 'Установка текущей суммы',
+			'znak' => ''
+		),
+		6 => array(
+			'name' => 'Внесение расхода',
+			'znak' => '-'
+		),
+		7 => array(
+			'name' => 'Удаление расхода',
+			'znak' => ''
+		),
+		8 => array(
+			'name' => 'Восстановление расхода',
+			'znak' => '-'
+		),
+		9 => array(
+			'name' => 'Редактирование расхода',
+			'znak' => ''
+		)
+	);
+	return $action[$id][$i];
+}//invoiceHistoryAction()
+function invoice_history_insert($v) {
+	$v = array(
+		'action' => $v['action'],
+		'table' => empty($v['table']) ? '' : $v['table'],
+		'id' => empty($v['id']) ? 0 : $v['id'],
+		'sum' => empty($v['sum']) ? 0 : $v['sum'],
+		'worker_id' => empty($v['worker_id']) ? 0 : $v['worker_id'],
+		'invoice_id' => empty($v['invoice_id']) ? 0 : $v['invoice_id']
+	);
+	if($v['table']) {
+		$r = query_assoc("SELECT * FROM `".$v['table']."` WHERE `id`=".$v['id']);
+		$v['sum'] = abs($r['sum']);
+		switch($v['table']) {
+			case 'money':
+				$v['invoice_id'] = $r['invoice_id'];
+				$v['sum'] = invoiceHistoryAction($v['action'], 'znak').$v['sum'];
+				break;
+			case 'invoice_transfer':
+				if(!$r['invoice_from'] && !$r['invoice_to'])
+					return;
+				if(!$r['invoice_from']) {//взятие средств у руководителя
+					$v['invoice_id'] = $r['invoice_to'];
+					if($r['worker_to'])
+						invoice_history_insert_sql($r['worker_to'], $v);
+					break;
+				}
+				if(!$r['invoice_to']) {//передача средств руководителю
+					$v['invoice_id'] = $r['invoice_from'];
+					$v['sum'] *= -1;
+					if($r['worker_from'])
+						invoice_history_insert_sql($r['worker_from'], $v);
+					break;
+				}
+				//Передача из банка в наличные и на счета сотрудников
+				$v['invoice_id'] = $r['invoice_from'];
+				invoice_history_insert_sql($r['invoice_to'], $v);
+				break;
+		}
+	}
+	invoice_history_insert_sql($v['invoice_id'], $v);
+}//invoice_history_insert()
+function invoice_history_insert_sql($invoice_id, $v) {
+	if(_invoice($invoice_id, 'start') == -1)
+		return;
+	$sql = "INSERT INTO `invoice_history` (
+				`action`,
+				`table`,
+				`table_id`,
+				`invoice_id`,
+				`sum`,
+				`balans`,
+				`viewer_id_add`
+			) VALUES (
+				".$v['action'].",
+				'".$v['table']."',
+				".$v['id'].",
+				".$invoice_id.",
+				".$v['sum'].",
+				"._invoiceBalans($invoice_id).",
+				".VIEWER_ID."
+			)";
+	query($sql);
+}
 
 
 
@@ -2498,6 +2757,14 @@ function setup() {
 		'income' => 'Виды платежей',
 		'expense' => 'Категории расходов'
 	);
+	if(!RULES_INFO)
+		unset($pages['info']);
+	if(!RULES_WORKER)
+		unset($pages['worker']);
+	if(!RULES_INCOME) {
+		unset($pages['invoice']);
+		unset($pages['income']);
+	}
 
 	$d = empty($_GET['d']) ? 'my' : $_GET['d'];
 
@@ -2505,7 +2772,13 @@ function setup() {
 		default: $d = 'my';
 		case 'my': $left = 'Мои настройки'; break;
 		case 'info': $left = setup_info(); break;
-		case 'worker': $left = setup_worker(); break;
+		case 'worker':
+			if(!empty($_GET['id']) && preg_match(REGEXP_NUMERIC, $_GET['id'])) {
+				$left = setup_worker_rules(intval($_GET['id']));
+				break;
+			}
+			$left = setup_worker();
+			break;
 		case 'invoice': $left = setup_invoice(); break;
 		case 'income': $left = setup_income(); break;
 		case 'expense': $left = setup_expense(); break;
@@ -2583,6 +2856,141 @@ function setup_worker_spisok() {
 	}
 	return $send;
 }//setup_worker_spisok()
+function _setupRules($rls, $admin=0) {
+	$rules = array(
+		'RULES_GETMONEY' => array(	// Может принимать и передавать деньги:
+			'def' => 0
+		),
+		'RULES_APPENTER' => array(	// Разрешать вход в приложение
+			'def' => 0,
+			'admin' => 1,
+			'childs' => array(
+				'RULES_INFO' => array(	    // Информация о мастерской
+					'def' => 0,
+					'admin' => 1
+				),
+				'RULES_WORKER' => array(	// Сотрудники
+					'def' => 0,
+					'admin' => 1
+				),
+				'RULES_RULES' => array(	    // Настройка прав сотрудников
+					'def' => 0,
+					'admin' => 1
+				),
+				'RULES_INCOME' => array(	// Счета и виды платежей
+					'def' => 0,
+					'admin' => 1
+				),
+				'RULES_HISTORYSHOW' => array(// Видит историю действий
+					'def' => 0,
+					'admin' => 1
+				),
+				'RULES_MONEY' => array(	    // Может видеть платежи: только свои, все платежи
+					'def' => 0,
+					'admin' => 1
+				)
+			)
+		)
+	);
+	$ass = array();
+	foreach($rules as $i => $r) {
+		$ass[$i] = $admin && isset($r['admin']) ? $r['admin'] : (isset($rls[$i]) ? $rls[$i] : $r['def']);
+		//$parent = $ass[$i];
+		if(isset($r['childs']))
+			foreach($r['childs'] as $ci => $cr)
+				$ass[$ci] = $admin && isset($cr['admin']) ? $cr['admin'] : (isset($rls[$ci]) ? $rls[$ci] : $cr['def']);
+	}
+	return $ass;
+}//_setupRules()
+function _viewerRules($viewer_id=VIEWER_ID, $rule='') {
+	$key = CACHE_PREFIX.'viewer_rules_'.$viewer_id;
+	$wr = xcache_get($key);
+	if(empty($wr)) {
+		$rules = query_ass("SELECT `key`,`value` FROM `vk_user_rules` WHERE `viewer_id`=".$viewer_id);
+		$admin = _viewer($viewer_id, 'admin');
+		$wr = _setupRules($rules, $admin);
+		xcache_set($key, $wr, 86400);
+	}
+	return $rule ? $wr[$rule] : $wr;
+}//_viewerRules()
+function setup_worker_rules($viewer_id) {
+	$u = _viewer($viewer_id);
+	if($u['ws_id'] != WS_ID)
+		return 'Сотрудника не существует.';
+	$rule = _viewerRules($viewer_id);
+	return
+	'<script type="text/javascript">var RULES_VIEWER_ID='.$viewer_id.';</script>'.
+	'<div id="setup_rules">'.
+
+		'<table class="utab">'.
+			'<tr><td>'.$u['photo'].
+			'<td><div class="name">'.$u['name'].'</div>'.
+			($viewer_id < VIEWER_MAX ? '<a href="http://vk.com/id'.$viewer_id.'" class="vklink" target="_blank">Перейти на страницу VK</a>' : '').
+		'</table>'.
+
+		'<div class="headName">Общее</div>'.
+		'<table class="rtab">'.
+			'<tr><td class="lab">Имя:<td><input type="text" id="first_name" value="'.$u['first_name'].'" />'.
+			'<tr><td class="lab">Фамилия:<td><input type="text" id="last_name" value="'.$u['last_name'].'" />'.
+			'<tr><td><td><div class="vkButton g-save"><button>Сохранить</button></div>'.
+		'</table>'.
+
+		'<div class="headName">Дополнительно</div>'.
+		'<table class="rtab">'.
+			'<tr><td class="lab">Может принимать<br />и передавать деньги:<td>'._check('rules_getmoney', '', $rule['RULES_GETMONEY']).
+			'<tr><td><td><div class="vkButton dop-save"><button>Сохранить</button></div>'.
+		'</table>'.
+
+	(!$u['admin'] && $viewer_id < VIEWER_MAX && RULES_RULES ?
+		'<div class="headName">Права</div>'.
+		'<table class="rtab">'.
+			'<tr><td class="lab">Разрешать вход<br />в приложение:<td>'._check('rules_appenter', '', $rule['RULES_APPENTER']).
+		'</table>'.
+		'<div class="app-div'.($rule['RULES_APPENTER'] ? '' : ' dn').'">'.
+			'<table class="rtab">'.
+				'<tr><td class="lab top">Управление установками:'.
+					'<td class="setup-div">'.
+						_check('rules_rekvisit', 'Информация о мастерской', $rule['RULES_INFO']).
+						_check('rules_worker', 'Сотрудники', $rule['RULES_WORKER']).
+						_check('rules_rules', 'Настройка прав сотрудников', $rule['RULES_RULES']).
+						_check('rules_income', 'Счета и виды платежей', $rule['RULES_INCOME']).
+				'<tr><td class="lab">Видит историю действий:<td>'._check('rules_historyshow', '', $rule['RULES_HISTORYSHOW']).
+				'<tr><td class="lab">Может видеть платежи:<td><input type="hidden" id="rules_money" value="'.$rule['RULES_MONEY'].'" />'.
+			'</table>'.
+			'</div>'.
+			'<table class="rtab">'.
+				'<tr><td class="lab"><td><div class="vkButton rules-save"><button>Сохранить</button></div>'.
+			'</table>'
+	: '').
+	'</div>';
+}//setup_worker_rules()
+function setup_worker_rules_save($post, $viewer_id) {
+	$rules = array();
+	foreach($post as $i => $v)
+		if(preg_match('/^rules_/', $i))
+			if(!preg_match(REGEXP_BOOL, $v))
+				jsonError();
+			else
+				$rules[strtoupper($i)] = $v;
+
+	$cur = query_ass("SELECT `key`,`value` FROM `vk_user_rules` WHERE `viewer_id`=".$viewer_id);
+	$rules += $cur;
+	foreach($rules as $i => $v)
+		if(isset($cur[$i]))
+			query("UPDATE `vk_user_rules` SET `value`=".$v." WHERE `key`='".$i."' AND `viewer_id`=".$viewer_id);
+		else
+			query("INSERT INTO `vk_user_rules` (
+						`viewer_id`,
+						`key`,
+						`value`
+					  ) VALUES (
+					    ".$viewer_id.",
+					    '".$i."',
+					    ".$v."
+					  )");
+	xcache_unset(CACHE_PREFIX.'viewer_'.$viewer_id);
+	xcache_unset(CACHE_PREFIX.'viewer_rules_'.$viewer_id);
+}//setup_worker_rules_save()
 
 function setup_invoice() {
 	return

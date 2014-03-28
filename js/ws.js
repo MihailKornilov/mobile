@@ -1885,7 +1885,7 @@ $(document)
 				'<tr><td class="label r top">Примечание:<td><textarea id="prim"></textarea>' +
 			'</table>',
 			dialog = _dialog({
-				width:340,
+				width:400,
 				head:'Установка запчасти',
 				content:html,
 				submit:submit
@@ -2013,8 +2013,7 @@ $(document)
 				'<tr><td class="label r top">Примечание:<td><textarea id="prim"></textarea>' +
 				'</table>',
 			dialog = _dialog({
-				top:60,
-				width:340,
+				width:400,
 				head:rus[type] + ' запчасти',
 				content:html,
 				submit:submit
@@ -2611,7 +2610,7 @@ $(document)
 					'<a href="' + URL + '&p=setup&d=expense" class="img_edit' + _tooltip('Настройка категорий расходов', -95) + '</a>' +
 				'<tr class="tr-work dn"><td class="label">Сотрудник:<td><input type="hidden" id="worker_id" />' +
 				'<tr><td class="label">Описание:<td><input type="text" id="prim" maxlength="100">' +
-				'<tr><td class="label">Счёт:<td><input type="hidden" id="invoice_id" />' +
+				'<tr><td class="label">Со счёта:<td><input type="hidden" id="invoice_id" value="' + (INVOICE_SPISOK.length == 1 ? INVOICE_SPISOK[0].uid : 0) + '" />' +
 				'<tr><td class="label">Сумма:<td><input type="text" id="sum" class="money" maxlength="11" /> руб.' +
 			'</TABLE>',
 			dialog = _dialog({
@@ -2691,6 +2690,74 @@ $(document)
 				_msg('Удаление произведено.');
 				tr.remove();
 			}
+		}, 'json');
+	})
+
+	.on('click', '.invoice_set', function() {
+		var t = $(this),
+			html =
+				'<table class="_dialog-tab">' +
+					'<tr><td class="label">Сумма:<td><INPUT type="text" class="money" id="sum" maxlength="11" /> руб.' +
+				'</table>';
+		var dialog = _dialog({
+				width:320,
+				head:'Установка текущей суммы счёта',
+				content:html,
+				butSubmit:'Установить',
+				submit:submit
+			});
+
+		$('#sum').focus().keyEnter(submit);
+		function submit() {
+			var send = {
+				op:'invoice_set',
+				invoice_id:t.attr('val'),
+				sum:$('#sum').val()
+			};
+			if(!REGEXP_CENA.test(send.sum)) {
+				err('Некорректно указана сумма');
+				$('#sum').focus();
+			} else {
+				dialog.process();
+				$.post(AJAX_WS, send, function(res) {
+					if(res.success) {
+						$('#invoice-spisok').html(res.html);
+						dialog.close();
+						_msg('Начальная сумма установлена');
+					} else
+						dialog.abort();
+				}, 'json');
+			}
+		}
+		function err(msg) {
+			dialog.bottom.vkHint({
+				msg:'<SPAN class="red">' + msg + '</SPAN>',
+				remove:1,
+				indent:40,
+				show:1,
+				top:-48,
+				left:72
+			});
+		}
+	})
+	.on('click', '#report.invoice .img_note', function() {
+		var dialog = _dialog({
+			top:20,
+			width:570,
+			head:'История операций со счётом',
+			load:1,
+			butSubmit:'',
+			butCancel:'Закрыть'
+		});
+		var send = {
+			op:'invoice_history',
+			invoice_id:$(this).attr('val')
+		};
+		$.post(AJAX_WS, send, function(res) {
+			if(res.success)
+				dialog.content.html(res.html);
+			else
+				dialog.loadError();
 		}, 'json');
 	})
 
@@ -3023,5 +3090,74 @@ $(document)
 			});
 			$('#year').years({func:expenseSpisok});
 			$('#monthSum')._radio(expenseSpisok)
+		}
+		if($('#report.invoice').length) {
+			$('.transfer').click(function() {
+				var t = $(this),
+					html = '<table class="_dialog-tab">' +
+							'<tr><td class="label">Со счёта:<td><input type="hidden" id="from" />' +
+							'<tr><td class="label">На счёт:<td><input type="hidden" id="to" />' +
+							'<tr><td class="label">Сумма:<td><input type="text" id="sum" class="money" /> руб. ' +
+							'<tr><td class="label">Комментарий:<td><input type="text" id="about" />' +
+						'</table>',
+					dialog = _dialog({
+						width:350,
+						head:'Перевод между счетами',
+						content:html,
+						butSubmit:'Применить',
+						submit:submit
+					});
+				if(window.W_GETMONEY && !window.CSMOVE) {//Проверка открывалось ли это окно прежде
+					for(n = 0; n < W_GETMONEY.length; n++)
+						INVOICE_SPISOK.push(W_GETMONEY[n]);
+					window.CSMOVE = 1;
+				}
+				$('#from')._select({
+					width:218,
+					title0:'Не выбран',
+					spisok:INVOICE_SPISOK
+				});
+				$('#to')._select({
+					width:218,
+					title0:'Не выбран',
+					spisok:INVOICE_SPISOK
+				});
+				$('#sum,#about').keyEnter(submit);
+				function submit() {
+					var send = {
+						op:'invoice_transfer',
+						from:$('#from').val() * 1,
+						to:$('#to').val() * 1,
+						sum:$('#sum').val(),
+						about:$('#about').val()
+					};
+					if(!send.from) err('Выберите счёт-отправитель');
+					else if(!send.to) err('Выберите счёт-получатель');
+					else if(send.from == send.to) err('Выберите другой счёт');
+					else if(!REGEXP_CENA.test(send.sum) || send.sum == 0) { err('Некорректно введена сумма'); $('#sum').focus(); }
+					else {
+						dialog.process();
+						$.post(AJAX_WS, send, function(res) {
+							if(res.success) {
+								$('#invoice-spisok').html(res.i);
+								$('.transfer-spisok').html(res.t);
+								dialog.close();
+								_msg('Перевод произведён.');
+							} else
+								dialog.abort();
+						}, 'json');
+					}
+				}
+				function err(msg) {
+					dialog.bottom.vkHint({
+						msg:'<span class="red">' + msg + '</span>',
+						top:-47,
+						left:92,
+						indent:50,
+						show:1,
+						remove:1
+					});
+				}
+			});
 		}
 	});

@@ -62,8 +62,14 @@ function _hashCookieSet() {
 	setcookie('id', isset($_GET['id']) ? $_GET['id'] : '', time() + 2592000, '/');
 }//_hashCookieSet()
 function _cacheClear($ws_id=WS_ID) {
+	$sql = "SELECT `viewer_id` FROM `vk_user` WHERE `ws_id`=".$ws_id;
+	$q = query($sql);
+	while($r = mysql_fetch_assoc($q)) {
+		xcache_unset(CACHE_PREFIX.'viewer_'.$r['viewer_id']);
+		xcache_unset(CACHE_PREFIX.'viewer_rules_'.$r['viewer_id']);
+		//xcache_unset(CACHE_PREFIX.'pin_enter_count'.$r['viewer_id']);
+	}
 	xcache_unset(CACHE_PREFIX.'setup_global');
-	xcache_unset(CACHE_PREFIX.'viewer_'.VIEWER_ID);
 	xcache_unset(CACHE_PREFIX.'device_name');
 	xcache_unset(CACHE_PREFIX.'vendor_name');
 	xcache_unset(CACHE_PREFIX.'model_name_count');
@@ -78,6 +84,7 @@ function _cacheClear($ws_id=WS_ID) {
 	xcache_unset(CACHE_PREFIX.'remind_active'.$ws_id);
 	xcache_unset(CACHE_PREFIX.'workshop_'.$ws_id);
 	GvaluesCreate();
+	query("UPDATE `setup_global` SET `script_style`=`script_style`+1");
 }//ens of _cacheClear()
 
 function _header() {

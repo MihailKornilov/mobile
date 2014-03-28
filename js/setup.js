@@ -607,4 +607,89 @@ $(document)
 				});
 			});
 		}
+		if($('#setup_rules').length) {
+			$('.g-save').click(function() {
+				var send = {
+						op:'setup_worker_save',
+						viewer_id:RULES_VIEWER_ID,
+						first_name:$('#first_name').val(),
+						last_name:$('#last_name').val(),
+						post:$('#post').val()
+					},
+					but = $(this);
+				if(!send.first_name) { err('Не указано имя'); $('#first_name').focus(); }
+				else if(!send.last_name) { err('Не указана фамилия'); $('#last_name').focus(); }
+				else {
+					but.addClass('busy');
+					$.post(AJAX_MAIN, send, function(res) {
+						but.removeClass('busy');
+						if(res.success)
+							_msg('Сохранено.');
+					}, 'json');
+				}
+				function err(msg) {
+					but.vkHint({
+						msg:'<SPAN class="red">' + msg + '</SPAN>',
+						top:-57,
+						left:-6,
+						indent:40,
+						show:1,
+						remove:1
+					});
+				}
+			});
+			$('#rules_appenter')._check(function(v) {
+				$('.app-div')[(v == 0 ? 'add' : 'remove') + 'Class']('dn');
+				$('#rules_info')._check(0);
+				$('#rules_worker')._check(0);
+				$('#rules_rules')._check(0);
+				$('#rules_income')._check(0);
+				$('#rules_historyshow')._check(0);
+				$('#rules_money')._dropdown(0);
+			});
+			$('#rules_money')._dropdown({
+				spisok:[
+					{uid:0,title:'только свои'},
+					{uid:1,title:'все платежи'}
+				]
+			});
+			$('.rules-save').click(function() {
+				var send = {
+						op:'worker_rules_save',
+						viewer_id:RULES_VIEWER_ID,
+						rules_appenter:$('#rules_appenter').val(),
+						rules_info:$('#rules_info').val(),
+						rules_worker:$('#rules_worker').val(),
+						rules_rules:$('#rules_rules').val(),
+						rules_income:$('#rules_income').val(),
+						rules_historyshow:$('#rules_historyshow').val(),
+						rules_money:$('#rules_money').val()
+					},
+					but = $(this);
+				if(but.hasClass('busy'))
+					return;
+				but.addClass('busy');
+				$.post(AJAX_SETUP, send, function(res) {
+					but.removeClass('busy');
+					if(res.success)
+						_msg('Права сохранены.');
+				}, 'json');
+			});
+			$('.dop-save').click(function() {
+				var send = {
+						op:'worker_dop_save',
+						viewer_id:RULES_VIEWER_ID,
+						rules_getmoney:$('#rules_getmoney').val()
+					},
+					but = $(this);
+				if(but.hasClass('busy'))
+					return;
+				but.addClass('busy');
+				$.post(AJAX_SETUP, send, function(res) {
+					but.removeClass('busy');
+					if(res.success)
+						_msg('Дополнительные настройки сохранены.');
+				}, 'json');
+			});
+		}
 	});

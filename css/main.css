@@ -410,7 +410,13 @@ table.zayavNomerTab td{vertical-align:top}
 .invoice #invoice-spisok{margin:10px 10px 25px}
 .invoice #invoice-spisok .name{width:150px}
 .invoice #invoice-spisok .about{color:#777;font-size:10px;margin:3px 7px}
+.invoice .balans{text-align:right}
+.invoice .img_note{margin-bottom:-2px}
 .invoice .invoice_set{display:block;text-align:center}
+.invoice .transfer-spisok{margin:10px}
+.invoice-history{margin-top:10px}
+.invoice-history .action{width:80px}
+.invoice-history .balans{width:70px;text-align:right}
 
 
 
@@ -454,6 +460,16 @@ table.zayavNomerTab td{vertical-align:top}
 #setup_worker_add .manual_tab input{width:230px}
 #setup_worker_add #sex_radio div{display:inline-block;margin-right:15px}
 
+#setup_rules{padding-bottom:30px}
+#setup_rules .utab td{padding-right:10px;vertical-align:top}
+#setup_rules .vklink{color:#777;display:inline-block;margin-top:10px}
+#setup_rules .name{font-weight:bold;font-size:12px;color:#45688e}
+#setup_rules .headName{margin:20px 0 10px}
+#setup_rules .pin-clear{margin-left:97px}
+#setup_rules .rtab{border-spacing:8px}
+#setup_rules .lab{width:150px;text-align:right}
+#setup_rules .rtab input{width:160px}
+#setup_rules .setup-div div{display:block;margin-bottom:5px;color:#555}
 
 #setup_info .tab{margin:10px 0 30px 0;border-spacing:10px}
 #setup_info .tab .label{text-align:right}

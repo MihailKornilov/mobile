@@ -51,6 +51,9 @@ function _getVkUser() {//Получение данных о пользователе
 	define('VIEWER_COUNTRY_ID', $u['country_id']);
 	define('VIEWER_CITY_ID', $u['city_id']);
 	define('VIEWER_ADMIN', $u['admin']);
+	if(WS_ID)
+		foreach(_viewerRules() as $key => $value)
+			define($key, $value);
 }//_getVkUser()
 function _getWorkshop($ws_id) {//Получение данных о мастерской
 	$ws = xcache_get(CACHE_PREFIX.'workshop_'.$ws_id);

@@ -1588,6 +1588,11 @@ switch(@$_POST['op']) {
 				WHERE `id`=".$id;
 		query($sql);
 
+		invoice_history_insert(array(
+			'action' => 2,
+			'table' => 'money',
+			'id' => $id
+		));
 		clientBalansUpdate($r['client_id']);
 		zayavBalansUpdate($r['zayav_id']);
 
@@ -1620,6 +1625,11 @@ switch(@$_POST['op']) {
 				WHERE `id`=".$id;
 		query($sql);
 
+		invoice_history_insert(array(
+			'action' => 3,
+			'table' => 'money',
+			'id' => $id
+		));
 		clientBalansUpdate($r['client_id']);
 		$send = zayavBalansUpdate($r['zayav_id']);
 
@@ -1705,6 +1715,13 @@ switch(@$_POST['op']) {
 					".VIEWER_ID."
 				)";
 		query($sql);
+
+		invoice_history_insert(array(
+			'action' => 6,
+			'table' => 'money',
+			'id' => mysql_insert_id()
+		));
+
 		history_insert(array(
 			'type' => 21,
 			'value' => abs($sum),
@@ -1729,11 +1746,112 @@ switch(@$_POST['op']) {
 					`dtime_del`=CURRENT_TIMESTAMP
 				WHERE `id`=".$id;
 		query($sql);
+
+		invoice_history_insert(array(
+			'action' => 7,
+			'table' => 'money',
+			'id' => $id
+		));
+
 		history_insert(array(
 			'type' => 22,
 			'value' => round(abs($r['sum']), 2)
 		));
 		jsonSuccess();
+		break;
+
+	case 'invoice_set':
+		if(!preg_match(REGEXP_NUMERIC, $_POST['invoice_id']) || !$_POST['invoice_id'])
+			jsonError();
+		if(!preg_match(REGEXP_CENA, $_POST['sum']))
+			jsonError();
+
+		$invoice_id = intval($_POST['invoice_id']);
+		$sum = round(str_replace(',', '.', $_POST['sum']), 2);
+
+		$sql = "SELECT * FROM `invoice` WHERE `id`=".$invoice_id;
+		if(!$r = mysql_fetch_assoc(query($sql)))
+			jsonError();
+
+		if($r['start'] != -1 && !VIEWER_ADMIN)
+			jsonError();
+
+		query("UPDATE `invoice` SET `start`="._invoiceBalans($invoice_id, $sum)." WHERE `id`=".$invoice_id);
+		xcache_unset(CACHE_PREFIX.'invoice');
+		invoice_history_insert(array(
+			'action' => 5,
+			'invoice_id' => $invoice_id
+		));
+
+		history_insert(array(
+			'type' => 28,
+			'value' => $sum,
+			'value1' => $invoice_id
+		));
+
+		$send['html'] = utf8(invoice_spisok());
+		jsonSuccess($send);
+		break;
+	case 'invoice_history':
+		if(empty($_POST['invoice_id']) || !preg_match(REGEXP_NUMERIC, $_POST['invoice_id']))
+			jsonError();
+		$send['html'] = utf8(invoice_history($_POST));
+		jsonSuccess($send);
+		break;
+	case 'invoice_transfer':
+		if(empty($_POST['from']) || !preg_match(REGEXP_NUMERIC, $_POST['from']))
+			jsonError();
+		if(empty($_POST['to']) || !preg_match(REGEXP_NUMERIC, $_POST['to']))
+			jsonError();
+		if(!preg_match(REGEXP_CENA, $_POST['sum']) || $_POST['sum'] == 0)
+			jsonError();
+
+		$from = intval($_POST['from']);
+		$to = intval($_POST['to']);
+		$sum = str_replace(',', '.', $_POST['sum']);
+		$about = win1251(htmlspecialchars(trim($_POST['about'])));
+
+		if($from == $to)
+			jsonError();
+
+		$invoice_from = $from > 100 ? 0 : $from;
+		$invoice_to = $to > 100 ? 0 : $to;
+		$sql = "INSERT INTO `invoice_transfer` (
+					`invoice_from`,
+					`invoice_to`,
+					`worker_from`,
+					`worker_to`,
+					`sum`,
+					`about`,
+					`viewer_id_add`
+				) VALUES (
+					".$invoice_from.",
+					".$invoice_to.",
+					".($from > 100 ? $from : 0).",
+					".($to > 100  ? $to : 0).",
+					".$sum.",
+					'".addslashes($about)."',
+					".VIEWER_ID."
+				)";
+		query($sql);
+
+		invoice_history_insert(array(
+			'action' => 4,
+			'table' => 'invoice_transfer',
+			'id' => mysql_insert_id()
+		));
+
+		history_insert(array(
+			'type' => 39,
+			'value' => $sum,
+			'value1' => $from,
+			'value2' => $to,
+			'value3' => $about
+		));
+
+		$send['i'] = utf8(invoice_spisok());
+		$send['t'] = utf8(transfer_spisok());
+		jsonSuccess($send);
 		break;
 
 	case 'tooltip_zayav_info_get':
