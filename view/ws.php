@@ -1677,14 +1677,14 @@ function report() {
 					$right .= expense_right();
 					break;
 				case 'invoice': $left = invoice(); break;
-				//case 'stat': $left = statistic(); break;
+				case 'stat': $left = statistic(); break;
 			}
 			$left =
 				'<div id="dopLinks">'.
 					'<a class="link'.($d1 == 'income' ? ' sel' : '').'" href="'.URL.'&p=report&d=money&d1=income">Поступления</a>'.
 					'<a class="link'.($d1 == 'expense' ? ' sel' : '').'" href="'.URL.'&p=report&d=money&d1=expense">Расходы</a>'.
 					'<a class="link'.($d1 == 'invoice' ? ' sel' : '').'" href="'.URL.'&p=report&d=money&d1=invoice">Счета</a>'.
-					//'<a class="link'.($d1 == 'stat' ? ' sel' : '').'" href="'.URL.'&p=report&d=money&d1=stat">Статистика</a>'.
+					'<a class="link'.($d1 == 'stat' ? ' sel' : '').'" href="'.URL.'&p=report&d=money&d1=stat">Статистика</a>'.
 				'</div>'.
 				$left;
 			break;

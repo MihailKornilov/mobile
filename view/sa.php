@@ -35,7 +35,7 @@ function sa_index() {
 		'<BR>'.
 		'<A href="'.URL.'&p=sa&d=color">Цвета для устройств и запчастей</A><BR>'.
 		'<BR>'.
-		//'<A href="'.URL.'&p=sa&d=zp-name">Наименования запчастей</A><BR>'.
+		'<A href="'.URL.'&p=sa&d=zpname">Наименования запчастей</A><BR>'.
 	'</div>';
 }//sa_index()
 
@@ -389,9 +389,9 @@ function sa_equip_spisok($device_id) {
 }//sa_equip_spisok()
 
 function sa_fault() {
-	return '<div class="path">'.sa_cookie_back().'<a href="'.URL.'&p=sa">Администрирование</a> » Комплектация устройств</div>'.
+	return '<div class="path">'.sa_cookie_back().'<a href="'.URL.'&p=sa">Администрирование</a> » Виды неисправностей</div>'.
 	'<div class="sa-fault">'.
-		'<div class="headName">Виды неисправностей<a class="add">Новая неисправность</a></div>'.
+		'<div class="headName">Виды неисправностей<a class="add">Добавить</a></div>'.
 		'<div class="spisok">'.sa_fault_spisok().'</div>'.
 	'</div>';
 
@@ -475,3 +475,38 @@ function sa_color_spisok() {
 	return $send;
 }//sa_color_spisok()
 
+function sa_zpname() {
+	return '<div class="path">'.sa_cookie_back().'<a href="'.URL.'&p=sa">Администрирование</a> » Наименования запчастей</div>'.
+	'<div class="sa-zpname">'.
+	'<div class="headName">Наименования запчастей<a class="add">Добавить</a></div>'.
+	'<div class="spisok">'.sa_zpname_spisok().'</div>'.
+	'</div>';
+
+}//sa_zpname()
+function sa_zpname_spisok() {
+	$sql = "SELECT
+	            `s`.*,
+				COUNT(`c`.`id`) AS `zp`
+	        FROM `setup_zp_name` AS `s`
+	        LEFT JOIN `zp_catalog` AS `c`
+	        ON `s`.`id`=`c`.`name_id`
+	        GROUP BY `s`.`id`
+	        ORDER BY `s`.`name`";
+	$q = query($sql);
+	if(!mysql_num_rows($q))
+		return 'Список пуст.';
+
+	$send =
+		'<table class="_spisok">'.
+			'<tr><th class="name">Наименование'.
+				'<th>Кол-во<br />запчастей<br />в каталоге'.
+				'<th>';
+	while($r = mysql_fetch_assoc($q))
+		$send .= '<tr val="'.$r['id'].'">'.
+			'<td class="name">'.$r['name'].
+			'<td class="zp">'.($r['zp'] ? $r['zp'] : '').
+			'<td><div class="img_edit"></div>'.
+				($r['zp'] ? '' : '<div class="img_del"></div>');
+	$send .= '</table>';
+	return $send;
+}//sa_zpname_spisok()

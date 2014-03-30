@@ -219,12 +219,12 @@ function GvaluesCreate() {//Составление файла G_values.js
 		"\n".'INCOME_SPISOK='.query_selJson("SELECT `id`,`name` FROM `setup_income` ORDER BY `sort`").','.
 		"\n".'EXPENSE_SPISOK='.query_selJson("SELECT `id`,`name` FROM `setup_expense` ORDER BY `sort` ASC").','.
 		"\n".'EXPENSE_WORKER='.query_ptpJson("SELECT `id`,`show_worker` FROM `setup_expense` WHERE `show_worker`").','.
-		//"\n".'FAULT_SPISOK='.query_selJson("SELECT `id`,`name` FROM `setup_fault` ORDER BY `sort`").','.
 		"\n".'FAULT_ASS='.query_ptpJson("SELECT `id`,`name` FROM `setup_fault` ORDER BY `sort`").','.
 		"\n".'ZPNAME_SPISOK='.query_selJson("SELECT `id`,`name` FROM `setup_zp_name` ORDER BY `name`").','.
 		"\n".'DEVSTATUS_SPISOK='.query_selJson("SELECT `id`,`name` FROM `setup_device_status` ORDER BY `sort`").','.
 		"\n".'DEVPLACE_SPISOK='.query_selJson("SELECT `id`,`name` FROM `setup_device_place` ORDER BY `sort`").','.
-		"\n".'DEV_SPISOK='.query_selJson("SELECT `id`,`name` FROM `base_device` ORDER BY `sort`").',DEV_ASS=_toAss(DEV_SPISOK),'.
+		"\n".'DEV_SPISOK='.query_selJson("SELECT `id`,`name` FROM `base_device` ORDER BY `sort`").','.
+		"\n".'DEV_ASS=_toAss(DEV_SPISOK),'.
 		"\n".'COUNTRY_SPISOK=['.
 			'{uid:1,title:"Россия"},'.
 			'{uid:2,title:"Украина"},'.

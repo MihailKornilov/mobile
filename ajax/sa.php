@@ -622,6 +622,65 @@ switch(@$_POST['op']) {
 		$send['html'] = utf8(sa_color_spisok());
 		jsonSuccess($send);
 		break;
+
+	case 'zpname_add':
+		$name = win1251(htmlspecialchars(trim($_POST['name'])));
+		if(empty($name))
+			jsonError();
+		$sql = "INSERT INTO `setup_zp_name` (
+					`name`
+				) VALUES (
+					'".addslashes($name)."'
+				)";
+		query($sql);
+
+		GvaluesCreate();
+		xcache_unset(CACHE_PREFIX.'zp_name');
+
+		$send['html'] = utf8(sa_zpname_spisok());
+		jsonSuccess($send);
+		break;
+	case 'zpname_edit':
+		if(!preg_match(REGEXP_NUMERIC, $_POST['id']) || !$_POST['id'])
+			jsonError();
+		$id = intval($_POST['id']);
+		$name = win1251(htmlspecialchars(trim($_POST['name'])));
+		if(empty($name))
+			jsonError();
+
+		$sql = "UPDATE `setup_zp_name`
+				SET `name`='".addslashes($name)."'
+				WHERE `id`=".$id;
+		query($sql);
+
+		GvaluesCreate();
+		xcache_unset(CACHE_PREFIX.'zp_name');
+
+		$send['html'] = utf8(sa_zpname_spisok());
+		jsonSuccess($send);
+		break;
+	case 'zpname_del':
+		if(!preg_match(REGEXP_NUMERIC, $_POST['id']) || !$_POST['id'])
+			jsonError();
+		$id = intval($_POST['id']);
+
+		$sql = "SELECT * FROM `setup_zp_name` WHERE `id`=".$id;
+		if(!$r = mysql_fetch_assoc(query($sql)))
+			jsonError();
+
+		$sql = "SELECT COUNT(`id`) FROM `zp_catalog` WHERE `name_id`=".$id;
+		if(query_value($sql))
+			jsonError();
+
+		$sql = "DELETE FROM `setup_zp_name` WHERE `id`=".$id;
+		query($sql);
+
+		GvaluesCreate();
+		xcache_unset(CACHE_PREFIX.'zp_name');
+
+		$send['html'] = utf8(sa_zpname_spisok());
+		jsonSuccess($send);
+		break;
 }
 
 jsonError();

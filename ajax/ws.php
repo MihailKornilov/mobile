@@ -626,11 +626,11 @@ switch(@$_POST['op']) {
 		jsonSuccess($send);
 		break;
 	case 'zayav_accrual_add':
-		if(!preg_match(REGEXP_NUMERIC, $_POST['zayav_id']) || $_POST['zayav_id'] == 0)
+		if(!preg_match(REGEXP_NUMERIC, $_POST['zayav_id']) || !$_POST['zayav_id'])
 			jsonError();
-		if(!preg_match(REGEXP_NUMERIC, $_POST['sum']) || $_POST['sum'] == 0)
+		if(!preg_match(REGEXP_NUMERIC, $_POST['sum']) || !$_POST['sum'])
 			jsonError();
-		if(!preg_match(REGEXP_NUMERIC, $_POST['status']) || $_POST['status'] == 0)
+		if(!preg_match(REGEXP_NUMERIC, $_POST['status']) || !$_POST['status'])
 			jsonError();
 		if(!preg_match(REGEXP_NUMERIC, $_POST['dev_status']))
 			jsonError();
@@ -680,11 +680,6 @@ switch(@$_POST['op']) {
 		clientBalansUpdate($zayav['client_id']);
 		$send = zayavBalansUpdate($zayav_id);
 
-		$send['html'] = utf8(zayav_accrual_unit(array(
-			'id' => mysql_insert_id(),
-			'sum' => $sum,
-			'prim' => $prim,
-		)));
 
 		history_insert(array(
 			'type' => 5,
@@ -730,6 +725,8 @@ switch(@$_POST['op']) {
 			query($sql);
 			$send['remind'] = utf8(remind_spisok(remind_data(1, array('zayav'=>$zayav_id))));
 		}
+
+		$send['html'] = utf8(zayav_info_money($zayav_id));
 		jsonSuccess($send);
 		break;
 	case 'zayav_accrual_del':

@@ -141,6 +141,7 @@ switch($_GET['p']) {
 			case 'equip': $html .= sa_equip(); break;
 			case 'fault': $html .= sa_fault(); break;
 			case 'color': $html .= sa_color(); break;
+			case 'zpname': $html .= sa_zpname(); break;
 			default: $html .= sa_index();
 		}
 		break;

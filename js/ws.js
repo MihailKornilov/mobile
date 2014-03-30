@@ -1375,7 +1375,7 @@ $(document)
 					if(res.success) {
 						dialog.close();
 						_msg('Начисление успешно произведено!');
-						$('._spisok._money').append(res.html);
+						$('#money_spisok').html(res.html);
 						zayavInfoMoneyUpdate(res);
 						if(res.status) {
 							$('#status')

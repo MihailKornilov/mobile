@@ -83,3 +83,8 @@
 .sa-color .zp{text-align:center}
 .sa-color-add{border-spacing:8px}
 .sa-color-add input{width:200px}
+
+.sa-zpname{margin-bottom:20px}
+.sa-zpname ._spisok{margin:10px 20px}
+.sa-zpname .name{width:250px}
+.sa-zpname .zp{text-align:center}
