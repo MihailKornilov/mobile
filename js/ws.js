@@ -685,7 +685,7 @@ $.fn.device = function(o) {
 					venSel
 						._select(VENDOR_SPISOK[dv])
 						._select(res.id);
-					getModel();
+					getModel(0);
 					dialog.close();
 				}
 			}, 'json');

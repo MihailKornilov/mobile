@@ -11,6 +11,7 @@
 	padding:5px;
 	top:-86px;
 	left:-10px;
+	z-index:1000;
 }
 .zayav_link:not(:hover) .tooltip{display:none}
 .zayav_link td{border:0;padding:0}

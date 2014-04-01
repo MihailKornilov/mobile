@@ -383,7 +383,7 @@ function client_info($client_id) {
 			if($r['zp_id'])
 				$about = 'Продажа запчасти '.$r['zp_id'].'. ';
 			$about .= $r['prim'];
-			$money .= '<tr><td class="sum"><b>'.$r['sum'].'</b>'.
+			$money .= '<tr><td class="sum"><b>'.round($r['sum'], 2).'</b>'.
 						  '<td>'.$about.
 						  '<td class="dtime" title="Внёс: '._viewer($r['viewer_id_add'], 'name').'">'.FullDataTime($r['dtime_add']);
 		}
@@ -448,10 +448,12 @@ function client_info($client_id) {
 		'</div>';
 }//client_info()
 function clientBalansUpdate($client_id, $ws_id=WS_ID) {//Обновление баланса клиента
+	if($client_id)
+		return 0;
 	$prihod = query_value("SELECT IFNULL(SUM(`sum`),0)
 						   FROM `money`
 						   WHERE `ws_id`=".$ws_id."
-							 AND `deleted`=0
+							 AND !`deleted`
 							 AND `client_id`=".$client_id."
 							 AND `sum`>0");
 	$acc = query_value("SELECT IFNULL(SUM(`sum`),0)
@@ -923,10 +925,12 @@ function zayav_spisok($data) {
 }//zayav_spisok()
 
 function zayavBalansUpdate($zayav_id, $ws_id=WS_ID) {//Обновление баланса клиента
+	if(!$zayav_id)
+		return false;
 	$opl = query_value("SELECT IFNULL(SUM(`sum`),0)
 						   FROM `money`
 						   WHERE `ws_id`=".$ws_id."
-							 AND `deleted`=0
+							 AND !`deleted`
 							 AND `zayav_id`=".$zayav_id."
 							 AND `sum`>0");
 	$acc = query_value("SELECT IFNULL(SUM(`sum`),0)
@@ -2241,12 +2245,12 @@ function income_unit($r) {
 	$about .= ($about ? '. ' : '').$r['prim'];
 	return
 		'<tr'.($r['deleted'] ? ' class="deleted"' : '').' val="'.$r['id'].'">'.
-		'<td class="sum">'._sumSpace($r['sum']).
-		'<td>'.$about.
-		'<td class="dtime'._tooltip(viewerAdded($r['viewer_id_add']), -20).FullDataTime($r['dtime_add']).
-		'<td class="ed">'.
-			'<div class="img_del income-del'._tooltip('Удалить платёж', -54).'</div>'.
-			'<div class="img_rest income-rest'._tooltip('Восстановить платёж', -69).'</div>';
+			'<td class="sum">'._sumSpace($r['sum']).
+			'<td>'.$about.
+			'<td class="dtime'._tooltip(viewerAdded($r['viewer_id_add']), -20).FullDataTime($r['dtime_add']).
+			'<td class="ed">'.
+				'<div class="img_del income-del'._tooltip('Удалить платёж', -54).'</div>'.
+				'<div class="img_rest income-rest'._tooltip('Восстановить платёж', -69).'</div>';
 }//income_unit()
 function income_insert($v) {
 	$v = array(
@@ -2293,6 +2297,8 @@ function income_insert($v) {
 		'table' => 'money',
 		'id' => mysql_insert_id()
 	));
+	clientBalansUpdate($v['client_id']);
+	zayavBalansUpdate($v['zayav_id']);
 
 	history_insert(array(
 		'type' => 6,

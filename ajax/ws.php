@@ -52,6 +52,7 @@ switch(@$_POST['op']) {
 		query($sql);
 
 		GvaluesCreate();
+		xcache_unset(CACHE_PREFIX.'device_name');
 		xcache_unset(CACHE_PREFIX.'setup_global');
 		xcache_unset(CACHE_PREFIX.'workshop_'.WS_ID);
 		jsonSuccess($send);
@@ -85,6 +86,7 @@ switch(@$_POST['op']) {
 		$send['id'] = mysql_insert_id();
 
 		GvaluesCreate();
+		xcache_unset(CACHE_PREFIX.'vendor_name');
 		xcache_unset(CACHE_PREFIX.'setup_global');
 		xcache_unset(CACHE_PREFIX.'workshop_'.WS_ID);
 		jsonSuccess($send);
@@ -124,6 +126,7 @@ switch(@$_POST['op']) {
 		$send['id'] = mysql_insert_id();
 
 		GvaluesCreate();
+		xcache_unset(CACHE_PREFIX.'model_name_count');
 		xcache_unset(CACHE_PREFIX.'setup_global');
 		xcache_unset(CACHE_PREFIX.'workshop_'.WS_ID);
 		jsonSuccess($send);
