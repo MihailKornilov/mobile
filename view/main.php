@@ -75,7 +75,6 @@ function _cacheClear($ws_id=WS_ID) {
 	xcache_unset(CACHE_PREFIX.'model_name_count');
 	xcache_unset(CACHE_PREFIX.'zp_name');
 	xcache_unset(CACHE_PREFIX.'color_name');
-	xcache_unset(CACHE_PREFIX.'device_place');
 	xcache_unset(CACHE_PREFIX.'device_status');
 	xcache_unset(CACHE_PREFIX.'device_equip');
 	xcache_unset(CACHE_PREFIX.'invoice');
@@ -222,7 +221,7 @@ function GvaluesCreate() {//Составление файла G_values.js
 		"\n".'FAULT_ASS='.query_ptpJson("SELECT `id`,`name` FROM `setup_fault` ORDER BY `sort`").','.
 		"\n".'ZPNAME_SPISOK='.query_selJson("SELECT `id`,`name` FROM `setup_zp_name` ORDER BY `name`").','.
 		"\n".'DEVSTATUS_SPISOK='.query_selJson("SELECT `id`,`name` FROM `setup_device_status` ORDER BY `sort`").','.
-		"\n".'DEVPLACE_SPISOK='.query_selJson("SELECT `id`,`name` FROM `setup_device_place` ORDER BY `sort`").','.
+		"\n".'DEVPLACE_SPISOK='._selJson(_devPlace()).','.
 		"\n".'DEV_SPISOK='.query_selJson("SELECT `id`,`name` FROM `base_device` ORDER BY `sort`").','.
 		"\n".'DEV_ASS=_toAss(DEV_SPISOK),'.
 		"\n".'COUNTRY_SPISOK=['.
@@ -530,23 +529,14 @@ function _color($color_id, $color_dop=0) {
 		return constant('COLORPRE_'.$color_id).' - '.strtolower(constant('COLOR_'.$color_dop));;
 	return constant('COLOR_'.$color_id);
 }//_color()
-function _devPlace($place_id) {
-	if(!defined('PLACE_LOADED')) {
-		$key = CACHE_PREFIX.'device_place';
-		$zp = xcache_get($key);
-		if(empty($zp)) {
-			$sql = "SELECT `id`,`name` FROM `setup_device_place` ORDER BY `id` ASC";
-			$q = query($sql);
-			while($r = mysql_fetch_assoc($q))
-				$zp[$r['id']] = $r['name'];
-			xcache_set($key, $zp, 86400);
-		}
-		foreach($zp as $id => $name)
-			define('PLACE_'.$id, $name);
-		define('PLACE_0', '');
-		define('PLACE_LOADED', true);
-	}
-	return constant('PLACE_'.$place_id);
+function _devPlace($place_id=false) {
+	$arr = array(
+		1 => 'в мастерской',
+		2 => 'у клиента'
+	);
+	if($place_id == false)
+		return $arr;
+	return isset($arr[$place_id]) ? $arr[$place_id] : '';
 }//_devPlace()
 function _devStatus($status_id) {
 	if(!defined('DEV_STATUS_LOADED')) {

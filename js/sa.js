@@ -145,7 +145,7 @@ $(document)
 				top:60,
 				width:460,
 				head:'Изменение данных устройства',
-				content:'<center><img src="/img/upload.gif"></center>',
+				load:1,
 				butSubmit:'Сохранить',
 				submit:submit
 			});
@@ -157,15 +157,18 @@ $(document)
 			id:id
 		};
 		$.post(AJAX_SA, send, function(res) {
-			var html = '<table class="sa-device-add">' +
-				'<tr><td class="label r">Наименование:<td><input id="name" type="text" maxlength="100" value="' + res.name + '" />' +
-				'<tr><td class="label r">Родительный падеж (кого?):<td><input id="name_rod" type="text" maxlength="100" value="' + res.name_rod + '" />' +
-				'<tr><td class="label r">Множественное число:<td><input id="name_mn" type="text" maxlength="100" value="' + res.name_mn + '" />' +
-				'<tr><td class="label r top">Возможная комплектация:<td class="equip">' + res.equip +
-			'</table>';
-			dialog.content.html(html);
-			$('#name,#name_rod,#name_mn').keyEnter(submit);
-			$('#name').focus();
+			if(res.success) {
+				var html = '<table class="sa-device-add">' +
+					'<tr><td class="label r">Наименование:<td><input id="name" type="text" maxlength="100" value="' + res.name + '" />' +
+					'<tr><td class="label r">Родительный падеж (кого?):<td><input id="name_rod" type="text" maxlength="100" value="' + res.name_rod + '" />' +
+					'<tr><td class="label r">Множественное число:<td><input id="name_mn" type="text" maxlength="100" value="' + res.name_mn + '" />' +
+					'<tr><td class="label r top">Возможная комплектация:<td class="equip">' + res.equip +
+				'</table>';
+				dialog.content.html(html);
+				$('#name,#name_rod,#name_mn').keyEnter(submit);
+				$('#name').focus();
+			} else
+				dialog.loadError();
 		}, 'json');
 		function submit() {
 			var inp = $('.equip input'),
@@ -786,6 +789,128 @@ $(document)
 				t = t.parent();
 			var send = {
 				op:'fault_del',
+				id:t.attr('val')
+			};
+			dialog.process();
+			$.post(AJAX_SA, send, function(res) {
+				if(res.success) {
+					$('.spisok').html(res.html);
+					dialog.close();
+					_msg('Удалено!');
+					sortable();
+				} else
+					dialog.abort();
+			}, 'json');
+		}
+	})
+
+	.on('click', '.sa-devstatus .add', function() {
+		var html = '<table class="sa-tab">' +
+				'<tr><td class="label">Наименование:<td><input id="name" type="text" maxlength="100" />' +
+				'</table>',
+			dialog = _dialog({
+				width:390,
+				head:'Добавление нового статуса устройства',
+				content:html,
+				submit:submit
+			});
+		$('#name').focus().keyEnter(submit);
+		function submit() {
+			var send = {
+				op:'devstatus_add',
+				name:$('#name').val()
+			};
+			if(!send.name) {
+				err('Не указано наименование');
+				$('#name').focus();
+			} else {
+				dialog.process();
+				$.post(AJAX_SA, send, function(res) {
+					if(res.success) {
+						$('.spisok').html(res.html);
+						dialog.close();
+						_msg('Внесено!');
+						sortable();
+					} else
+						dialog.abort();
+				}, 'json');
+			}
+		}
+		function err(msg) {
+			dialog.bottom.vkHint({
+				msg:'<SPAN class=red>' + msg + '</SPAN>',
+				top:-47,
+				left:99,
+				indent:50,
+				show:1,
+				remove:1
+			});
+		}
+	})
+	.on('click', '.sa-devstatus .img_edit', function() {
+		var t = $(this);
+		while(t[0].tagName != 'DD')
+			t = t.parent();
+		var name = t.find('.name').html(),
+			html = '<table class="sa-tab">' +
+				'<tr><td class="label">Наименование:<td><input id="name" type="text" maxlength="100" value="' + name + '" />' +
+				'</table>',
+			dialog = _dialog({
+				width:390,
+				head:'Редактирование статуса устройства',
+				content:html,
+				butSubmit:'Сохранить',
+				submit:submit
+			});
+		$('#name').keyEnter(submit).focus();
+		function submit() {
+			var send = {
+				op:'devstatus_edit',
+				id:t.attr('val'),
+				name:$('#name').val()
+			};
+			if(!send.name) {
+				err('Не указано наименование');
+				$('#name').focus();
+			} else {
+				dialog.process();
+				$.post(AJAX_SA, send, function(res) {
+					if(res.success) {
+						$('.spisok').html(res.html);
+						dialog.close();
+						_msg('Изменено.');
+						sortable();
+					} else
+						dialog.abort();
+				}, 'json');
+			}
+		}
+		function err(msg) {
+			dialog.bottom.vkHint({
+				msg:'<SPAN class=red>' + msg + '</SPAN>',
+				top:-47,
+				left:57,
+				indent:50,
+				show:1,
+				remove:1
+			});
+		}
+	})
+	.on('click', '.sa-devstatus .img_del', function() {
+		var t = $(this),
+			dialog = _dialog({
+				top:90,
+				width:300,
+				head:'Удаление статуса устройства',
+				content:'<center><b>Подтвердите удаление статуса устройства.</b></center>',
+				butSubmit:'Удалить',
+				submit:submit
+			});
+		function submit() {
+			while(t[0].tagName != 'DD')
+				t = t.parent();
+			var send = {
+				op:'devstatus_del',
 				id:t.attr('val')
 			};
 			dialog.process();

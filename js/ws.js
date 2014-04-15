@@ -280,6 +280,31 @@ var AJAX_WS = SITE + '/ajax/ws.php?' + VALUES,
 			}, 'json');
 		}
 	},
+	zayavPlace = function(other) {
+		if(other == undefined)
+			other = '';
+		if(!window.PLACE_OTHER) {
+			DEVPLACE_SPISOK.push({
+				uid:0,
+				title:'другое: ' +
+					  '<input type="text" ' +
+							 'id="place_other" ' +
+				   (!other ? 'class="dn" ' : '') +
+							 'maxlength="20" ' +
+							 'value="' + other + '" />'
+			});
+			window.PLACE_OTHER = 1;
+		}
+		$('#place')._radio({
+			spisok:DEVPLACE_SPISOK,
+			light:1,
+			func:function(val) {
+				$('#place_other')[(val != 0 ? 'add' : 'remove') + 'Class']('dn');
+				if(val == 0)
+					$('#place_other').val('').focus();
+			}
+		});
+	},
 
 	zpFilter = function() {
 		var v = {
@@ -801,10 +826,12 @@ $.fn.device = function(o) {
 
 	// проверка на совпадение имени при внесении нового элемента
 	function name_test(spisok, name) {
+		if(spisok) {
 		name = name.toLowerCase();
 		for(var n = 0; n < spisok.length; n++)
 			if(spisok[n].title.toLowerCase() == name)
 				return true;
+		}
 		return false;
 	}
 
@@ -1448,34 +1475,14 @@ $(document)
 			spisok:STATUS,
 			light:1
 		});
-
-		var spisok = [];
-		for(var n = 0; n < DEVPLACE_SPISOK.length; n++)
-			spisok.push(DEVPLACE_SPISOK[n]);
-		spisok.push({
-			uid:0,
-			title:'другое: <INPUT type="text" ' +
-								 'id="place_other" ' + (!ZAYAV.place_other ? 'class="dn" ' : '') +
-								 'maxlength="20" ' +
-								 'value="' + ZAYAV.place_other + '">'
-		});
-		$('#place')._radio({
-			spisok:spisok,
-			light:1,
-			func:function(val) {
-				$('#place_other')[(val == 0 ? 'remove' : 'add') + 'Class']('dn');
-				if(val == 0)
-					$('#place_other').val('').focus();
-			}
-		});
+		zayavPlace(ZAYAV.place_other);
 		$('#dev_status')._radio({
 			spisok:DEVSTATUS_SPISOK,
 			light:1
 		});
 
 		function submit() {
-			var msg,
-				send = {
+			var send = {
 				op:'zayav_status_place',
 				zayav_id:ZAYAV.id,
 				zayav_status:$('#z_status').val(),
@@ -1485,11 +1492,8 @@ $(document)
 			};
 			if(send.dev_place > 0)
 				send.place_other = '';
-			if(send.dev_place == 0 && send.place_other == '') {
-				msg = 'Не указано местонахождение устройства';
-				$('#place_other').focus();
-			} else if(send.dev_status == 0)
-				msg = 'Не указано состояние устройства';
+			if(send.dev_place == 0 && send.place_other == '') { err('Не указано местонахождение устройства'); $('#place_other').focus(); }
+			else if(send.dev_status == 0) err('Не указано состояние устройства');
 			else {
 				dialog.process();
 				$.post(AJAX_WS, send, function(res) {
@@ -1499,7 +1503,7 @@ $(document)
 						$('#status')
 							.html(res.z_status.name)
 							.css('background-color', '#' + res.z_status.color);
-						$('#status_dtime').html(res.z_status.dtime)
+						$('#status_dtime').html(res.z_status.dtime);
 						$('.dev_status').html(res.dev_status);
 						$('.dev_place').html(res.dev_place);
 						ZAYAV.z_status = send.zayav_status;
@@ -1509,16 +1513,16 @@ $(document)
 					}
 				}, 'json');
 			}
-			if(msg)
-				dialog.bottom.vkHint({
-					msg:'<SPAN class=red>' + msg + '</SPAN>',
-					top:-47,
-					left:103,
-					indent:50,
-					show:1,
-					remove:1,
-					correct:0
-				});
+		}
+		function err(msg) {
+			dialog.bottom.vkHint({
+				msg:'<SPAN class=red>' + msg + '</SPAN>',
+				top:-47,
+				left:103,
+				indent:50,
+				show:1,
+				remove:1
+			});
 		}
 	})
 	.on('click', '#zayavInfo .zakaz', function() {
@@ -2499,6 +2503,7 @@ $(document)
 			'<tr><td class="label">Вид платежа:<td><input type="hidden" id="income_id" value="' + (INCOME_SPISOK.length == 1 ? INCOME_SPISOK[0].uid : 0) + '" />' +
 			'<tr><td class="label">Сумма:<td><input type="text" id="sum" class="money" maxlength="11" /> руб.' +
 			'<tr><td class="label">Описание:<td><input type="text" id="prim" maxlength="100" />' +
+			(window.ZAYAV ? '<tr><td class="label topi">Местонахождение<br />устройства:<td><input type="hidden" id="place" value="-1" />' : '') +
 			'</TABLE>';
 		var dialog = _dialog({
 				width:380,
@@ -2516,6 +2521,8 @@ $(document)
 		});
 		$('#sum').focus();
 		$('#sum,#prim').keyEnter(submit);
+		if(window.ZAYAV)
+			zayavPlace();
 
 		function submit() {
 			var send = {
@@ -2523,11 +2530,14 @@ $(document)
 				zayav_id:$('#zayav_id').val(),
 				income_id:$('#income_id').val(),
 				sum:$('#sum').val(),
-				prim:$('#prim').val()
+				prim:$('#prim').val(),
+				place:window.ZAYAV ? $('#place').val() : 0,
+				place_other:window.ZAYAV ? $('#place_other').val() : ''
 			};
 			if(send.income_id == 0) err('Не указан вид платежа');
 			else if(!REGEXP_CENA.test(send.sum)) { err('Некорректно указана сумма'); $('#sum').focus(); }
 			else if(!window.ZAYAV && !send.prim) { err('Не указано описание'); $('#prim').focus(); }
+			else if(window.ZAYAV && send.place == -1) err('Не указано местонахождение устройства');
 			else {
 				dialog.process();
 				$.post(AJAX_WS, send, function (res) {
@@ -2885,15 +2895,7 @@ $(document)
 				device_ids:WS_DEVS,
 				func:zayavDevSelect
 			});
-			DEVPLACE_SPISOK.push({uid:0, title:'другое: <input type="text" id="place_other" class="dn" maxlength="20" />'});
-			$('#place')._radio({
-				spisok:DEVPLACE_SPISOK,
-				func:function(val) {
-					$('#place_other')[(val != 0 ? 'add' : 'remove') + 'Class']('dn');
-					if(val == 0)
-						$('#place_other').val('').focus();
-				}
-			});
+			zayavPlace();
 			colorSelDop(0);
 			$(document).on('click', '#fault', function() {
 				var i = $(this).find('INPUT'),

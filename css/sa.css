@@ -78,6 +78,13 @@
 .sa-fault td.name{cursor:move}
 .sa-fault .set{width:35px}
 
+.sa-devstatus{margin-bottom:20px}
+.sa-devstatus ._spisok{margin:1px 20px}
+.sa-devstatus .name{width:250px}
+.sa-devstatus td.name{cursor:move}
+.sa-devstatus .count{width:50px;text-align:center}
+.sa-devstatus .set{width:35px}
+
 .sa-color ._spisok{margin:10px 20px}
 .sa-color .zayav{text-align:center}
 .sa-color .zp{text-align:center}

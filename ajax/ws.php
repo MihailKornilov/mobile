@@ -1556,6 +1556,11 @@ switch(@$_POST['op']) {
 			jsonError();
 		if(!preg_match(REGEXP_CENA, $_POST['sum']))
 			jsonError();
+		if(!preg_match(REGEXP_NUMERIC, $_POST['place']))
+			jsonError();
+
+		$place = intval($_POST['place']);
+		$place_other = !$place ? win1251(htmlspecialchars(trim($_POST['place_other']))) : '';
 
 		if(!$_POST['zayav_id'] && empty($_POST['prim']))
 			jsonError();
@@ -1564,8 +1569,29 @@ switch(@$_POST['op']) {
 			jsonError();
 
 		$send = array();
-		if($v['zayav_id'])
+		if($v['zayav_id']) {
+			$sql = "SELECT * FROM `zayav` WHERE `id`=".$v['zayav_id'];
+			$r = mysql_fetch_assoc(query($sql));
+			if($place != $r['device_place'] || $place_other != $r['device_place_other']) {
+				$sql = "UPDATE `zayav`
+						SET `device_place`=".$place.",
+							`device_place_other`='".$place_other."'
+						WHERE `id`=".$v['zayav_id'];
+				query($sql);
+				history_insert(array(
+					'type' => 29,
+					'client_id' => $v['client_id'],
+					'zayav_id' => $v['zayav_id'],
+					'value' =>
+						'<table><tr>'.
+							'<td>'.($r['device_place'] ? @_devPlace($r['device_place']) : $r['device_place_other']).
+							'<td>»'.
+							'<td>'.($place ? @_devPlace($place) : $place_other).
+						'</table>'
+				));
+			}
 			$send['html'] = utf8(zayav_info_money($v['zayav_id']));
+		}
 		jsonSuccess($send);
 		break;
 	case 'income_del':

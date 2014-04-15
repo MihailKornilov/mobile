@@ -448,7 +448,7 @@ function client_info($client_id) {
 		'</div>';
 }//client_info()
 function clientBalansUpdate($client_id, $ws_id=WS_ID) {//Обновление баланса клиента
-	if($client_id)
+	if(!$client_id)
 		return 0;
 	$prihod = query_value("SELECT IFNULL(SUM(`sum`),0)
 						   FROM `money`
@@ -624,7 +624,7 @@ function zayav_add($v=array()) {
 				'<td><INPUT TYPE="hidden" id="color_id" />'.
 					'<span class="color_dop dn"><tt>-</tt><INPUT TYPE="hidden" id="color_dop" /></span>'.
 			'<tr class="tr_equip dn"><td class="label">Комплектация:<td class="equip_spisok">'.
-			'<tr><td class="label topi">Местонахождение устройства<br />после внесения заявки:<td><INPUT type="hidden" id="place" value="-1" />'.
+			'<tr><td class="label topi">Местонахождение устройства<br />после внесения заявки:<td><input type="hidden" id="place" value="-1" />'.
 			'<tr><td class="label top">Неисправности: <td id="fault">'.$fault.
 			'<tr><td class="label topi">Заметка:	   <td><textarea id="comm"></textarea>'.
 			'<tr><td class="label">Добавить напоминание:<td>'._check('reminder').
@@ -1795,6 +1795,7 @@ function history_types($v) {
 				($v['value1'] ? '('.$v['value1'].')' : '').
 				' у заявки '.$v['zayav_link'].'.';
 		case 28: return 'Установка текущей суммы для счёта <span class="oplata">'._invoice($v['value1']).'</span>: <b>'.$v['value'].'</b> руб.';
+		case 29: return 'Изменение местонахождения устройства по заявке '.$v['zayav_link'].' при внесении платежа:<div class="changes">'.$v['value'].'</div>';
 
 		case 39:
 			return 'Перевод '.
@@ -2263,7 +2264,7 @@ function income_insert($v) {
 	);
 
 	if($v['zayav_id']) {
-		$sql = "SELECT * FROM `zayav` WHERE !`deleted` AND `id`=".$v['zayav_id'];
+		$sql = "SELECT * FROM `zayav` WHERE `ws_id`=".WS_ID." AND !`deleted` AND `id`=".$v['zayav_id'];
 		if(!$r = mysql_fetch_assoc(query($sql)))
 			return false;
 		$v['client_id'] = $r['client_id'];
