@@ -116,8 +116,7 @@ var AJAX_WS = SITE + '/ajax/ws.php?' + VALUES,
 					left:81,
 					indent:40,
 					show:1,
-					remove:1,
-					correct:0
+					remove:1
 				});
 				$('#fio').focus();
 			} else {
@@ -162,7 +161,8 @@ var AJAX_WS = SITE + '/ajax/ws.php?' + VALUES,
 	},
 	clientZayavFilter = function() {
 		return {
-			client:CLIENT.id,
+			op:'client_zayav_spisok',
+			client_id:CLIENT.id,
 			status:$('#status').val(),
 			diff:$('#diff').val(),
 			device:$('#dev_device').val(),
@@ -171,10 +171,8 @@ var AJAX_WS = SITE + '/ajax/ws.php?' + VALUES,
 		};
 	},
 	clientZayavSpisok = function() {
-		var send = clientZayavFilter();
-		send.op = 'client_zayav_spisok';
 		$('#dopLinks').addClass('busy');
-		$.post(AJAX_WS, send, function (res) {
+		$.post(AJAX_WS, clientZayavFilter(), function (res) {
 			$('#dopLinks').removeClass('busy');
 			$('#zayav_result').html(res.all);
 			$('#zayav_spisok').html(res.html);
@@ -183,6 +181,7 @@ var AJAX_WS = SITE + '/ajax/ws.php?' + VALUES,
 
 	zayavFilter = function () {
 		var v = {
+				op:'zayav_spisok',
 				find:$.trim($('#find input').val()),
 				sort:$('#sort').val(),
 				desc:$('#desc').val(),
@@ -225,27 +224,15 @@ var AJAX_WS = SITE + '/ajax/ws.php?' + VALUES,
 
 		return v;
 	},
-	zayavSpisokLoad = function() {
+	zayavSpisok = function() {
 		var send = zayavFilter();
 		$('.condLost')[(send.find ? 'add' : 'remove') + 'Class']('hide');
-		send.op = 'zayav_spisok_load';
 
 		$('#mainLinks').addClass('busy');
 		$.post(AJAX_WS, send, function (res) {
-			$('#zayav .result').html(res.all);
-			$('#zayav #spisok').html(res.html);
+			$('.result').html(res.all);
+			$('#spisok').html(res.html);
 			$('#mainLinks').removeClass('busy');
-		}, 'json');
-	},
-	zayavImgUpdate = function() {
-		var send = {
-			op:'zayav_img_update',
-			zayav_id:ZAYAV.id
-		};
-		$.post(AJAX_WS, send, function (res) {
-			if(res.success) {
-				$('#foto').html(res.html);
-			}
 		}, 'json');
 	},
 	zayavInfoMoneyUpdate = function(res) {
@@ -327,7 +314,7 @@ var AJAX_WS = SITE + '/ajax/ws.php?' + VALUES,
 		VK.callMethod('setLocation', hashLoc + loc);
 		return v;
 	},
-	zpSpisokLoad = function() {
+	zpSpisok = function() {
 		var send = zpFilter();
 		send.op = 'zp_spisok_load';
 		$('#mainLinks').addClass('busy');
@@ -335,17 +322,6 @@ var AJAX_WS = SITE + '/ajax/ws.php?' + VALUES,
 			$('#mainLinks').removeClass('busy');
 			$('#zp .result').html(res.all);
 			$('#zp .left').html(res.html);
-		}, 'json');
-	},
-	zpImgUpdate = function() {
-		var send = {
-			op:'zp_img_update',
-			zp_id:ZP.compat_id
-		};
-		$.post(AJAX_WS, send, function (res) {
-			if(res.success) {
-				$('#foto').html(res.html);
-			}
 		}, 'json');
 	},
 	zpAvaiAdd = function(obj) {
@@ -540,7 +516,6 @@ $.fn.clientSel = function(o) {
 	}
 	return t;
 };
-
 $.fn.device = function(o) {
 	o = $.extend({
 		width:150,
@@ -1037,7 +1012,6 @@ $(document)
 			return;
 		var next = $(this),
 			send = clientZayavFilter();
-		send.op = 'client_zayav_next';
 		send.page = $(this).attr('val');
 		next.addClass('busy');
 		$.post(AJAX_WS, send, function (res) {
@@ -1132,7 +1106,6 @@ $(document)
 			return;
 		var next = $(this),
 			send = zayavFilter();
-		send.op = 'zayav_next';
 		send.page = $(this).attr('val');
 		next.addClass('busy');
 		$.post(AJAX_WS, send, function (res) {
@@ -1160,8 +1133,8 @@ $(document)
 				delayShow:500
 			});
 	})
-	.on('click', '#zayav #sort_radio div', zayavSpisokLoad)
-	.on('click', '#zayav #zpzakaz_radio div', zayavSpisokLoad)
+	.on('click', '#zayav #sort_radio div', zayavSpisok)
+	.on('click', '#zayav #zpzakaz_radio div', zayavSpisok)
 	.on('click', '#zayav #filter_break', function() {
 		zFind.clear();
 		$('#sort')._radio(1);
@@ -1175,11 +1148,11 @@ $(document)
 			device_ids:DEVICE_IDS,
 			vendor_ids:VENDOR_IDS,
 			model_ids:MODEL_IDS,
-			func:zayavSpisokLoad
+			func:zayavSpisok
 		});
 		$('#device_place')._select(0);
 		$('#devstatus')._select(0);
-		zayavSpisokLoad();
+		zayavSpisok();
 	})
 
 	.on('click', '#zayavInfo .zedit', function() {
@@ -1208,8 +1181,7 @@ $(document)
 			width:200,
 			top:-83,
 			left:-2,
-			delayShow:1500,
-			correct:0
+			delayShow:1500
 		});
 		$('#dev').device({
 			width:190,
@@ -1263,8 +1235,7 @@ $(document)
 					top:-47,
 					left:107,
 					show:1,
-					remove:1,
-					correct:0
+					remove:1
 				});
 		}
 	})
@@ -1423,8 +1394,7 @@ $(document)
 					left:123,
 					indent:40,
 					remove:1,
-					show:1,
-					correct:0
+					show:1
 				});
 		}
 	})
@@ -1591,8 +1561,7 @@ $(document)
 					top:-47,
 					left:56,
 					show:1,
-					remove:1,
-					correct:0
+					remove:1
 				});
 			else {
 				dialog.process();
@@ -1641,7 +1610,7 @@ $(document)
 		}
 	})
 
-	.on('click', '#zp #bu_check', zpSpisokLoad)
+	.on('click', '#zp #bu_check', zpSpisok)
 	.on('click', '#zp ._next', function() {
 		if($(this).hasClass('busy'))
 			return;
@@ -1778,9 +1747,9 @@ $(document)
 							device_id:send.device_id,
 							vendor_id:send.vendor_id,
 							model_id:send.model_id,
-							func:zpSpisokLoad
+							func:zpSpisok
 						});
-						zpSpisokLoad();
+						zpSpisok();
 					}
 				},'json');
 			}
@@ -2789,8 +2758,7 @@ $(document)
 				top:-38,
 				left:-250,
 				indent:40,
-				delayShow:1000,
-				correct:0
+				delayShow:1000
 			}).click(clientAdd);
 			$('#dolg')._check(clientSpisok)
 			$('#active')._check(clientSpisok)
@@ -2803,8 +2771,7 @@ $(document)
 				top:-6,
 				left:-185,
 				indent:20,
-				delayShow:1000,
-				correct:0
+				delayShow:1000
 			});
 		}
 		if($('#clientInfo').length) {
@@ -2839,20 +2806,19 @@ $(document)
 					ugol:'right',
 					top:-9,
 					left:-178,
-					delayShow:800,
-					correct:0
+					delayShow:800
 				})
 				._search({
 					width:153,
 					focus:1,
 					txt:'Быстрый поиск...',
 					enter:1,
-					func:zayavSpisokLoad
+					func:zayavSpisok
 				});
 			zFind.inp(G.zayav_find);
-			$('#desc')._check(zayavSpisokLoad);
-			$('#status').rightLink(zayavSpisokLoad);
-			$('#diff')._check(zayavSpisokLoad);
+			$('#desc')._check(zayavSpisok);
+			$('#status').rightLink(zayavSpisok);
+			$('#diff')._check(zayavSpisok);
 			$('#dev').device({
 				width:155,
 				type_no:1,
@@ -2862,7 +2828,7 @@ $(document)
 				device_ids:DEVICE_IDS,
 				vendor_ids:VENDOR_IDS,
 				model_ids:MODEL_IDS,
-				func:zayavSpisokLoad
+				func:zayavSpisok
 			});
 			// Нахождение устройства
 			for(n = 0; n < G.place_other.length; n++) {
@@ -2874,7 +2840,7 @@ $(document)
 				width:155,
 				title0:'Любое местонахождение',
 				spisok:DEVPLACE_SPISOK,
-				func:zayavSpisokLoad
+				func:zayavSpisok
 			});
 			// Состояние устройства
 			DEVSTATUS_SPISOK.splice(0, 1);
@@ -2883,7 +2849,7 @@ $(document)
 				width:155,
 				title0:'Любое состояние',
 				spisok:DEVSTATUS_SPISOK,
-				func:zayavSpisokLoad
+				func:zayavSpisok
 			});
 			zayavFilter();
 		}
@@ -2968,8 +2934,7 @@ $(document)
 						left:201,
 						indent:30,
 						remove:1,
-						show:1,
-						correct:0
+						show:1
 					});
 			});
 		}
@@ -2980,12 +2945,7 @@ $(document)
 				ugol:'top',
 				top:40,
 				left:456,
-				indent:90,
-				correct:0
-			});
-			$('.fotoUpload').fotoUpload({
-				owner:'zayav' + ZAYAV.id,
-				func:zayavImgUpdate
+				indent:90
 			});
 			$('.img_print').click(function() {
 				var html = '<table class="zayav-print">' +
@@ -3019,18 +2979,18 @@ $(document)
 					focus:1,
 					txt:'Быстрый поиск...',
 					enter:1,
-					func:zpSpisokLoad
+					func:zpSpisok
 				})
 				.inp(G.zp_find);
 			$('#menu_rightLink a').click(function() {
 				$('#menu').rightLink($(this).attr('val'));
-				zpSpisokLoad();
+				zpSpisok();
 			});
 			$("#zp_name")._select({
 				width:153,
 				title0:'Любое наименование',
 				spisok:ZPNAME_SPISOK,
-				func:zpSpisokLoad
+				func:zpSpisok
 			}).o;
 			$("#dev").device({
 				width:153,
@@ -3039,15 +2999,9 @@ $(document)
 				device_id:G.zp_device,
 				vendor_id:G.zp_vendor,
 				model_id:G.zp_model,
-				func:zpSpisokLoad
+				func:zpSpisok
 			});
 			zpFilter();
-		}
-		if($('#zpInfo').length) {
-			$('.fotoUpload').fotoUpload({
-				owner:'zp' + ZP.compat_id,
-				func:zpImgUpdate
-			});
 		}
 
 		if($('#report.history').length) {

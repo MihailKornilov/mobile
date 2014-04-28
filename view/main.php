@@ -305,100 +305,6 @@ function GvaluesCreate() {//Составление файла G_values.js
 	xcache_unset(CACHE_PREFIX.'setup_global');
 }//GvaluesCreate()
 
-function _imageResize($x_cur, $y_cur, $x_new, $y_new) { // изменение размера изображения
-	$x = $x_new;
-	$y = $y_new;
-	// если ширина больше или равна высоте
-	if ($x_cur >= $y_cur) {
-		if ($x > $x_cur) { $x = $x_cur; } // если новая ширина больше, чем исходная, то X остаётся исходным
-		$y = round($y_cur / $x_cur * $x);
-		if ($y > $y_new) { // если новая высота в итоге осталась меньше исходной, то подравнивание по Y
-			$y = $y_new;
-			$x = round($x_cur / $y_cur * $y);
-		}
-	}
-
-	// если выстоа больше ширины
-	if ($y_cur > $x_cur) {
-		if ($y > $y_cur) { $y = $y_cur; } // если новая высота больше, чем исходная, то Y остаётся исходным
-		$x = round($x_cur / $y_cur * $y);
-		if ($x > $x_new) { // если новая ширина в итоге осталась меньше исходной, то подравнивание по X
-			$x = $x_new;
-			$y = round($y_cur / $x_cur * $x);
-		}
-	}
-
-	$send['x'] = $x;
-	$send['y'] = $y;
-	return $send;
-}//_imageResize()
-function _getImg($type, $arr, $size='small', $x_new=10000, $y_new=10000, $class=false) {
-	$id = false;
-	if(!is_array($arr)) {
-		$id = 'IMG_'.strtoupper($type).$arr;
-		$arr = array($arr);
-	}
-	if($id && defined($id))
-		return array(
-			'success' => constant($id.'_RES'),
-			'img' => constant($id)
-		);
-	$send = array(
-		'success' => false,
-		'img' => '<img src="/img/nofoto-'.$size.'.gif"'.($x_new < 10000 ? ' width="'.$x_new.'"' : '').'>'
-	);
-	$owners = array();
-	foreach($arr as $k => $r) {
-		$arr[$k] = "'".$type.$r."'";
-		$owners[$type.$r] = false;
-	}
-	$sql = "SELECT *
-			FROM `images`
-			WHERE `status`=1
-			  AND `sort`=0
-			  AND `owner` IN (".implode(',', $arr).")
-			GROUP BY `owner`";
-	$q = query($sql);
-	while($r = mysql_fetch_assoc($q)) {
-		$s = _imageResize($r[$size.'_x'], $r[$size.'_y'], $x_new, $y_new);
-		$c = 'IMG_'.strtoupper($r['owner']);
-		define($c, '<img src="'.$r['link'].'-'.$size.'.jpg"'.
-						'width="'.$s['x'].'"'.
-						'height="'.$s['y'].'" '.
-			  ($class ? 'class="'.$class.'"' : '').
-						'val="'.$r['owner'].'">');
-		define($c.'_RES', true);
-		$owners[$r['owner']] = constant($c);
-	}
-	foreach($owners as $k => $ow)
-		if(!$ow) {
-			$c = 'IMG_'.strtoupper($k);
-			define($c, $send['img']);
-			define($c.'_RES', false);
-		}
-	if($id)
-		return array(
-			'success' => constant($id.'_RES'),
-			'img' => constant($id)
-		);
-	return $send;
-}//_getImg()
-function _zayavImg($zayav_id, $size='small', $x_new=10000, $y_new=10000, $class=false) {
-	$res = _getImg('zayav', $zayav_id, $size, $x_new, $y_new, $class);
-	if($res['success'])
-		return $res['img'];
-	$sql = "SELECT `base_model_id` FROM `zayav` WHERE `id`=".$zayav_id." LIMIT 1";
-	$r = mysql_fetch_assoc(query($sql));
-	return _modelImg($r['base_model_id'], $size, $x_new, $y_new, $class);
-}//_zayavImg()
-function _modelImg($model_id, $size='small', $x_new=10000, $y_new=10000, $class=false) {
-	$res = _getImg('dev', $model_id, $size, $x_new, $y_new, $class);
-	return $res['img'];
-}//_modelImg()
-function _zpImg($zp_id, $size='small', $x_new=10000, $y_new=10000, $class=false) {
-	$res = _getImg('zp', $zp_id, $size, $x_new, $y_new, $class);
-	return $res['img'];
-}//_modelImg()
 
 function _deviceName($device_id, $rod=false) {
 	if(!defined('DEVICE_LOADED')) {
@@ -646,3 +552,38 @@ function ws_create_step1() {
 		'<script type="text/javascript" src="'.SITE.'/js/ws_create_step1'.(DEBUG ? '' : '.min').'.js?'.VERSION.'"></script>'.
 	'</div>';
 }//ws_create_step1()
+
+
+
+
+
+
+
+
+
+/*
+function to_new_images() {//Перенос картинок в новый формат
+	define('IMLINK', 'http://'.DOMAIN.'/files/images/');
+	define('IMPATH', PATH.'files/images/');
+	$sql = "SELECT * FROM `images` WHERE !LENGTH(`path`) LIMIT 1000";
+	$q = query($sql);
+	while($r = mysql_fetch_assoc($q)) {
+		$name = str_replace('http://mobile.nyandoma.ru/files/images/', '', $r['link']);
+
+		$small_name = $name.'-s.jpg';
+		rename(IMPATH.$name.'-small.jpg', IMPATH.$small_name);
+
+		$big_name = $name.'-b.jpg';
+		rename(IMPATH.$name.'-big.jpg', IMPATH.$big_name);
+
+		echo 'id='.$r['id'].' '.$small_name.'<br />';
+
+		$sql = "UPDATE `images`
+				SET `path`='".addslashes(IMLINK)."',
+					`small_name`='".$small_name."',
+					`big_name`='".$big_name."'
+				WHERE `id`=".$r['id'];
+		query($sql);
+	}
+}
+*/

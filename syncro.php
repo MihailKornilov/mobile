@@ -9,6 +9,7 @@ $mysql = array(
 
 define('VKPATH', 'c:/www/nyandoma/vk/');
 define('PATH_FILES', 'c:/www/vkmobile/files/');
+define('PATH', 'c:/www/vkmobile/');
 define('CACHE_PREFIX', 'vkmobile_');
 
 $_GET['viewer_id'] = 982006;

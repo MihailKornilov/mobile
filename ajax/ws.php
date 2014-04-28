@@ -256,15 +256,11 @@ switch(@$_POST['op']) {
 		jsonSuccess();
 		break;
 	case 'client_zayav_spisok':
-		$data = zayav_data(1, zayavfilter($_POST), 10);
-		$send['all'] = utf8(zayav_count($data['all'], 0));
-		$send['html'] = utf8(zayav_spisok($data));
-		jsonSuccess($send);
-		break;
-	case 'client_zayav_next':
-		if(!preg_match(REGEXP_NUMERIC, $_POST['page']))
-			jsonError();
-		$send['html'] = utf8(zayav_spisok(zayav_data(intval($_POST['page']), zayavfilter($_POST), 10)));
+		$_POST['limit'] = 10;
+		$data = zayav_spisok($_POST);
+		if($data['filter']['page'] == 1)
+			$send['all'] = utf8($data['result']);
+		$send['html'] = utf8($data['spisok']);
 		jsonSuccess($send);
 		break;
 	case 'client_history_next':
@@ -414,7 +410,10 @@ switch(@$_POST['op']) {
 	case 'model_img_get':
 		if(!preg_match(REGEXP_NUMERIC, $_POST['model_id']))
 			jsonError();
-		$send['img'] = _modelImg(intval($_POST['model_id']), 'small', 80, 80, 'fotoView');
+		$send['img'] = _imageGet(array(
+			'owner' => 'dev'.intval($_POST['model_id']),
+			'view' => 1
+		));
 		jsonSuccess($send);
 		break;
 	case 'equip_check_get':
@@ -424,18 +423,12 @@ switch(@$_POST['op']) {
 		$send['spisok'] = utf8(devEquipCheck($device_id));
 		jsonSuccess($send);
 		break;
-	case 'zayav_spisok_load':
+	case 'zayav_spisok':
 		$_POST['find'] = win1251($_POST['find']);
-		$data = zayav_data(1, zayavfilter($_POST));
-		$send['all'] = utf8(zayav_count($data['all']));
-		$send['html'] = utf8(zayav_spisok($data));
-		jsonSuccess($send);
-		break;
-	case 'zayav_next':
-		$_POST['find'] = win1251($_POST['find']);
-		if(!preg_match(REGEXP_NUMERIC, $_POST['page']))
-			jsonError();
-		$send['html'] = utf8(zayav_spisok(zayav_data(intval($_POST['page']), zayavfilter($_POST))));
+		$data = zayav_spisok($_POST);
+		if($data['filter']['page'] == 1)
+			$send['all'] = utf8($data['result']);
+		$send['html'] = utf8($data['spisok']);
 		jsonSuccess($send);
 		break;
 	case 'zayav_edit':
@@ -620,12 +613,6 @@ switch(@$_POST['op']) {
 			));
 			$send['z_status']['dtime'] = utf8(FullDataTime(curTime(), 1));
 		}
-		jsonSuccess($send);
-		break;
-	case 'zayav_img_update'://Обновление картинки заявки после загрузки новой
-		if(!preg_match(REGEXP_NUMERIC, $_POST['zayav_id']))
-		jsonError();
-		$send['html'] = _zayavImg(intval($_POST['zayav_id']), 'big', 200, 320, 'fotoView');
 		jsonSuccess($send);
 		break;
 	case 'zayav_accrual_add':
@@ -920,20 +907,20 @@ switch(@$_POST['op']) {
 		break;
 
 	case 'zayav_nomer_info'://Получение данных о заявке по номеру
-		if(!preg_match(REGEXP_NUMERIC, $_POST['nomer']) || $_POST['nomer'] == 0)
+		if(empty($_POST['nomer']) || !preg_match(REGEXP_NUMERIC, $_POST['nomer']))
 			jsonError();
 		$nomer = intval($_POST['nomer']);
 		$sql = "SELECT *
 				FROM `zayav`
 				WHERE `ws_id`=".WS_ID."
 				  AND `nomer`=".$nomer."
-				  AND `zayav_status`>0
+				  AND `zayav_status`
 				LIMIT 1";
 		if(!$zayav = mysql_fetch_assoc(query($sql)))
 			$send['html'] = '<span class="zayavNomerTab">Заявка не найдена</span>';
 		else
 			$send['html'] = '<table class="zayavNomerTab">'.
-				'<tr><td>'._zayavImg($zayav['id'], 'small', 60, 40, 'fotoView').
+				'<tr><td>'._zayavImg($zayav).
 					'<td><a href="'.URL.'&p=zayav&d=info&id='.$zayav['id'].'">'._deviceName($zayav['base_device_id']).'<br />'.
 						   _vendorName($zayav['base_vendor_id'])._modelName($zayav['base_model_id']).
 						'</a>'.
@@ -1058,12 +1045,6 @@ switch(@$_POST['op']) {
 		} else
 			query("DELETE FROM `zp_zakaz` WHERE `ws_id`=".WS_ID." AND `zp_id`=".$zp_id);
 		jsonSuccess();
-		break;
-	case 'zp_img_update'://Обновление картинки заявки после загрузки новой
-		if(!preg_match(REGEXP_NUMERIC, $_POST['zp_id']))
-			jsonError();
-		$send['html'] = _zpImg(intval($_POST['zp_id']), 'big', 160, 280, 'fotoView');
-		jsonSuccess($send);
 		break;
 	case 'zp_edit':
 		if(!preg_match(REGEXP_NUMERIC, $_POST['zp_id']) || $_POST['zp_id'] == 0)
@@ -1885,17 +1866,17 @@ switch(@$_POST['op']) {
 			jsonError();
 		$id = intval($_POST['id']);
 		$sql = "SELECT * FROM `zayav` WHERE `id`=".$id;
-		$zayav = mysql_fetch_assoc(query($sql));
+		$z = mysql_fetch_assoc(query($sql));
 
-		$sql = "SELECT `fio` FROM `client` WHERE `deleted`=0 AND `id`=".$zayav['client_id'];
+		$sql = "SELECT `fio` FROM `client` WHERE `deleted`=0 AND `id`=".$z['client_id'];
 		$r = mysql_fetch_assoc(query($sql));
 		$client = $r['fio'];
 
 		$html = '<table><tr>'.
-					'<td><div class="image">'._zayavImg($id).'</div></td>'.
+					'<td><div class="image">'._zayavImg($z).'</div></td>'.
 					'<td class="inf">'.
-						_deviceName($zayav['base_device_id']).'<br />'.
-						'<b>'._vendorName($zayav['base_vendor_id'])._modelName($zayav['base_model_id']).'</b><br /><br />'.
+						_deviceName($z['base_device_id']).'<br />'.
+						'<b>'._vendorName($z['base_vendor_id'])._modelName($z['base_model_id']).'</b><br /><br />'.
 						'<span style="color:#000">Клиент:</span> '.$client.
 					'</td>'.
 				'</tr></table>';

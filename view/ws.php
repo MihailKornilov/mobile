@@ -347,7 +347,10 @@ function client_info($client_id) {
 		else
 			return _noauth('Клиент был удалён.');
 
-	$zayavData = zayav_data(1, array('client'=>$client_id), 10);
+	$zayavData = zayav_spisok(array(
+		'client_id' => $client_id,
+		'limit' => 10
+	));
 	$commCount = query_value("SELECT COUNT(`id`)
 							  FROM `vk_comment`
 							  WHERE `status`=1
@@ -425,7 +428,7 @@ function client_info($client_id) {
 						'<a class="link" val="comm">Заметки'.($commCount ? ' (<b>'.$commCount.'</b>)' : '').'</a>'.
 						'<a class="link" val="hist">История'.($histCount ? ' (<b>'.$histCount.'</b>)' : '').'</a>'.
 					'</div>'.
-					'<div id="zayav_spisok">'.zayav_spisok($zayavData).'</div>'.
+					'<div id="zayav_spisok">'.$zayavData['spisok'].'</div>'.
 					'<div id="money_spisok">'.$money.'</div>'.
 					'<div id="remind_spisok">'.(!empty($remindData) ? remind_spisok($remindData) : '<div class="_empty">Заданий нет.</div>').'</div>'.
 					'<div id="comments">'._vkComment('client', $client_id).'</div>'.
@@ -438,7 +441,7 @@ function client_info($client_id) {
 						'<a class="remind_add">Новое задание</a>'.
 					'</div>'.
 					'<div id="zayav_filter">'.
-						'<div id="zayav_result">'.zayav_count($zayavData['all'], 0).'</div>'.
+						'<div id="zayav_result">'.$zayavData['result'].'</div>'.
 						'<div class="findHead">Статус заявки</div>'.
 						_rightLink('status', _zayavStatusName()).
 						_check('diff', 'Неоплаченные заявки').
@@ -595,7 +598,20 @@ function _zayavBaseModelIds($client_id=0) { //список id производителей, которые 
 		$ids[] = $r['id'];
 	return implode(',', $ids);
 }//_zayavBaseModelIds()
-
+function _zayavImg($z, $size='s') {
+	$v = array(
+		'owner' => array('zayav'.$z['id'], 'dev'.$z['base_model_id'])
+	);
+	if($size == 'b')
+		$v += array(
+			'size' => 'b',
+			'x' => 200,
+			'y' => 320,
+			'view' => 1
+		);
+	$img = _imageGet($v);
+	return $img['zayav'.$z['id']]['id'] ? $img['zayav'.$z['id']]['img'] : $img['dev'.$z['base_model_id']]['img'];
+}//_zayavImg()
 
 
 function zayav_add($v=array()) {
@@ -640,105 +656,95 @@ function zayav_add($v=array()) {
 	'</div>';
 }//zayav_add()
 
-function zayavFilter($v) {
-	if(empty($v['status']) || !preg_match(REGEXP_NUMERIC, $v['status']))
-		$v['status'] = 0;
-	if(empty($v['zpzakaz']) || !preg_match(REGEXP_NUMERIC, $v['zpzakaz']))
-		$v['zpzakaz'] = 0;
-	if(empty($v['device']) || !preg_match(REGEXP_NUMERIC, $v['device']))
-		$v['device'] = 0;
-	if($v['device'] == 0 || !preg_match(REGEXP_NUMERIC, $v['vendor']))
-		$v['vendor'] = 0;
-	if($v['device'] == 0 || !preg_match(REGEXP_NUMERIC, $v['model']))
-		$v['model'] = 0;
-	if(empty($v['devstatus']) || !preg_match(REGEXP_NUMERIC, $v['devstatus']) && $v['devstatus'] != -1)
-		$v['devstatus'] = 0;
-	if(empty($v['client']) || !preg_match(REGEXP_NUMERIC, $v['client']))
-		$v['client'] = 0;
+function zayav_spisok($v) {
+	$filter = array(
+		'page' => !empty($v['page']) && preg_match(REGEXP_NUMERIC, $v['page']) ? intval($v['page']) : 1,
+		'limit' => !empty($v['limit']) && preg_match(REGEXP_NUMERIC, $v['limit']) ? intval($v['limit']) : 20,
+		'client_id' => !empty($v['client_id']) && preg_match(REGEXP_NUMERIC, $v['client_id']) ? intval($v['client_id']) : 0,
+		'find' => !empty($v['find']) ? htmlspecialchars(trim($v['find'])) : '',
+		'status' => !empty($v['status']) && preg_match(REGEXP_NUMERIC, $v['status']) ? intval($v['status']) : 0,
+		'zpzakaz' => !empty($v['zpzakaz']) && preg_match(REGEXP_NUMERIC, $v['zpzakaz']) ? intval($v['zpzakaz']) : 0,
+		'device' => !empty($v['device']) && preg_match(REGEXP_NUMERIC, $v['device']) ? intval($v['device']) : 0,
+		'vendor' => !empty($v['vendor']) && preg_match(REGEXP_NUMERIC, $v['vendor']) ? intval($v['vendor']) : 0,
+		'model' => !empty($v['model']) && preg_match(REGEXP_NUMERIC, $v['model']) ? intval($v['model']) : 0,
+		'devstatus' => empty($v['devstatus']) || preg_match(REGEXP_NUMERIC, $v['devstatus']) && $v['devstatus'] != -1 ? 0 : $v['devstatus'],
+		'sort' => !empty($v['sort']) && $v['sort'] == 2 ? 'zayav_status_dtime' : 'dtime_add',
+		'desc' => !empty($v['desc']) ? 'ASC' : 'DESC',
+		'diff' => !empty($v['diff']) ? 1 : 0,
+		'place' => !empty($v['place']) ? win1251(urldecode(htmlspecialchars(trim($v['place'])))) : ''
+	);
 
-	$filter = array();
-	$filter['find'] = htmlspecialchars(trim(@$v['find']));
-	switch(@$v['sort']) {
-		case '2': $filter['sort'] = 'zayav_status_dtime'; break;
-		default: $filter['sort'] = 'dtime_add';
-	}
-	$filter['desc'] = intval(@$v['desc']) == 1 ? 'ASC' : 'DESC';
-	$filter['status'] = intval($v['status']);
-	$filter['diff'] = intval(@$v['diff']) == 1 ? 1 : 0;
-	$filter['zpzakaz'] = intval($v['zpzakaz']);
-	$filter['device'] = intval($v['device']);
-	$filter['vendor'] = intval($v['vendor']);
-	$filter['model'] = intval($v['model']);
-	if(isset($v['place']))
-		$filter['place'] = win1251(urldecode(htmlspecialchars(trim($v['place']))));
-	$filter['devstatus'] = $v['devstatus'];
-	if($v['client'])
-		$filter['client'] = intval($v['client']);
-	return $filter;
-}//zayavFilter()
-function zayav_data($page=1, $filter=array(), $limit=20) {
-	$cond = "`ws_id`=".WS_ID." AND `zayav_status`>0";
 
-	if(empty($filter['sort']))
-		$filter['sort'] = 'dtime_add';
-	if(empty($filter['desc']))
-		$filter['desc'] = 'DESC';
-	if(!empty($filter['find'])) {
+	$page = $filter['page'];
+	$limit = $filter['limit'];
+	$cond = "`ws_id`=".WS_ID." AND `zayav_status`";
+
+	if($filter['find']) {
 		$cond .= " AND `find` LIKE '%".$filter['find']."%'";
 		if($page ==1 && preg_match(REGEXP_NUMERIC, $filter['find']))
 			$nomer = intval($filter['find']);
 		$reg = '/('.$filter['find'].')/i';
 	} else {
-		if(isset($filter['status']) && $filter['status'] > 0)
+		if($filter['client_id'])
+			$cond .= " AND `client_id`=".$filter['client_id'];
+		if($filter['status'])
 			$cond .= " AND `zayav_status`=".$filter['status'];
-		if(isset($filter['diff']) && $filter['diff'] > 0)
+		if($filter['diff'])
 			$cond .= " AND `accrual_sum`!=`oplata_sum`";
-		if(isset($filter['zpzakaz']) && $filter['zpzakaz'] > 0) {
-			$sql = "SELECT `zayav_id` FROM `zp_zakaz` WHERE `ws_id`=".WS_ID;
-			$q = query($sql);
-			$ids[0] = 0;
-			while($r = mysql_fetch_assoc($q))
-				$ids[$r['zayav_id']] = $r['zayav_id'];
-			$cond .= " AND `id` ".($filter['zpzakaz'] == 2 ? 'NOT' : '')." IN (".implode(',', $ids).")";
+		if($filter['zpzakaz']) {
+			$ids = query_ids("SELECT `zayav_id` FROM `zp_zakaz` WHERE `ws_id`=".WS_ID);
+			$cond .= " AND `id` ".($filter['zpzakaz'] == 2 ? 'NOT' : '')." IN (".$ids.")";
 		}
-		if(isset($filter['device']) && $filter['device'] > 0)
+		if($filter['device'])
 			$cond .= " AND `base_device_id`=".$filter['device'];
-		if(isset($filter['vendor']) && $filter['vendor'] > 0)
+		if($filter['vendor'])
 			$cond .= " AND `base_vendor_id`=".$filter['vendor'];
-		if(isset($filter['model']) && $filter['model'] > 0)
+		if($filter['model'])
 			$cond .= " AND `base_model_id`=".$filter['model'];
-		if(isset($filter['place']) && $filter['place'] != '0') {
+		if($filter['place']) {
 			if(preg_match(REGEXP_NUMERIC, $filter['place']))
 				$cond .= " AND `device_place`=".$filter['place'];
 			elseif($filter['place'] == -1)
-				$cond .= " AND `device_place`=0 AND LENGTH(`device_place_other`)=0";
+				$cond .= " AND !`device_place` AND !LENGTH(`device_place_other`)";
 			else
-				$cond .= " AND `device_place`=0 AND `device_place_other`='".$filter['place']."'";
+				$cond .= " AND !`device_place` AND `device_place_other`='".$filter['place']."'";
 		}
-		if(isset($filter['devstatus']) && $filter['devstatus'] != 0)
-			$cond .= " AND `device_status`=".($filter['devstatus'] > 0 ? $filter['devstatus'] : 0);
-		if(isset($filter['client']) && $filter['client'] > 0)
-			$cond .= " AND `client_id`=".$filter['client'];
+		if($filter['devstatus'])
+			$cond .= " AND `device_status`=".$filter['devstatus'];
 	}
 
-	$send['all'] = query_value("SELECT COUNT(*) AS `all` FROM `zayav` WHERE ".$cond." LIMIT 1");
+	$all = query_value("SELECT COUNT(*) AS `all` FROM `zayav` WHERE ".$cond." LIMIT 1");
 
 	$zayav = array();
 	$images = array();
 	if(isset($nomer)) {
-		$sql = "SELECT * FROM `zayav` WHERE `ws_id`=".WS_ID." AND `zayav_status`>0 AND `nomer`=".$nomer." LIMIT 1";
+		$sql = "SELECT * FROM `zayav` WHERE `ws_id`=".WS_ID." AND `zayav_status` AND `nomer`=".$nomer." LIMIT 1";
 		if($r = mysql_fetch_assoc(query($sql))) {
-			$send['all']++;
+			$all++;
 			$limit--;
 			$r['nomer_find'] = 1;
 			$zayav[$r['id']] = $r;
-			$images['zayav'.$r['id']] = '"zayav'.$r['id'].'"';
-			if($r['base_model_id'] > 0)
-				$images['dev'.$r['base_model_id']] = '"dev'.$r['base_model_id'].'"';
+			$images[] = 'zayav'.$r['id'];
+			$images[] = 'dev'.$r['base_model_id'];
 		}
 	}
-	if(!$send['all'])
-		return $send;
+
+	$filter_break = !$filter['client_id'] ? '<a id="filter_break">Сбросить условия поиска</a>' : '';
+
+	if(!$all)
+		return array(
+			'all' => 0,
+			'result' => 'Заявок не найдено',
+			'spisok' => '<div class="_empty">Заявок не найдено</div>'.$filter_break,
+			'filter' => $filter
+		);
+
+	$send = array(
+		'all' => $all,
+		'result' => 'Показан'._end($all, 'а', 'о').' '.$all.' заяв'._end($all, 'ка', 'ки', 'ок').$filter_break,
+		'spisok' => '',
+		'filter' => $filter
+	);
 
 	$start = ($page - 1) * $limit;
 	$sql = "SELECT *
@@ -751,22 +757,19 @@ function zayav_data($page=1, $filter=array(), $limit=20) {
 		if(isset($nomer) && $nomer == $r['nomer'])
 			continue;
 		$zayav[$r['id']] = $r;
-		$images['zayav'.$r['id']] = '"zayav'.$r['id'].'"';
-		if($r['base_model_id'] > 0)
-			$images['dev'.$r['base_model_id']] = '"dev'.$r['base_model_id'].'"';
+		$images[] = 'zayav'.$r['id'];
+		$images[] = 'dev'.$r['base_model_id'];
 	}
 
 	$zayavIds = implode(',', array_keys($zayav));
 
-	if(empty($filter['client']))
-	$zayav = _clientLink($zayav);
+	if(!$filter['client_id'])
+		$zayav = _clientLink($zayav);
 
-	$sql = "SELECT `owner`,`link` FROM `images` WHERE `status`=1 AND `sort`=0 AND `owner` IN (".implode(',', $images).")";
-	$q = query($sql);
-	$imgLinks = array();
-	while($r = mysql_fetch_assoc($q))
-		$imgLinks[$r['owner']] = $r['link'].'-small.jpg';
-	unset($images);
+	$images = _imageGet(array(
+		'owner' => $images,
+		'view' => 1
+	));
 
 	//Запчасти
 	$sql = "SELECT `zayav_id`,`zp_id` FROM `zp_zakaz` WHERE `zayav_id` IN (".$zayavIds.")";
@@ -794,89 +797,96 @@ function zayav_data($page=1, $filter=array(), $limit=20) {
 			FROM `vk_comment`
 			WHERE `table_name`='zayav'
 			  AND `table_id` IN (".$zayavIds.")
-			  AND `status`=1
+			  AND `status`
 			ORDER BY `id` ASC";
-	$articles = array();
+	$note = array();
 	$q = query($sql);
 	while($r = mysql_fetch_assoc($q))
-		$articles[$r['table_id']] = $r['txt'];
+		$note[$r['table_id']] = htmlspecialchars($r['txt']);
 
 	foreach($zayav as $id => $r) {
-		$img = '/img/nofoto-small.gif';
-		if(isset($imgLinks['zayav'.$id]))
-			$img = $imgLinks['zayav'.$id];
-		elseif(isset($imgLinks['dev'.$r['base_model_id']]))
-			$img = $imgLinks['dev'.$r['base_model_id']];
-		$unit = array(
-			'status_color' => _zayavStatusColor($r['zayav_status']),
-			'nomer' => $r['nomer'],
-			'nomer_find' => isset($r['nomer_find']),
-			'device' => _deviceName($r['base_device_id']),
-			'vendor' => _vendorName($r['base_vendor_id']),
-			'model' => _modelName($r['base_model_id']),
-			'dtime' => FullData($r['dtime_add'], 1),
-			'img' => $img,
-			'article' => isset($articles[$id]) ? $articles[$id] : '',
-			'acc' => $r['accrual_sum'],
-			'opl' => $r['oplata_sum']
-		);
-		if(empty($filter['client']))
-			$unit['client'] = $r['client_link'];
-		if(!empty($filter['find'])) {
-			if(preg_match($reg, $unit['model']))
-				$unit['model'] = preg_replace($reg, "<em>\\1</em>", $unit['model'], 1);
-			if(preg_match($reg, $r['imei']))
-				$unit['imei'] = preg_replace($reg, "<em>\\1</em>", $r['imei'], 1);
-			if(preg_match($reg, $r['serial']))
-				$unit['serial'] = preg_replace($reg, "<em>\\1</em>", $r['serial'], 1);
+		$r['model'] = _modelName($r['base_model_id']);
+		$img = $images['zayav'.$id]['id'] ? $images['zayav'.$id]['img'] : $images['dev'.$r['base_model_id']]['img'];
+		if($filter['find']) {
+			if(preg_match($reg, $r['model']))
+				$r['model'] = preg_replace($reg, "<em>\\1</em>", $r['model'], 1);
+			$r['imei'] = preg_match($reg, $r['imei']) ? preg_replace($reg, "<em>\\1</em>", $r['imei'], 1) : '';
+			$r['serial'] = preg_match($reg, $r['serial']) ? preg_replace($reg, "<em>\\1</em>", $r['serial'], 1) : '';
+		} else {
+			$r['imei'] = '';
+			$r['serial'] = '';
 		}
-		if(isset($zpZakaz[$id]))
-			$unit['zakaz'] = implode(', ', $zpZakaz[$id]);
-		$send['spisok'][$id] = $unit;
+		$diff = $r['accrual_sum'] - $r['oplata_sum'];
+		$send['spisok'] .=
+			'<div class="zayav_unit" style="background-color:#'._zayavStatusColor($r['zayav_status']).'" val="'.$id.'">'.
+				'<table width="100%">'.
+					'<tr><td valign=top>'.
+						'<h2'.(isset($r['nomer_find']) ? ' class="finded"' : '').'>#'.$r['nomer'].'</h2>'.
+						'<a class="name">'.
+							_deviceName($r['base_device_id']).
+							'<b>'._vendorName($r['base_vendor_id']).$r['model'].'</b>'.
+						'</a>'.
+						'<table class="utab">'.
+   (!$filter['client_id'] ? '<tr><td class="label">Клиент:<td>'.$r['client_link'] : '').
+							'<tr><td class="label">Дата подачи:'.
+								'<td>'.FullData($r['dtime_add'], 1).
+									($r['accrual_sum'] || $r['oplata_sum'] ?
+										'<div class="balans'.($diff ? ' diff' : '').'">'.
+											'<span class="acc'._tooltip('Начислено', -39).$r['accrual_sum'].'</span>/'.
+											'<span class="opl'._tooltip($diff ? ($diff > 0 ? 'Недо' : 'Пере').'плата '.abs($diff).' руб.' : 'Оплачено', -17, 'l').$r['oplata_sum'].'</span>'.
+										'</div>'
+									: '').
+			  ($r['imei'] ? '<tr><td class="label">IMEI:<td>'.$r['imei'] : '').
+		    ($r['serial'] ? '<tr><td class="label">Серийный номер:<td>'.$r['serial'] : '').
+	(isset($zpZakaz[$id]) ? '<tr><td class="label">Заказаны з/п:<td class="zz">'.implode(', ', $zpZakaz[$id]) : '').
+						'</table>'.
+					'<td class="image">'.$img.
+				'</table>'.
+				'<input type="hidden" class="msg" value="'.(isset($note[$id]) ? $note[$id] : '').'" />'.
+			'</div>';
 	}
-	$send['limit'] = $limit;
-	if($start + $limit < $send['all'])
-		$send['next'] = $page + 1;
+
+	if($start + $limit < $all) {
+		$c = $all - $start - $limit;
+		$c = $c > $limit ? $limit : $c;
+		$send['spisok'] .=
+			'<div class="_next" val="'.($page + 1).'">'.
+				'<span>Показать ещё '.$c.' заяв'._end($c, 'ку', 'ки', 'ок').'</span>'.
+			'</div>';
+	}
 	return $send;
-}//zayav_data()
-function zayav_count($count, $filter_break_show=true) {
-	return
-		($filter_break_show ? '<a id="filter_break">Сбросить условия поиска</a>' : '').
-		($count > 0 ?
-			'Показан'._end($count, 'а', 'о').' '.$count.' заяв'._end($count, 'ка', 'ки', 'ок')
-			:
-			'Заявок не найдено');
-}//zayav_count()
-function zayav_list($data, $values) {
+}//zayav_spisok()
+function zayav_list($v) {
+	$data = zayav_spisok($v);
 	$place_other = array();
 	$sql = "SELECT DISTINCT `device_place_other` AS `other`
 			FROM `zayav`
-			WHERE LENGTH(`device_place_other`)>0
-			  AND `zayav_status`>0
+			WHERE LENGTH(`device_place_other`)
+			  AND `zayav_status`
 			  AND `ws_id`=".WS_ID;
 	$q = query($sql);
 	while($r = mysql_fetch_assoc($q))
 		$place_other[] = '"'.$r['other'].'"';
 
 	return '<div id="zayav">'.
-		'<div class="result">'.zayav_count($data['all']).'</div>'.
+		'<div class="result">'.$data['result'].'</div>'.
 		'<table class="tabLR">'.
-			'<tr><td id="spisok">'.zayav_spisok($data).
+			'<tr><td id="spisok">'.$data['spisok'].
 				'<td class="right">'.
 					'<div id="buttonCreate"><a HREF="'.URL.'&p=zayav&d=add&back=zayav">Новая заявка</a></div>'.
 					'<div id="find"></div>'.
 					'<div class="findHead">Порядок</div>'.
-					_radio('sort', array(1=>'По дате добавления',2=>'По обновлению статуса'), $values['sort']).
-					_check('desc', 'Обратный порядок', $values['desc']).
-					'<div class="condLost'.(!empty($values['find']) ? ' hide' : '').'">'.
+					_radio('sort', array(1=>'По дате добавления',2=>'По обновлению статуса'), $v['sort']).
+					_check('desc', 'Обратный порядок', $v['desc']).
+					'<div class="condLost'.(!empty($v['find']) ? ' hide' : '').'">'.
 						'<div class="findHead">Статус заявки</div>'.
-						_rightLink('status', _zayavStatusName(), $values['status']).
-						_check('diff', 'Неоплаченные заявки', $values['diff']).
+						_rightLink('status', _zayavStatusName(), $v['status']).
+						_check('diff', 'Неоплаченные заявки', $v['diff']).
 						'<div class="findHead">Заказаны запчасти</div>'.
-						_radio('zpzakaz', array(0=>'Все заявки',1=>'Да',2=>'Нет'), $values['zpzakaz'], 1).
+						_radio('zpzakaz', array(0=>'Все заявки',1=>'Да',2=>'Нет'), $v['zpzakaz'], 1).
 						'<div class="findHead">Устройство</div><div id="dev"></div>'.
-						'<div class="findHead">Нахождение устройства</div><INPUT TYPE="hidden" id="device_place" value="'.$values['place'].'">'.
-						'<div class="findHead">Состояние устройства</div><INPUT TYPE="hidden" id="devstatus" value="'.$values['devstatus'].'">'.
+						'<div class="findHead">Нахождение устройства</div><INPUT TYPE="hidden" id="device_place" value="'.$v['place'].'">'.
+						'<div class="findHead">Состояние устройства</div><INPUT TYPE="hidden" id="devstatus" value="'.$v['devstatus'].'">'.
 					'</div>'.
 		'</table>'.
 		'<script type="text/javascript">'.
@@ -884,45 +894,14 @@ function zayav_list($data, $values) {
 				'VENDOR_IDS=['._zayavBaseVendorIds().'],'.
 				'MODEL_IDS=['._zayavBaseModelIds().'];'.
 			'G.place_other = ['.implode(',', $place_other).'];'.
-			'G.zayav_find = "'.unescape($values['find']).'";'.
-			'G.zayav_device = '.$values['device'].';'.
-			'G.zayav_vendor = '.$values['vendor'].';'.
-			'G.zayav_model = '.$values['model'].';'.
+			'G.zayav_find = "'.unescape($v['find']).'";'.
+			'G.zayav_device = '.$v['device'].';'.
+			'G.zayav_vendor = '.$v['vendor'].';'.
+			'G.zayav_model = '.$v['model'].';'.
 		'</script>'.
 	'</div>';
 }//zayav_list()
-function zayav_spisok($data) {
-	if(!isset($data['spisok']))
-		return '<div class="_empty">Заявок не найдено.</div>';
-	$send = '';
-	foreach($data['spisok'] as $id => $sp) {
-		$send .= '<div class="zayav_unit" style="background-color:#'.$sp['status_color'].'" val="'.$id.'">'.
-			'<table width="100%">'.
-				'<tr><td valign=top>'.
-						'<h2'.($sp['nomer_find'] ? ' class="finded"' : '').'>#'.$sp['nomer'].'</h2>'.
-						'<a class="name">'.$sp['device'].' <b>'.$sp['vendor'].' '.$sp['model'].'</b></a>'.
-						'<table class="utab">'.
-							(isset($sp['client']) ? '<tr><td class="label">Клиент:<td>'.$sp['client'] : '').
-							'<tr><td class="label">Дата подачи:'.
-								'<td>'.$sp['dtime'].
-									  ($sp['acc'] || $sp['opl'] ?
-										  '<div class="balans'.($sp['acc'] != $sp['opl'] ? ' diff' : '').'">'.
-											'<span class="acc" title="Начислено">'.$sp['acc'].'</span>/'.
-											'<span class="opl" title="Оплачено">'.$sp['opl'].'</span>'.
-										  '</div>' : '').
-							(isset($sp['imei']) ? '<tr><td class="label">IMEI:<td>'.$sp['imei'] : '').
-							(isset($sp['serial']) ? '<tr><td class="label">Серийный номер:<td>'.$sp['serial'] : '').
-							(isset($sp['zakaz']) ? '<tr><td class="label">Заказаны з/п:<td class="zz">'.$sp['zakaz'] : '').
-						'</table>'.
-					'<td class="image"><IMG src="'.$sp['img'].'" />'.
-			'</table>'.
-			'<input type="hidden" class="msg" value="'.htmlspecialchars($sp['article']).'">'.
-		'</div>';
-	}
-	if(isset($data['next']))
-		$send .= '<div class="_next" val="'.($data['next']).'"><span>Следующие '.$data['limit'].' заявок</span></div>';
-	return $send;
-}//zayav_spisok()
+
 
 function zayavBalansUpdate($zayav_id, $ws_id=WS_ID) {//Обновление баланса клиента
 	if(!$zayav_id)
@@ -965,81 +944,43 @@ function zayav_info($zayav_id) {
 			  AND `zayav_status`
 			  AND `id`=".$zayav_id."
 			LIMIT 1";
-	if(!$zayav = mysql_fetch_assoc(query($sql)))
+	if(!$z = mysql_fetch_assoc(query($sql)))
 		return 'Заявки не существует.';
 
-	$model = _vendorName($zayav['base_vendor_id'])._modelName($zayav['base_model_id']);
-
-	define('ACC_SUM', round(query_value("SELECT IFNULL(SUM(`sum`), 0) FROM `accrual` WHERE !`deleted` AND `zayav_id`=".$zayav_id), 2));
-	define('OPL_SUM', round(query_value("SELECT IFNULL(SUM(`sum`), 0) FROM `money` WHERE !`deleted` AND `sum`>0 AND `zayav_id`=".$zayav_id), 2));
-	define('DOPL', ACC_SUM - OPL_SUM);
-
-	$sql = "SELECT *
-			FROM `zp_catalog`
-			WHERE `base_device_id`=".$zayav['base_device_id']."
-			  AND `base_vendor_id`=".$zayav['base_vendor_id']."
-			  AND `base_model_id`=".$zayav['base_model_id'];
-	$q = query($sql);
-	if(!mysql_num_rows($q))
-		$zpSpisok = '<div class="_empty">Для '.$model.' запчастей нет.</div>';
-	else {
-		$zpSpisok = '';
-		$zp = array();
-		$ids = array();
-		while($r = mysql_fetch_assoc($q)) {
-			$id = $r['compat_id'] ? $r['compat_id'] : $r['id'];
-			$zp[$id] = $r;
-			$ids[$r['id']] = $r['id'];
-			$ids[$r['compat_id']] = $r['compat_id'];
-		}
-		unset($ids[0]);
-		_zpImg($ids, 'small', 80, 80, 'fotoView');
-		$ids = implode(',', $ids);
-		$sql = "SELECT `zp_id` AS `id`,`count` FROM `zp_avai` WHERE `zp_id` IN (".$ids.")";
-		$q = query($sql);
-		while($r = mysql_fetch_assoc($q))
-			$zp[$r['id']]['avai'] = $r['count'];
-		$sql = "SELECT `zp_id` AS `id`,`count`
-				FROM `zp_zakaz`
-				WHERE `zp_id` IN (".$ids.")
-				  AND `zayav_id`=".$zayav_id;
-		$q = query($sql);
-		while($r = mysql_fetch_assoc($q))
-			$zp[$r['id']]['zakaz'] = $r['count'];
-		foreach($zp as $r)
-			$zpSpisok .= zayav_zp_unit($r, $model);
-	}
+	define('MODEL', _vendorName($z['base_vendor_id'])._modelName($z['base_model_id']));
+	define('DOPL', $z['accrual_sum'] - $z['oplata_sum']);
 
 	$status = _zayavStatusName();
 	unset($status[0]);
+
 	return '<script type="text/javascript">'.
 		'var STATUS='._selJson($status).','.
 		'ZAYAV={'.
 			'id:'.$zayav_id.','.
-			'nomer:'.$zayav['nomer'].','.
-			'client_id:'.$zayav['client_id'].','.
-			'device:'.$zayav['base_device_id'].','.
-			'vendor:'.$zayav['base_vendor_id'].','.
-			'model:'.$zayav['base_model_id'].','.
-			'z_status:'.$zayav['zayav_status'].','.
-			'dev_status:'.$zayav['device_status'].','.
-			'dev_place:'.$zayav['device_place'].','.
-			'place_other:"'.$zayav['device_place_other'].'",'.
-			'imei:"'.$zayav['imei'].'",'.
-			'serial:"'.$zayav['serial'].'",'.
-			'color_id:'.$zayav['color_id'].','.
-			'color_dop:'.$zayav['color_dop'].','.
-			'equip:"'.addslashes(devEquipCheck($zayav['base_device_id'], $zayav['equip'])).'"'.
+			'nomer:'.$z['nomer'].','.
+			'client_id:'.$z['client_id'].','.
+			'device:'.$z['base_device_id'].','.
+			'vendor:'.$z['base_vendor_id'].','.
+			'model:'.$z['base_model_id'].','.
+			'z_status:'.$z['zayav_status'].','.
+			'dev_status:'.$z['device_status'].','.
+			'dev_place:'.$z['device_place'].','.
+			'place_other:"'.$z['device_place_other'].'",'.
+			'imei:"'.$z['imei'].'",'.
+			'serial:"'.$z['serial'].'",'.
+			'color_id:'.$z['color_id'].','.
+			'color_dop:'.$z['color_dop'].','.
+			'equip:"'.addslashes(devEquipCheck($z['base_device_id'], $z['equip'])).'"'.
 		'},'.
 		'PRINT={'.
-			'dtime:"'.FullDataTime($zayav['dtime_add']).'",'.
-			'device:"'._deviceName($zayav['base_device_id']).'<b>'._vendorName($zayav['base_vendor_id'])._modelName($zayav['base_model_id']).'</b>",'.
-			'color:"'._color($zayav['color_id'], $zayav['color_dop']).'",'.
-			($zayav['imei'] ? 'imei:"'.$zayav['imei'].'",' : '').
-			($zayav['serial'] ? 'serial:"'.$zayav['serial'].'",' : '').
-			($zayav['equip'] ? 'equip:"'.zayavEquipSpisok($zayav['equip']).'",' : '').
-			'client:"'._clientLink($zayav['client_id'], 1).'",'.
-			'telefon:"'.query_value("SELECT `telefon` FROM `client` WHERE id=".$zayav['client_id']).'",'.
+			'dtime:"'.FullDataTime($z['dtime_add']).'",'.
+			'device:"'._deviceName($z['base_device_id']).'<b>'._vendorName($z['base_vendor_id'])._modelName($z['base_model_id']).'</b>",'.
+			'color:"'._color($z['color_id'], $z['color_dop']).'",'.
+			($z['imei'] ? 'imei:"'.$z['imei'].'",' : '').
+			($z['serial'] ? 'serial:"'.$z['serial'].'",' : '').
+			($z['equip'] ? 'equip:"'.zayavEquipSpisok($z['equip']).'",' : '').
+			'client:"'._clientLink($z['client_id'], 1).'",'.
+			'telefon:"'.query_value("SELECT `telefon` FROM `client` WHERE id=".$z['client_id']).'",'.
 			'defect:"'.addslashes(str_replace("\n", ' ', query_value("SELECT `txt` FROM `vk_comment` WHERE `status`=1 AND `table_name`='zayav' AND `table_id`=".$zayav_id." AND `parent_id`=0 ORDER BY `id` DESC"))).'"'.
 		'};'.
 	'</script>'.
@@ -1054,27 +995,27 @@ function zayav_info($zayav_id) {
 		'<table class="itab">'.
 			'<tr><td id="left">'.
 				'<div class="headName">'.
-					'Заявка №'.$zayav['nomer'].
+					'Заявка №'.$z['nomer'].
 					'<a class="img_print" title="Распечатать квитанцию"></a>'.
 					//'<a href="'.SITE.'/view/_kvit.php?'.VALUES.'&id='.$zayav_id.'" class="img_word" title="Распечатать квитанцию в Microsoft Word"></a>'.
 				'</div>'.
 				'<table class="tabInfo">'.
-					'<tr><td class="label">Устройство: <td>'._deviceName($zayav['base_device_id']).'<a><b>'.$model.'</b></a>'.
-					'<tr><td class="label">Клиент:	 <td>'._clientLink($zayav['client_id']).
+					'<tr><td class="label">Устройство: <td>'._deviceName($z['base_device_id']).'<a><b>'.MODEL.'</b></a>'.
+					'<tr><td class="label">Клиент:	 <td>'._clientLink($z['client_id']).
 					'<tr><td class="label">Дата приёма:'.
-						'<td class="dtime_add" title="Заявку внёс '._viewer($zayav['viewer_id_add'], 'name').'">'.FullDataTime($zayav['dtime_add']).
+						'<td class="dtime_add" title="Заявку внёс '._viewer($z['viewer_id_add'], 'name').'">'.FullDataTime($z['dtime_add']).
 					'<tr><td class="label">Статус:'.
-						'<td><div id="status" style="background-color:#'._zayavStatusColor($zayav['zayav_status']).'" class="status_place">'.
-								_zayavStatusName($zayav['zayav_status']).
+						'<td><div id="status" style="background-color:#'._zayavStatusColor($z['zayav_status']).'" class="status_place">'.
+								_zayavStatusName($z['zayav_status']).
 							'</div>'.
-							'<div id="status_dtime">от '.FullDataTime($zayav['zayav_status_dtime'], 1).'</div>'.
-					'<tr class="acc_tr'.(ACC_SUM ? '' : ' dn').'"><td class="label">Начислено: <td><b class="acc">'.ACC_SUM.'</b> руб.'.
-					'<tr class="op_tr'.(OPL_SUM ? '' : ' dn').'"><td class="label">Оплачено:	<td><b class="op">'.OPL_SUM.'</b> руб.'.
+							'<div id="status_dtime">от '.FullDataTime($z['zayav_status_dtime'], 1).'</div>'.
+					'<tr class="acc_tr'.($z['accrual_sum'] ? '' : ' dn').'"><td class="label">Начислено: <td><b class="acc">'.$z['accrual_sum'].'</b> руб.'.
+					'<tr class="op_tr'.($z['oplata_sum'] ? '' : ' dn').'"><td class="label">Оплачено:	<td><b class="op">'.$z['oplata_sum'].'</b> руб.'.
 						'<span class="dopl'.(DOPL ? '' : ' dn')._tooltip('Необходимая доплата', -60).(DOPL > 0 ? '+' : '').DOPL.'</span>'.
 				'</table>'.
 				'<div class="headBlue">Задания<a class="add remind_add">Добавить задание</a></div>'.
-				'<div id="remind_spisok">'.remind_spisok(remind_data(1, array('zayav'=>$zayav['id']))).'</div>'.
-				_vkComment('zayav', $zayav['id']).
+				'<div id="remind_spisok">'.remind_spisok(remind_data(1, array('zayav'=>$z['id']))).'</div>'.
+				_vkComment('zayav', $z['id']).
 				'<div class="headBlue mon">Начисления и платежи'.
 					'<a class="add income-add">Принять платёж</a>'.
 					'<em>::</em>'.
@@ -1083,26 +1024,25 @@ function zayav_info($zayav_id) {
 				'<div id="money_spisok">'.zayav_info_money($zayav_id).'</div>'.
 
 			'<td id="right">'.
-				'<div id="foto">'._zayavImg($zayav_id, 'big', 200, 320, 'fotoView').'</div>'.
-				'<div class="fotoUpload">Добавить изображение</div>'.
+				'<div id="foto">'._zayavImg($z, 'b').'</div>'.
 				'<div class="headBlue">Информация об устройстве</div>'.
 				'<div class="devContent">'.
-					'<div class="devName">'._deviceName($zayav['base_device_id']).'<br />'.'<a>'.$model.'</a></div>'.
+					'<div class="devName">'._deviceName($z['base_device_id']).'<br />'.'<a>'.MODEL.'</a></div>'.
 					'<table class="devInfo">'.
-						($zayav['imei'] ? '<tr><th>imei:		 <td>'.$zayav['imei'] : '').
-						($zayav['serial'] ? '<tr><th>serial:	 <td>'.$zayav['serial'] : '').
-						($zayav['equip'] ? '<tr><th valign="top">Комплект:<td>'.zayavEquipSpisok($zayav['equip']) : '').
-						($zayav['color_id'] ? '<tr><th>Цвет:  <td>'._color($zayav['color_id'], $zayav['color_dop']) : '').
-						'<tr><th>Нахождение:<td><a class="dev_place status_place">'.($zayav['device_place'] ? @_devPlace($zayav['device_place']) : $zayav['device_place_other']).'</a>'.
-						'<tr><th>Состояние: <td><a class="dev_status status_place">'._devStatus($zayav['device_status']).'</a>'.
+						($z['imei'] ? '<tr><th>imei:		 <td>'.$z['imei'] : '').
+						($z['serial'] ? '<tr><th>serial:	 <td>'.$z['serial'] : '').
+						($z['equip'] ? '<tr><th valign="top">Комплект:<td>'.zayavEquipSpisok($z['equip']) : '').
+						($z['color_id'] ? '<tr><th>Цвет:  <td>'._color($z['color_id'], $z['color_dop']) : '').
+						'<tr><th>Нахождение:<td><a class="dev_place status_place">'.($z['device_place'] ? @_devPlace($z['device_place']) : $z['device_place_other']).'</a>'.
+						'<tr><th>Состояние: <td><a class="dev_status status_place">'._devStatus($z['device_status']).'</a>'.
 					'</table>'.
 				'</dev>'.
 
 				'<div class="headBlue">'.
-					'<a class="goZp" href="'.URL.'&p=zp&device='.$zayav['base_device_id'].'&vendor='.$zayav['base_vendor_id'].'&model='.$zayav['base_model_id'].'">Список запчастей</a>'.
+					'<a class="goZp" href="'.URL.'&p=zp&device='.$z['base_device_id'].'&vendor='.$z['base_vendor_id'].'&model='.$z['base_model_id'].'">Список запчастей</a>'.
 					'<a class="zpAdd add">добавить</a>'.
 				'</div>'.
-				'<div id="zpSpisok">'.$zpSpisok.'</div>'.
+				'<div id="zpSpisok">'.zayav_zp($z).'</div>'.
 		'</table>'.
 	'</div>';
 }//zayav_info()
@@ -1161,19 +1101,61 @@ function zayav_oplata_unit($r) {
 			'<div class="img_del income-del'._tooltip('Удалить платёж', -54).'</div>'.
 			'<div class="img_rest income-rest'._tooltip('Восстановить платёж', -69).'</div>';
 }//zayav_oplata_unit()
-function zayav_zp_unit($r, $model) {
-	return '<div class="unit" val="'.$r['id'].'">'.
-		'<div class="image"><div>'._zpImg($r['id']).'</div></div>'.
-		($r['bu'] ? '<span class="bu">Б/у</span>' : '').
-		'<a href="'.URL.'&p=zp&d=info&id='.$r['id'].'"><b>'._zpName($r['name_id']).'</b> '.$model.'</a>'.
-		($r['version'] ? '<div class="version">'.$r['version'].'</div>' : '').
-		($r['color_id'] ? '<div class="color">Цвет: '._color($r['color_id']).'</div>' : '').
-		'<div>'.
-			(isset($r['zakaz']) ? '<a class="zakaz_ok">Заказано!</a>' : '<a class="zakaz">Заказать</a>').
-			(isset($r['avai']) && $r['avai'] > 0 ? '<b class="avai">Наличие: '.$r['avai'].'</b> <a class="set">Установить</a>' : '').
-		'</div>'.
-	'</div>';
-}//zayav_zp_unit()
+function zayav_zp($z) {
+	$sql = "SELECT *
+			FROM `zp_catalog`
+			WHERE `base_device_id`=".$z['base_device_id']."
+			  AND `base_vendor_id`=".$z['base_vendor_id']."
+			  AND `base_model_id`=".$z['base_model_id'];
+	$q = query($sql);
+	if(!mysql_num_rows($q))
+		return '<div class="_empty">Для '.MODEL.' запчастей нет.</div>';
+
+	$zp = array();
+	$ids = array();
+	while($r = mysql_fetch_assoc($q)) {
+		$id = $r['compat_id'] ? $r['compat_id'] : $r['id'];
+		$zp[$id] = $r;
+		$ids[$r['id']] = $r['id'];
+		$ids[$r['compat_id']] = $r['compat_id'];
+	}
+	unset($ids[0]);
+
+	$img = array();
+	foreach($ids as $id)
+		$img[] = 'zp'.$id;
+	$img = _imageGet(array('owner' => $img));
+
+	$ids = implode(',', $ids);
+	$sql = "SELECT `zp_id` AS `id`,`count` FROM `zp_avai` WHERE `zp_id` IN (".$ids.")";
+	$q = query($sql);
+	while($r = mysql_fetch_assoc($q))
+		$zp[$r['id']]['avai'] = $r['count'];
+	$sql = "SELECT `zp_id` AS `id`,`count`
+				FROM `zp_zakaz`
+				WHERE `zp_id` IN (".$ids.")
+				  AND `zayav_id`=".$z['id'];
+	$q = query($sql);
+	while($r = mysql_fetch_assoc($q))
+		$zp[$r['id']]['zakaz'] = $r['count'];
+
+	$send = '';
+	foreach($zp as $id => $r)
+		$send .=
+			'<div class="unit" val="'.$r['id'].'">'.
+				'<div class="image"><div>'.$img['zp'.$id]['img'].'</div></div>'.
+				($r['bu'] ? '<span class="bu">Б/у</span>' : '').
+				'<a href="'.URL.'&p=zp&d=info&id='.$r['id'].'"><b>'._zpName($r['name_id']).'</b> '.MODEL.'</a>'.
+				($r['version'] ? '<div class="version">'.$r['version'].'</div>' : '').
+				($r['color_id'] ? '<div class="color">Цвет: '._color($r['color_id']).'</div>' : '').
+				'<div>'.
+					(isset($r['zakaz']) ? '<a class="zakaz_ok">Заказано!</a>' : '<a class="zakaz">Заказать</a>').
+					(isset($r['avai']) && $r['avai'] ? '<b class="avai">Наличие: '.$r['avai'].'</b> <a class="set">Установить</a>' : '').
+				'</div>'.
+			'</div>';
+
+	return $send;
+}//zayav_zp()
 
 
 
@@ -1344,7 +1326,13 @@ function zp_data($page=1, $filter=array(), $limit=20) {
 		$spisok[$r['id']] = $r;
 	}
 
-	_getImg('zp', $ids);
+	$img = array();
+	foreach($ids as $id)
+		$img[] = 'zp'.$id;
+	$img = _imageGet(array(
+		'owner' => $img,
+		'view' => 1
+	));
 
 	// Получение количества по наличию
 	$sql = "SELECT
@@ -1394,7 +1382,7 @@ function zp_data($page=1, $filter=array(), $limit=20) {
 		$zakazEdit = '<span class="zzedit">ано: <tt>—</tt><b>'.$r['zakaz'].'</b><tt>+</tt></span>';
 		$send['spisok'] .= '<div class="unit" val="'.$id.'">'.
 			'<table>'.
-				'<tr><td class="img">'._zpImg($r['zp_id']).
+				'<tr><td class="img">'.$img['zp'.$id]['img'].
 					'<td class="cont">'.
 						($r['bu'] ? '<span class="bu">Б/у</span>' : '').
 						'<a href="'.URL.'&p=zp&d=info&id='.$id.'" class="name">'.
@@ -1474,8 +1462,6 @@ function zp_info($zp_id) {
 	$zakazCount = query_value("SELECT IFNULL(SUM(`count`),0) FROM `zp_zakaz` WHERE `ws_id`=".WS_ID." AND `zp_id`=".$compat_id);
 	$zakazEdit = '<span class="zzedit">ано: <tt>—</tt><b>'.$zakazCount.'</b><tt>+</tt></span>';
 
-	_zpImg($compat_id, 'big', 160, 280, 'fotoView');
-
 	$compatSpisok = zp_compat_spisok($zp_id, $compat_id);
 	$compatCount = count($compatSpisok);
 
@@ -1495,7 +1481,7 @@ function zp_info($zp_id) {
 			'name:"'._zpName($zp['name_id']).' <b>'._vendorName($zp['base_vendor_id'])._modelName($zp['base_model_id']).'</b>",'.
 			'for:"для '._deviceName($zp['base_device_id'], 1).'",'.
 			'count:'.($avai ? $avai : 0).','.
-			'img:"'.addslashes(_zpImg($compat_id)).'"'.
+			'img:""'.
 		'};'.
 	'</script>'.
 	'<div id="zpInfo">'.
@@ -1520,9 +1506,16 @@ function zp_info($zp_id) {
 					'<div class="headBlue">Движение</div>'.
 					'<div class="move">'.zp_move($compat_id).'</div>'.
 				'<td class="right">'.
-					'<div id="foto">'._zpImg($compat_id).'</div>'.
+					'<div id="foto">'.
+						_imageGet(array(
+							'owner' => 'zp'.$compat_id,
+							'size' => 'b',
+							'x' => 200,
+							'y' => 320,
+							'view' => 1
+						)).
+					'</div>'.
 					'<div class="rightLink">'.
-						'<a class="fotoUpload">Добавить изображение</a>'.
 						'<a class="edit">Редактировать</a>'.
 						'<a class="avai_add">Внести наличие</a>'.
 						'<a class="zpzakaz unit'.($zakazCount ? '' : ' hid').'" val="'.$zp_id.'">'.

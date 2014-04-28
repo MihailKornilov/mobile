@@ -86,14 +86,14 @@
 .zayav_unit .utab em{font-size:11px}
 .zayav_unit .label{width:90px;padding-left:10px}
 .zayav_unit .balans{float:right;margin-right:2px;color:#777}
-.zayav_unit .acc{color:#07a;cursor:help}
-.zayav_unit .opl{color:#090;cursor:help}
-.zayav_unit .diff .acc,.zayav_unit .diff .opl{color:#b33;font-weight:700}
+.zayav_unit .acc{color:#07a;cursor:default;font-size:10px}
+.zayav_unit .opl{color:#090;cursor:default;font-size:10px}
+.zayav_unit .diff .acc,.zayav_unit .diff .opl{color:#c33}
 .zayav_unit .zz{color:#a33}
 .zayav_unit .image {
 	width:80px;
 	height:80px;
-	vertical-align:middle;
+	vertical-align:top;
 	text-align:center;
 	border-left:#DDD solid 1px;
 	background-color:#FFF;
@@ -158,9 +158,7 @@
 .zayav_accrual_add.remind{display:none;margin-top:-8px;}
 #zayavInfo .deleting{text-align:center;color:#555}
 #zayavInfo #right{vertical-align:top;width:200px}
-#zayavInfo #foto{text-align:center}
-#zayavInfo .fotoUpload{color:#2B587A;padding:10px;text-align:center;cursor:pointer}
-#zayavInfo .fotoUpload:hover{background-color:#e9edf1}
+#zayavInfo #foto{text-align:center;margin-bottom:10px}
 #zayavInfo .devContent{border-left:#e9edf1 solid 1px}
 #zayavInfo .devName{padding:7px 0 0 7px}
 #zayavInfo .devName a{font-weight:bold}

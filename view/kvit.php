@@ -1,6 +1,6 @@
 <?php
 require_once('../config.php');
-require_once(DOCUMENT_ROOT.'/include/clsMsDocGenerator.php');
+require_once(VKPATH.'clsMsDocGenerator.php');
 require_once(DOCUMENT_ROOT.'/view/ws.php');
 
 if(!preg_match(REGEXP_NUMERIC, $_GET['id'])) {
@@ -48,7 +48,7 @@ $send =
 
 	'<div class="kvit-head">Квитанция №'.$zayav['nomer'].'</div>'.
 
-	'<table class="device-tab"><tr><td>'.$kvit.'<td class="image">'._zayavImg($id, 'big', 200, 220).'</table>'.
+	//'<table class="device-tab"><tr><td>'.$kvit.'<td class="image">'._zayavImg($id, 'big', 200, 220).'</table>'.
 
 	'<div class="label" id="conditions">Условия проведения ремонта:</div>'.
 	'<ul class="conditions-about">'.

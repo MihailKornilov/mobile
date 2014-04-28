@@ -51,26 +51,6 @@ switch(@$_POST['op']) {
 		_cacheClear();
 		jsonSuccess();
 		break;
-
-	case 'foto_load':
-		if(!preg_match(REGEXP_WORD, $_POST['owner']))
-			jsonError();
-		$sql = "SELECT *
-				FROM `images`
-				WHERE `owner`='".$_POST['owner']."'
-				  AND `status`=1
-				ORDER BY `sort`";
-		$q = query($sql);
-		$send = array();
-		while($r = mysql_fetch_assoc($q))
-			$send['img'][] = array(
-				'link' => $r['link'].'-big.jpg',
-				'x' => $r['big_x'],
-				'y' => $r['big_y'],
-				'dtime' => utf8(FullData($r['dtime_add'], 1))
-			);
-		jsonSuccess($send);
-		break;
 }
 
 jsonError();
