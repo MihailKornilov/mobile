@@ -295,6 +295,7 @@ var AJAX_WS = SITE + '/ajax/ws.php?' + VALUES,
 
 	zpFilter = function() {
 		var v = {
+				op:'zp_spisok',
 				find:$.trim($('#find input').val()),
 				menu:$('#menu').val(),
 				name:$('#zp_name').val(),
@@ -315,10 +316,8 @@ var AJAX_WS = SITE + '/ajax/ws.php?' + VALUES,
 		return v;
 	},
 	zpSpisok = function() {
-		var send = zpFilter();
-		send.op = 'zp_spisok_load';
 		$('#mainLinks').addClass('busy');
-		$.post(AJAX_WS, send, function (res) {
+		$.post(AJAX_WS, zpFilter(), function (res) {
 			$('#mainLinks').removeClass('busy');
 			$('#zp .result').html(res.all);
 			$('#zp .left').html(res.html);
@@ -883,7 +882,7 @@ $(document)
 		if(!tooltip.hasClass('empty'))
 			return;
 		var send = {
-			op:'tooltip_zayav_info_get',
+			op:'zayav_tooltip',
 			id:t.attr('val')
 		};
 		$.post(AJAX_WS, send, function(res) {
@@ -1120,7 +1119,7 @@ $(document)
 	})
 	.on('mouseenter', '.zayav_unit', function() {
 		var t = $(this),
-			msg = t.find('.msg').val();
+			msg = t.find('.note').html();
 		if(msg)
 			t.vkHint({
 				width:150,
@@ -1135,8 +1134,8 @@ $(document)
 	})
 	.on('click', '#zayav #sort_radio div', zayavSpisok)
 	.on('click', '#zayav #zpzakaz_radio div', zayavSpisok)
-	.on('click', '#zayav #filter_break', function() {
-		zFind.clear();
+	.on('click', '#zayav .clear', function() {
+		$('#find')._search('clear');
 		$('#sort')._radio(1);
 		$('#desc')._check(0);
 		$('#status').rightLink(0);
@@ -1159,6 +1158,7 @@ $(document)
 		var html = '<TABLE class="zayav-info-edit">' +
 			'<tr><td class="label r">Клиент:		<td><input type="hidden" id="client_id" value="' + ZAYAV.client_id + '">' +
 			'<tr><td class="label r top">Устройство:<TD><TABLE><TD id="dev"><TD id="device_image"></TABLE>' +
+			'<tr><td><td>' + ZAYAV.images +
 			'<tr><td class="label r">IMEI:		  <td><input type="text" id="imei" maxlength="20" value="' + ZAYAV.imei + '">' +
 			'<tr><td class="label r">Серийный номер:<td><input type="text" id="serial" maxlength="30" value="' + ZAYAV.serial + '">' +
 			'<tr><td class="label r">Цвет:' +
@@ -1168,14 +1168,14 @@ $(document)
 				'<td class="label r top">Комплектация:<TD class="equip_spisok">' + ZAYAV.equip +
 		'</TABLE>',
 			dialog = _dialog({
-				width:410,
+				width:420,
 				top:30,
 				head:'Заявка №' + ZAYAV.nomer + ' - Редактирование',
 				content:html,
 				butSubmit:'Сохранить',
 				submit:submit
 			});
-		$('#client_id').clientSel();
+		$('#client_id').clientSel({width:267});
 		$('#client_id_select').vkHint({
 			msg:'Если изменяется клиент, то начисления и платежи заявки применяются на нового клиента.',
 			width:200,
@@ -1192,6 +1192,7 @@ $(document)
 			func:zayavDevSelect
 		});
 		modelImageGet();
+		imageSortable();
 		colorSelDop(ZAYAV.color_id);
 
 		function submit() {
@@ -1569,9 +1570,7 @@ $(document)
 					if(res.success) {
 						_msg('Внесение запчасти произведено.');
 						dialog.close();
-						$('#zpSpisok')
-							.append(res.html)
-							.find('._empty').remove();
+						$('#zpSpisok').html(res.html);
 					}
 				}, 'json');
 			}
@@ -1610,18 +1609,29 @@ $(document)
 		}
 	})
 
-	.on('click', '#zp #bu_check', zpSpisok)
+	.on('click', '#zp .clear', function() {
+		$('#find')._search('clear');
+		$('#menu').rightLink(0);
+		$('#zp_name')._select(0);
+		$('#dev').device({
+			width:153,
+			type_no:1,
+			device_ids:WS_DEVS,
+			func:zpSpisok
+		});
+		$('#bu')._check(0);
+		zayavSpisok();
+	})
 	.on('click', '#zp ._next', function() {
 		if($(this).hasClass('busy'))
 			return;
 		var next = $(this),
 			send = zpFilter();
-		send.op = 'zp_next';
 		send.page = $(this).attr('val');
 		next.addClass('busy');
 		$.post(AJAX_WS, send, function (res) {
 			if(res.success)
-				next.after(res.spisok).remove();
+				next.after(res.html).remove();
 			else
 				next.removeClass('busy');
 		}, 'json');
@@ -1689,82 +1699,6 @@ $(document)
 		}
 		c.html(count);
 	})
-	.on('click', '#zp .add', function() {
-		var html = '<table class="zp_add_dialog">' +
-			'<tr><td class="label">Наименование запчасти:<td><input type="hidden" id="name_id">' +
-			'<tr><td class="label top">Устройство:<td id="add_dev">' +
-			'<tr><td class="label">Версия:<td><input type="text" id="version">' +
-			'<tr><td class="label">Б/у:<td><input type="hidden" id="add_bu">' +
-			'<tr><td class="label">Цвет:<td><input type="hidden" id="color_id">' +
-			'</table>',
-			dialog = _dialog({
-				top:70,
-				width:380,
-				head:'Внесение новой запчасти в каталог',
-				content:html,
-				submit:submit
-			});
-		$('#name_id')._select({
-			width:200,
-			title0:'Наименование не выбрано',
-			spisok:ZPNAME_SPISOK
-		});
-		$('#color_id')._select({
-			width:130,
-			title0:'Цвет не указан',
-			spisok:COLOR_SPISOK
-		});
-		$('#add_bu')._check();
-		$('#add_dev').device({width:200});
-
-		function submit() {
-			var msg,
-				send = {
-					op:'zp_add',
-					name_id:$('#name_id').val(),
-					device_id:$('#add_dev_device').val(),
-					vendor_id:$('#add_dev_vendor').val(),
-					model_id:$('#add_dev_model').val(),
-					version:$('#version').val(),
-					bu:$('#add_bu').val(),
-					color_id:$('#color_id').val()
-				};
-			if(send.name_id == 0) msg = 'Не указано наименование запчасти.';
-			else if(send.device_id == 0) msg = 'Не выбрано устройство';
-			else if(send.vendor_id == 0) msg = 'Не выбран производитель';
-			else if(send.model_id == 0) msg = 'Не выбрана модель';
-			else {
-				dialog.process();
-				$.post(AJAX_WS, send, function(res) {
-					dialog.abort();
-					if(res.success) {
-						dialog.close();
-						$("#zp_name")._select(send.name_id);
-						$("#dev").device({
-							width:153,
-							type_no:1,
-							device_ids:WS_DEVS,
-							device_id:send.device_id,
-							vendor_id:send.vendor_id,
-							model_id:send.model_id,
-							func:zpSpisok
-						});
-						zpSpisok();
-					}
-				},'json');
-			}
-
-			if(msg)
-				dialog.bottom.vkHint({
-					msg:'<SPAN class="red">' + msg + '</SPAN>',
-					left:110,
-					top:-47,
-					indent:50,
-					show:1,
-					remove:1
-				});
-		}
-	})
 
 	.on('click', '#zpInfo .avai_add', function() {
 		var obj = ZP;
@@ -1778,14 +1712,15 @@ $(document)
 	.on('click', '#zpInfo .edit', function() {
 		var html = '<table class="zp_add_dialog">' +
 				'<tr><td class="label">Наименование запчасти:<td><input type="hidden" id="name_id" value="' + ZP.name_id + '">' +
-				'<tr><td class="label top">Устройство:<td id="add_dev">' +
+				'<tr><td class="label topi">Устройство:<td id="add_dev">' +
+				'<tr><td><td>' + ZP.images +
 				'<tr><td class="label">Версия:<td><input type="text" id="version" value="' + ZP.version + '">' +
 				'<tr><td class="label">Б/у:<td><input type="hidden" id="add_bu" value="' + ZP.bu + '">' +
 				'<tr><td class="label">Цвет:<td><input type="hidden" id="color_id" value="' + ZP.color_id + '">' +
 			'</table>',
 			dialog = _dialog({
 				top:30,
-				width:380,
+				width:450,
 				head:'Редактирование запчасти',
 				content:html,
 				butSubmit:'Сохранить',
@@ -1796,18 +1731,19 @@ $(document)
 			title0:'Наименование не выбрано',
 			spisok:ZPNAME_SPISOK
 		});
-		$('#color_id')._select({
-			width:130,
-			title0:'Цвет не указан',
-			spisok:COLOR_SPISOK
-		});
-		$('#add_bu')._check();
 		$('#add_dev').device({
 			width:200,
 			device_id:ZP.device,
 			vendor_id:ZP.vendor,
 			model_id:ZP.model
 		});
+		imageSortable();
+		$('#color_id')._select({
+			width:130,
+			title0:'Цвет не указан',
+			spisok:COLOR_SPISOK
+		});
+		$('#add_bu')._check();
 
 		function submit() {
 			var msg,
@@ -2800,7 +2736,7 @@ $(document)
 		}
 
 		if($('#zayav').length) {
-			window.zFind = $('#find')
+			$('#find')
 				.vkHint({
 					msg:'Поиск производится по<br />совпадению в названии<br />модели, imei и серийном<br />номере.',
 					ugol:'right',
@@ -2814,8 +2750,8 @@ $(document)
 					txt:'Быстрый поиск...',
 					enter:1,
 					func:zayavSpisok
-				});
-			zFind.inp(G.zayav_find);
+				})
+				.inp(G.zayav_find);
 			$('#desc')._check(zayavSpisok);
 			$('#status').rightLink(zayavSpisok);
 			$('#diff')._check(zayavSpisok);
@@ -2973,6 +2909,82 @@ $(document)
 		}
 
 		if($('#zp').length) {
+			$('.add').click(function() {
+				var html =
+						'<table class="zp_add_dialog">' +
+							'<tr><td class="label">Наименование запчасти:<td><input type="hidden" id="name_id">' +
+							'<tr><td class="label top">Устройство:<td id="add_dev">' +
+							'<tr><td class="label">Версия:<td><input type="text" id="version">' +
+							'<tr><td class="label">Б/у:<td><input type="hidden" id="add_bu">' +
+							'<tr><td class="label">Цвет:<td><input type="hidden" id="color_id">' +
+						'</table>',
+					dialog = _dialog({
+						top:70,
+						width:380,
+						head:'Внесение новой запчасти в каталог',
+						content:html,
+						submit:submit
+					});
+				$('#name_id')._select({
+					width:200,
+					title0:'Наименование не выбрано',
+					spisok:ZPNAME_SPISOK
+				});
+				$('#color_id')._select({
+					width:130,
+					title0:'Цвет не указан',
+					spisok:COLOR_SPISOK
+				});
+				$('#add_bu')._check();
+				$('#add_dev').device({width:200});
+
+				function submit() {
+					var send = {
+						op:'zp_add',
+						name_id:$('#name_id').val(),
+						device_id:$('#add_dev_device').val(),
+						vendor_id:$('#add_dev_vendor').val(),
+						model_id:$('#add_dev_model').val(),
+						version:$('#version').val(),
+						bu:$('#add_bu').val(),
+						color_id:$('#color_id').val()
+					};
+					if(send.name_id == 0) err('Не указано наименование запчасти');
+					else if(send.device_id == 0) err('Не выбрано устройство');
+					else if(send.vendor_id == 0) err('Не выбран производитель');
+					else if(send.model_id == 0) err('Не выбрана модель');
+					else {
+						dialog.process();
+						$.post(AJAX_WS, send, function(res) {
+							dialog.abort();
+							if(res.success) {
+								dialog.close();
+								$("#zp_name")._select(send.name_id);
+								$("#dev").device({
+									width:153,
+									type_no:1,
+									device_ids:WS_DEVS,
+									device_id:send.device_id,
+									vendor_id:send.vendor_id,
+									model_id:send.model_id,
+									func:zpSpisok
+								});
+								zpSpisok();
+							}
+						},'json');
+					}
+				}
+				function err(msg) {
+					dialog.bottom.vkHint({
+						msg:'<SPAN class="red">' + msg + '</SPAN>',
+						left:110,
+						top:-47,
+						indent:50,
+						show:1,
+						remove:1
+					});
+				}
+			});
 			$('#find')
 				._search({
 					width:153,
@@ -2981,26 +2993,24 @@ $(document)
 					enter:1,
 					func:zpSpisok
 				})
-				.inp(G.zp_find);
-			$('#menu_rightLink a').click(function() {
-				$('#menu').rightLink($(this).attr('val'));
-				zpSpisok();
-			});
-			$("#zp_name")._select({
+				.inp(ZP.find);
+			$('#menu').rightLink(zpSpisok);
+			$('#zp_name')._select({
 				width:153,
 				title0:'Любое наименование',
 				spisok:ZPNAME_SPISOK,
 				func:zpSpisok
-			}).o;
-			$("#dev").device({
+			});
+			$('#dev').device({
 				width:153,
 				type_no:1,
 				device_ids:WS_DEVS,
-				device_id:G.zp_device,
-				vendor_id:G.zp_vendor,
-				model_id:G.zp_model,
+				device_id:ZP.device,
+				vendor_id:ZP.vendor,
+				model_id:ZP.model,
 				func:zpSpisok
 			});
+			$('#bu')._check(zpSpisok);
 			zpFilter();
 		}
 

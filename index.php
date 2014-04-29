@@ -66,19 +66,7 @@ switch($_GET['p']) {
 							$v[$arr[1]] = $val;
 					}
 				}
-				$v = array(
-					'find' => isset($v['find']) ? unescape($v['find']) : '',
-					'sort' => isset($v['sort']) ? intval($v['sort']) : 1,
-					'desc' => isset($v['desc']) && intval($v['desc']) == 1 ? 1 : 0,
-					'status' => isset($v['status']) ? intval($v['status']) : 0,
-					'diff' => isset($v['diff']) && intval($v['diff']) == 1 ? 1 : 0,
-					'zpzakaz' => isset($v['zpzakaz']) ? intval($v['zpzakaz']) : 0,
-					'device' => isset($v['device']) ? intval($v['device']) : 0,
-					'vendor' => isset($v['vendor']) ? intval($v['vendor']) : 0,
-					'model' => isset($v['model']) ? intval($v['model']) : 0,
-					'place' => isset($v['place']) ? $v['place'] : 0,
-					'devstatus' => isset($v['devstatus']) ? $v['devstatus'] : 0
-				);
+				$v['find'] = unescape($v['find']);
 				$html .= zayav_list($v);
 		}
 		break;
@@ -107,7 +95,7 @@ switch($_GET['p']) {
 
 				$v = zpfilter($v);
 				$v['find'] = unescape($v['find']);
-				$html .= zp_list(zp_data(1, $v));
+				$html .= zp_list($v);
 		}
 		break;
 	case 'report':

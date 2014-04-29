@@ -10,7 +10,7 @@ $(document)
 			if(u.val() == 1)
 				devs.push(u.attr('id'));
 		}
-		if(devs.length == 0) {
+		if(!devs.length) {
 			spanShow('Не сохранено!<br />Необходимо выбрать<br />минимум одну категорию', true);
 			return;
 		}

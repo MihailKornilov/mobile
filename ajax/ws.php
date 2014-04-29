@@ -784,20 +784,22 @@ switch(@$_POST['op']) {
 		if(!preg_match(REGEXP_BOOL, $_POST['bu']))
 			jsonError();
 		$sql = "SELECT
-					`base_device_id` AS `device_id`,
-					`base_vendor_id` AS `vendor_id`,
-					`base_model_id` AS `model_id`
+					`id`,
+					`base_device_id`,
+					`base_vendor_id`,
+					`base_model_id`
 				FROM `zayav`
 				WHERE `ws_id`=".WS_ID."
 				  AND `id`=".intval($_POST['zayav_id']);
 		if(!$zp = mysql_fetch_assoc(query($sql)))
 			jsonError();
+		define('MODEL', _vendorName($zp['base_vendor_id'])._modelName($zp['base_model_id']));
 		$zp['name_id'] = intval($_POST['name_id']);
 		$zp['version'] = win1251(htmlspecialchars(trim($_POST['version'])));
 		$zp['bu'] = intval($_POST['bu']);
 		$zp['color_id'] = intval($_POST['color_id']);
-		$zp['id'] = zpAddQuery($zp);
-		$send['html'] = utf8(zayav_zp_unit($zp, _vendorName($zp['vendor_id'])._modelName($zp['model_id'])));
+		zpAddQuery($zp);
+		$send['html'] = utf8(zayav_zp($zp));
 		jsonSuccess($send);
 		break;
 	case 'zayav_zp_zakaz':
@@ -877,7 +879,7 @@ switch(@$_POST['op']) {
 			$parent_id = $r['parent_id'] ? $r['parent_id'] : $r['id'];
 		$sql = "SELECT * FROM `zp_catalog` WHERE id=".$zp_id." LIMIT 1";
 		$zp = mysql_fetch_assoc(query($sql));
-		$model = _vendorName($zp['base_vendor_id'])._modelName($zp['base_model_id']);
+		define('MODEL', _vendorName($zp['base_vendor_id'])._modelName($zp['base_model_id']));
 		$sql = "INSERT INTO `vk_comment` (
 					`table_name`,
 					`table_id`,
@@ -887,7 +889,7 @@ switch(@$_POST['op']) {
 				) VALUES (
 					'zayav',
 					".$zayav_id.",
-					'".addslashes('Установка запчасти: <a href="'.URL.'&p=zp&d=info&id='.$zp_id.'">'._zpName($zp['name_id']).' '.$model.'</a>')."',
+					'".addslashes('Установка запчасти: <a href="'.URL.'&p=zp&d=info&id='.$zp_id.'">'._zpName($zp['name_id']).' '.MODEL.'</a>')."',
 					".$parent_id.",
 					".VIEWER_ID."
 				)";
@@ -901,11 +903,39 @@ switch(@$_POST['op']) {
 		));
 
 		$zp['avai'] = $count;
-		$send['zp_unit'] = utf8(zayav_zp_unit($zp, $model));
+		$send['zp_unit'] = utf8(zayav_zp($zp));
 		$send['comment'] = utf8(_vkComment('zayav', $zayav_id));
 		jsonSuccess($send);
 		break;
+	case 'zayav_tooltip':
+		if(!preg_match(REGEXP_NUMERIC, $_POST['id']))
+			jsonError();
+		$id = intval($_POST['id']);
 
+		$z = query_assoc("SELECT * FROM `zayav` WHERE `id`=".$id);
+		$client = query_assoc("SELECT * FROM `client` WHERE !`deleted` AND `id`=".$z['client_id']);
+
+		$html =
+			'<table>'.
+				'<tr><td><div class="image">'._zayavImg($z).'</div>'.
+					'<td class="inf">'.
+						'<div style="background-color:#'._zayavStatusColor($z['zayav_status']).'" '.
+							 'class="tstat'._tooltip('Статус заявки: '._zayavStatusName($z['zayav_status']), -7, 'l').
+						'</div>'.
+						_deviceName($z['base_device_id']).
+						'<div class="tname">'._vendorName($z['base_vendor_id'])._modelName($z['base_model_id']).'</div>'.
+						'<table>'.
+							'<tr><td class="label top">Клиент:'.
+								'<td>'.$client['fio'].
+									   ($client['telefon'] ? '<br />'.$client['telefon'] : '').
+							'<tr><td class="label">Баланс:'.
+								'<td><span class="bl" style=color:#'.($client['balans'] < 0 ? 'A00' : '090').'>'.$client['balans'].'</span>'.
+						'</table>'.
+			'</table>';
+
+		$send['html'] = utf8($html);
+		jsonSuccess($send);
+		break;
 	case 'zayav_nomer_info'://Получение данных о заявке по номеру
 		if(empty($_POST['nomer']) || !preg_match(REGEXP_NUMERIC, $_POST['nomer']))
 			jsonError();
@@ -946,9 +976,9 @@ switch(@$_POST['op']) {
 
 		$zp = array(
 			'name_id' => intval($_POST['name_id']),
-			'device_id' => intval($_POST['device_id']),
-			'vendor_id' => intval($_POST['vendor_id']),
-			'model_id' => intval($_POST['model_id']),
+			'base_device_id' => intval($_POST['device_id']),
+			'base_vendor_id' => intval($_POST['vendor_id']),
+			'base_model_id' => intval($_POST['model_id']),
 			'version' => win1251(htmlspecialchars(trim($_POST['version']))),
 			'bu' => intval($_POST['bu']),
 			'color_id' => intval($_POST['color_id']),
@@ -957,18 +987,12 @@ switch(@$_POST['op']) {
 
 		jsonSuccess();
 		break;
-	case 'zp_spisok_load':
+	case 'zp_spisok':
 		$_POST['find'] = win1251($_POST['find']);
-		$data = zp_data(1, zpfilter($_POST));
-		$send['all'] = utf8(zp_count($data));
+		$data = zp_spisok($_POST);
+		if($data['filter']['page'] == 1)
+			$send['all'] = utf8($data['result']);
 		$send['html'] = utf8($data['spisok']);
-		jsonSuccess($send);
-		break;
-	case 'zp_next':
-		if(!preg_match(REGEXP_NUMERIC, $_POST['page']))
-			jsonError();
-		$send = zp_data(intval($_POST['page']), zpfilter($_POST));
-		$send['spisok'] = utf8($send['spisok']);
 		jsonSuccess($send);
 		break;
 	case 'zp_avai_add':
@@ -1311,9 +1335,9 @@ switch(@$_POST['op']) {
 			query("UPDATE `zp_move` SET `zp_id`=".$compat_id." WHERE `zp_id`=".$r['compat_id']);
 			_zpAvaiSet($zp_id);
 		} else {
-			$zp['device_id'] = $device_id;
-			$zp['vendor_id'] = $vendor_id;
-			$zp['model_id'] = $model_id;
+			$zp['base_device_id'] = $device_id;
+			$zp['base_vendor_id'] = $vendor_id;
+			$zp['base_model_id'] = $model_id;
 			$zp['compat_id'] = $compat_id;
 			zpAddQuery($zp);
 		}
@@ -1858,30 +1882,6 @@ switch(@$_POST['op']) {
 
 		$send['i'] = utf8(invoice_spisok());
 		$send['t'] = utf8(transfer_spisok());
-		jsonSuccess($send);
-		break;
-
-	case 'tooltip_zayav_info_get':
-		if(!preg_match(REGEXP_NUMERIC, $_POST['id']))
-			jsonError();
-		$id = intval($_POST['id']);
-		$sql = "SELECT * FROM `zayav` WHERE `id`=".$id;
-		$z = mysql_fetch_assoc(query($sql));
-
-		$sql = "SELECT `fio` FROM `client` WHERE `deleted`=0 AND `id`=".$z['client_id'];
-		$r = mysql_fetch_assoc(query($sql));
-		$client = $r['fio'];
-
-		$html = '<table><tr>'.
-					'<td><div class="image">'._zayavImg($z).'</div></td>'.
-					'<td class="inf">'.
-						_deviceName($z['base_device_id']).'<br />'.
-						'<b>'._vendorName($z['base_vendor_id'])._modelName($z['base_model_id']).'</b><br /><br />'.
-						'<span style="color:#000">Клиент:</span> '.$client.
-					'</td>'.
-				'</tr></table>';
-
-		$send['html'] = utf8($html);
 		jsonSuccess($send);
 		break;
 }

@@ -1,24 +1,6 @@
 .device-add-tab{border-spacing:10px}
 .device-add-tab input{width:170px}
 
-.zayav_link{position:relative;display:inline-block}
-.zayav_link .tooltip{
-	position:absolute;
-	background-color:#fff;
-	border:#ccc solid 1px;
-	min-width:100px;
-	min-height:75px;
-	padding:5px;
-	top:-86px;
-	left:-10px;
-	z-index:1000;
-}
-.zayav_link:not(:hover) .tooltip{display:none}
-.zayav_link td{border:0;padding:0}
-.zayav_link .image{max-width:100px;overflow:hidden}
-.zayav_link img{height:70px}
-.zayav_link .inf{white-space:nowrap;padding-left:5px;vertical-align:top}
-
 /* Список клиентов */
 #client #find{background-color:#F7F7F7;padding:10px;border-bottom:#dae1e8 solid 1px}
 #client .result.busy{background-position:585px center}
@@ -64,7 +46,7 @@
 #clientInfo #diff_check{margin-top:15px}
 
 /* список заявок */
-#zayav #filter_break{float:right}
+#zayav .clear{float:right}
 #zayav #spisok{padding-bottom:10px;background-color:#f7f7f7;vertical-align:top}
 #zayav .right{border:0;width:155px;padding-bottom:300px}
 #zayav .condLost.hide{display:none}
@@ -90,7 +72,7 @@
 .zayav_unit .opl{color:#090;cursor:default;font-size:10px}
 .zayav_unit .diff .acc,.zayav_unit .diff .opl{color:#c33}
 .zayav_unit .zz{color:#a33}
-.zayav_unit .image {
+.zayav_unit .image{
 	width:80px;
 	height:80px;
 	vertical-align:top;
@@ -98,11 +80,40 @@
 	border-left:#DDD solid 1px;
 	background-color:#FFF;
 }
+.zayav_unit .note{display:none}
 #zayav ._next{margin:6px 5px 0 8px}
 #zayav #find{margin-top:15px}
 #zayav #desc_check{margin-top:10px}
 #zayav #diff_check{margin-top:15px}
 #zayav ._empty{margin-right:6px;}
+
+/* Ссылка на заявку с подсказкой */
+.zayav_link{position:relative;display:inline-block}
+.zayav_link .tooltip{
+	position:absolute;
+	background-color:#fff;
+	border:#ccc solid 1px;
+	min-width:100px;
+	min-height:75px;
+	padding:5px;
+	top:-91px;
+	left:-10px;
+	z-index:1000;
+}
+.zayav_link:not(:hover) .tooltip{display:none}
+.zayav_link td{border:0;padding:0}
+.zayav_link .image{max-width:100px;overflow:hidden}
+.zayav_link .inf{white-space:nowrap;padding-left:5px;vertical-align:top}
+.zayav_link .label{padding-right:3px}
+.zayav_link .tstat{
+	float:left;
+	border:#DDD solid 1px;
+	width:22px;
+	height:22px;
+	margin:2px 4px 0 0;
+}
+.zayav_link .tname{font-weight:700;margin-bottom:8px}
+.zayav_link .bl{font-weight:700}
 
 /* Внесение новой заявки */
 #zayavAdd{padding:20px 10px 140px 10px;background-color:#F7F7F7}
@@ -135,6 +146,9 @@
 .zayav-info-edit{border-spacing:8px}
 .zayav-info-edit .equip_spisok div{display:block;margin-bottom:5px}
 .zayav-info-edit .color_dop tt{display:inline-block;margin:0 4px;position:relative;top:-5px}
+.zayav-info-edit ._image-spisok{width:260px}
+.zayav-info-edit #imei{width:244px}
+.zayav-info-edit #serial{width:244px}
 #zayavInfo #status {
 	display:inline-block;
 	border:#DDD solid 1px;
@@ -201,7 +215,9 @@
 
 
 /* Список запчастей */
+#zp .clear{float:right}
 #zp .right{width:155px}
+#zp ._search{margin-top:10px}
 #zp #bu_check{margin-top:15px}
 #zp .unit{padding:7px 0;margin:0 8px;border-bottom:#dae2e8 solid 1px}
 #zp .unit .img{width:80px;height:80px;padding-right:10px;text-align:center;vertical-align:top}
@@ -227,9 +243,11 @@
 .zpzakaz tt{display:inline-block;padding:0 4px;color:#aaa}
 .zpzakaz tt:hover{color:#004}
 #zp .zz{margin-top:10px;color:#777}
-#zp .add{float:right}
 .zp_add_dialog{border-spacing:10px}
 .zp_add_dialog .label{text-align:right}
+.zp_add_dialog #version{width:192px}
+.zp_add_dialog ._image-spisok{width:260px}
+
 .avaiAddTab{width:100%}
 .avaiAddTab .left{width:250px;vertical-align:top}
 .avaiAddTab .name,table.avaiAddTab b,.avaiAddTab em{font-size:12px}
@@ -265,12 +283,18 @@
 .compatAddTab #dev{margin:10px 0 10px 90px}
 .compatAddTab #cres{text-align:center}
 #zpInfo .move *{font-size:12px}
+#zpInfo .move .tooltip *,#zpInfo .move ._tooltip *{font-size:11px}
 #zpInfo .move .unit{border-bottom:#DEE solid 1px;padding:5px}
 #zpInfo .move .img_del{float:right;margin-top:2px}
-#zpInfo .move .dtime{display:inline-block;margin-top:4px;font-size:10px;color:#888;cursor:help}
+#zpInfo .move .dtime{
+	margin-top:4px;
+	width:110px;
+	font-size:10px;
+	color:#888;
+	cursor:default;
+}
 #zpInfo .move .cenaed{color:#777}
 #zpInfo .move .prim{color:#774;font:italic 12px Arial;margin-top:2px}
-#zpInfo .move ._next *{font-size:11px}
 #zpInfo .right{width:160px;vertical-align:top}
 #zpInfo #foto{text-align:center;margin-bottom:10px}
 .zp_dec_dialog{border-spacing:10px}
@@ -283,6 +307,7 @@
 span.zayavNomerTab{color:#955}
 table.zayavNomerTab{border-spacing:5px}
 table.zayavNomerTab td{vertical-align:top}
+
 
 
 

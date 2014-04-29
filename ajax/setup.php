@@ -30,6 +30,7 @@ switch(@$_POST['op']) {
 			if(!preg_match(REGEXP_NUMERIC, $id))
 				jsonError();
 		query("UPDATE `workshop` SET `devs`='".$_POST['devs']."' WHERE `id`=".WS_ID);
+		xcache_unset(CACHE_PREFIX.'workshop_'.WS_ID);
 		jsonSuccess();
 		break;
 	case 'info_del':

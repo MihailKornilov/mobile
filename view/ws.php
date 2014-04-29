@@ -554,7 +554,7 @@ function _zayavNomerLink($arr, $noHint=false) { //Вывод номеров заявок с возможн
 function _zayavBaseDeviceIds($client_id=0) { //список id устройств, которые используются в заявках
 	$ids = array();
 	$sql = "SELECT `b`.`id`
-			FROM `zayav` `z`,
+			FROM `zayav` `z` USE INDEX(`i_zayav_status`),
 				 `base_device` `b`
 			WHERE `b`.`id`=`z`.`base_device_id`
 			  AND `z`.`zayav_status`
@@ -656,8 +656,8 @@ function zayav_add($v=array()) {
 	'</div>';
 }//zayav_add()
 
-function zayav_spisok($v) {
-	$filter = array(
+function zayavFilter($v) {
+	return array(
 		'page' => !empty($v['page']) && preg_match(REGEXP_NUMERIC, $v['page']) ? intval($v['page']) : 1,
 		'limit' => !empty($v['limit']) && preg_match(REGEXP_NUMERIC, $v['limit']) ? intval($v['limit']) : 20,
 		'client_id' => !empty($v['client_id']) && preg_match(REGEXP_NUMERIC, $v['client_id']) ? intval($v['client_id']) : 0,
@@ -668,12 +668,14 @@ function zayav_spisok($v) {
 		'vendor' => !empty($v['vendor']) && preg_match(REGEXP_NUMERIC, $v['vendor']) ? intval($v['vendor']) : 0,
 		'model' => !empty($v['model']) && preg_match(REGEXP_NUMERIC, $v['model']) ? intval($v['model']) : 0,
 		'devstatus' => empty($v['devstatus']) || preg_match(REGEXP_NUMERIC, $v['devstatus']) && $v['devstatus'] != -1 ? 0 : $v['devstatus'],
-		'sort' => !empty($v['sort']) && $v['sort'] == 2 ? 'zayav_status_dtime' : 'dtime_add',
-		'desc' => !empty($v['desc']) ? 'ASC' : 'DESC',
+		'sort' => !empty($v['sort']) && preg_match(REGEXP_NUMERIC, $v['sort']) ? intval($v['sort']) : 1,
+		'desc' => !empty($v['desc']) && preg_match(REGEXP_BOOL, $v['desc']) ? intval($v['desc']) : 0,
 		'diff' => !empty($v['diff']) ? 1 : 0,
 		'place' => !empty($v['place']) ? win1251(urldecode(htmlspecialchars(trim($v['place'])))) : ''
 	);
-
+}//zayavFilter()
+function zayav_spisok($v) {
+	$filter = zayavFilter($v);
 
 	$page = $filter['page'];
 	$limit = $filter['limit'];
@@ -713,7 +715,7 @@ function zayav_spisok($v) {
 			$cond .= " AND `device_status`=".$filter['devstatus'];
 	}
 
-	$all = query_value("SELECT COUNT(*) AS `all` FROM `zayav` WHERE ".$cond." LIMIT 1");
+	$all = query_value("SELECT COUNT(*) FROM `zayav` USE INDEX (`i_zayav_status`) WHERE ".$cond." LIMIT 1");
 
 	$zayav = array();
 	$images = array();
@@ -729,28 +731,30 @@ function zayav_spisok($v) {
 		}
 	}
 
-	$filter_break = !$filter['client_id'] ? '<a id="filter_break">Сбросить условия поиска</a>' : '';
+	$filter_clear = !$filter['client_id'] ? '<a class="clear">Сбросить условия поиска</a>' : '';
 
 	if(!$all)
 		return array(
 			'all' => 0,
-			'result' => 'Заявок не найдено',
-			'spisok' => '<div class="_empty">Заявок не найдено</div>'.$filter_break,
+			'result' => 'Заявок не найдено'.$filter_clear,
+			'spisok' => '<div class="_empty">Заявок не найдено</div>',
 			'filter' => $filter
 		);
 
 	$send = array(
 		'all' => $all,
-		'result' => 'Показан'._end($all, 'а', 'о').' '.$all.' заяв'._end($all, 'ка', 'ки', 'ок').$filter_break,
+		'result' => 'Показан'._end($all, 'а', 'о').' '.$all.' заяв'._end($all, 'ка', 'ки', 'ок').$filter_clear,
 		'spisok' => '',
 		'filter' => $filter
 	);
 
 	$start = ($page - 1) * $limit;
-	$sql = "SELECT *
+	$sql = "SELECT
+	            *,
+				'' AS `note`
 			FROM `zayav`
 			WHERE ".$cond."
-			ORDER BY `".$filter['sort']."` ".$filter['desc']."
+			ORDER BY `".($filter['sort'] == 2 ? 'zayav_status_dtime' : 'dtime_add')."` ".($filter['desc'] ? 'ASC' : 'DESC')."
 			LIMIT ".$start.",".$limit;
 	$q = query($sql);
 	while($r = mysql_fetch_assoc($q)) {
@@ -799,10 +803,9 @@ function zayav_spisok($v) {
 			  AND `table_id` IN (".$zayavIds.")
 			  AND `status`
 			ORDER BY `id` ASC";
-	$note = array();
 	$q = query($sql);
 	while($r = mysql_fetch_assoc($q))
-		$note[$r['table_id']] = htmlspecialchars($r['txt']);
+		$zayav[$r['table_id']]['note'] = $r['txt'];
 
 	foreach($zayav as $id => $r) {
 		$r['model'] = _modelName($r['base_model_id']);
@@ -842,7 +845,7 @@ function zayav_spisok($v) {
 						'</table>'.
 					'<td class="image">'.$img.
 				'</table>'.
-				'<input type="hidden" class="msg" value="'.(isset($note[$id]) ? $note[$id] : '').'" />'.
+				'<div class="note">'.$r['note'].'</div>'.
 			'</div>';
 	}
 
@@ -858,6 +861,7 @@ function zayav_spisok($v) {
 }//zayav_spisok()
 function zayav_list($v) {
 	$data = zayav_spisok($v);
+	$v = $data['filter'];
 	$place_other = array();
 	$sql = "SELECT DISTINCT `device_place_other` AS `other`
 			FROM `zayav`
@@ -970,7 +974,8 @@ function zayav_info($zayav_id) {
 			'serial:"'.$z['serial'].'",'.
 			'color_id:'.$z['color_id'].','.
 			'color_dop:'.$z['color_dop'].','.
-			'equip:"'.addslashes(devEquipCheck($z['base_device_id'], $z['equip'])).'"'.
+			'equip:"'.addslashes(devEquipCheck($z['base_device_id'], $z['equip'])).'",'.
+			'images:"'.addslashes(_imageAdd(array('owner'=>'zayav'.$zayav_id))).'"'.
 		'},'.
 		'PRINT={'.
 			'dtime:"'.FullDataTime($z['dtime_add']).'",'.
@@ -981,7 +986,7 @@ function zayav_info($zayav_id) {
 			($z['equip'] ? 'equip:"'.zayavEquipSpisok($z['equip']).'",' : '').
 			'client:"'._clientLink($z['client_id'], 1).'",'.
 			'telefon:"'.query_value("SELECT `telefon` FROM `client` WHERE id=".$z['client_id']).'",'.
-			'defect:"'.addslashes(str_replace("\n", ' ', query_value("SELECT `txt` FROM `vk_comment` WHERE `status`=1 AND `table_name`='zayav' AND `table_id`=".$zayav_id." AND `parent_id`=0 ORDER BY `id` DESC"))).'"'.
+			'defect:"'.addslashes(str_replace("\n", ' ', query_value("SELECT `txt` FROM `vk_comment` WHERE `status` AND `table_name`='zayav' AND `table_id`=".$zayav_id." AND `parent_id`=0 ORDER BY `id` DESC"))).'"'.
 		'};'.
 	'</script>'.
 	'<div id="zayavInfo">'.
@@ -1208,96 +1213,90 @@ function zpAddQuery($zp) {//Внесение новой запчасти из заявки и из списка запчас
 				`find`
 			) VALUES (
 				".$zp['name_id'].",
-				".$zp['device_id'].",
-				".$zp['vendor_id'].",
-				".$zp['model_id'].",
+				".$zp['base_device_id'].",
+				".$zp['base_vendor_id'].",
+				".$zp['base_model_id'].",
 				".$zp['bu'].",
 				'".$zp['version']."',
 				".$zp['color_id'].",
 				".$zp['compat_id'].",
 				".VIEWER_ID.",
-				'"._modelName($zp['model_id'])." ".$zp['version']."'
+				'"._modelName($zp['base_model_id'])." ".$zp['version']."'
 			)";
 	query($sql);
 	return mysql_insert_id();
 }//zpAddQuery()
 
 function zpFilter($v) {
-	if(empty($v['menu']) || !preg_match(REGEXP_NUMERIC, $v['menu']))
-		$v['menu'] = 0;
-	if(empty($v['name']) || !preg_match(REGEXP_NUMERIC, $v['name']))
-		$v['name'] = 0;
-	if(empty($v['device']) || !preg_match(REGEXP_NUMERIC, $v['device']))
-		$v['device'] = 0;
-	if(empty($v['vendor']) || !preg_match(REGEXP_NUMERIC, $v['vendor']))
-		$v['vendor'] = 0;
-	if(empty($v['model']) || !preg_match(REGEXP_NUMERIC, $v['model']))
-		$v['model'] = 0;
-	if(empty($v['bu']) || !preg_match(REGEXP_BOOL, $v['bu']))
-		$v['bu'] = 0;
-
 	return array(
-		'find' => htmlspecialchars(trim(@$v['find'])),
-		'menu' => intval($v['menu']),
-		'name' => intval($v['name']),
-		'device' => intval($v['device']),
-		'vendor' => intval($v['vendor']),
-		'model' => intval($v['model']),
-		'bu' =>	intval($v['bu'])
+		'page' => !empty($v['page']) && preg_match(REGEXP_NUMERIC, $v['page']) ? intval($v['page']) : 1,
+		'limit' => !empty($v['limit']) && preg_match(REGEXP_NUMERIC, $v['limit']) ? intval($v['limit']) : 20,
+		'find' => !empty($v['find']) ? htmlspecialchars(trim($v['find'])) : '',
+		'menu' => !empty($v['menu']) && preg_match(REGEXP_NUMERIC, $v['menu']) ? intval($v['menu']) : 0,
+		'name' => !empty($v['name']) && preg_match(REGEXP_NUMERIC, $v['name']) ? intval($v['name']) : 0,
+		'device' => !empty($v['device']) && preg_match(REGEXP_NUMERIC, $v['device']) ? intval($v['device']) : 0,
+		'vendor' => !empty($v['vendor']) && preg_match(REGEXP_NUMERIC, $v['vendor']) ? intval($v['vendor']) : 0,
+		'model' => !empty($v['model']) && preg_match(REGEXP_NUMERIC, $v['model']) ? intval($v['model']) : 0,
+		'bu' => !empty($v['bu']) && preg_match(REGEXP_BOOL, $v['bu']) ? intval($v['bu']) : 0,
 	);
 }//zpFilter()
-function zp_data($page=1, $filter=array(), $limit=20) {
+function zp_spisok($v) {
+	$filter = zpFilter($v);
+	$page = $filter['page'];
+	$limit = $filter['limit'];
 	$cond = "`id`";
-	if(empty($filter['find']) && (!isset($filter['model']) || $filter['model'] == 0))
-		$cond .= " AND (`compat_id`=0 OR `compat_id`=`id`)";
+
+	if(empty($filter['find']) && !$filter['model'])
+		$cond .= " AND (!`compat_id` OR `compat_id`=`id`)";
 	if(!empty($filter['find'])) {
 		$cond .= " AND `find` LIKE '%".$filter['find']."%'";
 		$reg = '/('.$filter['find'].')/i';
 	}
-	if(isset($filter['menu']))
-		switch($filter['menu']) {
-			case '1':
-				$sql = "SELECT `zp_id` AS `id` FROM `zp_avai` WHERE `ws_id`=".WS_ID;
-				$q = query($sql);
-				$ids = '0';
-				while($r = mysql_fetch_assoc($q))
-					$ids .= ','.$r['id'];
-				$cond .= " AND `id` IN (".$ids.")";
-				break;
-			case '2':
-				$sql = "SELECT `zp_id` AS `id` FROM `zp_avai` WHERE `ws_id`=".WS_ID;
-				$q = query($sql);
-				$ids = '0';
-				while($r = mysql_fetch_assoc($q))
-					$ids .= ','.$r['id'];
-				$cond .= " AND `id` NOT IN (".$ids.")";
-				break;
-			case '3':
-				$sql = "SELECT `zp_id` AS `id` FROM `zp_zakaz` WHERE `ws_id`=".WS_ID." GROUP BY `zp_id`";
-				$q = query($sql);
-				$ids = '0';
-				while($r = mysql_fetch_assoc($q))
-					$ids .= ','.$r['id'];
-				$cond .= " AND `id` IN (".$ids.")";
-				break;
-		}
-	if(isset($filter['name']) && $filter['name'] > 0)
+	switch($filter['menu']) {
+		case '1':
+			$sql = "SELECT `zp_id` FROM `zp_avai` WHERE `ws_id`=".WS_ID;
+			$ids = query_ids($sql);
+			$cond .= " AND `id` IN (".$ids.")";
+			break;
+		case '2':
+			$sql = "SELECT `zp_id` FROM `zp_avai` WHERE `ws_id`=".WS_ID;
+			$ids = query_ids($sql);
+			$cond .= " AND `id` NOT IN (".$ids.")";
+			break;
+		case '3':
+			$sql = "SELECT `zp_id` FROM `zp_zakaz` WHERE `ws_id`=".WS_ID." GROUP BY `zp_id`";
+			$ids = query_ids($sql);
+			$cond .= " AND `id` IN (".$ids.")";
+			break;
+	}
+	if($filter['name'])
 		$cond .= " AND `name_id`=".$filter['name'];
-	if(isset($filter['device']) && $filter['device'] > 0)
+	if($filter['device'])
 		$cond .= " AND `base_device_id`=".$filter['device'];
-	if(isset($filter['vendor']) && $filter['vendor'] > 0)
+	if($filter['vendor'])
 		$cond .= " AND `base_vendor_id`=".$filter['vendor'];
-	if(isset($filter['model']) && $filter['model'] > 0)
+	if($filter['model'])
 		$cond .= " AND `base_model_id`=".$filter['model'];
-	if(isset($filter['bu']) && $filter['bu'] == 1)
+	if($filter['bu'])
 		$cond .= " AND `bu`=1";
 
-	$send['filter'] = $filter;
-	$send['all'] = query_value("SELECT COUNT(`id`) AS `all` FROM `zp_catalog` WHERE ".$cond." LIMIT 1");
-	if(!$send['all']) {
-		$send['spisok'] = '<div class="_empty">Запчастей не найдено.</div>';
-		return $send;
-	}
+	$filter_clear = '<a class="clear">Очистить фильтр</a>';
+	$all = query_value("SELECT COUNT(`id`) FROM `zp_catalog` WHERE ".$cond." LIMIT 1");
+	if(!$all)
+		return array(
+			'all' => 0,
+			'result' => 'Запчастей не найдено'.$filter_clear,
+			'spisok' => '<div class="_empty">Запчастей не найдено</div>',
+			'filter' => $filter
+		);
+
+	$send = array(
+		'all' => $all,
+		'result' => 'Показан'._end($all, 'а ', 'о ').$all.' запчаст'._end($all, 'ь', 'и', 'ей').$filter_clear,
+		'spisok' => '',
+		'filter' => $filter
+	);
+
 	$start = ($page - 1) * $limit;
 	$spisok = array();
 	$sql = "SELECT
@@ -1312,6 +1311,7 @@ function zp_data($page=1, $filter=array(), $limit=20) {
 	$q = query($sql);
 	$ids = array();
 	$compat = array();
+	$img = array();
 	while($r = mysql_fetch_assoc($q)) {
 		$r['model'] = _modelName($r['base_model_id']);
 		if(!empty($filter['find'])) {
@@ -1323,12 +1323,11 @@ function zp_data($page=1, $filter=array(), $limit=20) {
 		$r['zp_id'] = $r['compat_id'] ? $r['compat_id'] : $r['id'];
 		$compat[$r['zp_id']][] = $r['id'];
 		$ids[$r['zp_id']] = $r['zp_id'];
+		$img[] = 'zp'.$r['id'];
+		$img[] = 'zp'.$r['compat_id'];
 		$spisok[$r['id']] = $r;
 	}
 
-	$img = array();
-	foreach($ids as $id)
-		$img[] = 'zp'.$id;
 	$img = _imageGet(array(
 		'owner' => $img,
 		'view' => 1
@@ -1401,14 +1400,15 @@ function zp_data($page=1, $filter=array(), $limit=20) {
 			'</table>'.
 		'</div>';
 	}
-	if($start + $limit < $send['all']) {
-		$c = $send['all'] - $start - $limit;
+	if($start + $limit < $all) {
+		$c = $all - $start - $limit;
 		$c = $c > $limit ? $limit : $c;
 		$send['spisok'] .= '<div class="_next" val="'.($page + 1).'"><span>Показать ещё '.$c.' запчаст'._end($c, 'ь', 'и', 'ей').'</span></div>';
 	}
 	return $send;
-}//zp_data()
-function zp_list($data) {
+}//zp_spisok()
+function zp_list($v) {
+	$data = zp_spisok($v);
 	$filter = $data['filter'];
 	$menu = array(
 		0 => 'Общий каталог',
@@ -1417,10 +1417,11 @@ function zp_list($data) {
 		3 => 'Заказ'
 	);
 	return '<div id="zp">'.
-		'<div class="result">'.zp_count($data).'</div>'.
+		'<div class="result">'.$data['result'].'</div>'.
 		'<table class="tabLR">'.
 			'<tr><td class="left">'.$data['spisok'].
 				'<td class="right">'.
+					'<div id="buttonCreate" class="add"><a>Внести новую запчасть</a></div>'.
 					'<div id="find"></div>'.
 					_rightLink('menu', $menu, $filter['menu']).
 					'<div class="findHead">Наименование</div><INPUT type="hidden" id="zp_name" value="'.$filter['name'].'" />'.
@@ -1428,21 +1429,15 @@ function zp_list($data) {
 					_check('bu', 'Б/у', $filter['bu']).
 		'</table>'.
 		'<script type="text/javascript">'.
-			'G.zp_find = "'.$filter['find'].'";'.
-			'G.zp_device = '.$filter['device'].';'.
-			'G.zp_vendor = '.$filter['vendor'].';'.
-			'G.zp_model = '.$filter['model'].';'.
+			'var ZP={'.
+				'find:"'.addslashes($filter['find']).'",'.
+				'device:'.$filter['device'].','.
+				'vendor:'.$filter['vendor'].','.
+				'model:'.$filter['model'].
+			'};'.
 		'</script>'.
 	'</div>';
 }//zp_list()
-function zp_count($data) {
-	$all = $data['all'];
-	return ($all > 0 ?
-		'Показан'._end($all, 'а ', 'о ').$all.' запчаст'._end($all, 'ь', 'и', 'ей').
-		(!$data['filter']['menu'] ? '<a class="add">Внести новую запчасть в каталог</a>' : '')
-		:
-		'Запчастей не найдено');
-}//zp_count()
 
 function zp_info($zp_id) {
 	$sql = "SELECT * FROM `zp_catalog` WHERE `id`=".$zp_id;
@@ -1481,7 +1476,7 @@ function zp_info($zp_id) {
 			'name:"'._zpName($zp['name_id']).' <b>'._vendorName($zp['base_vendor_id'])._modelName($zp['base_model_id']).'</b>",'.
 			'for:"для '._deviceName($zp['base_device_id'], 1).'",'.
 			'count:'.($avai ? $avai : 0).','.
-			'img:""'.
+			'images:"'.addslashes(_imageAdd(array('owner'=>'zp'.$compat_id))).'"'.
 		'};'.
 	'</script>'.
 	'<div id="zpInfo">'.
@@ -1551,7 +1546,6 @@ function zp_move($zp_id, $page=1) {
 	$spisok = array();
 	while($r = mysql_fetch_assoc($q))
 		$spisok[$r['id']] = $r;
-	$spisok = _viewer($spisok);
 	$spisok = _zayavNomerLink($spisok);
 	$spisok = _clientLink($spisok);
 	$move = '';
@@ -1569,15 +1563,13 @@ function zp_move($zp_id, $page=1) {
 		$summa = round($r['summa'], 2);
 		$count = abs($r['count']);
 		$move .= '<div class="unit">'.
-			'<div>'.
-				(!$n++ && $page == 1 ? '<div class="img_del" val="'.$r['id'].'"></div>' : '').
+				(!$n++ && $page == 1 ? '<div val="'.$r['id'].'" class="img_del'._tooltip('Удалить запись', -50).'</div>' : '').
 				$type[$r['type']].' <b>'.$count.'</b> шт. '.
 				($summa ? 'на сумму '.$summa.' руб.'.($count > 1 ? ' <span class="cenaed">('.$cena.' руб./шт.)</span> ' : '') : '').
 				($r['zayav_id'] ? 'по заявке '.$r['zayav_link'].'.' : '').
 				($r['client_id'] ? 'клиенту '.$r['client_link'].'.' : '').
-			'</div>'.
 			($r['prim'] ? '<div class="prim">'.$r['prim'].'</div>' : '').
-			'<div class="dtime" title="Внёс '.$r['viewer_name'].'">'.FullDataTime($r['dtime_add']).'</div>'.
+			'<div class="dtime'._tooltip(viewerAdded($r['viewer_id_add']), -1, 'l').FullDataTime($r['dtime_add']).'</div>'.
 		'</div>';
 	}
 	if($start + $limit < $all) {
