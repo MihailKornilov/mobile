@@ -6,8 +6,8 @@ _hashRead();
 _header();
 
 //сброс нахождения в списке заявок
-setcookie('zayav_spisok', '', time() - 3600, '/');
-setcookie('zayav_info', '', time() - 3600, '/');
+setcookie('zback_spisok', '', time() - 3600, '/');
+setcookie('zback_info', '', time() - 3600, '/');
 
 switch($_GET['p']) {
 	case 'wscreate':
@@ -56,7 +56,7 @@ switch($_GET['p']) {
 				$html .= zayav_info(intval($_GET['id']));
 				break;
 			default:
-				setcookie('zayav_spisok', 1, time() + 3600, '/');
+				setcookie('zback_spisok', 1, time() + 3600, '/');
 				$v = array();
 				if(HASH_VALUES) {
 					$ex = explode('.', HASH_VALUES);

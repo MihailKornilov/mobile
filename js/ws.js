@@ -1106,7 +1106,7 @@ $(document)
 		}, 'json');
 	})
 	.on('click', '.zayav_unit', function() {
-		setCookie('zayav_scroll', VK_SCROLL);
+		setCookie('zback_scroll', VK_SCROLL);
 		location.href = URL + '&p=zayav&d=info&id=' + $(this).attr('val');
 	})
 	.on('mouseenter', '.zayav_unit', function() {
@@ -2757,7 +2757,7 @@ $(document)
 			});
 			//подсвечивание просмотренной заявки
 			if(Z.cookie_id) {
-				VK.callMethod('scrollWindow', getCookie('zayav_scroll'));
+				VK.callMethod('scrollWindow', getCookie('zback_scroll'));
 				$('#u' + Z.cookie_id).css('opacity', 0.1).delay(400).animate({opacity:1}, 700);
 			}
 			zayavFilter();

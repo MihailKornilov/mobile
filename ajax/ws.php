@@ -418,8 +418,10 @@ switch(@$_POST['op']) {
 	case 'zayav_spisok':
 		$_POST['find'] = win1251($_POST['find']);
 		$data = zayav_spisok($_POST);
-		if($data['filter']['page'] == 1)
+		if($data['filter']['page'] == 1) {
+			setcookie('zback_spisok_page', 1, time() + 3600, '/');
 			$send['all'] = utf8($data['result']);
+		}
 		$send['html'] = utf8($data['spisok']);
 		jsonSuccess($send);
 		break;

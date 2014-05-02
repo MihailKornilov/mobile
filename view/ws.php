@@ -682,7 +682,6 @@ function zayav_spisok($v) {
 	$filter = zayavFilter($v);
 
 	$page = $filter['page'];
-	$limit = $filter['limit'];
 	$cond = "`ws_id`=".WS_ID." AND `zayav_status`";
 
 	if($filter['find']) {
@@ -752,7 +751,16 @@ function zayav_spisok($v) {
 		'filter' => $filter
 	);
 
+	$limit = $filter['limit'];
 	$start = ($page - 1) * $limit;
+	$limit_save = $limit;
+	if($page > 1)
+		setcookie('zback_spisok_page', $page, time() + 3600, '/');
+	if(!empty($_COOKIE['zback_info']) && $page == 1 && !empty($_COOKIE['zback_spisok_page']) && $_COOKIE['zback_spisok_page'] > 1) {
+		setcookie('zback_info', '', time() - 3600, '/');
+		$page = $_COOKIE['zback_spisok_page'];
+		$limit *= $_COOKIE['zback_spisok_page'];
+	}
 	$sql = "SELECT
 	            *,
 				'' AS `note`
@@ -855,7 +863,7 @@ function zayav_spisok($v) {
 
 	if($start + $limit < $all) {
 		$c = $all - $start - $limit;
-		$c = $c > $limit ? $limit : $c;
+		$c = $c > $limit ? $limit_save : $c;
 		$send['spisok'] .=
 			'<div class="_next" val="'.($page + 1).'">'.
 				'<span>Показать ещё '.$c.' заяв'._end($c, 'ку', 'ки', 'ок').'</span>'.
@@ -907,7 +915,7 @@ function zayav_list($v) {
 				'device_id:'.$v['device'].','.
 				'vendor_id:'.$v['vendor'].','.
 				'model_id:'.$v['model'].','.
-				'cookie_id:'.(!empty($_COOKIE['zayav_info']) ? $_COOKIE['zayav_info'] : 0).
+				'cookie_id:'.(!empty($_COOKIE['zback_info']) ? $_COOKIE['zback_info'] : 0).
 			'};'.
 		'</script>'.
 	'</div>';
@@ -950,8 +958,8 @@ function zayavEquipSpisok($ids) {//Список комплектации через запятую
 }//zayavEquipSpisok()
 function zayav_info($zayav_id) {
 	//Установка id заявки, если переход со списка заявок
-	if(!empty($_COOKIE['zayav_spisok']))
-		setcookie('zayav_info', $zayav_id, time() + 3600, '/');
+	if(!empty($_COOKIE['zback_spisok']))
+		setcookie('zback_info', $zayav_id, time() + 3600, '/');
 
 	$sql = "SELECT *
 			FROM `zayav`
