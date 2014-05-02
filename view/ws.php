@@ -395,10 +395,7 @@ function client_info($client_id) {
 
 	$remindData = remind_data(1, array('client'=>$client_id));
 
-	$histCount = query_value("SELECT COUNT(`id`)
-							   FROM `history`
-							   WHERE `ws_id`=".WS_ID."
-								 AND `client_id`=".$client_id);
+	$histCount = query_value("SELECT COUNT(`id`) FROM `history` WHERE `ws_id`=".WS_ID." AND `client_id`=".$client_id);
 
 	return
 		'<script type="text/javascript">'.
@@ -432,7 +429,7 @@ function client_info($client_id) {
 					'<div id="money_spisok">'.$money.'</div>'.
 					'<div id="remind_spisok">'.(!empty($remindData) ? remind_spisok($remindData) : '<div class="_empty">Заданий нет.</div>').'</div>'.
 					'<div id="comments">'._vkComment('client', $client_id).'</div>'.
-					'<div id="histories">'.history_spisok(1, array('client_id'=>$client_id), 15).'</div>'.
+					'<div id="histories">'.history_spisok(array('client_id'=>$client_id,'limit'=>15)).'</div>'.
 				'<td class="right">'.
 					'<div class="rightLink">'.
 						'<a class="sel">Информация</a>'.
@@ -514,14 +511,19 @@ function _zayavStatusColor($id=false) {
 		$send[$id] = $r['color'];
 	return $send;
 }//_zayavStatusColor()
-function _zayavNomerLinkForming($id, $nomer, $noHint=false) {
+function _zayavNomerLinkForming($v) {
+	$class = (!$v['nohint'] ? 'zayav_link' : '').
+			 ($v['deleted'] ? ' deleted' : '');
 	return
-		'<a href="'.URL.'&p=zayav&d=info&id='.$id.'"'.(!$noHint ? ' class="zayav_link" val="'.$id.'"' : '').'>'.
-			'№'.$nomer.
-			(!$noHint ? '<div class="tooltip empty"></div>' : '').
+		'<a href="'.URL.'&p=zayav&d=info&id='.$v['id'].'"'.
+			($class ? ' class="'.$class.'"' : '').
+			(!$v['nohint'] ? ' val="'.$v['id'].'"' : '').
+		'>'.
+			'№'.$v['nomer'].
+			(!$v['nohint'] ? '<div class="tooltip empty"></div>' : '').
 		'</a>';
 }//_zayavNomerLinkForming()
-function _zayavNomerLink($arr, $noHint=false) { //Вывод номеров заявок с возможностью отображения дополнительной информации при наведении
+function _zayavNomerLink($arr, $noHint=0) { //Вывод номеров заявок с возможностью отображения дополнительной информации при наведении
 	$zayavArr = array(is_array($arr) ? 0 : $arr);
 	if(is_array($arr)) {
 		$ass = array();
@@ -535,19 +537,21 @@ function _zayavNomerLink($arr, $noHint=false) { //Вывод номеров заявок с возможн
 	if(!empty($zayavArr)) {
 		$sql = "SELECT
 	            `id`,
-	            `nomer`
+	            `nomer`,
+	            `deleted`,
+	            ".$noHint." `nohint`
 			FROM `zayav`
 			WHERE `ws_id`=".WS_ID."
 			  AND `id` IN (".implode(',', $zayavArr).")";
 		$q = query($sql);
 		if(!is_array($arr)) {
 			if($r = mysql_fetch_assoc($q))
-				return _zayavNomerLinkForming($r['id'], $r['nomer'], $noHint);
+				return _zayavNomerLinkForming($r);
 			return '';
 		}
 		while($r = mysql_fetch_assoc($q))
 			foreach($ass[$r['id']] as $id)
-				$arr[$id]['zayav_link'] = _zayavNomerLinkForming($r['id'], $r['nomer'], $noHint);
+				$arr[$id]['zayav_link'] = _zayavNomerLinkForming($r);
 	}
 	return $arr;
 }//_zayavNomerLink()
@@ -821,7 +825,7 @@ function zayav_spisok($v) {
 		}
 		$diff = $r['accrual_sum'] - $r['oplata_sum'];
 		$send['spisok'] .=
-			'<div class="zayav_unit" style="background-color:#'._zayavStatusColor($r['zayav_status']).'" val="'.$id.'">'.
+			'<div class="zayav_unit" id="u'.$id.'" style="background-color:#'._zayavStatusColor($r['zayav_status']).'" val="'.$id.'">'.
 				'<table width="100%">'.
 					'<tr><td valign=top>'.
 						'<h2'.(isset($r['nomer_find']) ? ' class="finded"' : '').'>#'.$r['nomer'].'</h2>'.
@@ -894,14 +898,17 @@ function zayav_list($v) {
 					'</div>'.
 		'</table>'.
 		'<script type="text/javascript">'.
-			'var DEVICE_IDS=['._zayavBaseDeviceIds().'],'.
-				'VENDOR_IDS=['._zayavBaseVendorIds().'],'.
-				'MODEL_IDS=['._zayavBaseModelIds().'];'.
-			'G.place_other = ['.implode(',', $place_other).'];'.
-			'G.zayav_find = "'.unescape($v['find']).'";'.
-			'G.zayav_device = '.$v['device'].';'.
-			'G.zayav_vendor = '.$v['vendor'].';'.
-			'G.zayav_model = '.$v['model'].';'.
+			'var Z={'.
+				'device_ids:['._zayavBaseDeviceIds().'],'.
+				'vendor_ids:['._zayavBaseVendorIds().'],'.
+				'model_ids:['._zayavBaseModelIds().'],'.
+				'place_other:['.implode(',', $place_other).'],'.
+				'find:"'.unescape($v['find']).'",'.
+				'device_id:'.$v['device'].','.
+				'vendor_id:'.$v['vendor'].','.
+				'model_id:'.$v['model'].','.
+				'cookie_id:'.(!empty($_COOKIE['zayav_info']) ? $_COOKIE['zayav_info'] : 0).
+			'};'.
 		'</script>'.
 	'</div>';
 }//zayav_list()
@@ -942,6 +949,10 @@ function zayavEquipSpisok($ids) {//Список комплектации через запятую
 	return implode(', ', $send);
 }//zayavEquipSpisok()
 function zayav_info($zayav_id) {
+	//Установка id заявки, если переход со списка заявок
+	if(!empty($_COOKIE['zayav_spisok']))
+		setcookie('zayav_info', $zayav_id, time() + 3600, '/');
+
 	$sql = "SELECT *
 			FROM `zayav`
 			WHERE `ws_id`=".WS_ID."
@@ -991,14 +1002,15 @@ function zayav_info($zayav_id) {
 	'</script>'.
 	'<div id="zayavInfo">'.
 		'<div id="dopLinks">'.
-			'<a class="delete'.(!empty($money) ?  ' dn': '').'">Удалить заявку</a>'.
-			'<a class="link sel">Информация</a>'.
+			'<a class="img_del delete'.(!empty($money) ?  ' dn': '').'"></a>'.
+			'<a class="link info sel">Информация</a>'.
 			'<a class="link zedit">Редактирование</a>'.
 			'<a class="link acc_add">Начислить</a>'.
 			'<a class="link income-add">Принять платёж</a>'.
+			'<a class="link hist">История</a>'.
 		'</div>'.
 		'<table class="itab">'.
-			'<tr><td id="left">'.
+			'<tr class="z-info"><td id="left">'.
 				'<div class="headName">'.
 					'Заявка №'.$z['nomer'].
 					'<a class="img_print" title="Распечатать квитанцию"></a>'.
@@ -1048,6 +1060,10 @@ function zayav_info($zayav_id) {
 					'<a class="zpAdd add">добавить</a>'.
 				'</div>'.
 				'<div id="zpSpisok">'.zayav_zp($z).'</div>'.
+
+			'<tr class="z-hist"><td>'.
+				'<div class="headName">Заявка №'.$z['nomer'].' - история действий</div>'.
+				history_spisok(array('zayav_id'=>$z['id'])).
 		'</table>'.
 	'</div>';
 }//zayav_info()
@@ -1714,44 +1730,55 @@ function history_insert($arr) {
 			)";
 	query($sql);
 }//history_insert()
-function history_types($v) {
+function history_types($v, $filter) {
 	switch($v['type']) {
-		case 1: return 'Создана новая заявка '.$v['zayav_link'].' для клиента '.$v['client_link'].'.';
-		case 2: return 'Удалена заявка №'.$v['value'].'.';
-		case 3: return 'Внесён новый клиент '.$v['client_link'].'.';
+		case 1: return 'Создана новая заявка'.
+			($filter['zayav_id'] ? '' : ' '.$v['zayav_link']).
+			($filter['zayav_id'] || $filter['client_id'] ? '' : ' для клиента '.$v['client_link']).
+			'.';
+		case 2: return $filter['zayav_id'] ? 'Заявка удалена.' : 'Удалена заявка '.$v['zayav_link'].'.';
+		case 3: return ($filter['client_id'] ? 'Клиент внесён' : 'Внесён новый клиент '.$v['client_link']).'.';
 		case 4:
 			$statusPrev = $v['value1'] ? _zayavStatus($v['value1']) : '';
 			$status = _zayavStatus($v['value']);
-			return 'Изменён статус заявки '.$v['zayav_link'].
+			return 'Изменён статус заявки'.
+					($filter['zayav_id'] ? '' : ' '.(!isset($v['zayav_link']) ? 'id=<b>'.$v['id'].'</b>' : $v['zayav_link'])).
 					($v['value1'] ? ':<br />' : ' на ').
 					($v['value1'] ? '<span style="background-color:#'.$statusPrev['color'].'" class="zstatus">'.$statusPrev['name'].'</span> » ' : '').
 					'<span style="background-color:#'.$status['color'].'" class="zstatus">'.$status['name'].'</span>';
-		case 5: return 'Произведено начисление на сумму <b>'.$v['value'].'</b> руб. для заявки '.$v['zayav_link'].'.';
+		case 5: return 'Произведено начисление на сумму <b>'.$v['value'].'</b> руб.'.
+						($filter['zayav_id'] ? '' : ' для заявки '.$v['zayav_link'].'.');
 		case 6: return
 			'Внесён платёж '.
 			($v['value2'] ? '<span class="oplata">'._income($v['value2']).'</span> ' : '').
 			'на сумму <b>'.$v['value'].'</b> руб. '.
 			($v['value1'] ? '<span class="prim">('.$v['value1'].')</span> ' : '').
-			($v['zayav_id'] ? 'по заявке '.$v['zayav_link'].'. ' : '').
+			($v['zayav_id'] && !$filter['zayav_id'] ? 'по заявке '.$v['zayav_link'].'. ' : '').
 			($v['zp_id'] ? '<br />Продана запчасть '.$v['zp_link'].'. ' : '');
-		case 7: return 'Отредактированы данные заявки '.$v['zayav_link'].($v['value'] ? ':<div class="changes">'.$v['value'].'</div>' : '.');
+		case 7: return 'Отредактированы данные заявки'.
+						($filter['zayav_id'] ? '' : ' '.$v['zayav_link']).
+						($v['value'] ? ':<div class="changes">'.$v['value'].'</div>' : '').
+						'.';
 		case 8:
 			return 'Удалено начисление на сумму <b>'.$v['value'].'</b> руб. '.
 				($v['value1'] ? '('.$v['value1'].')' : '').
-				' у заявки '.$v['zayav_link'].'.';
+				($filter['zayav_id'] ? '' : ' у заявки '.$v['zayav_link']).
+				'.';
 		case 9:
 			return 'Удалён платёж '.
 				($v['value2'] ? '<span class="oplata">'._income($v['value2']).'</span> ' : '').
 				'на сумму <b>'.$v['value'].'</b> руб. '.
 				($v['value1'] ? '<span class="prim">('.$v['value1'].')</span> ' : '').
-				($v['zayav_id'] ? ' у заявки '.$v['zayav_link'] : '').
+				($v['zayav_id'] && !$filter['zayav_id'] ? ' у заявки '.$v['zayav_link'] : '').
 				($v['zp_id'] ? ' (Продажа запчасти '.$v['zp_link'].')' : '').
 				'.';
-		case 10: return 'Отдерактированы данные клиента '.$v['client_link'].($v['value'] ? ':<div class="changes">'.$v['value'].'</div>' : '.');
+		case 10: return 'Отдерактированы данные клиента'.
+						($filter['client_id'] ? '' : ' '.$v['client_link']).
+						($v['value'] ? ':<div class="changes">'.$v['value'].'</div>' : '.');
 		case 11: return 'Произведено объединение клиентов <i>'.$v['value'].'</i> и '.$v['client_link'].'.';
-		case 12: return 'Установлено значение в кассе: '.$v['value'].' руб.';
-		case 13: return 'Произведена установка запчасти '.$v['zp_link'].' по заявке '.$v['zayav_link'].'.';
-		case 14: return 'Продана запчасть '.$v['zp_link'].' на сумму <b>'.$v['value'].'</b> руб.';
+		case 13: return 'Произведена установка запчасти '.$v['zp_link'].
+						($filter['zayav_id'] ? '' : ' по заявке '.$v['zayav_link']).
+						'.';
 		case 15: return 'Произведено списание запчасти '.$v['zp_link'].'';
 		case 16: return 'Произведён возврат запчасти '.$v['zp_link'].'';
 		case 17: return 'Забракована запчасть '.$v['zp_link'].'';
@@ -1761,26 +1788,25 @@ function history_types($v) {
 				($v['value2'] ? '<span class="oplata">'._income($v['value2']).'</span> ' : '').
 				'на сумму <b>'.$v['value'].'</b> руб. '.
 				($v['value1'] ? '<span class="prim">('.$v['value1'].')</span> ' : '').
-				($v['zayav_id'] ? ' у заявки '.$v['zayav_link'] : '').
+				($v['zayav_id'] && !$filter['zayav_id'] ? ' у заявки '.$v['zayav_link'] : '').
 				($v['zp_id'] ? ' (Продажа запчасти '.$v['zp_link'].')' : '').
 				'.';
 		case 20:
 			return 'Создано новое задание'.
-				($v['zayav_id'] ? ' для заявки '.$v['zayav_link'] : '').
-				($v['client_id'] ? ' для клиента '.$v['client_link'] : '').
+				($v['zayav_id'] && !$filter['zayav_id'] ? ' для заявки '.$v['zayav_link'] : '').
+				($v['client_id']  && !$filter['client_id'] ? ' для клиента '.$v['client_link'] : '').
 				'.';
 		case 21: return 'Внесён расход на сумму <b>'.$v['value'].'</b> руб.';
 		case 22: return 'Удалён расход на сумму <b>'.$v['value'].'</b> руб.';
-		case 23: return 'Изменены данные расхода на сумму <b>'.$v['value'].'</b> руб.';
-		case 24: return 'Установлено начальное значение в кассе = <b>'.$v['value'].'</b> руб.';
-		case 25: return 'Удалена запись в кассе на сумму <b>'.$v['value'].'</b> руб. ('.$v['value1'].')';
-		case 26: return 'Восстановлена запись в кассе на сумму <b>'.$v['value'].'</b> руб. ('.$v['value1'].')';
-		case 27:
-			return 'Восстановлено начисление на сумму <b>'.$v['value'].'</b> руб. '.
-				($v['value1'] ? '('.$v['value1'].')' : '').
-				' у заявки '.$v['zayav_link'].'.';
+//		case 23: return 'Изменены данные расхода на сумму <b>'.$v['value'].'</b> руб.';
+		case 27: return 'Восстановлено начисление на сумму <b>'.$v['value'].'</b> руб. '.
+						($v['value1'] ? '('.$v['value1'].')' : '').
+						($filter['zayav_id'] ? '' : ' у заявки '.$v['zayav_link']).
+						'.';
 		case 28: return 'Установка текущей суммы для счёта <span class="oplata">'._invoice($v['value1']).'</span>: <b>'.$v['value'].'</b> руб.';
-		case 29: return 'Изменение местонахождения устройства по заявке '.$v['zayav_link'].' при внесении платежа:<div class="changes">'.$v['value'].'</div>';
+		case 29: return 'Изменение местонахождения устройства'.
+						($filter['zayav_id'] ? '' : ' по заявке '.$v['zayav_link']).
+						' при внесении платежа:<div class="changes">'.$v['value'].'</div>';
 
 		case 39:
 			return 'Перевод '.
@@ -1834,30 +1860,50 @@ function history_right() {
 	foreach($viewer as $id)
 		$workers[] = '{uid:'.$id.',title:"'._viewer($id, 'name').'"}';
 	return
-	'<script type="text/javascript">var WORKERS = ['.implode(',', $workers).'];</script>'.
-	'<div class="findHead">Сотрудник</div><input type="hidden" id="worker">'.
+	'<script type="text/javascript">var WORKERS=['.implode(',', $workers).'];</script>'.
+	'<div class="findHead">Сотрудник</div><input type="hidden" id="worker_id">'.
 	'<div class="findHead">Действие</div><input type="hidden" id="action">';
 }//history_right()
-function history_spisok($page=1, $filter=array(), $limit=30) {
-	$cond = "`ws_id`=".WS_ID.
-		(isset($filter['worker']) ? ' AND `viewer_id_add`='.$filter['worker'] : '').
-		(isset($filter['client_id']) ? ' AND `client_id`='.$filter['client_id'] : '').
-		(isset($filter['action']) ? ' AND `type` IN ('.history_types_group($filter['action']).')' : '');
-	$sql = "SELECT
-				COUNT(`id`) AS `all`
-			FROM `history`
-			WHERE ".$cond;
-	$r = mysql_fetch_assoc(query($sql));
-	if($r['all'] == 0)
-		return 'Истории по указанным условиям нет.';
-	$all = $r['all'];
+function history_spisok($v=array()) {
+	$filter = array(
+		'page' => !empty($v['page']) && preg_match(REGEXP_NUMERIC, $v['page']) ? $v['page'] : 1,
+		'limit' => !empty($v['limit']) && preg_match(REGEXP_NUMERIC, $v['limit']) ? $v['limit'] : 30,
+		'worker_id' => !empty($v['worker_id']) && preg_match(REGEXP_NUMERIC, $v['worker_id']) ? $v['worker_id'] : 0,
+		'action' => !empty($v['action']) && preg_match(REGEXP_NUMERIC, $v['action']) ? $v['action'] : 0,
+		'client_id' => !empty($v['client_id']) && preg_match(REGEXP_NUMERIC, $v['client_id']) ? $v['client_id'] : 0,
+		'zayav_id' => !empty($v['zayav_id']) && preg_match(REGEXP_NUMERIC, $v['zayav_id']) ? $v['zayav_id'] : 0
+	);
+
+	$cond = "`ws_id`=".WS_ID;
+	if($filter['worker_id'])
+		$cond .= " AND `viewer_id_add`=".$filter['worker_id'];
+	if($filter['action'])
+		$cond .= " AND `type` IN(".history_types_group($filter['action']).")";
+	if($filter['client_id'])
+		$cond .= " AND `client_id`=".$filter['client_id'];
+	if($filter['zayav_id'])
+		$cond .= " AND `zayav_id`=".$filter['zayav_id'];
+
+	$page = $filter['page'];
+	$limit = $filter['limit'];
 	$start = ($page - 1) * $limit;
 
-	$sql = "SELECT
-	            *,
-	            '<i>удалённый клиент</i>' AS `client_link`,
-	            '<i>удалённая заявка</i>' AS `zayav_link`,
-	            '<i>удалённая запчасть</i>' AS `zp_link`
+	$send = $page == 1 ?
+		'<input type="hidden" id="history_limit" value="'.$filter['limit'].'" />'.
+		'<input type="hidden" id="history_worker_id" value="'.$filter['worker_id'].'" />'.
+		'<input type="hidden" id="history_action" value="'.$filter['action'].'" />'.
+		'<input type="hidden" id="history_client_id" value="'.$filter['client_id'].'" />'.
+		'<input type="hidden" id="history_zayav_id" value="'.$filter['zayav_id'].'" />'
+		: '';
+
+	$sql = "SELECT COUNT(`id`) AS `all`
+			FROM `history`
+			WHERE ".$cond;
+	$all = query_value($sql);
+	if(!$all)
+		return $send.'Истории по указанным условиям нет.';
+
+	$sql = "SELECT *
 			FROM `history`
 			WHERE ".$cond."
 			ORDER BY `id` DESC
@@ -1871,7 +1917,6 @@ function history_spisok($page=1, $filter=array(), $limit=30) {
 	$history = _zayavNomerLink($history);
 	$history = _zpLink($history);
 
-	$send = '';
 	$txt = '';
 	end($history);
 	$keyEnd = key($history);
@@ -1881,7 +1926,7 @@ function history_spisok($page=1, $filter=array(), $limit=30) {
 			$time = strtotime($r['dtime_add']);
 			$viewer_id = $r['viewer_id_add'];
 		}
-		$txt .= '<li><div class="li">'.history_types($r).'</div>';
+		$txt .= '<li><div class="li">'.history_types($r, $filter).'</div>';
 		$key = key($history);
 		if(!$key ||
 		   $key == $keyEnd ||

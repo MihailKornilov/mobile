@@ -313,27 +313,8 @@ switch(@$_POST['op']) {
 		jsonSuccess($send);
 		break;
 
-	case 'model_next':
-		if(!preg_match(REGEXP_NUMERIC, $_POST['vendor_id']) && $_POST['vendor_id'] == 0)
-			jsonError();
-		if(!preg_match(REGEXP_NUMERIC, $_POST['page']))
-			jsonError();
-		if(!preg_match(REGEXP_WORDFIND, win1251($_POST['find'])))
-			$_POST['find'] = '';
-		$vendor_id = intval($_POST['vendor_id']);
-		$find = win1251(htmlspecialchars(trim($_POST['find'])));
-		$page = intval($_POST['page']);
-		$send['html'] = utf8(sa_model_spisok($vendor_id, $page, $find));
-		jsonSuccess($send);
-		break;
-	case 'model_load':
-		if(!preg_match(REGEXP_NUMERIC, $_POST['vendor_id']) && $_POST['vendor_id'] == 0)
-			jsonError();
-		if(!preg_match(REGEXP_WORDFIND, win1251($_POST['find'])))
-			$_POST['find'] = '';
-		$vendor_id = intval($_POST['vendor_id']);
-		$find = win1251(htmlspecialchars(trim($_POST['find'])));
-		$send['html'] = utf8(sa_model_spisok($vendor_id, 1, $find));
+	case 'model_spisok':
+		$send['html'] = utf8(sa_model_spisok($_POST));
 		jsonSuccess($send);
 		break;
 	case 'model_add':
@@ -403,6 +384,9 @@ switch(@$_POST['op']) {
 
 		if(query_value("SELECT COUNT(`id`) FROM `zayav` WHERE `base_model_id`=".$model_id))
 			jsonError();
+		if(query_value("SELECT COUNT(`id`) FROM `zp_catalog` WHERE `base_model_id`=".$model_id))
+			jsonError();
+
 		$sql = "DELETE FROM `base_model` WHERE `id`=".$model_id;
 		query($sql);
 		xcache_unset(CACHE_PREFIX.'model_name');

@@ -289,18 +289,28 @@ function sa_model() {
 	'<div class="sa-model">'.
 		'<div class="headName">Список моделей для "'._deviceName($ven['device_id']).$ven['name'].'"<a class="add">Добавить</a></div>'.
 		'<div id="find"></div>'.
-		'<table class="_spisok">'.
-			'<tr><th>'.
-				'<th class="name">Наименование модели'.
-				'<th class="zayav">Кол-во<BR>заявок'.
-				'<th class="edit">'.
-			sa_model_spisok($vendor_id).
-		'</table>'.
+		'<div class="spisok">'.sa_model_spisok(array('vendor_id'=>$vendor_id)).'</div>'.
 	'</div>';
 }//sa_model()
-function sa_model_spisok($vendor_id, $page=1, $find='') {
-	$limit = 15;
-	$all = query_value("SELECT COUNT(`id`) FROM `base_model` WHERE `vendor_id`=".$vendor_id.($find ? " AND `name` LIKE '%".$find."%'" : ''));
+function sa_model_spisok($v) {
+	$filter = array(
+		'page' => !empty($v['page']) && preg_match(REGEXP_NUMERIC, $v['page']) ? intval($v['page']) : 1,
+		'limit' => !empty($v['limit']) && preg_match(REGEXP_NUMERIC, $v['limit']) ? intval($v['limit']) : 20,
+		'find' => !empty($v['find']) ? htmlspecialchars(trim($v['find'])) : '',
+		'vendor_id' => !empty($v['vendor_id']) && preg_match(REGEXP_NUMERIC, $v['vendor_id']) ? intval($v['vendor_id']) : 0,
+
+	);
+
+	$page = $filter['page'];
+	$limit = $filter['limit'];
+
+	$cond = "`m`.`vendor_id`=".$filter['vendor_id'].
+			($filter['find'] ? " AND `m`.`name` LIKE '%".$filter['find']."%'" : '');
+
+	$sql = "SELECT COUNT(*)
+			FROM `base_model` `m`
+			WHERE ".$cond;
+	$all = query_value($sql);
 	if(!$all)
 		return 'Моделей нет.';
 
@@ -308,36 +318,74 @@ function sa_model_spisok($vendor_id, $page=1, $find='') {
 	$sql = "SELECT
 				`m`.`id`,
 				`m`.`name`,
-				COUNT(`z`.`id`) AS `zayav_count`
+				COUNT(`z`.`id`) AS `zayav`,
+				0 AS `zp`
 			FROM `base_model` AS `m`
 				 LEFT JOIN `zayav` AS `z`
 				 ON `m`.`id`=`z`.`base_model_id`
-			WHERE `m`.`vendor_id`=".$vendor_id.
-				($find ? " AND `m`.`name` LIKE '%".$find."%'" : '')."
+			WHERE ".$cond."
 			GROUP BY `m`.`id`
 			ORDER BY `m`.`name`
 			LIMIT ".$start.",".$limit;
 	$q = query($sql);
-	$mods = array();
+	$model = array();
+	$img = array();
+	while($r = mysql_fetch_assoc($q)) {
+		$model[$r['id']] = $r;
+		$img[] = 'dev'.$r['id'];
+	}
+
+	$sql = "SELECT
+				`m`.`id`,
+				COUNT(`zp`.`id`) AS `zp`
+			FROM `base_model` AS `m`
+				 LEFT JOIN `zp_catalog` AS `zp`
+				 ON `m`.`id`=`zp`.`base_model_id`
+			WHERE ".$cond."
+				AND `m`.`id` IN (".implode(',', array_keys($model)).")
+			GROUP BY `m`.`id`";
+	$q = query($sql);
 	while($r = mysql_fetch_assoc($q))
-		$mods[$r['id']] = $r;
+		$model[$r['id']]['zp'] = $r['zp'];
 
-	_modelImg(array_keys($mods), 'small', 40, 40, 'fotoView');
+	$img = _imageGet(array(
+		'owner' => $img,
+		'view' => 1,
+		'x' => 60,
+		'y' => 45
+	));
 
-	$send = '';
-	foreach($mods as $id => $r)
-		$send .= '<tr class="tr" val="'.$id.'"><td class="img">'._modelImg($id).
-					   '<td class="name"><a href="'.URL.'&p=sa&d=modelInfo&id='.$id.'">'._vendorName($vendor_id).'<b>'.$r['name'].'</b></a>'.
-					   '<td class="zayav">'.($r['zayav_count'] ? $r['zayav_count'] : '').
+	$send = $page == 1 ?
+		'<div class="count">Найдено: <b>'.$all.'</b></div>'.
+		'<table class="_spisok">'.
+			'<tr><th>'.
+				'<th class="name">Наименование модели'.
+				'<th class="zayav">Кол-во<br />заявок'.
+				'<th class="zp">Кол-во<br />запчастей'.
+				'<th class="edit">'
+		: '';
+	$reg = '/('.$filter['find'].')/i';
+	foreach($model as $id => $r) {
+		$name = $r['name'];
+		if($filter['find'])
+			$r['name'] = preg_replace($reg, "<em>\\1</em>", $r['name'], 1);
+		$send .= '<tr val="'.$id.'"><td class="img">'.$img['dev'.$id]['img'].
+					   '<td class="name">'.
+							'<a href="'.URL.'&p=sa&d=modelInfo&id='.$id.'">'._vendorName($filter['vendor_id']).'<b>'.$r['name'].'</b></a>'.
+							'<div class="dn">'.$name.'</div>'.
+					   '<td class="zayav">'.($r['zayav'] ? $r['zayav'] : '').
+					   '<td class="zp">'.($r['zp'] ? $r['zp'] : '').
 					   '<td class="edit">'.
 						   '<div class="img_edit"></div>'.
-						   ($r['zayav_count'] ? '' : '<div class="img_del"></div>');
+						   ($r['zayav'] || $r['zp'] ? '' : '<div class="img_del"></div>');
+	}
 	if($start + $limit < $all) {
 		$c = $all - $start - $limit;
 		$c = $c > $limit ? $limit : $c;
-		$send .= '<tr class="tr"><td colspan="4" class="next">'.
-			'<div class="_next" val="'.($page + 1).'"><span>Показать ещё '.$c.' модел'._end($c, 'ь', 'и', 'ей').'</span></div>';
+		$send .= '<tr><td colspan="5" class="_next" val="'.($page + 1).'">'.
+					'<span>Показать ещё '.$c.' модел'._end($c, 'ь', 'и', 'ей').'</span>';
 	}
+	$send .= $page == 1 ? '</table>' : '';
 	return $send;
 }//sa_model_spisok()
 

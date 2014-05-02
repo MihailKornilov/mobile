@@ -5,6 +5,10 @@ require_once('view/ws.php');
 _hashRead();
 _header();
 
+//сброс нахождения в списке заявок
+setcookie('zayav_spisok', '', time() - 3600, '/');
+setcookie('zayav_info', '', time() - 3600, '/');
+
 switch($_GET['p']) {
 	case 'wscreate':
 		if(WS_ID)
@@ -52,6 +56,7 @@ switch($_GET['p']) {
 				$html .= zayav_info(intval($_GET['id']));
 				break;
 			default:
+				setcookie('zayav_spisok', 1, time() + 3600, '/');
 				$v = array();
 				if(HASH_VALUES) {
 					$ex = explode('.', HASH_VALUES);
@@ -66,7 +71,7 @@ switch($_GET['p']) {
 							$v[$arr[1]] = $val;
 					}
 				}
-				$v['find'] = unescape($v['find']);
+				$v['find'] = unescape(@$v['find']);
 				$html .= zayav_list($v);
 		}
 		break;

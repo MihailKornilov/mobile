@@ -409,18 +409,27 @@ var AJAX_WS = SITE + '/ajax/ws.php?' + VALUES,
 		}, 'json');
 	},
 
-	historySpisok = function() {
-		var send = {
+	historyFilter = function() {
+		return {
 			op:'history_spisok',
-			worker:$('#worker').val(),
-			action:$('#action').val()
+			limit:$('#history_limit').val(),
+			worker_id:$('#history_worker_id').val(),
+			action:$('#action').val(),
+			client_id:$('#history_client_id').val(),
+			zayav_id:$('#history_zayav_id').val()
 		};
+	},
+	historySpisok = function(v, id) {
+		var send = historyFilter();
+		send[id] = v;
 		$('#mainLinks').addClass('busy');
-		$.post(AJAX_WS, send, function (res) {
-			$('.left').html(res.html);
+		$.post(AJAX_WS, send, function(res) {
 			$('#mainLinks').removeClass('busy');
+			if(res.success)
+				$('.left').html(res.html);
 		}, 'json');
 	},
+
 	remindSpisok = function() {
 		var send = {
 			op:'remind_spisok',
@@ -1081,24 +1090,6 @@ $(document)
 			}
 		}//submit()
 	})
-	.on('click', '#clientInfo #histories ._next', function() {
-		if($(this).hasClass('busy'))
-			return;
-		var next = $(this),
-			send = {
-				op:'client_history_next',
-				page:$(this).attr('val'),
-				client_id:CLIENT.id
-			};
-		next.addClass('busy');
-		$.post(AJAX_WS, send, function (res) {
-			if(res.success)
-				next.after(res.html).remove();
-			else
-				next.removeClass('busy');
-		}, 'json');
-	})
-
 
 	.on('click', '#zayav ._next', function() {
 		if($(this).hasClass('busy'))
@@ -1115,7 +1106,8 @@ $(document)
 		}, 'json');
 	})
 	.on('click', '.zayav_unit', function() {
-		document.location.href = URL + '&p=zayav&d=info&id=' + $(this).attr('val');
+		setCookie('zayav_scroll', VK_SCROLL);
+		location.href = URL + '&p=zayav&d=info&id=' + $(this).attr('val');
 	})
 	.on('mouseenter', '.zayav_unit', function() {
 		var t = $(this),
@@ -1144,9 +1136,9 @@ $(document)
 		$('#dev').device({
 			width:155,
 			type_no:1,
-			device_ids:DEVICE_IDS,
-			vendor_ids:VENDOR_IDS,
-			model_ids:MODEL_IDS,
+			device_ids:Z.device_ids,
+			vendor_ids:Z.vendor_ids,
+			model_ids:Z.model_ids,
 			func:zayavSpisok
 		});
 		$('#device_place')._select(0);
@@ -1239,26 +1231,6 @@ $(document)
 					remove:1
 				});
 		}
-	})
-	.on('click', '#zayavInfo .delete', function() {
-		var dialog = _dialog({
-			top:110,
-			width:250,
-			head:'Удаление заявки',
-			content:'<CENTER>Подтвердите удаление заявки.</CENTER>',
-			butSubmit:'Удалить',
-			submit:function() {
-				var send = {
-					op:'zayav_delete',
-					zayav_id:ZAYAV.id
-				};
-				dialog.process();
-				$.post(AJAX_WS, send, function(res) {
-					if(res.success)
-						location.href = URL + '&p=client&d=info&id=' + res.client_id;
-				}, 'json');
-			}
-		});
 	})
 	.on('click', '#zayavInfo .remind_add', function() {
 		var html = '<TABLE class="remind_add_tab">' +
@@ -2146,21 +2118,17 @@ $(document)
 	})
 
 	.on('click', '#history_next', function() {
-		var next = $(this),
-			send = {
-				op:'history_next',
-				page:next.attr('val'),
-				worker:$('#worker').val(),
-				action:$('#action').val()
-			};
-		if(next.hasClass('busy'))
+		var t = $(this),
+			send = historyFilter();
+		if(t.hasClass('busy'))
 			return;
-		next.addClass('busy');
-		$.post(AJAX_WS, send, function (res) {
+		send.page = $(this).attr('val');
+		t.addClass('busy');
+		$.post(AJAX_WS, send, function(res) {
 			if(res.success)
-				next.after(res.html).remove();
+				t.after(res.html).remove();
 			else
-				next.removeClass('busy');
+				t.removeClass('busy');
 		}, 'json');
 	})
 
@@ -2751,24 +2719,24 @@ $(document)
 					enter:1,
 					func:zayavSpisok
 				})
-				.inp(G.zayav_find);
+				.inp(Z.find);
 			$('#desc')._check(zayavSpisok);
 			$('#status').rightLink(zayavSpisok);
 			$('#diff')._check(zayavSpisok);
 			$('#dev').device({
 				width:155,
 				type_no:1,
-				device_id:G.zayav_device,
-				vendor_id:G.zayav_vendor,
-				model_id:G.zayav_model,
-				device_ids:DEVICE_IDS,
-				vendor_ids:VENDOR_IDS,
-				model_ids:MODEL_IDS,
+				device_id:Z.device_id,
+				vendor_id:Z.vendor_id,
+				model_id:Z.model_id,
+				device_ids:Z.device_ids,
+				vendor_ids:Z.vendor_ids,
+				model_ids:Z.model_ids,
 				func:zayavSpisok
 			});
 			// Нахождение устройства
-			for(n = 0; n < G.place_other.length; n++) {
-				var sp = G.place_other[n];
+			for(n = 0; n < Z.place_other.length; n++) {
+				var sp = Z.place_other[n];
 				DEVPLACE_SPISOK.push({uid:encodeURI(sp), title:sp});
 			}
 			DEVPLACE_SPISOK.push({uid:-1, title:'не известно', content:'<B>не известно</B>'});
@@ -2787,6 +2755,11 @@ $(document)
 				spisok:DEVSTATUS_SPISOK,
 				func:zayavSpisok
 			});
+			//подсвечивание просмотренной заявки
+			if(Z.cookie_id) {
+				VK.callMethod('scrollWindow', getCookie('zayav_scroll'));
+				$('#u' + Z.cookie_id).css('opacity', 0.1).delay(400).animate({opacity:1}, 700);
+			}
 			zayavFilter();
 		}
 		if($('#zayavAdd').length) {
@@ -2875,24 +2848,57 @@ $(document)
 			});
 		}
 		if($('#zayavInfo').length) {
-			$('.delete').vkHint({
-				msg:'Заявку можно удалить при отсутствии платежей и начислений. Также удаляются все задачи к этой заявке.',
-				width:150,
-				ugol:'top',
-				top:40,
-				left:456,
-				indent:90
+			$('.hist').click(function() {
+				$('#dopLinks .sel').removeClass('sel');
+				$(this).addClass('sel');
+				$('.itab').addClass('h');
 			});
+			$('.info').click(function() {
+				$('#dopLinks .sel').removeClass('sel');
+				$(this).addClass('sel');
+				$('.itab').removeClass('h');
+			});
+			$('.delete')
+				.click(function() {
+					var dialog = _dialog({
+						top:110,
+						width:250,
+						head:'Удаление заявки',
+						content:'<CENTER>Подтвердите удаление заявки.</CENTER>',
+						butSubmit:'Удалить',
+						submit:function() {
+							var send = {
+								op:'zayav_delete',
+								zayav_id:ZAYAV.id
+							};
+							dialog.process();
+							$.post(AJAX_WS, send, function(res) {
+								if(res.success)
+									location.href = URL + '&p=client&d=info&id=' + res.client_id;
+								else
+									dialog.abort();
+							}, 'json');
+						}
+					});
+				})
+				.vkHint({
+					msg:'Заявку можно удалить при отсутствии платежей и начислений. Также удаляются все задачи к этой заявке.',
+					width:150,
+					ugol:'top',
+					top:39,
+					left:457,
+					indent:'right'
+				});
 			$('.img_print').click(function() {
 				var html = '<table class="zayav-print">' +
 						'<tr><td class="label">Дата приёма:<td>' + PRINT.dtime +
 						'<tr><td class="label top">Устройство:<td>' + PRINT.device +
-		 (PRINT.color ? '<tr><td class="label">Цвет:<td>' + PRINT.color : '') +
-		  (PRINT.imei ? '<tr><td class="label">IMEI:<td>' + PRINT.imei : '') +
-		(PRINT.serial ? '<tr><td class="label">Серийный номер:<td>' + PRINT.serial : '') +
-		 (PRINT.equip ? '<tr><td class="label">Комплектация:<td>' + PRINT.equip : '') +
+						(PRINT.color ? '<tr><td class="label">Цвет:<td>' + PRINT.color : '') +
+						(PRINT.imei ? '<tr><td class="label">IMEI:<td>' + PRINT.imei : '') +
+						(PRINT.serial ? '<tr><td class="label">Серийный номер:<td>' + PRINT.serial : '') +
+						(PRINT.equip ? '<tr><td class="label">Комплектация:<td>' + PRINT.equip : '') +
 						'<tr><td class="label">Заказчик:<td><b>' + PRINT.client + '</b>' +
-	   (PRINT.telefon ? '<tr><td class="label">Телефон:<td>' + PRINT.telefon : '') +
+						(PRINT.telefon ? '<tr><td class="label">Телефон:<td>' + PRINT.telefon : '') +
 						'<tr><td class="label top">Неисправность:<td><textarea id="defect">' + PRINT.defect + '</textarea>' +
 						'</table>',
 					dialog = _dialog({
@@ -3015,7 +3021,7 @@ $(document)
 		}
 
 		if($('#report.history').length) {
-			$('#worker')._select({
+			$('#worker_id')._select({
 				width:140,
 				title0:'Не указан',
 				spisok:WORKERS,

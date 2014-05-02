@@ -377,15 +377,15 @@ $(document)
 		if(t.hasClass('busy'))
 			return;
 		var send = {
-			op:'model_next',
+			op:'model_spisok',
 			vendor_id:VENDOR_ID,
 			page:t.attr('val'),
-			find:find.inp()
+			find:$('#find')._search('val')
 		};
 		t.addClass('busy');
 		$.post(AJAX_SA, send, function(res) {
 			if(res.success) {
-				t.parent().parent().remove();
+				t.parent().remove();
 				$('._spisok').append(res.html);
 			} else
 				t.removeClass('busy');
@@ -444,7 +444,7 @@ $(document)
 		while(mod[0].tagName != 'TR')
 			mod = mod.parent();
 		var html = '<table class="sa-model-add">' +
-				'<tr><td class="label r">Наименование:<td><input id="name" type="text" maxlength="100" value="' + mod.find('.name b').html() + '" />' +
+				'<tr><td class="label r">Наименование:<td><input id="name" type="text" maxlength="100" value="' + mod.find('.name .dn').html() + '" />' +
 				'</table>',
 			dialog = _dialog({
 				top:60,
@@ -1180,8 +1180,8 @@ $(document)
 	})
 
 	.ready(function() {
-		if($('.sa-model').length > 0) {
-			window.find = $('#find')._search({
+		if($('.sa-model').length) {
+			$('#find')._search({
 				width:300,
 				txt:'Поиск по названию модели',
 				enter:1,
@@ -1191,7 +1191,7 @@ $(document)
 					if(path.hasClass('busy'))
 						return;
 					var send = {
-						op:'model_load',
+						op:'model_spisok',
 						vendor_id:VENDOR_ID,
 						find:val
 					};
@@ -1199,8 +1199,7 @@ $(document)
 					$.post(AJAX_SA, send, function(res) {
 						path.removeClass('busy');
 						if(res.success)
-							$('._spisok').find('.tr').remove().end().append(res.html);
-
+							$('.spisok').html(res.html);
 					}, 'json');
 				}
 			});

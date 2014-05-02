@@ -41,11 +41,13 @@
 .sa-vendor-add{border-spacing:8px}
 .sa-vendor-add input{width:250px}
 
-.sa-model ._spisok{margin:10px 20px}
+.sa-model .spisok{margin:10px 20px 40px}
 .sa-model #find{margin:10px 0 0 20px}
+.sa-model .count{margin-bottom:10px}
 .sa-model .img{text-align:center}
+.sa-model em{background-color:#FFC;border-bottom:#FE2 solid 1px;font-weight:bold}
 .sa-model .zayav{text-align:center}
-.sa-model .next{padding:0}
+.sa-model .zp{text-align:center}
 .sa-model-add{border-spacing:8px}
 .sa-model-add input{width:250px}
 

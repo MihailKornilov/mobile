@@ -84,7 +84,7 @@ function _cacheClear($ws_id=WS_ID) {
 	xcache_unset(CACHE_PREFIX.'workshop_'.$ws_id);
 	GvaluesCreate();
 	query("UPDATE `setup_global` SET `script_style`=`script_style`+1");
-}//ens of _cacheClear()
+}//_cacheClear()
 
 function _header() {
 	global $html;
@@ -108,8 +108,7 @@ function _header() {
 
 		'<script type="text/javascript">'.
 			(LOCAL ? 'for(var i in VK)if(typeof VK[i]=="function")VK[i]=function(){return false};' : '').
-			'var G={},'.
-				'DOMAIN="'.DOMAIN.'",'.
+			'var DOMAIN="'.DOMAIN.'",'.
 				'VALUES="'.VALUES.'",'.
 				(defined('WS_DEVS') ? 'WS_DEVS=['.WS_DEVS.'],' : '').
 				'VIEWER_ID='.VIEWER_ID.';'.
@@ -145,7 +144,7 @@ function _footer() {
 		$id = empty($_GET['id']) ? '' :'&pre_id='.$_GET['id'];
 		$html .= '<div id="admin">'.
 				($_GET['p'] != 'sa' && !SA_VIEWER_ID ? '<a href="'.URL.'&p=sa&pre_p='.$_GET['p'].$d.$d1.$id.'">Admin</a> :: ' : '').
-				'<a href="http://vkmobile.reformal.ru" target="_blank">Reformal</a> :: '.
+//				'<a href="http://vkmobile.reformal.ru" target="_blank">Reformal</a> :: '.
 				'<a class="debug_toggle'.(DEBUG ? ' on' : '').'">В'.(DEBUG ? 'ы' : '').'ключить Debug</a> :: '.
 				'<a id="cache_clear">Очисить кэш ('.VERSION.')</a> :: '.
 				'sql <b>'.$sqlCount.'</b> ('.round($sqlTime, 3).') :: '.

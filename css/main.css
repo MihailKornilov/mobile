@@ -135,8 +135,10 @@
 #zayavAdd .vkButton{margin:10px 7px 0 206px}
 
 /* Информация о заявке */
-#zayavInfo .delete{float:right;margin-top:4px;color:#933}
+#zayavInfo .delete{float:right;margin-top:4px}
 #zayavInfo .itab{width:100%;border-spacing:10px}
+#zayavInfo .h .z-info,#zayavInfo .itab:not(.h) .z-hist{display:none}
+#zayavInfo .z-hist .headName{margin-bottom:15px}
 #zayavInfo #left{vertical-align:top}
 #zayavInfo .headName{margin:0;padding:4px 3px}
 #zayavInfo .img_print{float:right}
