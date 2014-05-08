@@ -682,6 +682,7 @@ function zayav_spisok($v) {
 	$filter = zayavFilter($v);
 
 	$page = $filter['page'];
+	$limit = $filter['limit'];
 	$cond = "`ws_id`=".WS_ID." AND `zayav_status`";
 
 	if($filter['find']) {
@@ -751,7 +752,6 @@ function zayav_spisok($v) {
 		'filter' => $filter
 	);
 
-	$limit = $filter['limit'];
 	$start = ($page - 1) * $limit;
 	$limit_save = $limit;
 	if($page > 1)
@@ -1740,10 +1740,13 @@ function history_insert($arr) {
 }//history_insert()
 function history_types($v, $filter) {
 	switch($v['type']) {
-		case 1: return 'Создана новая заявка'.
-			($filter['zayav_id'] ? '' : ' '.$v['zayav_link']).
-			($filter['zayav_id'] || $filter['client_id'] ? '' : ' для клиента '.$v['client_link']).
-			'.';
+		case 1: return
+					($filter['zayav_id'] ?
+						'Заявка создана' :
+						'Создана новая заявка '.$v['zayav_link'].
+						($filter['client_id'] ? '' : ' для клиента '.$v['client_link'])
+					).
+					'.';
 		case 2: return $filter['zayav_id'] ? 'Заявка удалена.' : 'Удалена заявка '.$v['zayav_link'].'.';
 		case 3: return ($filter['client_id'] ? 'Клиент внесён' : 'Внесён новый клиент '.$v['client_link']).'.';
 		case 4:

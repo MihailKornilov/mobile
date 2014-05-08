@@ -146,3 +146,4 @@ switch($_GET['p']) {
 _footer();
 mysql_close();
 echo $html;
+exit;

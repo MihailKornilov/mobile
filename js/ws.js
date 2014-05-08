@@ -1592,7 +1592,7 @@ $(document)
 			func:zpSpisok
 		});
 		$('#bu')._check(0);
-		zayavSpisok();
+		zpSpisok();
 	})
 	.on('click', '#zp ._next', function() {
 		if($(this).hasClass('busy'))
@@ -2906,11 +2906,24 @@ $(document)
 						top:30,
 						head:'Заявка №' + ZAYAV.nomer + ' - Печать квитанции',
 						content:html,
-						butSubmit:'',
+						butSubmit:'Распечатать',
 						submit:submit
 					});
 				$('#defect').focus().autosize();
-				function submit() {}
+				function submit() {
+					var params =
+						'scrollbars=yes,' +
+						'resizable=yes,' +
+						'status=no,' +
+						'location=no,' +
+						'toolbar=no,' +
+						'menubar=no,' +
+						'width=680,' +
+						'height=500,' +
+						'left=20,' +
+						'top=20';
+					window.open(SITE + '/view/kvit_html.php?' + VALUES + '&id=' + ZAYAV.id, 'kvit', params);
+				}
 			});
 		}
 

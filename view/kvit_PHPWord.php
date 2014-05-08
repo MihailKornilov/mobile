@@ -1,4 +1,16 @@
 <?php
+function mm($millimeters){
+	return floor($millimeters*56.7); //1 твип равен 1/567 сантиметра
+}//mm()
+function _top($v=0) {
+	return array('spaceBefore' => mm($v));
+}
+function _bot($v=0) {
+	return array('spaceAfter' => mm($v));
+}
+function _size($v=0) {
+	return array('size' => $v);
+}
 function _clr($v='FFFFFF') {
 	if(strlen($v) == 3)
 		$v = $v[0].$v[0].$v[1].$v[1].$v[2].$v[2];
@@ -8,6 +20,32 @@ function tabInfo() {
 	global $section, $zayav, $client, $i;
 	$label = _clr('555');
 	$table = $section->addTable();
+	$table->addRow();
+	$table->addCell(W_LABEL)->addText('Дата приёма:', $label, _bot());
+	$table->addCell(W_TEXT)->addText(utf8(FullData($zayav['dtime_add'])), null, _bot());
+	$table->addRow();
+	$table->addCell(W_LABEL)->addText('Устройство:', $label, _bot());
+	$table->addCell(W_TEXT)->addText(utf8(_deviceName($zayav['base_device_id'])._vendorName($zayav['base_vendor_id'])._modelName($zayav['base_model_id'])), null, _bot());
+	if($zayav['color_id']) {
+		$table->addRow();
+		$table->addCell(W_LABEL)->addText('Цвет:', $label, _bot());
+		$table->addCell(W_TEXT)->addText(utf8(_color($zayav['color_id'])), null, _bot());
+	}
+	if($zayav['imei']) {
+		$table->addRow();
+		$table->addCell(W_LABEL)->addText('IMEI:', $label, _bot());
+		$table->addCell(W_TEXT)->addText(utf8($zayav['imei']), null, _bot());
+	}
+	if($zayav['serial']) {
+		$table->addRow();
+		$table->addCell(W_LABEL)->addText('Серийный номер:', $label, _bot());
+		$table->addCell(W_TEXT)->addText(utf8($zayav['serial']), null, _bot());
+	}
+	if($zayav['equip']) {
+		$table->addRow();
+		$table->addCell(W_LABEL)->addText('Комплектация:', $label, _bot());
+		$table->addCell(W_TEXT)->addText(utf8(zayavEquipSpisok($zayav['equip'])), null, _bot());
+	}
 	$section->addText('-', _size(4) + _clr(), _bot());
 
 	$table = $section->addTable('tabStyle');
@@ -29,154 +67,68 @@ function tabInfo() {
 	$table->addCell(W_LABEL + W_TEXT)->addText('Не включается', $i, _bot());
 }
 
-function pageSetup($title) {
-	global $book;
-
-	$sheet = $book->getActiveSheet();
-
-	//Глобальные стили для ячеек
-	$book->getDefaultStyle()
-		->getFont()->setName('Times New Roman')
-		->setSize(11);
-
-	//Ориентация страницы и  размер листа
-	$sheet->getPageSetup()
-		->setOrientation(PHPExcel_Worksheet_PageSetup::ORIENTATION_PORTRAIT)
-		->SetPaperSize(PHPExcel_Worksheet_PageSetup::PAPERSIZE_A4);
-
-	//Поля документа
-	$sheet->getPageMargins()
-		->setTop(0.5)
-		->setRight(0.5)
-		->setLeft(0.5)
-		->setBottom(0.5);
-
-	//Масштаб страницы
-	$sheet->getSheetView()->setZoomScale(100);
-
-	//Название страницы
-	$sheet->setTitle($title);
-}
-function kvit_head() {
-	global $book, $ln;
-	$sheet = $book->getActiveSheet();
-
-	$sheet->mergeCells('A'.$ln.':I'.$ln);
-
-	$txt = new PHPExcel_RichText();
-	$txt->createText('Мастерская «');
-	$t = $txt->createTextRun('Ремонт мобильных телефонов в Няндоме');
-	$t->getFont()->setBold(true);
-	$txt->createTextRun('»');
-	$sheet->setCellValue('A'.$ln, $txt);
-	$sheet->getStyle('A'.$ln)->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_RIGHT);
-	$ln++;
-
-	$sheet->mergeCells('A'.$ln.':I'.$ln);
-	$sheet->setCellValue('A'.$ln, 'Адрес: г.Няндома, ул.Североморская, рядом с магазином "Уют".');
-	$sheet->getStyle('A'.$ln)->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_RIGHT);
-	$sheet->getStyle('A'.$ln)->getFont()->setSize(9);
-	$ln++;
-
-	$sheet->mergeCells('A'.$ln.':I'.$ln);
-	$sheet->setCellValue('A'.$ln, 'Телефон: 8 964 299 94 89. Время работы: пн-пт, 10:00-19:00.');
-	$sheet->getStyle('A'.$ln)->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_RIGHT);
-	$sheet->getStyle('A'.$ln)->getFont()->setSize(9);
-	$sheet->getStyle('A'.$ln.':I'.$ln)->getBorders()->getBottom()->setBorderStyle(PHPExcel_Style_Border::BORDER_MEDIUM);
-	$ln++;
-}//kvit_head()
-function kvit_name($nomer) {
-	global $book, $ln;
-	$sheet = $book->getActiveSheet();
-
-	$sheet->mergeCells('A'.$ln.':I'.$ln);
-	$sheet->setCellValue('A'.$ln, 'Квитанция №'.$nomer);
-	$sheet->getStyle('A'.$ln)->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
-	$sheet->getStyle('A'.$ln)->getFont()->setSize(18);
-	$sheet->getStyle('A'.$ln)->getFont()->setBold(true);
-	$ln++;
-}//kvit_name()
-function kvit_content() {
-	global $book, $ln, $z, $c;
-	$sheet = $book->getActiveSheet();
-
-	define('COL', 'C');
-	define('START', $ln);
-
-	$sheet->setCellValue('A'.$ln, 'Дата приёма:');
-	$sheet->setCellValue(COL.$ln, utf8(FullData($z['dtime_add'])));
-	$ln++;
-
-	$sheet->setCellValue('A'.$ln, 'Устройство:');
-	$sheet->setCellValue(COL.$ln, utf8(_deviceName($z['base_device_id'])._vendorName($z['base_vendor_id'])._modelName($z['base_model_id'])));
-	$ln++;
-
-	if($z['color_id']) {
-		$sheet->setCellValue('A'.$ln, 'Цвет:');
-		$sheet->setCellValue(COL.$ln, utf8(_color($z['color_id'], $z['color_dop'])));
-		$ln++;
-	}
-
-	if($z['imei']) {
-		$sheet->setCellValue('A'.$ln, 'IMEI:');
-		$sheet->setCellValue(COL.$ln, utf8($z['imei']));
-		$ln++;
-	}
-
-	if($z['serial']) {
-		$sheet->setCellValue('A'.$ln, 'Серийный номер:');
-		$sheet->setCellValue(COL.$ln, utf8($z['serial']));
-		$ln++;
-	}
-
-	if($z['equip']) {
-		$sheet->setCellValue('A'.$ln, 'Комплектация:');
-		$sheet->setCellValue(COL.$ln, utf8(zayavEquipSpisok($z['equip'])));
-		$ln++;
-	}
-
-	$sheet->getStyle('A'.START.':A'.($ln - 1))
-		->getFont()
-		->getColor()->setRGB('555555');
-}//kvit_content()
 
 
 
-require_once '../config.php';
-require_once VKPATH.'excel/PHPExcel.php';
+require_once('../config.php');
+require_once VKPATH.'word/PHPWord.php';
 require_once(DOCUMENT_ROOT.'/view/ws.php');
 
-set_time_limit(10);
+if(!preg_match(REGEXP_NUMERIC, $_GET['id'])) {
+	echo 'Неверный id заявки';
+	exit;
+}
 
-if(!$id = _isnum($_GET['id']))
-	die(win1251('Неверный id заявки.'));
+$id = intval($_GET['id']);
 
-$sql = "SELECT * FROM `zayav` WHERE `ws_id`=".WS_ID." AND !`deleted` AND `zayav_status` AND `id`=".$id;
-if(!$z = query_assoc($sql))
-	die(win1251('Заявки не существует.'));
+$sql = "SELECT * FROM `zayav` WHERE `ws_id`=".WS_ID." AND `zayav_status`>0 AND `id`=".$id." LIMIT 1";
+if(!$zayav = mysql_fetch_assoc(query($sql))) {
+	echo 'Заявки не существует';
+	exit;
+}
 
-$c = query_assoc("SELECT * FROM `client` WHERE `ws_id`=".WS_ID." AND !`deleted` AND `id`=".$z['client_id']);
+$sql = "SELECT * FROM `client` WHERE `ws_id`=".WS_ID." AND `deleted`=0 AND `id`=".$zayav['client_id']." LIMIT 1";
+$client = mysql_fetch_assoc(query($sql));
 
-$book = new PHPExcel();
-$book->setActiveSheetIndex(0);
+$word = new PHPWord();
+$word->setDefaultFontName('Times New Roman');
+$word->setDefaultFontSize(12);
 
-pageSetup('Квитанция');
+$section = $word->createSection(array(
+	'orientation' => null,
+	'marginLeft' => mm(5),
+	'marginRight' => mm(5),
+	'marginTop' => mm(5),
+	'marginBottom' => mm(5)
+));
 
-$ln = 1;
-kvit_head();
-kvit_name($z['nomer']);
-kvit_content();
+$empty = array();
+$b = array('bold' => true);
+$i = array('italic' => true);
+$center = array('align' => 'center');
+$right = array('align' => 'right');
 
-header('Content-Type:application/vnd.ms-excel');
-header('Content-Disposition:attachment;filename="kvit_'.$id.'.xls"');
-$writer = PHPExcel_IOFactory::createWriter($book, 'Excel5');
-$writer->save('php://output');
+$run = $section->createTextRun($right + _bot());
+$run->addText('Мастерская «');
+$run->addText('Ремонт мобильных телефонов в Няндоме', $b);
+$run->addText('»');
 
-mysql_close();
-exit;
+$section->addText('Адрес: г.Няндома, ул.Североморская, рядом с магазином "Уют".', _size(9), $right + _bot());
+$section->addText('Телефон: 8 964 299 94 89. Время работы: пн-пт, 10:00-19:00.', _size(9), $right + _bot(2));
 
 
 
+
+
+$word->addTableStyle('styleHead', array(
+	'borderTopSize' => 6,
+	'borderTopColor' => '777777',
+	'cellMarginTop' => mm(3)
+));
+$table = $section->addTable('styleHead');
+$table->addRow();
+$cell = $table->addCell(mm(200));
+$cell->addText('Квитанция №'.$zayav['nomer'], $b + _size(18), $center + _bot());
 
 
 
@@ -245,7 +197,7 @@ $table->addCell(mm(40))->addText(utf8(FullData(curTime())), null, _bot() + _top(
 
 
 
-$section->addImage(PATH_FILES.'images/zayav3563-w3td2ojt0a-big.jpg');
+//$section->addImage('http://mobile.nyandoma.ru/files/images/dev522-ymgf4ngsyu-b.jpg');
 
 
 mysql_close();
