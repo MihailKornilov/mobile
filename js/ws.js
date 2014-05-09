@@ -292,6 +292,20 @@ var AJAX_WS = SITE + '/ajax/ws.php?' + VALUES,
 			}
 		});
 	},
+	kvitHtml = function(id) {
+		var params =
+			'scrollbars=yes,' +
+			'resizable=yes,' +
+			'status=no,' +
+			'location=no,' +
+			'toolbar=no,' +
+			'menubar=no,' +
+			'width=680,' +
+			'height=500,' +
+			'left=20,' +
+			'top=20';
+		window.open(SITE + '/view/kvit_html.php?' + VALUES + '&id=' + id, 'kvit', params);
+	},
 
 	zpFilter = function() {
 		var v = {
@@ -455,16 +469,23 @@ var AJAX_WS = SITE + '/ajax/ws.php?' + VALUES,
 			}
 		}, 'json');
 	},
-	expenseSpisok = function() {
-		var send = {
+	expenseFilter = function() {
+		var arr = [],
+			inp = $('#monthList input');
+		for(var n = 1; n <= 12; n++)
+			if(inp.eq(n - 1).val() == 1)
+				arr.push(n);
+		return {
 			op:'expense_spisok',
 			category:$('#category').val(),
 			worker:$('#worker').val(),
 			year:$('#year').val(),
-			month:$('#monthSum').val()
+			month:arr.join()
 		};
+	},
+	expenseSpisok = function() {
 		$('#mainLinks').addClass('busy');
-		$.post(AJAX_WS, send, function (res) {
+		$.post(AJAX_WS, expenseFilter(), function(res) {
 			$('#mainLinks').removeClass('busy');
 			if(res.success) {
 				$('#spisok').html(res.html);
@@ -2467,16 +2488,11 @@ $(document)
 		}, 'json');
 	})
 
+	.on('click', '.expense #monthList div', expenseSpisok)
 	.on('click', '.expense ._next', function() {
 		var next = $(this),
-			send = {
-				op:'expense_next',
-				page:next.attr('val'),
-				category:$('#category').val(),
-				worker:$('#worker').val(),
-				year:$('#year').val(),
-				month:$('#monthSum').val()
-			};
+			send = expenseFilter();
+		send.page = next.attr('val');
 		if(next.hasClass('busy'))
 			return;
 		next.addClass('busy');
@@ -2486,80 +2502,6 @@ $(document)
 			else
 				next.removeClass('busy');
 		}, 'json');
-	})
-	.on('click', '.expense .add', function() {
-		var html = '<TABLE id="expense-add-tab">' +
-				'<tr><td class="label">Категория:<td><input type="hidden" id="expense_id" />' +
-					'<a href="' + URL + '&p=setup&d=expense" class="img_edit' + _tooltip('Настройка категорий расходов', -95) + '</a>' +
-				'<tr class="tr-work dn"><td class="label">Сотрудник:<td><input type="hidden" id="worker_id" />' +
-				'<tr><td class="label">Описание:<td><input type="text" id="prim" maxlength="100">' +
-				'<tr><td class="label">Со счёта:<td><input type="hidden" id="invoice_id" value="' + (INVOICE_SPISOK.length == 1 ? INVOICE_SPISOK[0].uid : 0) + '" />' +
-				'<tr><td class="label">Сумма:<td><input type="text" id="sum" class="money" maxlength="11" /> руб.' +
-			'</TABLE>',
-			dialog = _dialog({
-				width:380,
-				head:'Внесение расхода',
-				content:html,
-				submit:submit
-			});
-
-		$('#expense_id')._select({
-			width:200,
-			title0:'Не указана',
-			spisok:EXPENSE_SPISOK,
-			func:function(id) {
-				$('#worker_id')._select(0);
-				$('.tr-work')[(EXPENSE_WORKER[id] ? 'remove' : 'add') + 'Class']('dn');
-			}
-		});
-		$('#worker_id')._select({
-			width:200,
-			title0:'Не выбран',
-			spisok:WORKERS
-		});
-		$('#prim').focus();
-		$('#invoice_id')._select({
-			width:200,
-			title0:'Не выбран',
-			spisok:INVOICE_SPISOK,
-			func:function() {
-				$('#sum').focus();
-			}
-		});
-
-		function submit() {
-			var send = {
-				op:'expense_add',
-				expense_id:$('#expense_id').val(),
-				worker_id:$('#worker_id').val(),
-				prim:$('#prim').val(),
-				invoice_id:$('#invoice_id').val(),
-				sum:$('#sum').val()
-			};
-			if(!send.prim && send.expense_id == 0) { err('Выберите категорию или укажите описание.'); $('#prim').focus(); }
-			else if(send.invoice_id == 0) err('Укажите с какого счёта производится оплата.');
-			else if(!REGEXP_CENA.test(send.sum)) { err('Некорректно указана сумма.'); $('#sum').focus(); }
-			else {
-				dialog.process();
-				$.post(AJAX_WS, send, function (res) {
-					if(res.success) {
-						dialog.close();
-						_msg('Новый расход внесён.');
-						expenseSpisok();
-					}
-				}, 'json');
-			}
-		}
-		function err(msg) {
-			dialog.bottom.vkHint({
-				msg:'<SPAN class="red">' + msg + '</SPAN>',
-				remove:1,
-				indent:40,
-				show:1,
-				top:-47,
-				left:103
-			});
-		}
 	})
 	.on('click', '.expense .img_del', function() {
 		var send = {
@@ -2641,6 +2583,23 @@ $(document)
 				dialog.content.html(res.html);
 			else
 				dialog.loadError();
+		}, 'json');
+	})
+	.on('click', '.invoice-history ._next', function() {
+		var next = $(this),
+			send = {
+				op:'invoice_history',
+				page:next.attr('val'),
+				invoice_id:$('#invoice_history_id').val()
+			};
+		if(next.hasClass('busy'))
+			return;
+		next.addClass('busy');
+		$.post(AJAX_WS, send, function(res) {
+			if(res.success)
+				next.after(res.html).remove();
+			else
+				next.removeClass('busy');
 		}, 'json');
 	})
 
@@ -2893,36 +2852,71 @@ $(document)
 				var html = '<table class="zayav-print">' +
 						'<tr><td class="label">Дата приёма:<td>' + PRINT.dtime +
 						'<tr><td class="label top">Устройство:<td>' + PRINT.device +
-						(PRINT.color ? '<tr><td class="label">Цвет:<td>' + PRINT.color : '') +
-						(PRINT.imei ? '<tr><td class="label">IMEI:<td>' + PRINT.imei : '') +
-						(PRINT.serial ? '<tr><td class="label">Серийный номер:<td>' + PRINT.serial : '') +
-						(PRINT.equip ? '<tr><td class="label">Комплектация:<td>' + PRINT.equip : '') +
+		                '<tr><td class="label">Цвет:<td>' + (PRINT.color ? PRINT.color : '<i>не указан</i>') +
+						'<tr><td class="label">IMEI:<td>' + (PRINT.imei ? PRINT.imei : '<i>не указан</i>') +
+						'<tr><td class="label">Серийный номер:<td>' + (PRINT.serial ? PRINT.serial : '<i>не указан</i>') +
+						'<tr><td class="label">Комплектация:<td>' + (PRINT.equip ? PRINT.equip : '<i>не указана</i>') +
 						'<tr><td class="label">Заказчик:<td><b>' + PRINT.client + '</b>' +
-						(PRINT.telefon ? '<tr><td class="label">Телефон:<td>' + PRINT.telefon : '') +
+						'<tr><td class="label">Телефон:<td>' + (PRINT.telefon ? PRINT.telefon : '<i>не указан</i>') +
 						'<tr><td class="label top">Неисправность:<td><textarea id="defect">' + PRINT.defect + '</textarea>' +
-						'</table>',
+						'<tr><td colspan="2"><a id="preview"><span>Предварительный просмотр квитанции</span></a>' +
+					'</table>',
 					dialog = _dialog({
 						width:380,
 						top:30,
 						head:'Заявка №' + ZAYAV.nomer + ' - Печать квитанции',
 						content:html,
-						butSubmit:'Распечатать',
+						butSubmit:'Сохранить квитанцию',
 						submit:submit
 					});
 				$('#defect').focus().autosize();
+				$('#preview').click(function() {
+					var t = $(this),
+						send = {
+							op:'zayav_kvit',
+							zayav_id:ZAYAV.id,
+							defect:$.trim($('#defect').val())
+						};
+					if(t.hasClass('_busy'))
+						return;
+					if(!send.defect) err(1);
+					else {
+						t.addClass('_busy');
+						$.post(AJAX_WS, send, function(res) {
+							t.removeClass('_busy');
+							if(res.success)
+								kvitHtml(res.id);
+						}, 'json');
+					}
+				});
 				function submit() {
-					var params =
-						'scrollbars=yes,' +
-						'resizable=yes,' +
-						'status=no,' +
-						'location=no,' +
-						'toolbar=no,' +
-						'menubar=no,' +
-						'width=680,' +
-						'height=500,' +
-						'left=20,' +
-						'top=20';
-					window.open(SITE + '/view/kvit_html.php?' + VALUES + '&id=' + ZAYAV.id, 'kvit', params);
+					var send = {
+						op:'zayav_kvit',
+						zayav_id:ZAYAV.id,
+						defect:$.trim($('#defect').val()),
+						active:1
+					};
+					if(!send.defect) err();
+					else {
+						dialog.process();
+						$.post(AJAX_WS, send, function(res) {
+							if(res.success) {
+								dialog.close();
+								_msg('Квитанция сохранена');
+							} else
+								dialog.abort();
+						}, 'json');
+					}
+				}
+				function err(prev) {
+					dialog.bottom.vkHint({
+						msg:'<SPAN class="red">Не указана неисправность</SPAN>',
+						top:prev ? -112 : -47,
+						left:prev ? 127 : 97,
+						indent:50,
+						show:1,
+						remove:1
+					});
 				}
 			});
 		}
@@ -3061,6 +3055,81 @@ $(document)
 			$('#del')._check(incomeSpisok);
 		}
 		if($('#report.expense').length) {
+			$('.add').click(function() {
+				var html =
+					'<TABLE id="expense-add-tab">' +
+						'<tr><td class="label">Категория:<td><input type="hidden" id="expense_id" />' +
+							'<a href="' + URL + '&p=setup&d=expense" class="img_edit' + _tooltip('Настройка категорий расходов', -95) + '</a>' +
+						'<tr class="tr-work dn"><td class="label">Сотрудник:<td><input type="hidden" id="worker_id" />' +
+						'<tr><td class="label">Описание:<td><input type="text" id="prim" maxlength="100">' +
+						'<tr><td class="label">Со счёта:<td><input type="hidden" id="invoice_id" value="' + (INVOICE_SPISOK.length == 1 ? INVOICE_SPISOK[0].uid : 0) + '" />' +
+						'<tr><td class="label">Сумма:<td><input type="text" id="sum" class="money" maxlength="11" /> руб.' +
+					'</TABLE>',
+					dialog = _dialog({
+						width:380,
+						head:'Внесение расхода',
+						content:html,
+						submit:submit
+					});
+
+				$('#expense_id')._select({
+					width:200,
+					title0:'Не указана',
+					spisok:EXPENSE_SPISOK,
+					func:function(id) {
+						$('#worker_id')._select(0);
+						$('.tr-work')[(EXPENSE_WORKER[id] ? 'remove' : 'add') + 'Class']('dn');
+					}
+				});
+				$('#worker_id')._select({
+					width:200,
+					title0:'Не выбран',
+					spisok:WORKERS
+				});
+				$('#prim').focus();
+				$('#invoice_id')._select({
+					width:200,
+					title0:'Не выбран',
+					spisok:INVOICE_SPISOK,
+					func:function() {
+						$('#sum').focus();
+					}
+				});
+
+				function submit() {
+					var send = {
+						op:'expense_add',
+						expense_id:$('#expense_id').val(),
+						worker_id:$('#worker_id').val(),
+						prim:$('#prim').val(),
+						invoice_id:$('#invoice_id').val(),
+						sum:$('#sum').val()
+					};
+					if(!send.prim && send.expense_id == 0) { err('Выберите категорию или укажите описание.'); $('#prim').focus(); }
+					else if(send.invoice_id == 0) err('Укажите с какого счёта производится оплата.');
+					else if(!REGEXP_CENA.test(send.sum)) { err('Некорректно указана сумма.'); $('#sum').focus(); }
+					else {
+						dialog.process();
+						$.post(AJAX_WS, send, function (res) {
+							if(res.success) {
+								dialog.close();
+								_msg('Новый расход внесён.');
+								expenseSpisok();
+							}
+						}, 'json');
+					}
+				}
+				function err(msg) {
+					dialog.bottom.vkHint({
+						msg:'<SPAN class="red">' + msg + '</SPAN>',
+						remove:1,
+						indent:40,
+						show:1,
+						top:-47,
+						left:103
+					});
+				}
+			});
 			$('#category')._select({
 				width:140,
 				title0:'Любая категория',
@@ -3073,9 +3142,21 @@ $(document)
 				spisok:WORKERS,
 				func:expenseSpisok
 			});
-			$('#year').years({func:expenseSpisok});
-			$('#monthSum')._radio(expenseSpisok)
-		}
+			$('#year').years({
+				func:expenseSpisok,
+				center:function() {
+					var inp = $('#monthList input'),
+						all = 0;
+					for(var n = 1; n <= 12; n++)
+						if(inp.eq(n - 1).val() == 0) {
+							all = 1;
+							break;
+						}
+					for(n = 1; n <= 12; n++)
+						$('#c' + n)._check(all);
+					expenseSpisok();
+				}
+			});		}
 		if($('#report.invoice').length) {
 			$('.transfer').click(function() {
 				var t = $(this),

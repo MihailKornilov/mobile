@@ -216,12 +216,12 @@ switch(@$_POST['op']) {
 		$client2 = intval($_POST['client2']);
 		if(empty($fio))
 			jsonError();
-		$sql = "SELECT * FROM `client` WHERE !`deleted` AND `id`=".$client_id;
+		$sql = "SELECT * FROM `client` WHERE `ws_id`=".WS_ID." AND !`deleted` AND `id`=".$client_id;
 		if(!$client = mysql_fetch_assoc(query($sql)))
 			jsonError();
 		if($join && !$client2)
 			jsonError();
-		if($join && !query_value("SELECT * FROM `client` WHERE !`deleted` AND `id`=".$client2))
+		if($join && !query_value("SELECT * FROM `client` WHERE `ws_id`=".WS_ID." AND !`deleted` AND `id`=".$client2))
 			jsonError();
 		if($join && $client_id == $client2)
 			jsonError();
@@ -457,7 +457,7 @@ switch(@$_POST['op']) {
 		}
 		$equip = $_POST['equip'];
 
-		$sql = "SELECT * FROM `zayav` WHERE `ws_id`=".WS_ID." AND `id`=".$zayav_id." LIMIT 1";
+		$sql = "SELECT * FROM `zayav` WHERE `ws_id`=".WS_ID." AND !`deleted` AND `id`=".$zayav_id;
 		if(!$z = mysql_fetch_assoc(query($sql)))
 			jsonError();
 
@@ -958,6 +958,75 @@ switch(@$_POST['op']) {
 			'</table>'.
 			'<input type="hidden" id="zayavNomerId" value="'.$z['id'].'" />';
 		$send['html'] = utf8($send['html']);
+		jsonSuccess($send);
+		break;
+	case 'zayav_kvit':
+		if(!$zayav_id = _isnum($_POST['zayav_id']))
+			jsonError();
+		$active = _isbool(@$_POST['active']);
+		$defect = win1251(htmlspecialchars(trim($_POST['defect'])));
+		if(empty($defect))
+			jsonError();
+
+		$sql = "SELECT * FROM `zayav` WHERE `ws_id`=".WS_ID." AND !`deleted` AND `id`=".$zayav_id;
+		if(!$z = query_assoc($sql))
+			jsonError();
+
+		$sql = "SELECT * FROM `client` WHERE !`deleted` AND `id`=".$z['client_id'];
+		if(!$c = query_assoc($sql))
+			jsonError();
+
+		query("DELETE FROM `zayav_kvit` WHERE `ws_id`=".WS_ID." AND !`active` AND `zayav_id`=".$zayav_id);
+
+		$sql = "INSERT INTO `zayav_kvit` (
+					`ws_id`,
+					`zayav_id`,
+					`nomer`,
+					`dtime`,
+
+					`device_id`,
+					`vendor_id`,
+					`model_id`,
+
+					`color_id`,
+					`color_dop`,
+
+					`imei`,
+					`serial`,
+					`equip`,
+
+					`client_fio`,
+					`client_telefon`,
+
+					`defect`,
+					`active`,
+					`viewer_id_add`
+				) VALUES (
+					".WS_ID.",
+					".$zayav_id.",
+					".$z['nomer'].",
+					'".$z['dtime_add']."',
+
+					".$z['base_device_id'].",
+					".$z['base_vendor_id'].",
+					".$z['base_model_id'].",
+
+					".$z['color_id'].",
+					".$z['color_dop'].",
+
+					'".addslashes($z['imei'])."',
+					'".addslashes($z['serial'])."',
+					'".addslashes($z['equip'])."',
+
+					'".addslashes($c['fio'])."',
+					'".addslashes($c['telefon'])."',
+
+					'".addslashes($defect)."',
+					".$active.",
+					".VIEWER_ID."
+				)";
+		$send['id'] = query($sql);
+
 		jsonSuccess($send);
 		break;
 
@@ -1654,38 +1723,9 @@ switch(@$_POST['op']) {
 		break;
 
 	case 'expense_spisok':
-		if(!preg_match(REGEXP_YEAR, $_POST['year']))
-			jsonError();
-		if(!preg_match(REGEXP_NUMERIC, $_POST['month']))
-			jsonError();
-		if(!preg_match(REGEXP_NUMERIC, $_POST['category']))
-			jsonError();
-		if(!preg_match(REGEXP_NUMERIC, $_POST['worker']))
-			jsonError();
-		$year = intval($_POST['year']);
-		$mon = ($_POST['month'] < 10 ? 0 : '').$_POST['month'];
-		$cat = intval($_POST['category']);
-		$worker = intval($_POST['worker']);
-		$send['mon'] = utf8(expenseMonthSum($year, intval($mon), $cat, $worker));
-		$send['html'] = utf8(expense_spisok(1, $year.'-'.$mon, $cat, $worker));
-		jsonSuccess($send);
-		break;
-	case 'expense_next':
-		if(!preg_match(REGEXP_NUMERIC, $_POST['page']))
-			jsonError();
-		if(!preg_match(REGEXP_YEAR, $_POST['year']))
-			jsonError();
-		if(!preg_match(REGEXP_NUMERIC, $_POST['month']))
-			jsonError();
-		if(!preg_match(REGEXP_NUMERIC, $_POST['category']))
-			jsonError();
-		if(!preg_match(REGEXP_NUMERIC, $_POST['worker']))
-			jsonError();
-		$year = intval($_POST['year']);
-		$mon = ($_POST['month'] < 10 ? 0 : '').$_POST['month'];
-		$cat = intval($_POST['category']);
-		$worker = intval($_POST['worker']);
-		$send['html'] = utf8(expense_spisok(intval($_POST['page']), $year.'-'.$mon, $cat, $worker));
+		$data = expense_spisok($_POST);
+		$send['html'] = utf8($data['spisok']);
+		$send['mon'] = utf8(expenseMonthSum($_POST));
 		jsonSuccess($send);
 		break;
 	case 'expense_add':

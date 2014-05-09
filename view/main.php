@@ -145,7 +145,7 @@ function _footer() {
 		$cookie = '';
 		if(DEBUG && !empty($_COOKIE))
 			foreach($_COOKIE as $key => $val)
-				$cookie .= $key.' = '.$val.'<br />';
+				$cookie .= '&nbsp;<b>'.$key.'</b> '.$val.'<br />';
 		$html .= '<div id="admin">'.
 				($_GET['p'] != 'sa' && !SA_VIEWER_ID ? '<a href="'.URL.'&p=sa&pre_p='.$_GET['p'].$d.$d1.$id.'">Admin</a> :: ' : '').
 //				'<a href="http://vkmobile.reformal.ru" target="_blank">Reformal</a> :: '.

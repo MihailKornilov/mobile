@@ -186,7 +186,7 @@
 .zayav_zp_add center,.zayav_zp_add center b{font-size:12px}
 .zayav_zp_add #version{width:188px}
 .zayav_zp_set,.zayav_zp_set b{font-size:12px}
-#zayavInfo #zpSpisok{margin:7px 7px 60px 7px}
+#zayavInfo #zpSpisok{margin:7px 7px 60px}
 #zayavInfo #zpSpisok *{font-size:10px}
 #zayavInfo #zpSpisok .unit{border-bottom:#DEE3EF solid 1px;padding-bottom:4px;margin-bottom:7px}
 #zayavInfo #zpSpisok .unit:not(:hover) .zakaz,#zayavInfo #zpSpisok .unit:not(:hover) .set{visibility:hidden}
@@ -213,7 +213,11 @@
 }
 .zayav-print{border-spacing:10px}
 .zayav-print .label{width:90px}
+.zayav-print i{text:11px Arial;color:#999}
 .zayav-print textarea{width:220px;height:40px}
+.zayav-print #preview{display:block;padding:10px;text-align:center}
+.zayav-print #preview._busy span{visibility:hidden}
+.zayav-print #preview:hover{background-color:#e9edf1;text-decoration:none}
 
 
 /* Список запчастей */
@@ -423,8 +427,8 @@ table.zayavNomerTab td{vertical-align:top}
 .expense #spisok{margin:10px}
 .expense ._spisok{margin-top:5px}
 .expense .years{margin-top:20px}
-.expense #monthSum_radio .sum{float:right}
-.expense #monthSum_radio .off .sum{color:#888}
+.expense #monthList div{display:block;margin-bottom:5px}
+.expense #monthList .sum{float:right}
 #expense-add-tab{border-spacing:10px}
 #expense-add-tab .label{width:60px;text-align:right}
 #expense-add-tab #prim{width:250px}
