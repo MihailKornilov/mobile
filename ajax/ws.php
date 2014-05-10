@@ -978,6 +978,21 @@ switch(@$_POST['op']) {
 
 		query("DELETE FROM `zayav_kvit` WHERE `ws_id`=".WS_ID." AND !`active` AND `zayav_id`=".$zayav_id);
 
+		$zayav = 'zayav'.$z['id'];
+		$dev = 'dev'.$z['base_model_id'];
+		$v = array(
+			'owner' => array($zayav, $dev),
+			'size' => 'b',
+			'x' => 180,
+			'y' => 220
+		);
+		$img = _imageGet($v);
+		$image = '';
+		if($img[$zayav]['id'])
+			$image = $img[$zayav]['img'];
+		elseif($img[$dev]['id'])
+			$image = $img[$dev]['img'];
+
 		$sql = "INSERT INTO `zayav_kvit` (
 					`ws_id`,
 					`zayav_id`,
@@ -998,6 +1013,7 @@ switch(@$_POST['op']) {
 					`client_fio`,
 					`client_telefon`,
 
+					`image`,
 					`defect`,
 					`active`,
 					`viewer_id_add`
@@ -1021,11 +1037,15 @@ switch(@$_POST['op']) {
 					'".addslashes($c['fio'])."',
 					'".addslashes($c['telefon'])."',
 
+					'".addslashes($image)."',
 					'".addslashes($defect)."',
 					".$active.",
 					".VIEWER_ID."
 				)";
 		$send['id'] = query($sql);
+
+		if($active)
+			$send['html'] = utf8(zayav_kvit($zayav_id));
 
 		jsonSuccess($send);
 		break;

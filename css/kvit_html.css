@@ -8,19 +8,21 @@ img{border:none}
 table{border:0;border-spacing:0}
 
 .head *{font-size:11px}
-.head{
-	border-bottom:#000 solid 1px;
-	padding-bottom:4px
-}
-.head h1,.head h2{text-align:right}
+.head{border-bottom:#000 solid 1px;width:100%}
+.head h2{margin-bottom:4px}
+.rekvisit{text-align:right}
 
 .name{
+	position:relative;
 	padding:10px;
 	font-size:22px;
 	text-align:center;
 	font-weight:bold;
 }
+.name img{position:absolute;left:0;top:0}
 
+.content_tab{width:100%}
+.content_tab .image{width:180px;text-align:right}
 .content{border-spacing:3px;margin-left:5px}
 .label{color:#555;font-size:13px}
 td.label{width:135px}
@@ -57,6 +59,15 @@ td.label.fault{width:200px}
 	margin-top:20px;
 	color:#888;
 }
+
+.printer{
+	position:fixed;
+	top:10px;
+	left:280px;
+	cursor:pointer;
+	z-index:10;
+}
+body:not(:hover) .printer{display:none}
 
 
 

@@ -1601,6 +1601,9 @@ $(document)
 			},'json');
 		}
 	})
+	.on('click', '.zayav_kvit', function() {
+		kvitHtml($(this).attr('val'));
+	})
 
 	.on('click', '#zp .clear', function() {
 		$('#find')._search('clear');
@@ -2864,7 +2867,7 @@ $(document)
 					dialog = _dialog({
 						width:380,
 						top:30,
-						head:'Заявка №' + ZAYAV.nomer + ' - Печать квитанции',
+						head:'Заявка №' + ZAYAV.nomer + ' - Формирование квитанции',
 						content:html,
 						butSubmit:'Сохранить квитанцию',
 						submit:submit
@@ -2903,6 +2906,7 @@ $(document)
 							if(res.success) {
 								dialog.close();
 								_msg('Квитанция сохранена');
+								$('#kvit_spisok').html(res.html);
 							} else
 								dialog.abort();
 						}, 'json');

@@ -1,36 +1,48 @@
 <?php
 function kvit_head() {
 	return
-	'<div class="head">'.
-		'<h1>Мастерская «<b>Ремонт мобильных телефонов в Няндоме</b>»</h1>'.
-		'<h2>Адрес: г.Няндома, ул.Североморская, рядом с магазином "Уют".</h2>'.
-		'<h2>Телефон: 8 964 299 94 89. Время работы: пн-пт, 10:00-19:00.</h2>'.
-	'</div>';
+	'<table class="head">'.
+		'<tr><td>'.BARCODE.
+			'<td class="rekvisit">'.
+				'<h1>Мастерская «<b>Ремонт мобильных телефонов в Няндоме</b>»</h1>'.
+				'<h1>Адрес: г.Няндома, ул.Североморская, рядом с магазином "Уют".</h1>'.
+				'<h2>Телефон: 8 964 299 94 89. Время работы: пн-пт, 10:00-19:00.</h2>'.
+	'</table>';
 }//kvit_head()
-function kvit_name($nomer) {
-	return '<div class="name">Квитанция №'.$nomer.'</div>';
+function kvit_name($nomer, $barcode=0) {
+	return
+		'<div class="name">'.
+			($barcode ? BARCODE : '').
+			'Квитанция №'.$nomer.
+		'</div>';
 }//kvit_name()
 function kvit_content($k) {
 	return
-	'<table class="content">'.
-		'<tr><td class="label">Дата приёма:<td>'.FullData($k['dtime']).
-		'<tr><td class="label">Устройство:'.
-			'<td>'._deviceName($k['device_id']).
-				'<b>'._vendorName($k['vendor_id'])._modelName($k['model_id']).'</b>'.
-		($k['color_id'] ? '<tr><td class="label">Цвет:<td>'._color($k['color_id'], $k['color_dop']) : '').
-		($k['imei'] ? '<tr><td class="label">IMEI:<td>'.$k['imei'] : '').
-		($k['serial'] ? '<tr><td class="label">Серийный номер:<td>'.$k['serial'] : '').
-		($k['equip'] ? '<tr><td class="label">Комплектация:<td>'.zayavEquipSpisok($k['equip']) : '').
-	'</table>'.
-	'<div class="line"></div>'.
-	'<table class="content">'.
-		'<tr><td class="label">Заказчик:<td>'.$k['client_fio'].
-		'<tr><td class="label">Контактные телефоны:<td>'.$k['client_telefon'].
-	'</table>'.
-	'<div class="line"></div>'.
-	'<table class="content">'.
-		'<tr><td class="label fault">Неисправность со слов Заказчика:'.
-		'<tr><td>не включается'.
+	'<table class="content_tab">'.
+		'<tr><td>'.
+
+			'<table class="content">'.
+				'<tr><td class="label">Дата приёма:<td>'.FullData($k['dtime']).
+				'<tr><td class="label">Устройство:'.
+					'<td>'._deviceName($k['device_id']).
+						'<b>'._vendorName($k['vendor_id'])._modelName($k['model_id']).'</b>'.
+				($k['color_id'] ? '<tr><td class="label">Цвет:<td>'._color($k['color_id'], $k['color_dop']) : '').
+				($k['imei'] ? '<tr><td class="label">IMEI:<td>'.$k['imei'] : '').
+				($k['serial'] ? '<tr><td class="label">Серийный номер:<td>'.$k['serial'] : '').
+				($k['equip'] ? '<tr><td class="label">Комплектация:<td>'.zayavEquipSpisok($k['equip']) : '').
+			'</table>'.
+			'<div class="line"></div>'.
+			'<table class="content">'.
+				'<tr><td class="label">Заказчик:<td>'.$k['client_fio'].
+				'<tr><td class="label">Контактные телефоны:<td>'.$k['client_telefon'].
+			'</table>'.
+			'<div class="line"></div>'.
+			'<table class="content">'.
+				'<tr><td class="label fault">Неисправность со слов Заказчика:'.
+				'<tr><td>'.$k['defect'].
+			'</table>'.
+
+		'<td class="image">'.$k['image'].
 	'</table>';
 }//kvit_content()
 function kvit_conditions() {
@@ -73,6 +85,9 @@ $sql = "SELECT * FROM `zayav_kvit` WHERE `ws_id`=".WS_ID." AND `id`=".$id;
 if(!$k = query_assoc($sql))
 	die(win1251('Квитанции не существует.'));
 
+define('BARCODE', '<img src="http://nyandoma/vk/barcode/barcode.php?code=167332001152&encoding=ean&mode=gif" />');
+
+
 echo '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">'.
 	'<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="ru" lang="ru">'.
 	'<head>'.
@@ -81,16 +96,16 @@ echo '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www
 		'<link href="'.SITE.'/css/kvit_html'.(DEBUG ? '' : '.min').'.css?'.VERSION.'" rel="stylesheet" type="text/css" />'.
 	'</head>'.
 	'<body>'.
+		'<img src="'.SITE.'/img/printer.png" class="printer" onclick="this.style.display=\'none\';window.print()" title="Распечатать" />'.
 		kvit_head().
 		kvit_name($k['nomer']).
 		kvit_content($k).
 		kvit_conditions().
 		kvit_podpis().
 		kvit_cut().
-		kvit_name($k['nomer']).
+		kvit_name($k['nomer'], 1).
 		kvit_content($k).
 		kvit_podpis(1).
-		'<a onclick="this.style.display=\'none\';window.print()">Печать</a>'.
 	'</body>'.
 	'</html>';
 

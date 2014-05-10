@@ -1021,7 +1021,7 @@ function zayav_info($zayav_id) {
 			'<tr class="z-info"><td id="left">'.
 				'<div class="headName">'.
 					'Заявка №'.$z['nomer'].
-					'<a class="img_print" title="Распечатать квитанцию"></a>'.
+					'<a class="img_print'._tooltip('Распечатать квитанцию', -75).'</a>'.
 					//'<a href="'.SITE.'/view/_kvit.php?'.VALUES.'&id='.$zayav_id.'" class="img_word" title="Распечатать квитанцию в Microsoft Word"></a>'.
 				'</div>'.
 				'<table class="tabInfo">'.
@@ -1038,6 +1038,7 @@ function zayav_info($zayav_id) {
 					'<tr class="op_tr'.($z['oplata_sum'] ? '' : ' dn').'"><td class="label">Оплачено:	<td><b class="op">'.$z['oplata_sum'].'</b> руб.'.
 						'<span class="dopl'.(DOPL ? '' : ' dn')._tooltip('Необходимая доплата', -60).(DOPL > 0 ? '+' : '').DOPL.'</span>'.
 				'</table>'.
+				'<div id="kvit_spisok">'.zayav_kvit($zayav_id).'</div>'.
 				'<div class="headBlue">Задания<a class="add remind_add">Добавить задание</a></div>'.
 				'<div id="remind_spisok">'.remind_spisok(remind_data(1, array('zayav'=>$z['id']))).'</div>'.
 				_vkComment('zayav', $z['id']).
@@ -1075,6 +1076,22 @@ function zayav_info($zayav_id) {
 		'</table>'.
 	'</div>';
 }//zayav_info()
+function zayav_kvit($zayav_id) {
+	$sql = "SELECT * FROM `zayav_kvit` WHERE `ws_id`=".WS_ID." AND `active` AND `zayav_id`=".$zayav_id." ORDER BY `id`";
+	$q = query($sql);
+	if(!mysql_num_rows($q))
+		return '';
+	$send = '<div class="headBlue">Квитанции</div>'.
+			'<table class="_spisok _money">';
+	$n = 1;
+	while($r = mysql_fetch_assoc($q))
+		$send .=
+			'<tr><td><a class="zayav_kvit" val="'.$r['id'].'">Квитанция '.($n++).'</a>. '.
+					'<span class="kvit_defect">'.$r['defect'].'</span>'.
+				'<td class="dtime">'.FullDataTime($r['dtime_add']);
+	$send .= '</table>';
+	return $send;
+}//zayav_kvit()
 function zayav_info_money($zayav_id) {
 	$sql = "(
 		SELECT
