@@ -310,7 +310,8 @@
 .zp_dec_dialog span{margin-left:5px;color:#888}
 .zp_dec_dialog #cena{text-align:right}
 .zp_dec_dialog textarea{width:232px;height:40px}
-#zayavNomer{width:60px;margin-right:5px}
+#zayavNomer{width:80px;margin-right:5px}
+#zayavNomer._busy{background-position:50px center}
 span.zayavNomerTab{color:#955}
 table.zayavNomerTab{border-spacing:5px}
 table.zayavNomerTab td{vertical-align:top}

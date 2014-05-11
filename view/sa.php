@@ -22,21 +22,50 @@ function sa_index() {
 	return '<div class="path">'.sa_cookie_back().'Администрирование</div>'.
 	'<div class="sa-index">'.
 		'<div><B>Мастерские и сотрудники:</B></div>'.
-		//'<A href="'.URL.'&p=sa&d=vkuser">Пользователи ('.$userCount.')</A><BR>'.
-		'<A href="'.URL.'&p=sa&d=ws">Мастерские ('.$wsCount.')</A><BR>'.
-		'<BR>'.
+		'<A href="'.URL.'&p=sa&d=user">Пользователи ('.$userCount.')</A><br />'.
+		'<A href="'.URL.'&p=sa&d=ws">Мастерские ('.$wsCount.')</A><br />'.
+		'<br />'.
 		'<div><B>Устройства и запчасти:</B></div>'.
-		'<A href="'.URL.'&p=sa&d=device">Устройства / Производители / Модели</A><BR>'.
-		'<A href="'.URL.'&p=sa&d=equip">Комплектация устройств</A><BR>'.
-		'<A href="'.URL.'&p=sa&d=fault">Виды неисправностей</A><BR>'.
-		//'<A href="'.URL.'&p=sa&d=dev-spec">Характеристики устройств для информации</A><BR>'.
-		'<A href="'.URL.'&p=sa&d=devstatus">Статусы устройств в заявках</A><BR>'.
-		'<BR>'.
-		'<A href="'.URL.'&p=sa&d=color">Цвета для устройств и запчастей</A><BR>'.
-		'<BR>'.
-		'<A href="'.URL.'&p=sa&d=zpname">Наименования запчастей</A><BR>'.
+		'<A href="'.URL.'&p=sa&d=device">Устройства / Производители / Модели</A><br />'.
+		'<A href="'.URL.'&p=sa&d=equip">Комплектация устройств</A><br />'.
+		'<A href="'.URL.'&p=sa&d=fault">Виды неисправностей</A><br />'.
+		//'<A href="'.URL.'&p=sa&d=dev-spec">Характеристики устройств для информации</A><br />'.
+		'<A href="'.URL.'&p=sa&d=devstatus">Статусы устройств в заявках</A><br />'.
+		'<br />'.
+		'<A href="'.URL.'&p=sa&d=color">Цвета для устройств и запчастей</A><br />'.
+		'<br />'.
+		'<A href="'.URL.'&p=sa&d=zpname">Наименования запчастей</A><br />'.
 	'</div>';
 }//sa_index()
+
+
+function sa_user() {
+	$wsSpisok =
+		'<tr><th>id'.
+		'<th>Наименование'.
+		'<th>Админ'.
+		'<th>Дата создания';
+	$sql = "SELECT * FROM `workshop` ORDER BY `id`";
+	$q = query($sql);
+	$count = mysql_num_rows($q);
+	while($r = mysql_fetch_assoc($q))
+		$wsSpisok .=
+			'<tr><td class="id">'.$r['id'].
+			'<td class="name'.(!$r['status'] ? ' del' : '').'">'.
+			'<a href="'.URL.'&p=sa&d=ws&id='.$r['id'].'">'.$r['org_name'].'</a>'.
+			'<div class="city">'.$r['city_name'].($r['country_id'] != 1 ? ', '.$r['country_name'] : '').'</div>'.
+			'<td>'._viewer($r['admin_id'], 'link').
+			'<td class="dtime">'.FullDataTime($r['dtime_add']);
+
+	return
+	'<div class="path">'.sa_cookie_back().'<a href="'.URL.'&p=sa">Администрирование</a> » Пользователи</div>'.
+	'<div class="sa-user">'.
+		'<div class="count">Всего <b>'.$count.'</b> мастерск'._end($count, 'ая', 'их').'.</div>'.
+		'<table class="_spisok">'.$wsSpisok.'</table>'.
+	'</div>';
+}//sa_user()
+
+
 
 function sa_ws() {
 	$wsSpisok =
@@ -176,9 +205,9 @@ function sa_device_spisok() {
 	$spisok =
 		'<table class="_spisok">'.
 			'<tr><th class="name">Наименование устройства'.
-				'<th class="ven">Кол-во<BR>производителей'.
-				'<th class="mod">Кол-во<BR>моделей'.
-				'<th class="zayav">Кол-во<BR>заявок'.
+				'<th class="ven">Кол-во<br />производителей'.
+				'<th class="mod">Кол-во<br />моделей'.
+				'<th class="zayav">Кол-во<br />заявок'.
 				'<th class="edit">'.
 		'</table>'.
 		'<dl class="_sort" val="base_device">';
@@ -252,8 +281,8 @@ function sa_vendor_spisok($device_id) {
 	$spisok =
 	'<table class="_spisok">'.
 		'<tr><th class="name">Наименование устройства'.
-			'<th class="mod">Кол-во<BR>моделей'.
-			'<th class="zayav">Кол-во<BR>заявок'.
+			'<th class="mod">Кол-во<br />моделей'.
+			'<th class="zayav">Кол-во<br />заявок'.
 			'<th class="edit">'.
 	'</table>'.
 	'<dl class="_sort" val="base_vendor">';
@@ -552,8 +581,8 @@ function sa_color_spisok() {
 		'<table class="_spisok">'.
 			'<tr><th>Предлог'.
 				'<th>Цвет'.
-				'<th>Кол-во<BR>заявок'.
-				'<th>Кол-во<BR>запчастей'.
+				'<th>Кол-во<br />заявок'.
+				'<th>Кол-во<br />запчастей'.
 				'<th>';
 	foreach($color as $id => $r)
 		$send .=

@@ -85,7 +85,11 @@ $sql = "SELECT * FROM `zayav_kvit` WHERE `ws_id`=".WS_ID." AND `id`=".$id;
 if(!$k = query_assoc($sql))
 	die(win1251('Квитанции не существует.'));
 
-define('BARCODE', '<img src="http://nyandoma/vk/barcode/barcode.php?code=167332001152&encoding=ean&mode=gif" />');
+$sql = "SELECT * FROM `zayav` WHERE `ws_id`=".WS_ID." AND !`deleted` AND `id`=".$k['zayav_id'];
+if(!$z = query_assoc($sql))
+	die(win1251('Заявки не существует.'));
+
+define('BARCODE', '<img src="'.GSITE.'/vk/barcode/barcode.php?code='.$z['barcode'].'&encoding=ean&mode=gif" />');
 
 
 echo '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">'.
@@ -96,7 +100,7 @@ echo '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www
 		'<link href="'.SITE.'/css/kvit_html'.(DEBUG ? '' : '.min').'.css?'.VERSION.'" rel="stylesheet" type="text/css" />'.
 	'</head>'.
 	'<body>'.
-		'<img src="'.SITE.'/img/printer.png" class="printer" onclick="this.style.display=\'none\';window.print()" title="Распечатать" />'.
+		'<img src="'.GSITE.'/vk/img/printer.png" class="printer" onclick="this.style.display=\'none\';window.print()" title="Распечатать" />'.
 		kvit_head().
 		kvit_name($k['nomer']).
 		kvit_content($k).

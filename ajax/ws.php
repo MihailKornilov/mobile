@@ -12,7 +12,8 @@ switch(@$_POST['op']) {
 				FROM `zayav`
 				WHERE `ws_id`=".WS_ID."
 				  AND (`imei`='".$word."'
-				   OR `serial`='".$word."')";
+				   OR `serial`='".$word."'
+				   OR `barcode`='".$word."')";
 		$id = query_value($sql);
 		$send = array();
 		if($id)
@@ -329,6 +330,7 @@ switch(@$_POST['op']) {
 					`device_place`,
 					`device_place_other`,
 
+					`barcode`,
 					`viewer_id_add`,
 					`find`
 				) VALUES (
@@ -353,6 +355,7 @@ switch(@$_POST['op']) {
 					".addslashes($place).",
 					'".$place_other."',
 
+					'".rand(10, 99).(time() + rand(10000, 99999))."',
 					".VIEWER_ID.",
 					'".addslashes($modelName.' '.$imei.' '.$serial)."'
 				)";

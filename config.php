@@ -5,9 +5,9 @@ define('TIME', microtime(true));
 $SA[982006] = 1; // Корнилов Михаил
 $SA[2170788] = 1;// Корнилов Виталий
 define('SA', isset($SA[$_GET['viewer_id']]));
-if(SA) { ini_set('display_errors',1); error_reporting(E_ALL); }
+if(SA) { ini_set('display_errors', 1); error_reporting(E_ALL); }
 
-define('DEBUG', @$_COOKIE['debug'] == 1);
+define('DEBUG', !empty($_COOKIE['debug']));
 define('DOCUMENT_ROOT', dirname(__FILE__));
 define('NAMES', 'cp1251');
 define('DOMAIN', $_SERVER["SERVER_NAME"]);

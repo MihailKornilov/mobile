@@ -97,11 +97,11 @@ function _header() {
 		'<title>Hi-tech Service - Приложение '.API_ID.'</title>'.
 
 		//Отслеживание ошибок в скриптах
-		(SA ? '<script type="text/javascript" src="http://nyandoma'.(LOCAL ? '' : '.ru').'/js/errors.js?'.VERSION.'"></script>' : '').
+		(SA ? '<script type="text/javascript" src="'.GSITE.'/js/errors.js?'.VERSION.'"></script>' : '').
 
 		//Стороние скрипты
-		'<script type="text/javascript" src="http://nyandoma'.(LOCAL ? '' : '.ru').'/js/jquery-2.0.3.min.js"></script>'.
-		'<script type="text/javascript" src="http://nyandoma'.(LOCAL ? '' : '.ru').'/vk/xd_connection'.(DEBUG ? '' : '.min').'.js"></script>'.
+		'<script type="text/javascript" src="'.GSITE.'/js/jquery-2.0.3.min.js"></script>'.
+		'<script type="text/javascript" src="'.GSITE.'/vk/xd_connection'.(DEBUG ? '' : '.min').'.js"></script>'.
 
 		//Установка начального значения таймера.
 		(SA ? '<script type="text/javascript">var TIME=(new Date()).getTime();</script>' : '').

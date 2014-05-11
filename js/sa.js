@@ -580,7 +580,7 @@ $(document)
 				top:90,
 				width:350,
 				head:'Редактирование комплектации',
-				content:'<center><img src="/img/upload.gif"></center>',
+				load:1,
 				butSubmit:'Сохранить',
 				submit:submit
 			});
@@ -592,13 +592,16 @@ $(document)
 			id:id
 		};
 		$.post(AJAX_SA, send, function(res) {
-			var html = '<table class="sa-equip-add">' +
-				'<tr><td class="label">Наименование:<td><input id="name" type="text" maxlength="100" value="' + res.name + '" />' +
-				'<tr><td class="label">Описание:<td><input id="title" type="text" maxlength="200" value="' + res.title + '" />' +
-				'</table>';
-			dialog.content.html(html);
-			$('#name,#title').keyEnter(submit);
-			$('#name').focus();
+			if(res.success) {
+				var html = '<table class="sa-equip-add">' +
+					'<tr><td class="label">Наименование:<td><input id="name" type="text" maxlength="100" value="' + res.name + '" />' +
+					'<tr><td class="label">Описание:<td><input id="title" type="text" maxlength="200" value="' + res.title + '" />' +
+					'</table>';
+				dialog.content.html(html);
+				$('#name,#title').keyEnter(submit);
+				$('#name').focus();
+			} else
+				dialog.loadError();
 		}, 'json');
 
 		function submit() {

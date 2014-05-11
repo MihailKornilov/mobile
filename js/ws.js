@@ -923,18 +923,16 @@ $(document)
 	})
 	.on('keyup', '#zayavNomer', function() {
 		var t = $(this);
-		if(t.hasClass('busy'))
+		if(t.hasClass('_busy'))
 			return;
 		t.next('.zayavNomerTab').remove().end()
-		 .after('<img src="/img/upload.gif">')
-		 .addClass('busy');
+		 .addClass('_busy');
 		var send = {
 			op:'zayav_nomer_info',
 			nomer:t.val()
 		};
 		$.post(AJAX_WS, send, function(res) {
-			t.removeClass('busy')
-			 .next('img').remove();
+			t.removeClass('_busy');
 			if(res.success)
 				t.after(res.html);
 		}, 'json');
@@ -1398,7 +1396,7 @@ $(document)
 			id:$(this).attr('val')
 		};
 		var tr = $(this).parent().parent();
-		tr.html('<td colspan="4" class="deleting">Удаление... <img src=/img/upload.gif></td>');
+		tr.html('<td colspan="4" class="deleting">Удаление...');
 		$.post(AJAX_WS, send, function(res) {
 			if(res.success) {
 				tr.find('.deleting').html('Начисление удалено. <a class="acc_rest" val="' + send.id + '">Восстановить</a>');
@@ -1413,7 +1411,7 @@ $(document)
 			},
 			t = $(this),
 			tr = t.parent().parent();
-		t.after('<img src=/img/upload.gif>').remove();
+		t.remove();
 		$.post(AJAX_WS, send, function(res) {
 			if(res.success) {
 				tr.after(res.html).remove();
@@ -1786,8 +1784,8 @@ $(document)
 			return;
 		var html = '<table class="zp_dec_dialog">' +
 				'<tr><td class="label r">Количество:<td><input type="text" id="count" value="1"><span>(max: <b>' + ZP.count + '</b>)</span>' +
-				'<tr><td class="label r top">Номер заявки:<td><input type="text" id="zayavNomer">' +
-				'<tr><td class="label r top">Примечание:<td><textarea id="prim"></textarea>' +
+				'<tr><td class="label r topi">Номер заявки:<td><input type="text" id="zayavNomer">' +
+				'<tr><td class="label r topi">Примечание:<td><textarea id="prim"></textarea>' +
 			'</table>',
 			dialog = _dialog({
 				width:400,
@@ -2038,7 +2036,7 @@ $(document)
 			dialog.abort();
 			go = 0;
 			dev = obj;
-			cres.html('');
+			cres.html('&nbsp;');
 			if(obj.device_id > 0 && obj.vendor_id > 0 && obj.model_id > 0) {
 				if(obj.device_id == sp.device && obj.vendor_id == sp.vendor && obj.model_id == sp.model) {
 					cres.html('<em class="red">Невозможно создать совместимость на это же устройство.</em>');
@@ -2054,9 +2052,9 @@ $(document)
 					model_id:obj.model_id,
 					color_id:sp.color_id
 				};
-				cres.html('<img src="/img/upload.gif">');
+				cres.addClass('_busy');
 				$.post(AJAX_WS, send, function(res) {
-					cres.html('');
+					cres.removeClass('_busy');
 					if(res.success)
 						finded(res);
 				}, 'json');
@@ -2512,7 +2510,7 @@ $(document)
 			id:$(this).attr('val')
 		};
 		var tr = $(this).parent().parent();
-		tr.html('<td colspan="4" class="deleting">Удаление... <img src=/img/upload.gif></td>');
+		tr.html('<td colspan="4" class="deleting">Удаление...</td>');
 		$.post(AJAX_WS, send, function (res) {
 			if(res.success) {
 				_msg('Удаление произведено.');

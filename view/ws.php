@@ -938,8 +938,8 @@ function zayavBalansUpdate($zayav_id, $ws_id=WS_ID) {//Обновление баланса клиент
 						  AND `zayav_id`=".$zayav_id);
 	query("UPDATE `zayav` SET `accrual_sum`=".$acc.",`oplata_sum`=".$opl." WHERE `id`=".$zayav_id);
 	return array(
-		'acc' => $acc,
-		'opl' => $opl,
+		'acc' => round($acc, 2),
+		'opl' => round($opl, 2),
 		'diff' => $acc - $opl
 	);
 }//zayavBalansUpdate()
