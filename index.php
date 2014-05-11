@@ -121,6 +121,7 @@ switch($_GET['p']) {
 			header('Location:'.URL.'&p=zayav');
 		require_once('view/sa.php');
 		switch(@$_GET['d']) {
+			case 'user': $html .= sa_user(); break;
 			case 'ws':
 				if(isset($_GET['id']) && preg_match(REGEXP_NUMERIC, $_GET['id'])) {
 					$html .= sa_ws_info(intval($_GET['id']));

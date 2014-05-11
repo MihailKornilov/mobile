@@ -40,32 +40,61 @@ function sa_index() {
 
 
 function sa_user() {
-	$wsSpisok =
-		'<tr><th>id'.
-		'<th>Наименование'.
-		'<th>Админ'.
-		'<th>Дата создания';
-	$sql = "SELECT * FROM `workshop` ORDER BY `id`";
-	$q = query($sql);
-	$count = mysql_num_rows($q);
-	while($r = mysql_fetch_assoc($q))
-		$wsSpisok .=
-			'<tr><td class="id">'.$r['id'].
-			'<td class="name'.(!$r['status'] ? ' del' : '').'">'.
-			'<a href="'.URL.'&p=sa&d=ws&id='.$r['id'].'">'.$r['org_name'].'</a>'.
-			'<div class="city">'.$r['city_name'].($r['country_id'] != 1 ? ', '.$r['country_name'] : '').'</div>'.
-			'<td>'._viewer($r['admin_id'], 'link').
-			'<td class="dtime">'.FullDataTime($r['dtime_add']);
-
+	$data = sa_user_spisok();
 	return
 	'<div class="path">'.sa_cookie_back().'<a href="'.URL.'&p=sa">Администрирование</a> » Пользователи</div>'.
 	'<div class="sa-user">'.
-		'<div class="count">Всего <b>'.$count.'</b> мастерск'._end($count, 'ая', 'их').'.</div>'.
-		'<table class="_spisok">'.$wsSpisok.'</table>'.
+		'<div class="result">'.$data['result'].'</div>'.
+		'<table class="tabLR">'.
+			'<tr><td class="left">'.$data['spisok'].
+				'<td class="right">'.
+		'</table>'.
 	'</div>';
 }//sa_user()
-
-
+function sa_user_spisok() {
+	$sql = "SELECT * FROM `vk_user` ORDER BY `dtime_add` DESC";
+	$q = query($sql);
+	$all = mysql_num_rows($q);
+	$send = array(
+		'all' => $all,
+		'result' => 'Показано '.$all.' пользовател'._end($all, 'ь', 'я', 'ей'),
+		'spisok' => ''
+	);
+	while($r = mysql_fetch_assoc($q))
+		$send['spisok'] .=
+			'<div class="un" val="'.$r['viewer_id'].'">'.
+				'<table class="tab">'.
+					'<tr><td class="img"><a href="http://vk.com/id'.$r['viewer_id'].'" target="_blank"><img src="'.$r['photo'].'"></a>'.
+						'<td class="inf">'.
+							'<div class="dtime">'.
+								'<div class="added'._tooltip('Дата добавления', 10).FullDataTime($r['dtime_add']).'</div>'.
+								(substr($r['enter_last'], 0, 16) != substr($r['dtime_add'], 0, 16) ?
+									'<div class="enter'._tooltip('Активность', 40).FullDataTime($r['enter_last']).'</div>'
+								: '').
+							'</div>'.
+							'<a href="http://vk.com/id'.$r['viewer_id'].'" target="_blank"><b>'.$r['first_name'].' '.$r['last_name'].'</b></a>'.
+							($r['ws_id'] ? '<a class="ws_id" href="'.URL.'&p=sa&d=ws&id='.$r['ws_id'].'">ws: <b>'.$r['ws_id'].'</b></a>' : '').
+							($r['admin'] ? '<b class="adm">Админ</b>' : '').
+							'<div class="city">'.$r['city_name'].($r['country_name'] ? ', '.$r['country_name'] : '').'</div>'.
+							'<a class="action">Действия</a>'.
+				'</table>'.
+			'</div>';
+	return $send;
+}//sa_user_spisok()
+function sa_user_tab_test($tab, $col, $viewer_id) {//проверка количества записей для пользователя в определённой таблице
+	$sql = "SELECT COUNT(*)
+			FROM information_schema.COLUMNS
+			WHERE TABLE_SCHEMA='".DATABASE."'
+			  AND TABLE_NAME='".$tab."'
+			  AND COLUMN_NAME='".$col."'";
+	if(query_value($sql)) {
+		$sql = "SELECT COUNT(*)
+					FROM `".$tab."`
+					WHERE `".$col."`=".$viewer_id;
+		return query_value($sql);
+	}
+	return 0;
+}//sa_user_tab_test()
 
 function sa_ws() {
 	$wsSpisok =

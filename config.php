@@ -25,6 +25,7 @@ setlocale(LC_ALL, 'ru_RU.CP1251');
 setlocale(LC_NUMERIC, 'en_US');
 
 require_once(DOCUMENT_ROOT.'/syncro.php');
+define('DATABASE', $mysql['database']);
 require_once(VKPATH.'/vk.php');
 _appAuth();
 require_once(DOCUMENT_ROOT.'/view/main.php');

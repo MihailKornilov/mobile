@@ -1,6 +1,24 @@
 var AJAX_SA = SITE + '/ajax/sa.php?' + VALUES;
 
 $(document)
+	.on('click', '.sa-user .action', function() {
+		var t = $(this),
+			un = t;
+		while(!un.hasClass('un'))
+			un = un.parent();
+		var send = {
+			op:'user_action',
+			viewer_id:un.attr('val')
+		};
+		t.html('&nbsp;').addClass('_busy');
+		$.post(AJAX_SA, send, function(res) {
+			if(res.success)
+				t.after(res.html).remove();
+			else
+				t.html('Действие').removeClass('_busy');
+		}, 'json');
+	})
+
 	.on('click', '.sa-ws-info .ws_status_change', function() {
 		var t = $(this),
 			send = {

@@ -5,10 +5,55 @@ require_once(DOCUMENT_ROOT.'/view/ws.php');
 require_once(DOCUMENT_ROOT.'/view/sa.php');
 
 switch(@$_POST['op']) {
+	case 'user_action':
+		if(!$viewer_id = _isnum($_POST['viewer_id']))
+			jsonError();
+/*		$tables = array(
+			'accrual' => "Начисления",
+			'base_device' => "Устройства",
+			'base_model' => "Модели",
+			'base_vendor' => "Производители",
+			'chem_catalog' => "Схемы",
+			'client' => "Клиенты",
+			'device_specific' => "Характеристики устройств",
+			'fw_catalog' => "Прошивоки",
+			'images' => "Изображения",
+			'money' => "Оплаты",
+			'setup_color_name' => "Настройки цветов",
+			'setup_device_place' => "Местонахождения устройств",
+			'setup_device_specific_item' => "Элементы характеристик",
+			'setup_device_specific_razdel' => "Разделы характеристик",
+			'setup_device_status' => "Состояния устройств",
+			'setup_fault' => "Неисправности",
+			'setup_zayavki_category' => "Категории заявок",
+			'setup_zayavki_status' => "Статусы заявок",
+			'setup_zp_name' => "Наименования запчастей",
+			'vk_comment' => "Комментарии",
+			'zayavki' => "Заявки",
+			'zp_catalog' => "Запчасти",
+			'zp_move' => "Движения запчастей",
+			'zp_zakaz' => "Заказ запчастей"
+		);
+*/
+		$sql = "SHOW TABLES";
+		$q = query($sql);
+		$tab = '';
+		while($r = mysql_fetch_row($q)) {
+			$count = '';
+			if(!$count = sa_user_tab_test($r[0], 'viewer_id_add', $viewer_id))
+				if(!$count = sa_user_tab_test($r[0], 'viewer_id', $viewer_id))
+					if(!$count = sa_user_tab_test($r[0], 'admin_id', $viewer_id))
+						continue;
+			$tab .= '<tr><td>'.$r[0].'<td class="c">'.$count;
+		}
+
+		$send['html'] = '<table class="action-res">'.$tab.'</table>';
+		jsonSuccess($send);
+		break;
+
 	case 'ws_status_change':
-		if(!preg_match(REGEXP_NUMERIC, $_POST['ws_id']))
+		if(!$ws_id = _isnum($_POST['ws_id']))
 			jsonError('Неверный id');
-		$ws_id = intval($_POST['ws_id']);
 		$sql = "SELECT * FROM `workshop` WHERE `id`=".$ws_id;
 		if(!$ws = mysql_fetch_assoc(query($sql)))
 			jsonError('Мастерской не существует');

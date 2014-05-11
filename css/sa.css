@@ -4,6 +4,35 @@
 .sa-tab .label{text-align:right}
 .sa-tab #name{width:250px}
 
+.sa-user .un{padding-bottom:8px;margin:8px;border-bottom:#dae1e8 solid 1px}
+.sa-user .tab{width:100%}
+.sa-user .img{width:57px;vertical-align:top}
+.sa-user .inf{vertical-align:top}
+.sa-user .dtime{float:right}
+.sa-user .dtime div{font-size:10px;cursor:default;text-align:right}
+.sa-user .enter{color:#2a5}
+.sa-user .added{color:#aaa}
+.sa-user .ws_id{
+	display:inline-block;
+	padding:2px 5px;
+	background-color:#282;
+	color:#fff;
+	margin-left:20px;
+}
+.sa-user .adm{
+	display:inline-block;
+	padding:2px 5px;
+	background-color:#b22;
+	color:#fff;
+	margin-left:5px;
+}
+.sa-user .action{display:block;margin-top:4px;width:50px}
+.sa-user .un:not(:hover) .action:not(._busy){display:none}
+.sa-user .action._busy{text-decoration:none}
+.sa-user .action-res{border-collapse:collapse;margin-top:5px}
+.sa-user .action-res td{border:#ddd solid 1px;padding:1px 4px}
+.sa-user .action-res .c{text-align:right}
+
 .sa-ws{padding:10px 15px}
 .sa-ws .count{margin-bottom:5px}
 .sa-ws .id{text-align:right}
