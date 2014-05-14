@@ -210,17 +210,17 @@ var AJAX_WS = SITE + '/ajax/ws.php?' + VALUES,
 		}
 		VK.callMethod('setLocation', hashLoc + loc);
 
-		setCookie('zayav_find', escape(v.find));
-		setCookie('zayav_sort', v.sort);
-		setCookie('zayav_desc', v.desc);
-		setCookie('zayav_status', v.status);
-		setCookie('zayav_diff', v.diff);
-		setCookie('zayav_zpzakaz', v.zpzakaz);
-		setCookie('zayav_device', v.device);
-		setCookie('zayav_vendor', v.vendor);
-		setCookie('zayav_model', v.model);
-		setCookie('zayav_place', encodeURI(v.place));
-		setCookie('zayav_devstatus', v.devstatus);
+		_cookie('zayav_find', escape(v.find));
+		_cookie('zayav_sort', v.sort);
+		_cookie('zayav_desc', v.desc);
+		_cookie('zayav_status', v.status);
+		_cookie('zayav_diff', v.diff);
+		_cookie('zayav_zpzakaz', v.zpzakaz);
+		_cookie('zayav_device', v.device);
+		_cookie('zayav_vendor', v.vendor);
+		_cookie('zayav_model', v.model);
+		_cookie('zayav_place', encodeURI(v.place));
+		_cookie('zayav_devstatus', v.devstatus);
 
 		return v;
 	},
@@ -1125,7 +1125,7 @@ $(document)
 		}, 'json');
 	})
 	.on('click', '.zayav_unit', function() {
-		setCookie('zback_scroll', VK_SCROLL);
+		_cookie('zback_scroll', VK_SCROLL);
 		location.href = URL + '&p=zayav&d=info&id=' + $(this).attr('val');
 	})
 	.on('mouseenter', '.zayav_unit', function() {
@@ -2717,7 +2717,7 @@ $(document)
 			});
 			//подсвечивание просмотренной заявки
 			if(Z.cookie_id) {
-				VK.callMethod('scrollWindow', getCookie('zback_scroll'));
+				VK.callMethod('scrollWindow', _сookie('zback_scroll'));
 				$('#u' + Z.cookie_id).css('opacity', 0.1).delay(400).animate({opacity:1}, 700);
 			}
 			zayavFilter();

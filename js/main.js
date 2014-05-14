@@ -1,5 +1,4 @@
 var	SITE = 'http://' + DOMAIN,
-	IMAGE_UPLOAD_PATH = SITE + '/include/imageUpload.php',
 	hashLoc,
 	hashSet = function(hash) {
 		if(!hash && !hash.p)
@@ -38,6 +37,6 @@ var	SITE = 'http://' + DOMAIN,
 
 $(document)
 	.on('click', '.sa_viewer_msg .leave', function() {
-		delCookie('sa_viewer_id');
+		_ñookie('sa_viewer_id', '');
 		document.location.href = URL + '&p=sa&d=ws';
 	});

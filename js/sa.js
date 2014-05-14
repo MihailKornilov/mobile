@@ -40,7 +40,7 @@ $(document)
 		}, 'json');
 	})
 	.on('click', '.sa-ws-info .ws_enter', function() {
-		setCookie('sa_viewer_id', $(this).attr('val'));
+		_cookie('sa_viewer_id', $(this).attr('val'));
 		document.location.reload();
 	})
 	.on('click', '.sa-ws-info .ws_del', function() {

@@ -20,6 +20,7 @@
 }
 #client ._next{margin:0 10px}
 
+
 /* Информация о клиенте */
 #clientInfo .left{padding-bottom:10px}
 #clientInfo .fio{color:#31618C;font-size:12px;font-weight:bold;margin:15px 5px 5px 30px}
@@ -44,6 +45,7 @@
 #clientInfo .right{width:145px}
 #clientInfo #zayav_filter{margin-top:30px}
 #clientInfo #diff_check{margin-top:15px}
+
 
 /* список заявок */
 #zayav .clear{float:right}
@@ -114,6 +116,7 @@
 }
 .zayav_link .tname{font-weight:700;margin-bottom:8px}
 .zayav_link .bl{font-weight:700}
+
 
 /* Внесение новой заявки */
 #zayavAdd{padding:20px 10px 140px 10px;background-color:#F7F7F7}
@@ -214,7 +217,7 @@
 }
 .zayav-print{border-spacing:10px}
 .zayav-print .label{width:90px}
-.zayav-print i{text:11px Arial;color:#999}
+.zayav-print i{font:11px Arial;color:#999}
 .zayav-print textarea{width:220px;height:40px}
 .zayav-print #preview{display:block;padding:10px;text-align:center}
 .zayav-print #preview._busy span{visibility:hidden}

@@ -7,9 +7,9 @@ $mysql = array(
     'names' => 'cp1251'
 );
 
+define('API_ID', 2031819);
+define('PATH', 'c:/www/mobile/');
 define('VKPATH', 'c:/www/nyandoma/vk/');
-define('PATH_FILES', 'c:/www/vkmobile/files/');
-define('PATH', 'c:/www/vkmobile/');
-define('CACHE_PREFIX', 'vkmobile_');
+define('CACHE_PREFIX', 'mobile_');
 
 $_GET['viewer_id'] = 982006;

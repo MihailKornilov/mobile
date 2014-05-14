@@ -1,33 +1,18 @@
 <?php
-define('API_ID', 2031819);
-define('TIME', microtime(true));
-
-$SA[982006] = 1; // Корнилов Михаил
-$SA[2170788] = 1;// Корнилов Виталий
-define('SA', isset($SA[$_GET['viewer_id']]));
-if(SA) { ini_set('display_errors', 1); error_reporting(E_ALL); }
-
-define('DEBUG', !empty($_COOKIE['debug']));
 define('DOCUMENT_ROOT', dirname(__FILE__));
 define('NAMES', 'cp1251');
 define('DOMAIN', $_SERVER["SERVER_NAME"]);
-define('LOCAL', DOMAIN == 'vkmobile');
-define('SA_VIEWER_ID', SA && @$_COOKIE['sa_viewer_id'] ? intval($_COOKIE['sa_viewer_id']) : 0);
-define('VIEWER_ID', SA_VIEWER_ID ? SA_VIEWER_ID : $_GET['viewer_id']);
-define('VALUES', 'viewer_id='.$_GET['viewer_id'].
-	'&api_id='.@$_GET['api_id'].
-	'&auth_key='.@$_GET['auth_key'].
-	'&sid='.@$_GET['sid']);
-define('SITE', 'http://'.DOMAIN);
-define('URL', SITE.'/index.php?'.VALUES);
-
-setlocale(LC_ALL, 'ru_RU.CP1251');
-setlocale(LC_NUMERIC, 'en_US');
+define('LOCAL', DOMAIN == 'mobile');
 
 require_once(DOCUMENT_ROOT.'/syncro.php');
 define('DATABASE', $mysql['database']);
+
+$SA[2170788] = 1;// Корнилов Виталий
 require_once(VKPATH.'/vk.php');
+define('SA_VIEWER_ID', SA && @$_COOKIE['sa_viewer_id'] ? intval($_COOKIE['sa_viewer_id']) : 0);
+//define('VIEWER_ID', SA_VIEWER_ID ? SA_VIEWER_ID : $_GET['viewer_id']);
 _appAuth();
+
 require_once(DOCUMENT_ROOT.'/view/main.php');
 require_once(DOCUMENT_ROOT.'/view/ws.php');
 

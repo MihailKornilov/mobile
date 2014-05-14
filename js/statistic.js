@@ -38,6 +38,7 @@ $('#statistic').highcharts('StockChart', {
 	]
 });
 
+
 $(document).ready(function() {
 
 });

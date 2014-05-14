@@ -12,6 +12,7 @@ var cityGet = function(val) {
 	});
 };
 
+
 // проверка наличия страны в списке
 if(!COUNTRY_ASS[COUNTRY_ID])
 	$('#countries').val(1); //если нет, устанавливается Россия

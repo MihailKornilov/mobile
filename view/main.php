@@ -136,62 +136,6 @@ function _header() {
 			(SA_VIEWER_ID ? '<div class="sa_viewer_msg">Вы вошли под пользователем '._viewer(SA_VIEWER_ID, 'link').'. <a class="leave">Выйти</a></div>' : '');
 }//_header()
 
-function _footer() {
-	global $html, $sqlQuery, $sqlCount, $sqlTime;
-	if(SA) {
-		$d = empty($_GET['d']) ? '' :'&pre_d='.$_GET['d'];
-		$d1 = empty($_GET['d1']) ? '' :'&pre_d1='.$_GET['d1'];
-		$id = empty($_GET['id']) ? '' :'&pre_id='.$_GET['id'];
-		$cookie = '';
-		if(DEBUG && !empty($_COOKIE))
-			foreach($_COOKIE as $key => $val)
-				$cookie .= '&nbsp;<b>'.$key.'</b> '.$val.'<br />';
-		$html .= '<div id="admin">'.
-				($_GET['p'] != 'sa' && !SA_VIEWER_ID ? '<a href="'.URL.'&p=sa&pre_p='.$_GET['p'].$d.$d1.$id.'">Admin</a> :: ' : '').
-//				'<a href="http://vkmobile.reformal.ru" target="_blank">Reformal</a> :: '.
-				'<a class="debug_toggle'.(DEBUG ? ' on' : '').'">В'.(DEBUG ? 'ы' : '').'ключить Debug</a> :: '.
-				'<a id="cookie_clear">Очисить cookie</a> :: '.
-				'<a id="cache_clear">Очисить кэш ('.VERSION.')</a> :: '.
-				'sql <b>'.$sqlCount.'</b> ('.round($sqlTime, 3).') :: '.
-				'php '.round(microtime(true) - TIME, 3).' :: '.
-				'js <EM></EM>'.
-			'</div>'
-			.(DEBUG ? $sqlQuery.$cookie : '');
-	}
-	$getArr = array(
-		'start' => 1,
-		'api_url' => 1,
-		'api_id' => 1,
-		'api_settings' => 1,
-		'viewer_id' => 1,
-		'viewer_type' => 1,
-		'sid' => 1,
-		'secret' => 1,
-		'access_token' => 1,
-		'user_id' => 1,
-		'group_id' => 1,
-		'is_app_user' => 1,
-		'auth_key' => 1,
-		'language' => 1,
-		'parent_language' => 1,
-		'ad_info' => 1,
-		'is_secure' => 1,
-		'referrer' => 1,
-		'lc_name' => 1,
-		'hash' => 1
-	);
-	$gValues = array();
-	foreach($_GET as $k => $val) {
-		if(isset($getArr[$k]) || empty($_GET[$k])) continue;
-		$gValues[] = '"'.$k.'":"'.$val.'"';
-	}
-	$html .= '<script type="text/javascript">'.
-				'hashSet({'.implode(',', $gValues).'});'.
-				(SA ? '$("#admin EM").html(((new Date().getTime())-TIME)/1000);' : '').
-			 '</script>'.
-		 '</div></BODY></HTML>';
-}//_footer()
-
 function _dopLinks($p, $data, $d=false, $d1=false) {//Дополнительное меню на сером фоне
 	$s = $d1 ? $d1 : $d;
 	$page = false;
@@ -301,7 +245,7 @@ function GvaluesCreate() {//Составление файла G_values.js
 		"\n".'MODEL_ASS={0:""};'.
 		"\n".'for(k in MODEL_SPISOK){for(n=0;n<MODEL_SPISOK[k].length;n++){var sp=MODEL_SPISOK[k][n];MODEL_ASS[sp.uid]=sp.title;}}';
 
-	$fp = fopen(PATH_FILES.'../js/G_values.js', 'w+');
+	$fp = fopen(PATH.'js/G_values.js', 'w+');
 	fwrite($fp, $save);
 	fclose($fp);
 
