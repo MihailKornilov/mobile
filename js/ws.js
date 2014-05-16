@@ -2717,7 +2717,7 @@ $(document)
 			});
 			//подсвечивание просмотренной заявки
 			if(Z.cookie_id) {
-				VK.callMethod('scrollWindow', _сookie('zback_scroll'));
+				VK.callMethod('scrollWindow', _cookie('zback_scroll'));
 				$('#u' + Z.cookie_id).css('opacity', 0.1).delay(400).animate({opacity:1}, 700);
 			}
 			zayavFilter();

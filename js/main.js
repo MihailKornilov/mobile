@@ -37,6 +37,6 @@ var	SITE = 'http://' + DOMAIN,
 
 $(document)
 	.on('click', '.sa_viewer_msg .leave', function() {
-		_ñookie('sa_viewer_id', '');
+		_cookie('sa_viewer_id', '');
 		document.location.href = URL + '&p=sa&d=ws';
 	});
