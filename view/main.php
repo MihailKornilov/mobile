@@ -3,7 +3,7 @@ function _hashRead() {
 	$_GET['p'] = isset($_GET['p']) ? $_GET['p'] : 'zayav';
 	if(empty($_GET['hash'])) {
 		define('HASH_VALUES', false);
-		if(isset($_GET['start'])) {// восстановление последней посещённой страницы
+		if(APP_START) {// восстановление последней посещённой страницы
 			$_GET['p'] = isset($_COOKIE['p']) ? $_COOKIE['p'] : $_GET['p'];
 			$_GET['d'] = isset($_COOKIE['d']) ? $_COOKIE['d'] : '';
 			$_GET['d1'] = isset($_COOKIE['d1']) ? $_COOKIE['d1'] : '';

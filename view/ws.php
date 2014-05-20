@@ -395,7 +395,7 @@ function client_info($client_id) {
 
 	$remindData = remind_data(1, array('client'=>$client_id));
 
-	$histCount = query_value("SELECT COUNT(`id`) FROM `history` WHERE `ws_id`=".WS_ID." AND `client_id`=".$client_id);
+	$history = history(array('client_id'=>$client_id,'limit'=>15));
 
 	return
 		'<script type="text/javascript">'.
@@ -423,13 +423,13 @@ function client_info($client_id) {
 						'<a class="link" val="money">Платежи'.($moneyCount ? ' (<b>'.$moneyCount.'</b>)' : '').'</a>'.
 						'<a class="link" val="remind">Задания'.(!empty($remindData) ? ' (<b>'.$remindData['all'].'</b>)' : '').'</a>'.
 						'<a class="link" val="comm">Заметки'.($commCount ? ' (<b>'.$commCount.'</b>)' : '').'</a>'.
-						'<a class="link" val="hist">История'.($histCount ? ' (<b>'.$histCount.'</b>)' : '').'</a>'.
+						'<a class="link" val="hist">История'.($history['all'] ? ' (<b>'.$history['all'].'</b>)' : '').'</a>'.
 					'</div>'.
 					'<div id="zayav_spisok">'.$zayavData['spisok'].'</div>'.
 					'<div id="money_spisok">'.$money.'</div>'.
 					'<div id="remind_spisok">'.(!empty($remindData) ? remind_spisok($remindData) : '<div class="_empty">Заданий нет.</div>').'</div>'.
 					'<div id="comments">'._vkComment('client', $client_id).'</div>'.
-					'<div id="histories">'.history_spisok(array('client_id'=>$client_id,'limit'=>15)).'</div>'.
+					'<div id="histories">'.$history['spisok'].'</div>'.
 				'<td class="right">'.
 					'<div class="rightLink">'.
 						'<a class="sel">Информация</a>'.
@@ -976,6 +976,8 @@ function zayav_info($zayav_id) {
 	$status = _zayavStatusName();
 	unset($status[0]);
 
+	$history = history(array('zayav_id'=>$zayav_id));
+
 	return '<script type="text/javascript">'.
 		'var STATUS='._selJson($status).','.
 		'ZAYAV={'.
@@ -1072,7 +1074,7 @@ function zayav_info($zayav_id) {
 
 			'<tr class="z-hist"><td>'.
 				'<div class="headName">Заявка №'.$z['nomer'].' - история действий</div>'.
-				history_spisok(array('zayav_id'=>$z['id'])).
+				$history['spisok'].
 		'</table>'.
 	'</div>';
 }//zayav_info()
@@ -1666,7 +1668,8 @@ function report() {
 	switch($d) {
 		default: $d = 'history';
 		case 'histoty':
-			$left = history_spisok();
+			$data = history();
+			$left = $data['spisok'];
 			$right .= history_right();
 			break;
 		case 'remind':
@@ -1729,31 +1732,11 @@ function report() {
 	'</table>';
 }//report()
 
-function history_insert($arr) {
-	$sql = "INSERT INTO `history` (
-			   `ws_id`,
-			   `type`,
-			   `value`,
-			   `value1`,
-			   `value2`,
-			   `value3`,
-			   `client_id`,
-			   `zayav_id`,
-			   `zp_id`,
-			   `viewer_id_add`
-			) VALUES (
-				".WS_ID.",
-				".$arr['type'].",
-				'".(isset($arr['value']) ? addslashes($arr['value']) : '')."',
-				'".(isset($arr['value1']) ? addslashes($arr['value1']) : '')."',
-				'".(isset($arr['value2']) ? addslashes($arr['value2']) : '')."',
-				'".(isset($arr['value3']) ? addslashes($arr['value3']) : '')."',
-				".(isset($arr['client_id']) ? $arr['client_id'] : 0).",
-				".(isset($arr['zayav_id']) ? $arr['zayav_id'] : 0).",
-				".(isset($arr['zp_id']) ? $arr['zp_id'] : 0).",
-				".VIEWER_ID."
-			)";
-	query($sql);
+function history_insert($v) {
+	$v['ws_id'] = WS_ID;
+	$type = $v['type'];
+	unset($v['type']);
+	_historyInsert($type, $v);
 }//history_insert()
 function history_types($v, $filter) {
 	switch($v['type']) {
@@ -1867,7 +1850,7 @@ function history_types($v, $filter) {
 		default: return $v['type'];
 	}
 }//history_types()
-function history_types_group($action) {
+function history_group($action) {
 	switch($action) {
 		case 1: return '3,10,11';
 		case 2: return '1,2,4,5,6,7,8,9,13';
@@ -1889,90 +1872,22 @@ function history_right() {
 		$workers[] = '{uid:'.$id.',title:"'._viewer($id, 'name').'"}';
 	return
 	'<script type="text/javascript">var WORKERS=['.implode(',', $workers).'];</script>'.
-	'<div class="findHead">Сотрудник</div><input type="hidden" id="worker_id">'.
+	'<div class="findHead">Сотрудник</div><input type="hidden" id="viewer_id_add">'.
 	'<div class="findHead">Действие</div><input type="hidden" id="action">';
 }//history_right()
-function history_spisok($v=array()) {
-	$filter = array(
-		'page' => !empty($v['page']) && preg_match(REGEXP_NUMERIC, $v['page']) ? $v['page'] : 1,
-		'limit' => !empty($v['limit']) && preg_match(REGEXP_NUMERIC, $v['limit']) ? $v['limit'] : 30,
-		'worker_id' => !empty($v['worker_id']) && preg_match(REGEXP_NUMERIC, $v['worker_id']) ? $v['worker_id'] : 0,
-		'action' => !empty($v['action']) && preg_match(REGEXP_NUMERIC, $v['action']) ? $v['action'] : 0,
-		'client_id' => !empty($v['client_id']) && preg_match(REGEXP_NUMERIC, $v['client_id']) ? $v['client_id'] : 0,
-		'zayav_id' => !empty($v['zayav_id']) && preg_match(REGEXP_NUMERIC, $v['zayav_id']) ? $v['zayav_id'] : 0
+function history($v=array()) {
+	return _history(
+		'history_types',
+		array('_clientLink', '_zayavNomerLink', '_zpLink'),
+		$v,
+		array(
+			'ws_id' => WS_ID,
+			'client_id' => !empty($v['client_id']) && _isnum($v['client_id']) ? intval($v['client_id']) : 0,
+			'zayav_id' => !empty($v['zayav_id']) && _isnum($v['zayav_id']) ? intval($v['zayav_id']) : 0,
+			'zp_id' => !empty($v['zp_id']) && _isnum($v['zp_id']) ? intval($v['zp_id']) : 0
+		)
 	);
-
-	$cond = "`ws_id`=".WS_ID;
-	if($filter['worker_id'])
-		$cond .= " AND `viewer_id_add`=".$filter['worker_id'];
-	if($filter['action'])
-		$cond .= " AND `type` IN(".history_types_group($filter['action']).")";
-	if($filter['client_id'])
-		$cond .= " AND `client_id`=".$filter['client_id'];
-	if($filter['zayav_id'])
-		$cond .= " AND `zayav_id`=".$filter['zayav_id'];
-
-	$page = $filter['page'];
-	$limit = $filter['limit'];
-	$start = ($page - 1) * $limit;
-
-	$send = $page == 1 ?
-		'<input type="hidden" id="history_limit" value="'.$filter['limit'].'" />'.
-		'<input type="hidden" id="history_worker_id" value="'.$filter['worker_id'].'" />'.
-		'<input type="hidden" id="history_action" value="'.$filter['action'].'" />'.
-		'<input type="hidden" id="history_client_id" value="'.$filter['client_id'].'" />'.
-		'<input type="hidden" id="history_zayav_id" value="'.$filter['zayav_id'].'" />'
-		: '';
-
-	$sql = "SELECT COUNT(`id`) AS `all`
-			FROM `history`
-			WHERE ".$cond;
-	$all = query_value($sql);
-	if(!$all)
-		return $send.'Истории по указанным условиям нет.';
-
-	$sql = "SELECT *
-			FROM `history`
-			WHERE ".$cond."
-			ORDER BY `id` DESC
-			LIMIT ".$start.",".$limit;
-	$q = query($sql);
-	$history = array();
-	while($r = mysql_fetch_assoc($q))
-		$history[$r['id']] = $r;
-	$history = _viewer($history);
-	$history = _clientLink($history);
-	$history = _zayavNomerLink($history);
-	$history = _zpLink($history);
-
-	$txt = '';
-	end($history);
-	$keyEnd = key($history);
-	reset($history);
-	foreach($history as $r) {
-		if(!$txt) {
-			$time = strtotime($r['dtime_add']);
-			$viewer_id = $r['viewer_id_add'];
-		}
-		$txt .= '<li><div class="li">'.history_types($r, $filter).'</div>';
-		$key = key($history);
-		if(!$key ||
-		   $key == $keyEnd ||
-		   $time - strtotime($history[$key]['dtime_add']) > 900 ||
-		   $viewer_id != $history[$key]['viewer_id_add']) {
-			$send .=
-				'<div class="history_unit">'.
-					'<div class="head"><span>'.FullDataTime($r['dtime_add']).'</span>'.$r['viewer_name'].'</div>'.
-					'<ul>'.$txt.'</ul>'.
-				'</div>';
-			$txt = '';
-		}
-		next($history);
-	}
-	if($start + $limit < $all)
-		$send .= '<div class="_next" id="history_next" val="'.($page + 1).'"><span>Далее...</span></div>';
-	return $send;
-}//history_spisok()
+}//history()
 
 function remind_right() {
 	return
@@ -2264,7 +2179,7 @@ function income_spisok($filter=array()) {
 	$money = array();
 	while($r = mysql_fetch_assoc($q))
 		$money[$r['id']] = $r;
-	$money = _viewer($money);
+	//$money = _viewer($money);
 	$money = _zayavNomerLink($money);
 	$money = _zpLink($money);
 
@@ -2393,7 +2308,9 @@ function expenseFilter($v) {
 function expense_right() {
 	$sql = "SELECT DISTINCT `worker_id` AS `viewer_id_add`
 			FROM `money`
-			WHERE `ws_id`=".WS_ID." AND `sum`<0 AND `worker_id`>0";
+			WHERE `ws_id`=".WS_ID."
+			  AND `sum`<0
+			  AND `worker_id`";
 	$q = query($sql);
 	$viewer = array();
 	while($r = mysql_fetch_assoc($q)) {
@@ -2494,11 +2411,11 @@ function expense_spisok($v=array()) {
 			ORDER BY `dtime_add` DESC
 			LIMIT ".$start.",".$limit;
 	$q = query($sql);
-	$rashod = array();
+	$expense = array();
 	while($r = mysql_fetch_assoc($q))
-		$rashod[$r['id']] = $r;
-	$rashod = _viewer($rashod);
-	foreach($rashod as $r)
+		$expense[$r['id']] = $r;
+	$expense = _viewer($expense);
+	foreach($expense as $r)
 		$send['spisok'] .= '<tr'.($r['deleted'] ? ' class="deleted"' : '').'>'.
 			'<td class="sum"><b>'.abs($r['sum']).'</b>'.
 			'<td>'.($r['expense_id'] ? '<span class="type">'._expense($r['expense_id']).($r['prim'] || $r['worker_id'] ? ':' : '').'</span> ' : '').
@@ -2821,16 +2738,16 @@ function statistic() {
 			GROUP BY DATE_FORMAT(`dtime_add`, '%Y-%m')
 			ORDER BY `dtime_add`";
 	$q = query($sql);
-	$rashod = array();
+	$expense = array();
 	while($r = mysql_fetch_assoc($q))
-		$rashod[] = array(strtotime($r['dtime']) * 1000, intval($r['sum']));
+		$expense[] = array(strtotime($r['dtime']) * 1000, intval($r['sum']));
 
 	return
 	'<script type="text/javascript" src="http://nyandoma'.(LOCAL ? '' : '.ru').'/js/highstock.js"></script>'.
 	'<div id="statistic"></div>'.
 	'<script type="text/javascript">'.
 		'var statPrihod = '.json_encode($prihod).';'.
-		'var statRashod = '.json_encode($rashod).';'.
+		'var statRashod = '.json_encode($expense).';'.
 	'</script>'.
 	'<script type="text/javascript" src="'.SITE.'/js/statistic.js"></script>';
 }//statistic()

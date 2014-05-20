@@ -13,7 +13,7 @@ switch(@$_POST['op']) {
 				WHERE `ws_id`=".WS_ID."
 				  AND (`imei`='".$word."'
 				   OR `serial`='".$word."'
-				   OR `barcode`='".$word."')";
+				   OR `barcode`='".substr($word, 0, 12)."')";
 		$id = query_value($sql);
 		$send = array();
 		if($id)
@@ -1462,11 +1462,6 @@ switch(@$_POST['op']) {
 		$spisok = zp_compat_spisok($zp_id);
 		$send['count'] = utf8(zp_compat_count(count($spisok)));
 		$send['spisok'] = utf8(implode($spisok));
-		jsonSuccess($send);
-		break;
-
-	case 'history_spisok':
-		$send['html'] = utf8(history_spisok($_POST));
 		jsonSuccess($send);
 		break;
 

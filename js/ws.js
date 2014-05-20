@@ -423,27 +423,6 @@ var AJAX_WS = SITE + '/ajax/ws.php?' + VALUES,
 		}, 'json');
 	},
 
-	historyFilter = function() {
-		return {
-			op:'history_spisok',
-			limit:$('#history_limit').val(),
-			worker_id:$('#history_worker_id').val(),
-			action:$('#action').val(),
-			client_id:$('#history_client_id').val(),
-			zayav_id:$('#history_zayav_id').val()
-		};
-	},
-	historySpisok = function(v, id) {
-		var send = historyFilter();
-		send[id] = v;
-		$('#mainLinks').addClass('busy');
-		$.post(AJAX_WS, send, function(res) {
-			$('#mainLinks').removeClass('busy');
-			if(res.success)
-				$('.left').html(res.html);
-		}, 'json');
-	},
-
 	remindSpisok = function() {
 		var send = {
 			op:'remind_spisok',
@@ -2139,21 +2118,6 @@ $(document)
 		return false;
 	})
 
-	.on('click', '#history_next', function() {
-		var t = $(this),
-			send = historyFilter();
-		if(t.hasClass('busy'))
-			return;
-		send.page = $(this).attr('val');
-		t.addClass('busy');
-		$.post(AJAX_WS, send, function(res) {
-			if(res.success)
-				t.after(res.html).remove();
-			else
-				t.removeClass('busy');
-		}, 'json');
-	})
-
 	.on('click', '.remind_unit .hist_a', function() {
 		$(this).parent().parent().find('.hist').slideToggle();
 	})
@@ -3030,11 +2994,11 @@ $(document)
 		}
 
 		if($('#report.history').length) {
-			$('#worker_id')._select({
+			$('#viewer_id_add')._select({
 				width:140,
 				title0:'Не указан',
 				spisok:WORKERS,
-				func:historySpisok
+				func:_history
 			});
 			$('#action')._select({
 				width:140,
@@ -3045,7 +3009,7 @@ $(document)
 					{uid:3, title:'Запчасти'},
 					{uid:4, title:'Платежи'}
 				],
-				func:historySpisok
+				func:_history
 			});
 		}
 		if($('#report.remind').length) {

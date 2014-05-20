@@ -37,11 +37,10 @@
 #clientInfo #zayav_result{color:#777;text-align:center}
 #clientInfo .zayav_unit{margin-right:10px}
 #clientInfo #zayav_spisok ._next{margin:5px 10px 0 10px}
-#clientInfo #money_spisok,#clientInfo #histories{margin:10px;display:none}
+#clientInfo #money_spisok,#clientInfo #histories{display:none}
 #clientInfo #money_spisok ._empty{margin:0;padding:60px 10px}
 #clientInfo #comments,#clientInfo #remind_spisok{margin:0 10px;display:none}
 #clientInfo #remind_spisok ._empty{margin:10px 0;padding:60px 10px}
-#clientInfo #histories ._next{margin:0}
 #clientInfo .right{width:145px}
 #clientInfo #zayav_filter{margin-top:30px}
 #clientInfo #diff_check{margin-top:15px}
@@ -322,22 +321,6 @@ table.zayavNomerTab td{vertical-align:top}
 
 
 
-.history .left{padding:8px}
-.history_unit{margin-bottom:12px;padding-bottom:8px;border-bottom:#dae1e8 solid 1px}
-.history_unit .head{font-size:10px}
-.history_unit .head span{color:#777;font-size:10px;margin-right:10px}
-.history_unit ul{margin:5px 0 7px 25px}
-.history_unit li{margin:0 0 8px}
-.history_unit .li{margin-left:-4px}
-.history_unit i{font:italic 11px Arial;color:#977}
-.history_unit .changes *{font-size:10px;color:#777}
-.history_unit .changes table{border-collapse:collapse;margin-top:3px}
-.history_unit .changes th{text-align:right;font-weight:700}
-.history_unit .changes th,.history_unit .changes td{border:#ddd solid 1px;padding:2px 4px;vertical-align:top}
-.history_unit .oplata{color:#770}
-.history_unit a.deleted{color:#a66}
-.history_unit .zstatus{display:inline-block;padding:2px 5px}
-.history_unit .prim{font:italic 11px Arial;color:#555}
 
 
 .remind .left{padding:0 8px}
