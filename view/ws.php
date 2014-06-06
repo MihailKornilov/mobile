@@ -1260,11 +1260,11 @@ function zpAddQuery($zp) {//Внесение новой запчасти из заявки и из списка запчас
 				".$zp['base_vendor_id'].",
 				".$zp['base_model_id'].",
 				".$zp['bu'].",
-				'".$zp['version']."',
+				'".addslashes($zp['version'])."',
 				".$zp['color_id'].",
 				".$zp['compat_id'].",
 				".VIEWER_ID.",
-				'"._modelName($zp['base_model_id'])." ".$zp['version']."'
+				'".addslashes(_modelName($zp['base_model_id']).' '.$zp['version'])."'
 			)";
 	query($sql);
 	return mysql_insert_id();

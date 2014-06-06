@@ -1,7 +1,7 @@
 <?php
 define('DOCUMENT_ROOT', dirname(__FILE__));
 define('NAMES', 'cp1251');
-define('DOMAIN', $_SERVER["SERVER_NAME"]);
+define('DOMAIN', defined('CRON') && CRON ? 'mobile.nyandoma.ru' : $_SERVER['SERVER_NAME']);
 define('LOCAL', DOMAIN == 'mobile');
 
 require_once(DOCUMENT_ROOT.'/syncro.php');
@@ -23,6 +23,8 @@ _getVkUser();
 
 
 function _getSetupGlobal() {//Получение глобальных данных
+	if(CRON)
+		return;
 	$key = CACHE_PREFIX.'setup_global';
 	$g = xcache_get($key);
 	if(empty($g)) {
@@ -34,6 +36,8 @@ function _getSetupGlobal() {//Получение глобальных данных
 	define('G_VALUES', $g['g_values']);
 }//_getSetupGlobal()
 function _getVkUser() {//Получение данных о пользователе
+	if(CRON)
+		return;
 	$u = _viewer();
 	define('WS_ID', $u['ws_id'] && _getWorkshop($u['ws_id']) ? $u['ws_id'] : 0);
 	define('VIEWER_NAME', $u['name']);

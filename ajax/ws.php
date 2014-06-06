@@ -1195,7 +1195,8 @@ switch(@$_POST['op']) {
 					`base_model_id`=".$model_id.",
 					`version`='".$version."',
 					`bu`=".$bu.",
-					`color_id`=".$color_id."
+					`color_id`=".$color_id.",
+					`find`='".addslashes(_modelName($model_id).' '.$version)."'
 				WHERE `id`=".$zp_id;
 		query($sql);
 
@@ -1382,24 +1383,22 @@ switch(@$_POST['op']) {
 		jsonSuccess($send);
 		break;
 	case 'zp_compat_add':
-		if(!preg_match(REGEXP_NUMERIC, $_POST['zp_id']) || $_POST['zp_id'] == 0)
+		if(!$zp_id = _isnum($_POST['zp_id']))
 			jsonError();
-		if(!preg_match(REGEXP_NUMERIC, $_POST['device_id']) || $_POST['device_id'] == 0)
+		if(!$device_id = _isnum($_POST['device_id']))
 			jsonError();
-		if(!preg_match(REGEXP_NUMERIC, $_POST['vendor_id']) || $_POST['vendor_id'] == 0)
+		if(!$vendor_id = _isnum($_POST['vendor_id']))
 			jsonError();
-		if(!preg_match(REGEXP_NUMERIC, $_POST['model_id']) || $_POST['model_id'] == 0)
+		if(!$model_id = _isnum($_POST['model_id']))
 			jsonError();
 
-		$zp_id = intval($_POST['zp_id']);
 		$compat_id = _zpCompatId($zp_id);
 		$sql = "SELECT * FROM `zp_catalog` WHERE `id`=".$compat_id;
 		if(!$zp = mysql_fetch_assoc(query($sql)))
 			jsonError();
 
-		$device_id = intval($_POST['device_id']);
-		$vendor_id = intval($_POST['vendor_id']);
-		$model_id = intval($_POST['model_id']);
+		if(!$zp['compat_id'])
+			query("UPDATE `zp_catalog` SET `compat_id`=".$compat_id." WHERE `id`=".$zp_id);
 
 		$sql = "SELECT `id`,`compat_id`
 				FROM `zp_catalog`
@@ -1411,10 +1410,6 @@ switch(@$_POST['op']) {
 				  AND `base_model_id`=".$model_id."
 				  AND `color_id`=".$zp['color_id']."
 				LIMIT 1";
-
-		if(!$zp['compat_id'])
-			query("UPDATE `zp_catalog` SET `compat_id`=".$compat_id." WHERE `id`=".$zp_id);
-
 		if($r = mysql_fetch_assoc(query($sql))) {
 			if($r['compat_id'] == $compat_id)
 				jsonError();
