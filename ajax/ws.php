@@ -609,7 +609,7 @@ switch(@$_POST['op']) {
 		jsonSuccess($send);
 		break;
 	case 'zayav_accrual_add':
-		if(!preg_match(REGEXP_NUMERIC, $_POST['zayav_id']) || !$_POST['zayav_id'])
+		if(!$zayav_id = _isnum($_POST['zayav_id']))
 			jsonError();
 		if(!preg_match(REGEXP_NUMERIC, $_POST['sum']) || !$_POST['sum'])
 			jsonError();
@@ -629,18 +629,13 @@ switch(@$_POST['op']) {
 				jsonError();
 		}
 
-		$zayav_id = intval($_POST['zayav_id']);
 		$sum = intval($_POST['sum']);
 		$prim = win1251(htmlspecialchars(trim($_POST['prim'])));
 		$status = intval($_POST['status']);
 		$dev_status = intval($_POST['dev_status']);
 
-		$sql = "SELECT *
-				FROM `zayav`
-				WHERE `ws_id`=".WS_ID."
-				  AND !`deleted`
-				  AND `id`=".$zayav_id;
-		if(!$z = mysql_fetch_assoc(query($sql)))
+		$sql = "SELECT * FROM `zayav` WHERE `ws_id`=".WS_ID." AND !`deleted` AND `id`=".$zayav_id;
+		if(!$z = query_assoc($sql))
 			jsonError();
 
 		$sql = "INSERT INTO `accrual` (
@@ -662,7 +657,9 @@ switch(@$_POST['op']) {
 
 		clientBalansUpdate($z['client_id']);
 		$send = zayavBalansUpdate($zayav_id);
-
+		$z['accrual_sum'] = $send['acc'];
+		$send['acc_sum'] = utf8(zayav_acc_sum($z));
+		$send['expense'] = utf8(zayav_expense_spisok($z));
 
 		history_insert(array(
 			'type' => 5,
@@ -675,8 +672,7 @@ switch(@$_POST['op']) {
 		$sql = "UPDATE `zayav`
 				SET `device_status`=".$dev_status."
 					".($z['zayav_status'] != $status ? ",`zayav_status`=".$status.",`zayav_status_dtime`=CURRENT_TIMESTAMP" : '')."
-				WHERE `ws_id`=".WS_ID."
-				  AND `id`=".$zayav_id;
+				WHERE `id`=".$zayav_id;
 		query($sql);
 		if($z['zayav_status'] != $status) {
 			history_insert(array(
@@ -716,12 +712,17 @@ switch(@$_POST['op']) {
 		jsonSuccess($send);
 		break;
 	case 'zayav_accrual_del':
-		if(!preg_match(REGEXP_NUMERIC, $_POST['id']))
+		if(!$id = _isnum($_POST['id']))
 			jsonError();
-		$id = intval($_POST['id']);
+
 		$sql = "SELECT * FROM `accrual` WHERE !`deleted` AND `id`=".$id;
-		if(!$r = mysql_fetch_assoc(query($sql)))
+		if(!$r = query_assoc($sql))
 			jsonError();
+
+		$sql = "SELECT * FROM `zayav` WHERE `ws_id`=".WS_ID." AND !`deleted` AND `id`=".$r['zayav_id'];
+		if(!$z = query_assoc($sql))
+			jsonError();
+
 		$sql = "UPDATE `accrual` SET
 					`deleted`=1,
 					`viewer_id_del`=".VIEWER_ID.",
@@ -731,6 +732,9 @@ switch(@$_POST['op']) {
 
 		clientBalansUpdate($r['client_id']);
 		$send = zayavBalansUpdate($r['zayav_id']);
+		$z['accrual_sum'] = $send['acc'];
+		$send['acc_sum'] = utf8(zayav_acc_sum($z));
+		$send['expense'] = utf8(zayav_expense_spisok($z));
 
 		history_insert(array(
 			'type' => 8,
@@ -742,9 +746,9 @@ switch(@$_POST['op']) {
 		jsonSuccess($send);
 		break;
 	case 'zayav_accrual_rest':
-		if(!preg_match(REGEXP_NUMERIC, $_POST['id']))
+		if(!$id = _isnum($_POST['id']))
 			jsonError();
-		$id = intval($_POST['id']);
+
 		$sql = "SELECT
 		            *,
 					'acc' AS `type`
@@ -752,8 +756,13 @@ switch(@$_POST['op']) {
 				WHERE `ws_id`=".WS_ID."
 				  AND `deleted`
 				  AND `id`=".$id;
-		if(!$r = mysql_fetch_assoc(query($sql)))
+		if(!$r = query_assoc($sql))
 			jsonError();
+
+		$sql = "SELECT * FROM `zayav` WHERE `ws_id`=".WS_ID." AND !`deleted` AND `id`=".$r['zayav_id'];
+		if(!$z = query_assoc($sql))
+			jsonError();
+
 		$sql = "UPDATE `accrual` SET
 					`deleted`=0,
 					`viewer_id_del`=0,
@@ -763,6 +772,9 @@ switch(@$_POST['op']) {
 
 		clientBalansUpdate($r['client_id']);
 		$send = zayavBalansUpdate($r['zayav_id']);
+		$z['accrual_sum'] = $send['acc'];
+		$send['acc_sum'] = utf8(zayav_acc_sum($z));
+		$send['expense'] = utf8(zayav_expense_spisok($z));
 
 		history_insert(array(
 			'type' => 27,
@@ -1050,6 +1062,62 @@ switch(@$_POST['op']) {
 		if($active)
 			$send['html'] = utf8(zayav_kvit($zayav_id));
 
+		jsonSuccess($send);
+		break;
+	case 'zayav_expense_edit':
+		if(!$zayav_id = _isnum($_POST['zayav_id']))
+			jsonError();
+
+		$expenseNew = zayav_expense_test($_POST['expense']);
+		if($expenseNew === false)
+			jsonError();
+
+		$sql = "SELECT * FROM `zayav` WHERE `ws_id`=".WS_ID." AND !`deleted` AND `id`=".$zayav_id;
+		if(!$z = query_assoc($sql))
+			jsonError();
+
+		$expenseOld = zayav_expense_spisok($z, 'array');
+		if($expenseNew != $expenseOld) {
+			$old = zayav_expense_spisok($z);
+			query("DELETE FROM `zayav_expense` WHERE `zayav_id`=".$zayav_id);
+			foreach($expenseNew as $r) {
+				$sql = "INSERT INTO `zayav_expense` (
+							`ws_id`,
+							`zayav_id`,
+							`category_id`,
+							`txt`,
+							`worker_id`,
+							`zp_id`,
+							`sum`,
+							`mon`,
+							`year`
+						) VALUES (
+							".WS_ID.",
+							".$zayav_id.",
+							".$r[0].",
+							'".(_zayavExpense($r[0], 'txt') ? addslashes($r[1]) : '')."',
+							".(_zayavExpense($r[0], 'worker') ? intval($r[1]) : 0).",
+							".(_zayavExpense($r[0], 'zp') ? intval($r[1]) : 0).",
+							".$r[2].",
+							".$r[3].",
+							".$r[4]."
+						)";
+				query($sql);
+			}
+		//	_zayavBalansUpdate($zayav_id);
+			$changes = '<tr><td>'.$old.'<td>»<td>'.zayav_expense_spisok($z);
+			history_insert(array(
+				'type' => 30,
+				'client_id' => $z['client_id'],
+				'zayav_id' => $zayav_id,
+				'value' => '<table>'.$changes.'</table>'
+			));
+		}
+		$expense = zayav_expense_spisok($z, 'all');
+		$send['html'] = utf8($expense['html']);
+		foreach($expense['array'] as $n => $r)
+			$expense['array'][$n][1] = utf8($expense['array'][$n][1]);
+		$send['array'] = $expense['array'];
 		jsonSuccess($send);
 		break;
 
@@ -1792,12 +1860,11 @@ switch(@$_POST['op']) {
 		jsonSuccess();
 		break;
 	case 'expense_del':
-		if(!preg_match(REGEXP_NUMERIC, $_POST['id']))
+		if(!$id = _isnum($_POST['id']))
 			jsonError();
-		$id = intval($_POST['id']);
 
 		$sql = "SELECT * FROM `money` WHERE !`deleted` AND `sum`<0 AND `id`=".$id;
-		if(!$r = mysql_fetch_assoc(query($sql)))
+		if(!$r = query_assoc($sql))
 			jsonError();
 
 		$sql = "UPDATE `money` SET
@@ -1911,6 +1978,159 @@ switch(@$_POST['op']) {
 
 		$send['i'] = utf8(invoice_spisok());
 		$send['t'] = utf8(transfer_spisok());
+		jsonSuccess($send);
+		break;
+
+	case 'salary_up':
+		if(!$worker_id = _isnum($_POST['worker_id']))
+			jsonError();
+		if(!$sum = _cena($_POST['sum']))
+			jsonError();
+		if(!$mon = _isnum($_POST['mon']))
+			jsonError();
+		if(!$year = _isnum($_POST['year']))
+			jsonError();
+
+		$about = win1251(htmlspecialchars(trim($_POST['about'])));
+
+		$sql = "INSERT INTO `zayav_expense` (
+					`ws_id`,
+					`worker_id`,
+					`sum`,
+					`txt`,
+					`mon`,
+					`year`
+				) VALUES (
+					".WS_ID.",
+					".$worker_id.",
+					".$sum.",
+					'".addslashes($about)."',
+					".$mon.",
+					".$year."
+				)";
+		query($sql);
+
+		history_insert(array(
+			'type' => 36,
+			'value' => $sum,
+			'value1' => $about,
+			'value2' => $worker_id
+		));
+
+		jsonSuccess();
+		break;
+	case 'salary_del':
+		if(!$id = _isnum($_POST['id']))
+			jsonError();
+
+		$sql = "SELECT * FROM `zayav_expense` WHERE `id`=".$id;
+		if(!$r = query_assoc($sql))
+			jsonError();
+
+		query("DELETE FROM `zayav_expense` WHERE `id`=".$id);
+
+		history_insert(array(
+			'type' => 50,
+			'value' => _cena($r['sum']),
+			'value1' => $r['worker_id']
+		));
+
+		jsonSuccess();
+		break;
+	case 'salary_zp_add':
+		if(!$worker_id = _isnum($_POST['worker_id']))
+			jsonError();
+		if(!$invoice_id = _isnum($_POST['invoice_id']))
+			jsonError();
+		if(!$sum = _cena($_POST['sum']))
+			jsonError();
+		if(!$mon = _isnum($_POST['mon']))
+			jsonError();
+		if(!$year = _isnum($_POST['year']))
+			jsonError();
+
+		$about = win1251(htmlspecialchars(trim($_POST['about'])));
+		$about = _monthDef($mon).' '.$year.($about ? ', ' : '').$about;
+
+		$sql = "INSERT INTO `money` (
+					`ws_id`,
+					`sum`,
+					`prim`,
+					`invoice_id`,
+					`expense_id`,
+					`worker_id`,
+					`year`,
+					`mon`,
+					`viewer_id_add`
+				) VALUES (
+					".WS_ID.",
+					-".$sum.",
+					'".addslashes($about)."',
+					".$invoice_id.",
+					1,
+					".$worker_id.",
+					".$year.",
+					".$mon.",
+					".VIEWER_ID."
+				)";
+		query($sql);
+
+		invoice_history_insert(array(
+			'action' => 6,
+			'table' => 'money',
+			'id' => mysql_insert_id()
+		));
+
+		history_insert(array(
+			'type' => 37,
+			'value' => $sum,
+			'value1' => $about,
+			'value2' => $worker_id
+		));
+
+		jsonSuccess();
+		break;
+	case 'salary_start_set':
+		if(!$worker_id = _isnum($_POST['worker_id']))
+			jsonError();
+		if(!$sum = _cena($_POST['sum']))
+			jsonError();
+
+		$sql = "SELECT * FROM `vk_user` WHERE `ws_id`=".WS_ID." AND `viewer_id`=".$worker_id;
+		if(!$r = query_assoc($sql))
+			jsonError();
+
+		$sMoney = query_value("
+				SELECT IFNULL(SUM(`sum`),0)
+				FROM `money`
+				WHERE `ws_id`=".WS_ID."
+				  AND `worker_id`=".$worker_id."
+				  AND `sum`<0
+				  AND !`deleted`");
+		$sExpense = query_value("
+				SELECT IFNULL(SUM(`sum`),0)
+				FROM `zayav_expense`
+				WHERE `ws_id`=".WS_ID."
+				  AND `mon`
+			      AND `worker_id`=".$worker_id);
+		$start = round($sum - $sMoney - $sExpense, 2);
+
+		query("UPDATE `vk_user` SET `salary_balans_start`=".$start." WHERE `viewer_id`=".$worker_id);
+
+		xcache_unset(CACHE_PREFIX.'viewer_'.$worker_id);
+
+		history_insert(array(
+			'type' => 45,
+			'value' => $worker_id,
+			'value1' => $sum
+		));
+
+		$send['html'] = utf8(salary_worker_spisok(array('worker_id'=>$worker_id)));
+		jsonSuccess($send);
+		break;
+	case 'salary_spisok':
+		$send['html'] = utf8(salary_worker_spisok($_POST));
+		$send['month'] = utf8(salary_monthList($_POST));
 		jsonSuccess($send);
 		break;
 }

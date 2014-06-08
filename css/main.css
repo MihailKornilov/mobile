@@ -137,24 +137,24 @@
 #zayavAdd .vkButton{margin:10px 7px 0 206px}
 
 /* Информация о заявке */
-#zayavInfo .delete{float:right;margin-top:4px}
-#zayavInfo .itab{width:100%;border-spacing:10px}
-#zayavInfo .h .z-info,#zayavInfo .itab:not(.h) .z-hist{display:none}
-#zayavInfo .z-hist .headName{margin-bottom:15px}
-#zayavInfo #left{vertical-align:top}
-#zayavInfo .headName{margin:0;padding:4px 3px}
-#zayavInfo .img_print{float:right}
-#zayavInfo .tabInfo{margin:2px 10px 15px 4px;border-spacing:8px}
-#zayavInfo .label{width:75px}
-#zayavInfo .kvit_defect{color:#777}
-#zayavInfo .dtime_add{cursor:help}
+#zayav-info .delete{float:right;margin-top:4px}
+#zayav-info .itab{width:100%;border-spacing:10px}
+#zayav-info .h .z-info,#zayav-info .itab:not(.h) .z-hist{display:none}
+#zayav-info .z-hist .headName{margin-bottom:15px}
+#zayav-info #left{vertical-align:top}
+#zayav-info .headName{margin:0;padding:4px 3px}
+#zayav-info .img_print{float:right}
+#zayav-info .tabInfo{margin:2px 10px 15px 4px;border-spacing:8px}
+#zayav-info .label{width:75px}
+#zayav-info .kvit_defect{color:#777}
+#zayav-info .dtime_add{cursor:help}
 .zayav-info-edit{border-spacing:8px}
 .zayav-info-edit .equip_spisok div{display:block;margin-bottom:5px}
 .zayav-info-edit .color_dop tt{display:inline-block;margin:0 4px;position:relative;top:-5px}
 .zayav-info-edit ._image-spisok{width:260px}
 .zayav-info-edit #imei{width:244px}
 .zayav-info-edit #serial{width:244px}
-#zayavInfo #status {
+#zayav-info #status {
 	display:inline-block;
 	border:#DDD solid 1px;
 	width:140px;
@@ -163,47 +163,70 @@
 	color:#666;
 	cursor:pointer;
 }
-#zayavInfo #status:hover{border-color:#bbd; color:#444}
-#zayavInfo #status_dtime{display:inline-block;color:#aaa;font-size:10px;margin-left:10px}
-#zayavInfo .dopl{margin-left:10px;color:#888;cursor:default}
-#zayavInfo #remind_spisok{margin:8px 0}
-#zayavInfo .headBlue.mon{margin-top:10px}
-#zayavInfo .headBlue.mon em{float:right;margin:0 5px;}
-#zayavInfo .acc{color:#07a;cursor:default}
-#zayavInfo .op{color:#090;cursor:default}
+#zayav-info #status:hover{border-color:#bbd; color:#444}
+#zayav-info #status_dtime{display:inline-block;color:#aaa;font-size:10px;margin-left:10px}
+#zayav-info .dopl{margin-left:10px;color:#888;cursor:default}
+#zayav-info .rm{margin-top:10px}
+#zayav-info #remind_spisok{margin:8px 0}
+#zayav-info .headBlue.mon{margin-top:10px}
+#zayav-info .headBlue.mon em{float:right;margin:0 5px;}
+#zayav-info .acc{color:#07a;cursor:default}
+#zayav-info .op{color:#090;cursor:default}
 .zayav_accrual_add{border-spacing:8px}
 .zayav_accrual_add .label{width:140px;text-align:right}
 .zayav_accrual_add #prim,.zayav_accrual_add #reminder_txt { width:200px; }
 .zayav_accrual_add.remind{display:none;margin-top:-8px;}
-#zayavInfo .deleting{text-align:center;color:#555}
-#zayavInfo #right{vertical-align:top;width:200px}
-#zayavInfo #foto{text-align:center;margin-bottom:10px}
-#zayavInfo .devContent{border-left:#e9edf1 solid 1px}
-#zayavInfo .devName{padding:7px 0 0 7px}
-#zayavInfo .devName a{font-weight:bold}
-#zayavInfo .devInfo{margin:7px 0 10px 7px;border-spacing:1px}
-#zayavInfo .devInfo *{font-size:10px}
-#zayavInfo .devInfo th{width:70px;color:#777;text-align:left;font-size:10px}
-#zayavInfo .goZp{font-weight:bold}
+#zayav-info .deleting{text-align:center;color:#555}
+#zayav-info #kvit_spisok{margin-bottom:8px}
+#zayav-info #ze_acc{
+	border-left:#e9edf1 solid 1px;
+	border-right:#e9edf1 solid 1px;
+	border-bottom:#e9edf1 solid 1px;
+	padding:5px 7px;
+}
+#zayav-info #ze-edit{float:right}
+.ze-edit-tab{border-spacing:8px}
+.ze-edit-tab .label{width:60px}
+.ze-spisok *{font-size:10px}
+.ze-spisok{width:100%;margin-top:-1px;border-collapse:collapse}
+.ze-spisok td{border:#dee4e8 solid 1px;padding:2px 4px}
+.ze-spisok .name{width:100px}
+.ze-spisok .sum{text-align:right;width:50px;white-space:nowrap;cursor:default}
+.ze-spisok .itog{text-align:right}
+/* Изменение списка расходов в заявке */
+#_ze-edit .ptab{margin-bottom:6px}
+#_ze-edit .zetxt{width:142px;margin-right:5px}
+#_ze-edit ._select{margin-right:5px}
+#_ze-edit .zesum{width:40px;margin-right:3px;text-align:right}
+#_ze-edit ._dropdown{margin-left:4px}
+#zayav-info #right{vertical-align:top;width:200px}
+#zayav-info #foto{text-align:center;margin-bottom:10px}
+#zayav-info .devContent{border-left:#e9edf1 solid 1px}
+#zayav-info .devName{padding:7px 0 0 7px}
+#zayav-info .devName a{font-weight:bold}
+#zayav-info .devInfo{margin:7px 0 10px 7px;border-spacing:1px}
+#zayav-info .devInfo *{font-size:10px}
+#zayav-info .devInfo th{width:70px;color:#777;text-align:left;font-size:10px}
+#zayav-info .goZp{font-weight:bold}
 .zayav_zp_add center{margin-bottom:15px}
 .zayav_zp_add center,.zayav_zp_add center b{font-size:12px}
 .zayav_zp_add #version{width:188px}
 .zayav_zp_set,.zayav_zp_set b{font-size:12px}
-#zayavInfo #zpSpisok{margin:7px 7px 60px}
-#zayavInfo #zpSpisok *{font-size:10px}
-#zayavInfo #zpSpisok .unit{border-bottom:#DEE3EF solid 1px;padding-bottom:4px;margin-bottom:7px}
-#zayavInfo #zpSpisok .unit:not(:hover) .zakaz,#zayavInfo #zpSpisok .unit:not(:hover) .set{visibility:hidden}
-#zayavInfo #zpSpisok .bu{font-weight:bold;margin-right:4px;color:#800}
-#zayavInfo #zpSpisok .zakaz{color:#567f9e}
-#zayavInfo #zpSpisok .set{color:#567f9e;float:right}
-#zayavInfo #zpSpisok .version{color:#333}
-#zayavInfo #zpSpisok .color{color:#777}
-#zayavInfo #zpSpisok .zakaz_ok{color:#933}
-#zayavInfo #zpSpisok .avai{float:right;color:#393;margin-left:4px}
-#zayavInfo #zpSpisok ._empty{margin:5px 0;padding:20px 10px;font-size:12px}
-#zayavInfo #zpSpisok .unit:not(:hover) .image{display:none}
-#zayavInfo #zpSpisok .image{position:relative}
-#zayavInfo #zpSpisok .image div{
+#zayav-info #zpSpisok{margin:7px 7px 60px}
+#zayav-info #zpSpisok *{font-size:10px}
+#zayav-info #zpSpisok .unit{border-bottom:#DEE3EF solid 1px;padding-bottom:4px;margin-bottom:7px}
+#zayav-info #zpSpisok .unit:not(:hover) .zakaz,#zayav-info #zpSpisok .unit:not(:hover) .set{visibility:hidden}
+#zayav-info #zpSpisok .bu{font-weight:bold;margin-right:4px;color:#800}
+#zayav-info #zpSpisok .zakaz{color:#567f9e}
+#zayav-info #zpSpisok .set{color:#567f9e;float:right}
+#zayav-info #zpSpisok .version{color:#333}
+#zayav-info #zpSpisok .color{color:#777}
+#zayav-info #zpSpisok .zakaz_ok{color:#933}
+#zayav-info #zpSpisok .avai{float:right;color:#393;margin-left:4px}
+#zayav-info #zpSpisok ._empty{margin:5px 0;padding:20px 10px;font-size:12px}
+#zayav-info #zpSpisok .unit:not(:hover) .image{display:none}
+#zayav-info #zpSpisok .image{position:relative}
+#zayav-info #zpSpisok .image div{
 	position:absolute;
 	top:0;
 	left:-94px;
@@ -321,6 +344,9 @@ table.zayavNomerTab td{vertical-align:top}
 
 
 
+._hist-un .z td{border:none}
+._hist-un .z .ze-spisok td{border:#ddd solid 1px}
+
 
 
 .remind .left{padding:0 8px}
@@ -436,6 +462,29 @@ table.zayavNomerTab td{vertical-align:top}
 .invoice-history .action{width:80px}
 .invoice-history .balans{width:70px;text-align:right}
 
+.salary#report .headName{margin:10px}
+.salary#report .headName em{font-size:12px;font-weight:bold}
+.salary#report .headName._busy{background-position:right center}
+.salary #spisok{margin:10px}
+.salary .balans{text-align:right}
+.salary .uhead .a{float:right}
+.salary .uhead a{color:#68A;}
+.salary .uhead a:hover{color:#357}
+.salary h1{margin-bottom:5px}
+.salary a.rate-set{color:#d33;float:right}
+.salary a.rate-set:hover{color:#d33}
+.salary .years{margin-top:25px}
+.salary #monthList em{float:right;font-size:10px}
+.salary .show{background-color:#ffc}
+.salary .s-zayav{display:inline-block;padding:2px 5px}
+.salary .about tt{font-size:10px;color:#888;margin-left:7px}
+.salary .zp-head{margin:17px 0 3px}
+.salary .zp-head span{float:right}
+.salary-tab{border-spacing:8px}
+.salary-tab #about{width:230px}
+.salary-tab #day{width:30px}
+.salary-tab .img_edit{position:relative;top:-4px;left:4px}
+
 
 
 
@@ -523,7 +572,11 @@ table.zayavNomerTab td{vertical-align:top}
 #setup_expense .use{width:55px;text-align:center}
 #setup_expense .set{width:35px}
 
-
+#setup_zayav_expense .name{width:130px}
+#setup_zayav_expense td.name{cursor:move}
+#setup_zayav_expense .dop{width:150px}
+#setup_zayav_expense .use{width:55px;text-align:center}
+#setup_zayav_expense .set{width:35px}
 
 
 

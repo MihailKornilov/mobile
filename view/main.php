@@ -80,6 +80,7 @@ function _cacheClear($ws_id=WS_ID) {
 	xcache_unset(CACHE_PREFIX.'invoice');
 	xcache_unset(CACHE_PREFIX.'income');
 	xcache_unset(CACHE_PREFIX.'expense');
+	xcache_unset(CACHE_PREFIX.'zayav_expense');
 	xcache_unset(CACHE_PREFIX.'remind_active'.$ws_id);
 	xcache_unset(CACHE_PREFIX.'workshop_'.$ws_id);
 	GvaluesCreate();
@@ -172,6 +173,11 @@ function GvaluesCreate() {//Составление файла G_values.js
 		"\n".'DEVPLACE_SPISOK='._selJson(_devPlace()).','.
 		"\n".'DEV_SPISOK='.query_selJson("SELECT `id`,`name` FROM `base_device` ORDER BY `sort`").','.
 		"\n".'DEV_ASS=_toAss(DEV_SPISOK),'.
+		"\n".'ZE_SPISOK='.query_selJson("SELECT `id`,`name` FROM `setup_zayav_expense` ORDER BY `sort`").','.
+		"\n".'ZE_TXT='.query_ptpJson("SELECT `id`,1 FROM `setup_zayav_expense` WHERE `dop`=1").','.
+		"\n".'ZE_WORKER='.query_ptpJson("SELECT `id`,1 FROM `setup_zayav_expense` WHERE `dop`=2").','.
+		"\n".'ZE_ZP='.query_ptpJson("SELECT `id`,1 FROM `setup_zayav_expense` WHERE `dop`=3").','.
+		"\n".'ZE_DOP='._selJson(_zayavExpenseDop()).','.
 		"\n".'COUNTRY_SPISOK=['.
 			'{uid:1,title:"Россия"},'.
 			'{uid:2,title:"Украина"},'.

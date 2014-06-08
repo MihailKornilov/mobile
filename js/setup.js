@@ -1,4 +1,4 @@
-var AJAX_SETUP = SITE + '/ajax/setup.php?' + VALUES;
+var AJAX_SETUP = '/ajax/setup.php?' + VALUES;
 
 $(document)
 	.on('click', '#setup_info #devs div', function() {
@@ -552,6 +552,133 @@ $(document)
 			$.post(AJAX_SETUP, send, function(res) {
 				if(res.success) {
 					$('#spisok').html(res.html);
+					dialog.close();
+					_msg('Удалено!');
+					sortable();
+				} else
+					dialog.abort();
+			}, 'json');
+		}
+	})
+
+	.on('click', '#setup_zayav_expense .add', function() {
+		var t = $(this),
+			html =
+			'<table class="setup-tab">' +
+				'<tr><td class="label">Наименование:<td><input id="name" type="text" maxlength="50" />' +
+				'<tr><td class="label topi">Дополнительное поле:<td><input id="dop" type="hidden" />' +
+			'</table>',
+			dialog = _dialog({
+				width:440,
+				head:'Добавление новой категории расхода заявки',
+				content:html,
+				submit:submit
+			});
+		$('#name').focus().keyEnter(submit);
+		$('#dop')._radio({light:1,spisok:ZE_DOP});
+		function submit() {
+			var send = {
+				op:'zayav_expense_add',
+				name: $.trim($('#name').val()),
+				dop:$('#dop').val()
+			};
+			if(!send.name) {
+				dialog.bottom.vkHint({
+					msg:'<SPAN class=red>Не указано наименование</SPAN>',
+					top:-47,
+					left:131,
+					indent:50,
+					show:1,
+					remove:1
+				});
+				$('#name').focus();
+			} else {
+				dialog.process();
+				$.post(AJAX_SETUP, send, function(res) {
+					if(res.success) {
+						$('.spisok').html(res.html);
+						dialog.close();
+						_msg('Внесено!');
+						sortable();
+					} else
+						dialog.abort();
+				}, 'json');
+			}
+		}
+	})
+	.on('click', '#setup_zayav_expense .img_edit', function() {
+		var t = $(this);
+		while(t[0].tagName != 'DD')
+			t = t.parent();
+		var id = t.attr('val'),
+			name = t.find('.name').html(),
+			dop = t.find('.hdop').val(),
+			html =
+				'<table class="setup-tab">' +
+					'<tr><td class="label">Наименование:<td><input id="name" type="text" maxlength="50" value="' + name + '" />' +
+					'<tr><td class="label topi">Дополнительное поле:<td><input id="dop" type="hidden" value="' + dop + '" />' +
+				'</table>',
+			dialog = _dialog({
+				width:440,
+				head:'Редактирование категории расхода заявки',
+				content:html,
+				butSubmit:'Сохранить',
+				submit:submit
+			});
+		$('#name').focus().keyEnter(submit);
+		$('#dop')._radio({light:1,spisok:ZE_DOP});
+		function submit() {
+			var send = {
+				op:'zayav_expense_edit',
+				id:id,
+				name:$.trim($('#name').val()),
+				dop:$('#dop').val()
+			};
+			if(!send.name) {
+				dialog.bottom.vkHint({
+					msg:'<SPAN class=red>Не указано наименование</SPAN>',
+					top:-47,
+					left:131,
+					indent:50,
+					show:1,
+					remove:1
+				});
+				$('#name').focus();
+			} else {
+				dialog.process();
+				$.post(AJAX_SETUP, send, function(res) {
+					if(res.success) {
+						$('.spisok').html(res.html);
+						dialog.close();
+						_msg('Сохранено!');
+						sortable();
+					} else
+						dialog.abort();
+				}, 'json');
+			}
+		}
+	})
+	.on('click', '#setup_zayav_expense .img_del', function() {
+		var t = $(this),
+			dialog = _dialog({
+				top:90,
+				width:300,
+				head:'Удаление категории расхода заявки',
+				content:'<center><b>Подтвердите удаление<br />категории расхода заявки.</b></center>',
+				butSubmit:'Удалить',
+				submit:submit
+			});
+		function submit() {
+			while(t[0].tagName != 'DD')
+				t = t.parent();
+			var send = {
+				op:'zayav_expense_del',
+				id:t.attr('val')
+			};
+			dialog.process();
+			$.post(AJAX_SETUP, send, function(res) {
+				if(res.success) {
+					$('.spisok').html(res.html);
 					dialog.close();
 					_msg('Удалено!');
 					sortable();

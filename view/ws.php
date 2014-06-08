@@ -555,6 +555,33 @@ function _zayavNomerLink($arr, $noHint=0) { //Вывод номеров заявок с возможность
 	}
 	return $arr;
 }//_zayavNomerLink()
+function _zayavLink($arr, $noHint=0) {
+	$ids = array();
+	$arrIds = array();
+	foreach($arr as $key => $r)
+		if(!empty($r['zayav_id'])) {
+			$ids[$r['zayav_id']] = 1;
+			$arrIds[$r['zayav_id']][] = $key;
+		}
+	if(empty($ids))
+		return $arr;
+	$sql = "SELECT
+	            *,
+	            ".$noHint." `nohint`
+			FROM `zayav`
+			WHERE `ws_id`=".WS_ID."
+			  AND `id` IN (".implode(',', array_keys($ids)).")";
+	$q = query($sql);
+	while($r = mysql_fetch_assoc($q))
+		foreach($arrIds[$r['id']] as $id) {
+			$arr[$id] += array(
+				'zayav_link' => _zayavNomerLinkForming($r),
+				'zayav_status_color' => _zayavStatusColor($r['zayav_status']),
+				'zayav_add' => FullData($r['dtime_add'], 1)
+			);
+		}
+	return $arr;
+}//_zayavLink()
 function _zayavBaseDeviceIds($client_id=0) { //список id устройств, которые используются в заявках
 	$ids = array();
 	$sql = "SELECT `b`.`id`
@@ -616,7 +643,53 @@ function _zayavImg($z, $size='s') {
 	$img = _imageGet($v);
 	return $img['zayav'.$z['id']]['id'] ? $img['zayav'.$z['id']]['img'] : $img['dev'.$z['base_model_id']]['img'];
 }//_zayavImg()
-
+function _zayavExpense($type_id=false, $i='name') {//Список расходов заявки
+	if(!defined('ZE_LOADED') || $type_id === false) {
+		$key = CACHE_PREFIX.'zayav_expense';
+		$arr = xcache_get($key);
+		if(empty($arr)) {
+			$sql = "SELECT * FROM `setup_zayav_expense` ORDER BY `sort`";
+			$q = query($sql);
+			while($r = mysql_fetch_assoc($q))
+				$arr[$r['id']] = array(
+					'name' => $r['name'],
+					'dop' => $r['dop']
+				);
+			xcache_set($key, $arr, 86400);
+		}
+		if(!defined('ZE_LOADED')) {
+			foreach($arr as $id => $r) {
+				define('ZE_'.$id, $r['name']);
+				define('ZE_TXT_'.$id, $r['dop'] == 1);
+				define('ZE_WORKER_'.$id, $r['dop'] == 2);
+				define('ZE_ZP_'.$id, $r['dop'] == 3);
+			}
+			define('ZE_0', '');
+			define('ZE_TXT_0', '');
+			define('ZE_WORKER_0', 0);
+			define('ZE_ZP_0', 0);
+			define('ZE_LOADED', true);
+		}
+	}
+	if($type_id === false)
+		return $arr;
+	if($i == 'txt')
+		return constant('ZE_TXT_'.$type_id);
+	if($i == 'worker')
+		return constant('ZE_WORKER_'.$type_id);
+	if($i == 'zp')
+		return constant('ZE_ZP_'.$type_id);
+	return constant('ZE_'.$type_id);
+}//_zayavExpense()
+function _zayavExpenseDop($id=false) {
+	$arr =  array(
+		0 => 'нет',
+		1 => 'текстовое поле',
+		2 => 'список сотрудников',
+		3 => 'список запчастей'
+	);
+	return $id !== false ? $arr[$id] : $arr;
+}//_zayavExpenseDop()
 
 function zayav_add($v=array()) {
 	$sql = "SELECT `id`,`name` FROM `setup_fault` ORDER BY SORT";
@@ -975,7 +1048,7 @@ function zayav_info($zayav_id) {
 
 	$status = _zayavStatusName();
 	unset($status[0]);
-
+	$expense = zayav_expense_spisok($z, 'all');
 	$history = history(array('zayav_id'=>$zayav_id));
 
 	return '<script type="text/javascript">'.
@@ -996,8 +1069,14 @@ function zayav_info($zayav_id) {
 			'color_id:'.$z['color_id'].','.
 			'color_dop:'.$z['color_dop'].','.
 			'equip:"'.addslashes(devEquipCheck($z['base_device_id'], $z['equip'])).'",'.
-			'images:"'.addslashes(_imageAdd(array('owner'=>'zayav'.$zayav_id))).'"'.
+			'images:"'.addslashes(_imageAdd(array('owner'=>'zayav'.$zayav_id))).'",'.
+			'expense:['.$expense['json'].'],'.
+			'zp_avai:'.zayav_zp_avai($z).
 		'},'.
+		'WORKER_SPISOK='.query_selJson("SELECT `viewer_id`,CONCAT(`first_name`,' ',`last_name`) FROM `vk_user`
+										 WHERE `ws_id`=".WS_ID."
+										 ORDER BY `dtime_add`").','.
+//		'WORKER_ASS=_toAss(WORKER_SPISOK),'.
 		'PRINT={'.
 			'dtime:"'.FullDataTime($z['dtime_add']).'",'.
 			'device:"'._deviceName($z['base_device_id']).'<b>'._vendorName($z['base_vendor_id'])._modelName($z['base_model_id']).'</b>",'.
@@ -1007,10 +1086,10 @@ function zayav_info($zayav_id) {
 			($z['equip'] ? 'equip:"'.zayavEquipSpisok($z['equip']).'",' : '').
 			'client:"'._clientLink($z['client_id'], 1).'",'.
 			'telefon:"'.query_value("SELECT `telefon` FROM `client` WHERE id=".$z['client_id']).'",'.
-			'defect:"'.addslashes(str_replace("\n", ' ', query_value("SELECT `txt` FROM `vk_comment` WHERE `status` AND `table_name`='zayav' AND `table_id`=".$zayav_id." AND `parent_id`=0 ORDER BY `id` DESC"))).'"'.
+			'defect:"'.addslashes(str_replace("\n", ' ', query_value("SELECT `txt` FROM `vk_comment` WHERE `status` AND `table_name`='zayav' AND `table_id`=".$zayav_id." AND !`parent_id` ORDER BY `id` DESC"))).'"'.
 		'};'.
 	'</script>'.
-	'<div id="zayavInfo">'.
+	'<div id="zayav-info">'.
 		'<div id="dopLinks">'.
 			'<a class="img_del delete'.(!empty($money) ?  ' dn': '').'"></a>'.
 			'<a class="link info sel">Информация</a>'.
@@ -1041,7 +1120,13 @@ function zayav_info($zayav_id) {
 						'<span class="dopl'.(DOPL ? '' : ' dn')._tooltip('Необходимая доплата', -60).(DOPL > 0 ? '+' : '').DOPL.'</span>'.
 				'</table>'.
 				'<div id="kvit_spisok">'.zayav_kvit($zayav_id).'</div>'.
-				'<div class="headBlue">Задания<a class="add remind_add">Добавить задание</a></div>'.
+				'<div class="headBlue">Расходы</div>'.
+				'<div id="ze_acc">'.
+					'<a id="ze-edit">Изменить</a>'.
+					'<h1>'.zayav_acc_sum($z).'</h1>'.
+				'</div>'.
+				$expense['html'].
+				'<div class="headBlue rm">Задания<a class="add remind_add">Добавить задание</a></div>'.
 				'<div id="remind_spisok">'.remind_spisok(remind_data(1, array('zayav'=>$z['id']))).'</div>'.
 				_vkComment('zayav', $z['id']).
 				'<div class="headBlue mon">Начисления и платежи'.
@@ -1094,6 +1179,99 @@ function zayav_kvit($zayav_id) {
 	$send .= '</table>';
 	return $send;
 }//zayav_kvit()
+function zayav_acc_sum($z) {
+	return $z['accrual_sum'] ? 'Общая сумма начислений: <b>'.$z['accrual_sum'].'</b> руб.' : 'Начислений нет.';
+}//zayav_acc_sum()
+function zayav_expense_test($v) {// Проверка корректности данных расходов заявки при внесении в базу
+	if(empty($v))
+		return array();
+	$send = array();
+	$ex = explode(',', $v);
+	foreach($ex as $r) {
+		$ids = explode(':', $r);
+		if(!_isnum($ids[0]))
+			return false;
+		if((_zayavExpense($ids[0], 'worker') || _zayavExpense($ids[0], 'zp')) && !_isnum($ids[1]))
+			return false;
+		if(_zayavExpense($ids[0], 'txt'))
+			$ids[1] = win1251(htmlspecialchars(trim($ids[1])));
+		if(!_zayavExpense($ids[0], 'txt') && !_zayavExpense($ids[0], 'worker') && !_zayavExpense($ids[0], 'zp'))
+			$ids[1] = '';
+		if(!_cena($ids[2]))
+			return false;
+		if(_zayavExpense($ids[0], 'worker') && !_isnum($ids[3]))
+			return false;
+		if(_zayavExpense($ids[0], 'worker') && !_isnum($ids[4]))
+			return false;
+		if(!$ids[1]) {
+			$ids[3] = 0;
+			$ids[4] = 0;
+		}
+		$send[] = $ids;
+	}
+	return $send;
+}//zayav_expense_test()
+function zayav_expense_spisok($z, $type='html') {//Получение списка расходов заявки
+	$sql = "SELECT * FROM `zayav_expense` WHERE `zayav_id`=".$z['id']." ORDER BY `id`";
+	$q = query($sql);
+	$arr = array();
+	while($r = mysql_fetch_assoc($q))
+		$arr[$r['id']] = $r;
+
+	$arr = _zpLink($arr);
+
+	$html = '<table class="ze-spisok">';
+	$json = array();
+	$array = array();
+	$expense_sum = 0;
+	foreach($arr as $r) {
+		$sum = round($r['sum'], 2);
+		$expense_sum += $sum;
+		$html .= '<tr>'.
+			'<td class="name">'._zayavExpense($r['category_id']).
+			'<td>'.(_zayavExpense($r['category_id'], 'txt') ? $r['txt'] : '').
+				(_zayavExpense($r['category_id'], 'worker') ?
+					'<a href="'.URL.'&p=report&d=salary&id='.$r['worker_id'].'&year='.$r['year'].'&mon='.$r['mon'].'&acc_id='.$r['id'].'">'.
+						_viewer($r['worker_id'], 'name').
+					'</a>'
+				: '').
+				(_zayavExpense($r['category_id'], 'zp') ? $r['zp_short'] : '').
+			'<td class="sum">'.$sum.' р.';
+		$json[] = '['.
+			$r['category_id'].','.
+			(_zayavExpense($r['category_id'], 'txt') ? '"'.$r['txt'].'"' : '').
+			(_zayavExpense($r['category_id'], 'worker') ? intval($r['worker_id']) : '').
+			(_zayavExpense($r['category_id'], 'zp') ? intval($r['zp_id']) : '').','.
+			$sum.','.
+			intval($r['mon']).','.
+			intval($r['year']).
+		']';
+		$array[] = array(
+			intval($r['category_id']),
+				(_zayavExpense($r['category_id'], 'txt') ? $r['txt'] : '').
+				(_zayavExpense($r['category_id'], 'worker') ? intval($r['worker_id']) : '').
+				(_zayavExpense($r['category_id'], 'zp') ? intval($r['zp_id']) : ''),
+			$sum,
+			intval($r['mon']),
+			intval($r['year'])
+		);
+	}
+	if(!empty($arr))
+		$html .= '<tr><td colspan="2" class="itog">Итог:<td class="sum"><b>'.$expense_sum.'</b> р.'.
+				 '<tr><td colspan="2" class="itog">Остаток:<td class="sum">'.($z['accrual_sum'] - $expense_sum).' р.';
+	$html .= '</table>';
+	switch($type) {
+		default:
+		case 'html': return $html;
+		case 'json': return implode(',', $json);
+		case 'array': return $array;
+		case 'all': return array(
+			'html' => $html,
+			'json' => implode(',', $json),
+			'array' => $array
+		);
+	}
+}//zayav_expense_spisok()
 function zayav_info_money($zayav_id) {
 	$sql = "(
 		SELECT
@@ -1204,7 +1382,26 @@ function zayav_zp($z) {
 
 	return $send;
 }//zayav_zp()
-
+function zayav_zp_avai($z) {
+	$sql = "SELECT
+				`id`,
+				`compat_id`,
+				`name_id`,
+				`version`
+			FROM `zp_catalog` `c`
+			WHERE `c`.`base_device_id`=".$z['base_device_id']."
+			  AND `c`.`base_vendor_id`=".$z['base_vendor_id']."
+			  AND `c`.`base_model_id`=".$z['base_model_id'];
+	$q = query($sql);
+	$send = array();
+	while($r = mysql_fetch_assoc($q))
+		$send[] = '{'.
+			'uid:'.($r['compat_id'] ? $r['compat_id'] : $r['id']).','.
+			'title:"'.addslashes(_zpName($r['name_id'])).'"'.
+			($r['version'] ? ',content:"'.addslashes(_zpName($r['name_id']).'<span>'.$r['version'].'</span>').'"' : '').
+		'}';
+	return '['.implode(',',$send).']';
+}//zayav_zp_avai()
 
 
 
@@ -1228,7 +1425,7 @@ function _zpLink($arr) {
 	        WHERE `id` IN (".implode(',', $ids).")";
 		$q = query($sql);
 		while($r = mysql_fetch_assoc($q))
-			foreach($ass[$r['id']] as $id)
+			foreach($ass[$r['id']] as $id) {
 				$arr[$id]['zp_link'] =
 					'<a href="'.URL.'&p=zp&d=info&id='.$r['id'].'">'.
 						'<b>'._zpName($r['name_id']).'</b> для '.
@@ -1236,6 +1433,13 @@ function _zpLink($arr) {
 						_vendorName($r['base_vendor_id']).
 						_modelName($r['base_model_id']).
 					'</a>';
+				$arr[$id]['zp_short']  =
+					'<a href="'.URL.'&p=zp&d=info&id='.$r['id'].'">'.
+						'<b>'._zpName($r['name_id']).'</b> '.
+						_vendorName($r['base_vendor_id']).
+						_modelName($r['base_model_id']).
+					'</a>';
+			}
 	}
 	return $arr;
 }//_zpLink()
@@ -1655,7 +1859,8 @@ function report() {
 	$pages = array(
 		'history' => 'История действий',
 		'remind' => 'Задания'.REMIND_ACTIVE.'<div class="img_add report_remind_add"></div>',
-		'money' => 'Деньги'
+		'money' => 'Деньги',
+		'salary' => 'З/п сотрудников'
 	);
 
 	$rightLink = '<div class="rightLink">';
@@ -1720,6 +1925,21 @@ function report() {
 					'<a class="link'.($d1 == 'stat' ? ' sel' : '').'" href="'.URL.'&p=report&d=money&d1=stat">Статистика</a>'.
 				'</div>'.
 				$left;
+			break;
+		case 'salary':
+			if($worker_id = _isnum(@$_GET['id'])) {
+				$v = salaryFilter(array(
+					'worker_id' => $worker_id,
+					'mon' => intval(@$_GET['mon']),
+					'year' => intval(@$_GET['year']),
+					'acc_id' => intval(@$_GET['acc_id'])
+				));
+				$left = salary_worker($v);
+				if(defined('WORKER_OK'))
+					$right = '<input type="hidden" id="year" value="'.$v['year'].'" />'.
+							 '<div id="monthList">'.salary_monthList($v).'</div>';
+			} else
+				$left = salary();
 			break;
 	}
 
@@ -1818,6 +2038,17 @@ function history_types($v, $filter) {
 		case 29: return 'Изменение местонахождения устройства'.
 						($filter['zayav_id'] ? '' : ' по заявке '.$v['zayav_link']).
 						' при внесении платежа:<div class="changes">'.$v['value'].'</div>';
+		case 30: return 'Изменение расходов'.($filter['zayav_id'] ? '' : ' по заявке '.$v['zayav_link']).':<div class="changes z">'.$v['value'].'</div>';
+
+		case 36: return
+			'Внесение начисления з/п на сумму <b>'.$v['value'].'</b> '.
+			($v['value1'] ? '<em>('.$v['value1'].')</em> ' : '').
+			'для сотрудника <u>'._viewer($v['value2'], 'name').'</u>.';
+		case 37: return
+			'Выдача з/п на сумму <b>'.$v['value'].'</b> '.
+			($v['value1'] ? '<em>('.$v['value1'].')</em> ' : '').
+			'для сотрудника <u>'._viewer($v['value2'], 'name').'</u>.';
+
 
 		case 39:
 			return 'Перевод '.
@@ -1831,21 +2062,32 @@ function history_types($v, $filter) {
 					).
 					'в сумме <b>'.$v['value'].'</b> руб. '.
 					($v['value3'] ? '<span class="prim">('.$v['value3'].')</span>' : '');
+		case 45: return 'Установка баланса з/п в сумме <b>'.$v['value1'].'</b> руб. '.
+		'для сотрудника <u>'._viewer($v['value'], 'name').'</u>. ';
 
+		case 50: return 'Удаление начисления з/п в сумме <b>'.$v['value'].'</b> руб. у сотрудника <u>'._viewer($v['value1'], 'name').'</u>.';
 
 		case 1001: return 'В настройках: добавление нового сотрудника <u>'._viewer($v['value'], 'name').'</u>.';
 		case 1002: return 'В настройках: удаление сотрудника <u>'._viewer($v['value'], 'name').'</u>.';
+
 		case 1003: return 'В настройках: изменение названия мастерской:<div class="changes">'.$v['value'].'</div>';
 		case 1004: return 'В настройках: мастерская удалена.';
+
 		case 1005: return 'В настройках: внесение новой категории расходов мастерской <u>'.$v['value'].'</u>.';
 		case 1006: return 'В настройках: изменение данных категории расходов мастерской <u>'.$v['value'].'</u>:<div class="changes">'.$v['value1'].'</div>';
 		case 1007: return 'В настройках: удаление категории расходов мастерской <u>'.$v['value'].'</u>.';
+
 		case 1008: return 'В настройках: внесение нового счёта <u>'.$v['value'].'</u>.';
 		case 1009: return 'В настройках: изменение данных счёта <u>'.$v['value'].'</u>:<div class="changes">'.$v['value1'].'</div>';
 		case 1010: return 'В настройках: удаление счёта <u>'.$v['value'].'</u>.';
+
 		case 1011: return 'В настройках: внесение нового вида платежа <u>'.$v['value'].'</u>.';
 		case 1012: return 'В настройках: изменение вида платежа <u>'.$v['value'].'</u>:<div class="changes">'.$v['value1'].'</div>';
 		case 1013: return 'В настройках: удаление вида платежа <u>'.$v['value'].'</u>.';
+
+		case 1014: return '<a href="'.URL.'&p=setup&d=zayavexpense">В настройках:</a> внесение новой категории расходов заявки <u>'.$v['value'].'</u>.';
+		case 1015: return '<a href="'.URL.'&p=setup&d=zayavexpense">В настройках:</a> изменение данных категории расходов заявки <u>'.$v['value'].'</u>:<div class="changes">'.$v['value1'].'</div>';
+		case 1016: return '<a href="'.URL.'&p=setup&d=zayavexpense">В настройках:</a> удаление данных категории расходов заявки <u>'.$v['value'].'</u>.';
 
 		default: return $v['type'];
 	}
@@ -2713,9 +2955,6 @@ function invoice_history_insert_sql($invoice_id, $v) {
 	query($sql);
 }
 
-
-
-
 function statistic() {
 	$sql = "SELECT
 				SUM(`sum`) AS `sum`,
@@ -2752,6 +2991,306 @@ function statistic() {
 	'<script type="text/javascript" src="'.SITE.'/js/statistic.js"></script>';
 }//statistic()
 
+function salary() {
+	return
+		'<div class="headName">Начисления зарплаты сотрудников</div>'.
+		'<div id="spisok">'.salary_spisok().'</div>';
+}//salary()
+function salary_spisok() {
+	$sql = "SELECT
+				`u`.`viewer_id`,
+				`u`.`rate_sum`,
+				`u`.`rate_period`,
+				CONCAT(`u`.`first_name`,' ',`u`.`last_name`) AS `name`,
+				IFNULL(SUM(`m`.`sum`),0) AS `zp`
+			FROM `vk_user` AS `u`
+				LEFT JOIN `money` AS `m`
+				ON `u`.`viewer_id`=`m`.`worker_id`
+					AND !`m`.`deleted`
+					AND `m`.`worker_id`
+					AND `m`.`sum`<0
+			WHERE `u`.`ws_id`=".WS_ID."
+			GROUP BY `u`.`viewer_id`
+			ORDER BY `u`.`dtime_add`";
+	$q = query($sql);
+	$worker = array();
+	while($r = mysql_fetch_assoc($q))
+		$worker[$r['viewer_id']] = $r;
+
+	//Начисления с заявками
+	$sql = "SELECT
+ 				`e`.`worker_id`,
+				IFNULL(SUM(`e`.`sum`),0) AS `sum`
+			FROM `zayav_expense` AS `e`,
+			 	 `zayav` AS `z`
+			WHERE `z`.`ws_id`=".WS_ID."
+			  AND `e`.`worker_id`
+			  AND `z`.`id`=`e`.`zayav_id`
+			  AND !`z`.`deleted`
+			GROUP BY `e`.`worker_id`";
+	$q = query($sql);
+	while($r = mysql_fetch_assoc($q))
+		$worker[$r['worker_id']]['zp'] += $r['sum'];
+
+	//Начисления без заявок
+	$sql = "SELECT
+ 				`u`.`viewer_id`,
+				IFNULL(SUM(`e`.`sum`),0) AS `ze`
+			FROM `vk_user` AS `u`
+				LEFT JOIN `zayav_expense` AS `e`
+				ON `u`.`viewer_id`=`e`.`worker_id`
+					AND `e`.`worker_id`
+					AND !`e`.`zayav_id`
+			WHERE `u`.`ws_id`=".WS_ID."
+			GROUP BY `u`.`viewer_id`
+			ORDER BY `u`.`dtime_add`";
+	$q = query($sql);
+
+	$send = '<table class="_spisok">'.
+		'<tr><th>Фио'.
+			'<th>Ставка'.
+			'<th>Баланс';
+	while($r = mysql_fetch_assoc($q)) {
+		$w = $worker[$r['viewer_id']];
+		$start = _viewer($r['viewer_id'], 'salary_balans_start');
+		$balans = $start == -1 ? '' : round($w['zp'] + $r['ze'] + $start, 2);
+		$send .=
+			'<tr><td class="fio"><a href="'.URL.'&p=report&d=salary&id='.$r['viewer_id'].'" class="name">'.$w['name'].'</a>'.
+				'<td class="rate">'.($w['rate_sum'] == 0 ? '' : round($w['rate_sum'], 2)).
+				'<td class="balans" style="color:#'.($balans < 0 ? 'A00' : '090').'">'.$balans;
+	}
+	$send .= '</table>';
+	return $send;
+}//salary_spisok()
+function salary_monthList($v) {
+	$filter = salaryFilter($v);
+
+	$acc = array();
+	$zp = array();
+	for($n = 1; $n <= 12; $n++) {
+		$acc[$n] = 0;
+		$zp[$n] = 0;
+	}
+
+	//Получение сумм автоматичиских, ручных начислений и по заявкам
+	$sql = "SELECT
+	            `mon`,
+				SUM(`sum`) AS `sum`
+			FROM `zayav_expense`
+			WHERE `worker_id`=".$filter['worker_id']."
+			  AND `year`=".$filter['year']."
+			GROUP BY DATE_FORMAT(`mon`,'%m')";
+	$q = query($sql);
+	while($r = mysql_fetch_assoc($q))
+		$acc[intval($r['mon'])] = round($r['sum']);
+
+	//Получение сумм зп
+	$sql = "SELECT
+	            `mon`,
+				SUM(`sum`) AS `sum`
+			FROM `money`
+			WHERE !`deleted`
+			  AND `worker_id`=".$filter['worker_id']."
+			  AND `year`=".$filter['year']."
+			GROUP BY DATE_FORMAT(`mon`,'%m')";
+	$q = query($sql);
+	while($r = mysql_fetch_assoc($q))
+		$zp[intval($r['mon'])] = abs(round($r['sum'], 2));
+
+	$mon = array();
+	foreach(_monthDef(0, 1) as $i => $r)
+		$mon[$i] = $r.($acc[$i] || $zp[$i]? '<em>'.$acc[$i].'/'.$zp[$i].'</em>' : '');
+	return _radio('salmon', $mon, $filter['mon'], 1);
+}//salary_monthList()
+function salaryFilter($v) {
+	$v = array(
+		'worker_id' => _isnum(@$v['worker_id']),
+		'mon' => _isnum(@$v['mon']) ? intval($v['mon']) : intval(strftime('%m')),
+		'year' => _isnum(@$v['year']) ? intval($v['year']) : intval(strftime('%Y')),
+		'acc_id' => _isnum(@$v['acc_id'])
+	);
+	$v['month'] = _monthDef($v['mon'], 1).' '.$v['year'];
+	$v['year-mon'] = $v['year'].'-'.($v['mon'] < 10 ? 0 : '').$v['mon'];
+	return $v;
+}//salaryFilter()
+function salary_worker($v) {
+	$filter = salaryFilter($v);
+	if(!query_value("SELECT COUNT(*) FROM `vk_user` WHERE `viewer_id`=".$filter['worker_id']))
+		return '<h2>Сотрудника не существует.</h2>';
+	define('WORKER_OK', true);
+	$year = array();
+	for($n = 2014; $n <= $filter['year']; $n++)
+		$year[$n] = $n;
+	return
+	'<script type="text/javascript">'.
+		'var WORKER_ID='.$filter['worker_id'].','.
+			'MON='.$filter['mon'].','.
+			'MON_SPISOK='._selJson(_monthDef(0, 1)).','.
+			'YEAR='.$filter['year'].','.
+			'YEAR_SPISOK='._selJson($year).','.
+			'RATE={'.
+				'sum:'.round(_viewer($filter['worker_id'], 'rate_sum'), 2).','.
+				'period:'._viewer($filter['worker_id'], 'rate_period').','.
+				'day:'._viewer($filter['worker_id'], 'rate_day').
+			'};'.
+	'</script>'.
+	'<div class="headName">'._viewer($filter['worker_id'], 'name').': история з/п за <em>'.$filter['month'].'</em>.</div>'.
+	'<div id="spisok">'.salary_worker_spisok($filter).'</div>';
+}//salary_worker()
+function salary_worker_spisok($v) {
+	$filter = salaryFilter($v);
+
+	if(!$filter['worker_id'])
+		return 'Некорректный id сотрудника';
+
+	$start = _viewer($filter['worker_id'], 'salary_balans_start');
+	if($start != -1) {
+		$sMoney = query_value("
+			SELECT IFNULL(SUM(`sum`),0)
+			FROM `money`
+			WHERE `worker_id`=".$filter['worker_id']."
+			  AND `sum`<0
+			  AND !`deleted`");
+		$sExpense = query_value("
+			SELECT IFNULL(SUM(`sum`),0)
+			FROM `zayav_expense`
+			WHERE `mon`
+			  AND `worker_id`=".$filter['worker_id']);
+		$balans = round($sMoney + $sExpense + $start, 2);
+		$balans = '<b style="color:#'.($balans < 0 ? 'A00' : '090').'">'.$balans.'</b> руб.';
+	} else
+		$balans = '<a class="start-set">установить</a>';
+
+	$rate_sum = _viewer($filter['worker_id'], 'rate_sum');
+	$send =
+	'<div class="uhead">'.
+		'<h1>'.
+			'Ставка: '.($rate_sum != 0 ? '<b>'.round($rate_sum, 2).'</b> руб.<span>('._viewer($filter['worker_id'], 'rate_day').'-е число месяца)</span>' : 'нет').
+			'<a class="rate-set">Изменить ставку</a>'.
+		'</h1>'.
+		'Баланс: '.$balans.
+		'<div class="a">'.
+			'<a class="up">Начислить</a> :: '.
+			'<a class="zp_add">Выдать з/п</a>'.
+		'</div>'.
+	'</div>'.
+	'<div id="salary-sel">&nbsp;</div>';
+
+	$send .= salary_worker_acc($filter);
+	$send .= salary_worker_zp($filter);
+	return $send;
+}//salary_worker_spisok()
+function salary_worker_acc($v) {
+	$sql = "(SELECT
+				'Начисление' AS `type`,
+				`e`.`id`,
+			    `e`.`sum`,
+				'' AS `about`,
+				`e`.`zayav_id`,
+				`e`.`dtime_add`
+			FROM `zayav_expense` `e`,
+				 `zayav` `z`
+			WHERE `z`.`id`=`e`.`zayav_id`
+			  AND !`z`.`deleted`
+			  AND `e`.`year`=".$v['year']."
+			  AND `e`.`mon`=".$v['mon']."
+			  AND `e`.`worker_id`=".$v['worker_id']."
+			  AND `e`.`sum`>0
+			GROUP BY `e`.`id`
+		) UNION (
+			SELECT
+				'Начисление' AS `type`,
+				`id`,
+			    `sum`,
+				`txt` AS `about`,
+				0 AS `zayav_id`,
+				`dtime_add`
+			FROM `zayav_expense`
+			WHERE !`zayav_id`
+			  AND `worker_id`=".$v['worker_id']."
+			  AND `sum`>0
+			  AND `year`=".$v['year']."
+			  AND `mon`=".$v['mon']."
+		)
+		ORDER BY `id` DESC";
+	$q = query($sql);
+	if(!mysql_num_rows($q))
+		return '';
+	$spisok = array();
+	while($r = mysql_fetch_assoc($q)) {
+		$key = strtotime($r['dtime_add']);
+		while(isset($spisok[$key]))
+			$key++;
+		$spisok[$key] = $r;
+	}
+
+	$spisok = _zayavLink($spisok);
+	krsort($spisok);
+
+	$send = '<table class="_spisok _money">'.
+		'<tr>'.
+			'<th>Вид'.
+			'<th>Сумма'.
+			'<th>Описание'.
+			'<th>';
+
+	foreach($spisok as $r) {
+		$about = $r['zayav_id'] ?
+			'<span class="s-zayav" style="background-color:#'.$r['zayav_status_color'].'">'.$r['zayav_link'].'</span>'.
+			'<tt>от '.$r['zayav_add'].'</tt>'
+			:
+			$r['about'];
+		$send .=
+			'<tr val="'.$r['id'].'" class="'.($v['acc_id'] == $r['id'] ? ' show' : '').'">'.
+				'<td class="type">'.$r['type'].
+				'<td class="sum">'.round($r['sum'], 2).
+				'<td class="about">'.$about.
+				'<td class="ed">'.
+					(!$r['zayav_id'] ? '<div class="img_del ze_del'._tooltip('Удалить', -29).'</div>' : '');
+	}
+	$send .= '</table>';
+	return $send;
+}//salary_worker_acc()
+function salary_worker_zp($v) {
+	$sql = "SELECT *
+			FROM `money`
+			WHERE `ws_id`=".WS_ID."
+			  AND !`deleted`
+			  AND `worker_id`=".$v['worker_id']."
+			  AND `sum`<0
+			  AND `year`=".$v['year']."
+			  AND `mon`=".$v['mon']."
+			ORDER BY `id`";
+	$q = query($sql);
+	if(!mysql_num_rows($q))
+		return '';
+	$zp = '';
+	$summa = 0;
+	while($r = mysql_fetch_assoc($q)) {
+		$sum = abs(round($r['sum'], 2));
+		$summa += $sum;
+		$zp .= '<tr>'.
+			'<td class="sum">'.$sum.
+			'<td class="about"><span class="type">'._invoice($r['invoice_id']).(empty($r['prim']) ? '' : ':').'</span> '.$r['prim'].
+			'<td class="dtime">'.FullDataTime($r['dtime_add']).
+			'<td class="ed"><div val="'.$r['id'].'" class="img_del zp_del'._tooltip('Удалить', -29).'</div>';
+	}
+	$send =
+		'<div class="zp-head">'.
+			'<b>З/п за '.$v['month'].'</b>:'.
+			'<span><a class="zp_add">Выдать з/п</a> :: Сумма: <b>'.$summa.'</b> руб.</span>'.
+		'</div>'.
+		'<table class="_spisok _money">'.
+			'<tr><th>Сумма'.
+				'<th>Описание'.
+				'<th>Дата'.
+				'<th>'.
+				$zp.
+		'</table>';
+
+	return $send;
+}//salary_worker_zp()
+
 
 
 // ---===! setup !===--- Секция настроек
@@ -2763,7 +3302,8 @@ function setup() {
 		'worker' => 'Сотрудники',
 		'invoice' => 'Счета',
 		'income' => 'Виды платежей',
-		'expense' => 'Категории расходов'
+		'expense' => 'Категории расходов',
+		'zayavexpense' => 'Расходы по заявке'
 	);
 	if(!RULES_INFO)
 		unset($pages['info']);
@@ -2790,6 +3330,7 @@ function setup() {
 		case 'invoice': $left = setup_invoice(); break;
 		case 'income': $left = setup_income(); break;
 		case 'expense': $left = setup_expense(); break;
+		case 'zayavexpense': $left = setup_zayav_expense(); break;
 	}
 	$links = '';
 	foreach($pages as $p => $name)
@@ -3150,3 +3691,51 @@ function setup_expense_spisok() {
 	$send .= '</dl>';
 	return $send;
 }//setup_expense_spisok()
+
+function setup_zayav_expense() {
+	return
+	'<div id="setup_zayav_expense">'.
+		'<div class="headName">Настройки категорий расходов по заявке<a class="add">Добавить</a></div>'.
+		'<div class="spisok">'.setup_zayav_expense_spisok().'</div>'.
+	'</div>';
+}//setup_zayav_expense()
+function setup_zayav_expense_spisok() {
+	$sql = "SELECT `s`.*,
+				   COUNT(`z`.`id`) AS `use`
+			FROM `setup_zayav_expense` AS `s`
+			  LEFT JOIN `zayav_expense` AS `z`
+			  ON `s`.`id`=`z`.`category_id`
+			GROUP BY `s`.`id`
+			ORDER BY `s`.`sort`";
+	$q = query($sql);
+	if(!mysql_num_rows($q))
+		return 'Список пуст.';
+
+	$expense = array();
+	while($r = mysql_fetch_assoc($q))
+		$expense[$r['id']] = $r;
+
+	$send =
+	'<table class="_spisok">'.
+		'<tr><th class="name">Наименование'.
+			'<th class="dop">Дополнительное поле'.
+			'<th class="use">Кол-во<br />записей'.
+			'<th class="set">'.
+	'</table>'.
+	'<dl class="_sort" val="setup_zayav_expense">';
+	foreach($expense as $id => $r)
+		$send .=
+		'<dd val="'.$id.'">'.
+			'<table class="_spisok">'.
+				'<tr><td class="name">'.$r['name'].
+					'<td class="dop">'.
+						($r['dop'] ? _zayavExpenseDop($r['dop']) : '').
+						'<input class="hdop" type="hidden" value="'.$r['dop'].'" />'.
+					'<td class="use">'.($r['use'] ? $r['use'] : '').
+					'<td class="set">'.
+						'<div class="img_edit"></div>'.
+						(!$r['use'] ? '<div class="img_del"></div>' : '').
+			'</table>';
+	$send .= '</dl>';
+	return $send;
+}//setup_zayav_expense_spisok()

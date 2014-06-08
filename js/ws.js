@@ -1,4 +1,4 @@
-var AJAX_WS = SITE + '/ajax/ws.php?' + VALUES,
+var AJAX_WS = '/ajax/ws.php?' + VALUES,
 	scannerWord = '',
 	scannerTime = 0,
 	scannerTimer,
@@ -245,6 +245,9 @@ var AJAX_WS = SITE + '/ajax/ws.php?' + VALUES,
 			.html((res.diff > 0 ? '+' : '') + res.diff);
 		var del = res.acc == 0 && res.opl == 0;
 		$('.delete')[(del ? 'remove' : 'add') + 'Class']('dn');
+		$('#ze_acc h1').html(res.acc_sum);
+		$('.ze-spisok').remove();
+		$('#ze_acc').after(res.expense);
 	},
 	zayavDevSelect = function(dev) {
 		modelImageGet(dev);
@@ -469,6 +472,27 @@ var AJAX_WS = SITE + '/ajax/ws.php?' + VALUES,
 			if(res.success) {
 				$('#spisok').html(res.html);
 				$('#monthList').html(res.mon);
+			}
+		}, 'json');
+	},
+	salarySpisok = function() {
+		if($('.headName').hasClass('_busy'))
+			return;
+		var send = {
+			op:'salary_spisok',
+			worker_id:WORKER_ID,
+			year:$('#year').val(),
+			mon:$('#salmon').val()
+		};
+		$('.headName').addClass('_busy');
+		$.post(AJAX_WS, send, function (res) {
+			$('.headName').removeClass('_busy');
+			if(res.success) {
+				MON = send.mon * 1;
+				YEAR = send.year;
+				$('.headName em').html(MONTH_DEF[MON] + ' ' + YEAR);
+				$('#spisok').html(res.html);
+				$('#monthList').html(res.month);
 			}
 		}, 'json');
 	};
@@ -826,6 +850,167 @@ $.fn.device = function(o) {
 		};
 	}
 };
+$.fn.zayavExpense = function(o) {
+	var t = $(this),
+		id = t.attr('id'),
+		num = 1,
+		n;
+
+	if(typeof o == 'string') {
+		if(o == 'get') {
+			var units = t.find('.ptab'),
+				send = [];
+			for(n = 0; n < units.length; n++) {
+				var u = units.eq(n),
+					attr = id + u.attr('val'),
+					cat_id = $('#' + attr + 'cat').val(),
+					sum = _cena(u.find('.zesum').val()),
+					dop = '',
+					mon = 0,
+					year = 0;
+				if(cat_id == 0)
+					continue;
+				if(!sum)
+					return 'sum_error';
+				if(ZE_TXT[cat_id])
+					dop = u.find('.zetxt').val();
+				else if(ZE_WORKER[cat_id]) {
+					dop = $('#' + attr + 'worker').val();
+					if(dop > 0) {
+						mon = $('#' + attr + 'mon').val();
+						year = $('#' + attr + 'year').val();
+					}
+				} else if(ZE_ZP[cat_id])
+					dop = $('#' + attr + 'zp').val();
+
+				send.push(cat_id + ':' +
+						  dop + ':' +
+						  sum + ':' +
+						  mon + ':' +
+						  year);
+			}
+			return send.join();
+		}
+	}
+
+	t.html('<div id="_ze-edit"></div>');
+	var ze = t.find('#_ze-edit'),
+		zemon = [], // Преобразование списка месяцев из ассоциативного
+		zeyear = [];// Список годов
+	for(var k in  MONTH_DEF)
+		zemon.push({uid:k,title:MONTH_DEF[k]});
+	for(n = 2014; n <= (new Date()).getFullYear(); n++)
+		zeyear.push({uid:n,title:n});
+
+	if(typeof o == 'object')
+		for(n = 0; n < o.length; n++)
+			itemAdd(o[n])
+
+	itemAdd();
+
+	function itemAdd(v) {
+		if(!v)
+			v = [
+				0, //0 - категория
+				'',//1 - описание, id сотрудника или id запчасти
+				'',//2 - сумма
+				0, //3 - месяц
+				0  //4 - год
+			];
+		var attr = id + num,
+			attr_cat = attr + 'cat',
+			attr_worker = attr + 'worker',
+			attr_zp = attr + 'zp',
+			attr_mon = attr + 'mon',
+			attr_year = attr + 'year',
+			html =
+				'<table id="ptab'+ num + '" class="ptab" val="' + num + '"><tr>' +
+					'<td><input type="hidden" id="' + attr_cat + '" value="' + v[0] + '" />' +
+					'<td class="tddop">' +
+						(v[0] && ZE_TXT[v[0]] ? '<input type="text" class="zetxt" placeholder="описание не указано" tabindex="' + (num * 10 - 1) + '" value="' + v[1] + '" />' : '') +
+						(v[0] && ZE_WORKER[v[0]] ? '<input type="hidden" id="' + attr_worker + '" value="' + v[1] + '" />' : '') +
+						(v[0] && ZE_ZP[v[0]] ? '<input type="hidden" id="' + attr_zp + '" value="' + v[1] + '" />' : '') +
+					'<td class="tdsum' + (v[0] ? '' : ' dn') + '">' +
+						'<input type="text" class="zesum" maxlength="6"' + (v[5] ? ' disabled' : '') + ' tabindex="' + (num * 10) + '" value="' + v[2] + '" />руб.' +
+					'<td class="tdmon' + (v[0] && ZE_WORKER[v[0]] ? '' : ' dn') + '">' +
+						'<input type="hidden" id="' + attr_mon + '" value="' + (v[3] || (new Date()).getMonth() + 1) + '" />' +
+						'<input type="hidden" id="' + attr_year + '" value="' + (v[4] || (new Date()).getFullYear()) + '" />' +
+				'</table>';
+		ze.append(html);
+		var ptab = $('#ptab' + num),
+			tddop = ptab.find('.tddop'),
+			zesum = ptab.find('.zesum'),
+			tdmon = ptab.find('.tdmon');
+		$('#' + attr_cat)._select({
+			width:130,
+			disabled:0,
+			title0:'Категория',
+			spisok:ZE_SPISOK,
+			func:function(id) {
+				ptab.find('.tdsum')[(id ? 'remove' : 'add') + 'Class']('dn');
+				if(ZE_TXT[id]) {
+					tddop.html('<input type="text" class="zetxt" placeholder="описание не указано" tabindex="' + (num * 10 - 11) + '" />');
+					tddop.find('.zetxt').focus();
+				} else if(ZE_WORKER[id]) {
+					tddop.html('<input type="hidden" id="' + attr_worker + '" />');
+					$('#' + attr_worker)._select({
+						width:150,
+						title0:'Сотрудник не указан',
+						spisok:WORKER_SPISOK,
+						func:function(v) {
+							zesum.focus();
+							tdmon[(v ? 'remove' : 'add') + 'Class']('dn');
+						}
+					});
+					zesum.focus();
+				} else if(ZE_ZP[id]) {
+					tddop.html('<input type="hidden" id="' + attr_zp + '" />');
+					$('#' + attr_zp)._select({
+						width:150,
+						title0:'Запчасть не выбрана',
+						spisok:ZAYAV.zp_avai,
+						func:function(v) {
+							zesum.focus();
+						}
+					});
+					zesum.focus();
+				} else {
+					tddop.html('');
+					zesum.focus();
+				}
+				zesum.val('');
+				if(id && !ptab.next().hasClass('ptab'))
+					itemAdd();
+				tdmon.addClass('dn');
+			}
+		});
+		if(v[0] && ZE_WORKER[v[0]])
+			$('#' + attr_worker)._select({
+				width:150,
+				disabled:0,
+				title0:'Сотрудник',
+				spisok:WORKER_SPISOK,
+				func:function(v) {
+					zesum.focus();
+					tdmon[(v ? 'remove' : 'add') + 'Class']('dn');
+				}
+			});
+		if(v[0] && ZE_ZP[v[0]])
+			$('#' + attr_zp)._select({
+				width:150,
+				title0:'Запчасть не выбрана',
+				spisok:ZAYAV.zp_avai,
+				func:function(v) {
+					zesum.focus();
+				}
+			});
+		$('#' + attr_mon)._dropdown({disabled:0,spisok:zemon});
+		$('#' + attr_year)._dropdown({disabled:0,spisok:zeyear});
+		num++;
+	}
+	return t;
+};
+
 
 $(document)
 	.keydown(function(e) {
@@ -1144,7 +1329,7 @@ $(document)
 		zayavSpisok();
 	})
 
-	.on('click', '#zayavInfo .zedit', function() {
+	.on('click', '#zayav-info .zedit', function() {
 		var html = '<TABLE class="zayav-info-edit">' +
 			'<tr><td class="label r">Клиент:		<td><input type="hidden" id="client_id" value="' + ZAYAV.client_id + '">' +
 			'<tr><td class="label r top">Устройство:<TD><TABLE><TD id="dev"><TD id="device_image"></TABLE>' +
@@ -1230,7 +1415,7 @@ $(document)
 				});
 		}
 	})
-	.on('click', '#zayavInfo .remind_add', function() {
+	.on('click', '#zayav-info .remind_add', function() {
 		var html = '<TABLE class="remind_add_tab">' +
 			'<tr><td class="label">Заявка:<TD>№<b>' + ZAYAV.nomer + '</b>' +
 			'<tr><td class="label top">Описание задания:<TD><TEXTAREA id="txt"></TEXTAREA>' +
@@ -1292,7 +1477,7 @@ $(document)
 			}
 		}//submit()
 	})
-	.on('click', '#zayavInfo .acc_add', function() {
+	.on('click', '#zayav-info .acc_add', function() {
 		var html = '<TABLE class="zayav_accrual_add">' +
 				'<tr><td class="label">Сумма: <TD><input type="text" id="sum" class="money" maxlength="5" /> руб.' +
 				'<tr><td class="label">Примечание:<em>(не обязательно)</em><TD><input type="text" id="prim" maxlength="100" />' +
@@ -1369,7 +1554,7 @@ $(document)
 				});
 		}
 	})
-	.on('click', '#zayavInfo .acc_del', function() {
+	.on('click', '#zayav-info .acc_del', function() {
 		var send = {
 			op:'zayav_accrual_del',
 			id:$(this).attr('val')
@@ -1383,7 +1568,7 @@ $(document)
 			}
 		}, 'json');
 	})
-	.on('click', '#zayavInfo .acc_rest', function() {
+	.on('click', '#zayav-info .acc_rest', function() {
 		var send = {
 				op:'zayav_accrual_rest',
 				id:$(this).attr('val')
@@ -1398,7 +1583,7 @@ $(document)
 			}
 		}, 'json');
 	})
-	.on('click', '#zayavInfo .status_place', function() {
+	.on('click', '#zayav-info .status_place', function() {
 		var html = '<TABLE style="border-spacing:8px">' +
 			'<TR><TD class="label r topi">Статус заявки:<TD><input type="hidden" id="z_status" value="' + ZAYAV.z_status + '">' +
 			'<TR><TD class="label r topi">Местонахождение устройства:<TD><input type="hidden" id="place" value="' + ZAYAV.dev_place + '">' +
@@ -1466,7 +1651,7 @@ $(document)
 			});
 		}
 	})
-	.on('click', '#zayavInfo .zakaz', function() {
+	.on('click', '#zayav-info .zakaz', function() {
 		var t = $(this),
 			send = {
 				op:'zayav_zp_zakaz',
@@ -1480,10 +1665,10 @@ $(document)
 			}
 		}, 'json');
 	})
-	.on('click', '#zayavInfo .zakaz_ok', function() {
+	.on('click', '#zayav-info .zakaz_ok', function() {
 		location.href = URL + '&p=zp&menu=3';
 	})
-	.on('click', '#zayavInfo .zpAdd', function() {
+	.on('click', '#zayav-info .zpAdd', function() {
 		var html = '<div class="zayav_zp_add">' +
 				'<CENTER>Добавление запчасти к устройству<br />' +
 					'<b>' +
@@ -1546,7 +1731,7 @@ $(document)
 			}
 		}
 	})
-	.on('click', '#zayavInfo .set', function() {
+	.on('click', '#zayav-info .set', function() {
 		var unit = $(this).parent().parent();
 		var html = '<CENTER class="zayav_zp_set">' +
 			'Установка запчасти<br />' + unit.find('a:first').html() + '.<br />' +
@@ -2568,6 +2753,297 @@ $(document)
 		}, 'json');
 	})
 
+	.on('click', '.salary .rate-set', function() {
+		var html =
+				'<div class="_info">' +
+					'После установки ставки сотруднику указанная сумма будет автоматически начисляться ' +
+					'на его баланс в определённый день выбранной периодичностью. ' +
+				'</div>' +
+				'<table class="salary-tab">' +
+					'<tr><td class="label">Сумма:<TD><INPUT type="text" id="sum" class="money" maxlength="11" value="' + (RATE.sum ? RATE.sum : '') + '" /> руб.' +
+					'<tr><td class="label">Период:<TD><INPUT type="hidden" id="period" />' +
+					'<tr><td class="label">День начисления:<TD><INPUT type="text" id="day" maxlength="2" value="' + (RATE.day ? RATE.day : '') + '" />' +
+				'</table>',
+			dialog = _dialog({
+				top:30,
+				width:320,
+				head:'Установка ставки з/п для сотрудника',
+				content:html,
+				butSubmit:'Установить',
+				submit:submit
+			});
+
+		$('#sum').focus();
+		$('#sum,#day').keyEnter(submit);
+		function submit() {
+			var send = {
+				op:'salary_rate_set',
+				worker_id:WORKER_ID,
+				sum:_cena($('#sum').val()),
+				day:$('#day').val() * 1
+			};
+			if(!send.sum) { err('Некорректно указана сумма.'); $('#sum').focus(); }
+			else if(!REGEXP_NUMERIC.test(send.day) || !send.day || send.day > 28) { err('Некорректно указан день.'); $('#day').focus(); }
+			else {
+				dialog.process();
+				$.post(AJAX_WS, send, function(res) {
+					if(res.success) {
+						RATE = send.sum;
+						RATE_DAY = send.day;
+						dialog.close();
+						_msg('Установка ставки произведена.');
+						salarySpisok();
+					} else
+						dialog.abort();
+				}, 'json');
+			}
+		}
+		function err(msg) {
+			dialog.bottom.vkHint({
+				msg:'<SPAN class="red">' + msg + '</SPAN>',
+				remove:1,
+				indent:40,
+				show:1,
+				top:-47,
+				left:74
+			});
+		}
+	})
+	.on('click', '.salary .up', function() {
+		var html =
+				'<table class="salary-tab">' +
+					'<tr><td class="label">Сумма:<TD><INPUT type="text" id="sum" class="money" maxlength="8"> руб.' +
+					'<tr><td class="label">Описание:<TD><INPUT type="text" id="about" maxlength="50">' +
+					'<tr><td class="label">Месяц:' +
+						'<td><input type="hidden" id="tabmon" value="' + MON + '" /> ' +
+							'<input type="hidden" id="tabyear" value="' + YEAR + '" />' +
+					'</table>',
+			dialog = _dialog({
+				head:'Внесение начисления для сотрудника',
+				content:html,
+				submit:submit
+			});
+
+		$('#sum').focus();
+		$('#sum,#about').keyEnter(submit);
+		$('#tabmon')._select({
+			width:80,
+			spisok:MON_SPISOK
+		});
+		$('#tabyear')._select({
+			width:60,
+			spisok:YEAR_SPISOK
+		});
+		function submit() {
+			var send = {
+				op:'salary_up',
+				worker_id:WORKER_ID,
+				sum:_cena($('#sum').val()),
+				about:$('#about').val(),
+				mon:$('#tabmon').val(),
+				year:$('#tabyear').val()
+			};
+			if(!send.sum) {
+				err('Некорректно указана сумма.');
+				$('#sum').focus();
+			} else {
+				dialog.process();
+				$.post(AJAX_WS, send, function(res) {
+					if(res.success) {
+						dialog.close();
+						_msg('Начисление произведено.');
+						salarySpisok();
+					} else
+						dialog.abort();
+				}, 'json');
+			}
+		}
+		function err(msg) {
+			dialog.bottom.vkHint({
+				msg:'<SPAN class="red">' + msg + '</SPAN>',
+				remove:1,
+				indent:40,
+				show:1,
+				top:-47,
+				left:93
+			});
+		}
+	})
+	.on('click', '.salary .ze_del', function() {
+		var t = $(this),
+			dialog = _dialog({
+				top:110,
+				width:250,
+				head:'Удаление',
+				content:'<CENTER>Подтвердите удаление записи.</CENTER>',
+				butSubmit:'Удалить',
+				submit:submit
+			});
+		while(t[0].tagName != 'TR')
+			t = t.parent();
+		function submit() {
+			var send = {
+				op:'salary_del',
+				id:t.attr('val')
+			};
+			dialog.process();
+			$.post(AJAX_WS, send, function(res) {
+				if(res.success) {
+					dialog.close();
+					_msg('Удалено.');
+					salarySpisok();
+				} else
+					dialog.abort();
+			}, 'json');
+		}
+	})
+	.on('click', '.salary .zp_add', function() {
+		var html =
+				'<table class="salary-tab">' +
+					'<tr><td class="label">Со счёта:' +
+						'<td><input type="hidden" id="invoice_id">' +
+							'<a href="' + URL + '&p=setup&d=invoice" class="img_edit' + _tooltip('Настройка счетов', -56) + '</a>' +
+					'<tr><td class="label">Сумма:<td><input type="text" id="sum" class="money" maxlength="8"> руб.' +
+					'<tr><td class="label">Описание:<td><input type="text" id="about" maxlength="100">' +
+					'<tr><td class="label">Месяц:' +
+						'<td><input type="hidden" id="tabmon" value="' + MON + '" /> ' +
+							'<input type="hidden" id="tabyear" value="' + YEAR + '" />' +
+				'</table>',
+			dialog = _dialog({
+				head:'Выдача зарплаты сотруднику',
+				content:html,
+				submit:submit
+			});
+
+		$('#sum').focus();
+		$('#invoice_id')._select({
+			title0:'Не выбран',
+			spisok:INVOICE_SPISOK,
+			func:function() {
+				$('#sum').focus();
+			}
+		});
+		$('#sum,#about').keyEnter(submit);
+		$('#tabmon')._select({
+			width:80,
+			spisok:MON_SPISOK
+		});
+		$('#tabyear')._select({
+			width:60,
+			spisok:YEAR_SPISOK
+		});
+
+		function submit() {
+			var send = {
+				op:'salary_zp_add',
+				worker_id:WORKER_ID,
+				invoice_id:$('#invoice_id').val() * 1,
+				sum:_cena($('#sum').val()),
+				about:$('#about').val(),
+				mon:$('#tabmon').val(),
+				year:$('#tabyear').val()
+			};
+			if(!send.invoice_id) err('Укажите с какого счёта производится выдача.');
+			else if(!send.sum) { err('Некорректно указана сумма.'); $('#sum').focus(); }
+			else {
+				dialog.process();
+				$.post(AJAX_WS, send, function(res) {
+					if(res.success) {
+						dialog.close();
+						_msg('Выдача зарплаты произведена.');
+						salarySpisok();
+					} else
+						dialog.abort();
+				}, 'json');
+			}
+		}
+		function err(msg) {
+			dialog.bottom.vkHint({
+				msg:'<SPAN class="red">' + msg + '</SPAN>',
+				remove:1,
+				indent:40,
+				show:1,
+				top:-47,
+				left:93
+			});
+		}
+	})
+	.on('click', '.salary .zp_del', function() {
+		var t = $(this),
+			dialog = _dialog({
+				top:110,
+				width:250,
+				head:'Удаление з/п',
+				content:'<CENTER>Подтвердите удаление записи.</CENTER>',
+				butSubmit:'Удалить',
+				submit:submit
+			});
+		function submit() {
+			var send = {
+				op:'expense_del',
+				id:t.attr('val')
+			};
+			dialog.process();
+			$.post(AJAX_WS, send, function(res) {
+				if(res.success) {
+					dialog.close();
+					_msg('Удалено.');
+					salarySpisok();
+				} else
+					dialog.abort();
+			}, 'json');
+		}
+	})
+	.on('click', '.salary .start-set', function() {
+		var html =
+				'<table class="salary-tab">' +
+					'<tr><td class="label">Сумма:<TD><INPUT type="text" id="sum" class="money" maxlength="8"> руб.' +
+				'</table>',
+			dialog = _dialog({
+				head:'Установка баланса по зарплате сотрудника',
+				content:html,
+				butSubmit:'Применить',
+				submit:submit
+			});
+
+		$('#sum').focus().keyEnter(submit);
+
+		function submit() {
+			var send = {
+				op:'salary_start_set',
+				worker_id:WORKER_ID,
+				sum:_cena($('#sum').val())
+			};
+			if(!send.sum) {
+				err('Некорректно указана сумма.');
+				$('#sum').focus();
+			} else {
+				dialog.process();
+				$.post(AJAX_WS, send, function (res) {
+					if(res.success) {
+						dialog.close();
+						_msg('Установка произведёна.');
+						$('#spisok').html(res.html);
+					} else
+						dialog.abort();
+				}, 'json');
+			}
+		}
+		function err(msg) {
+			dialog.bottom.vkHint({
+				msg:'<SPAN class="red">' + msg + '</SPAN>',
+				remove:1,
+				indent:40,
+				show:1,
+				top:-47,
+				left:93
+			});
+		}
+	})
+	.on('mouseenter', '.salary .show', function() {
+		$(this).removeClass('show');
+	})
+
 	.ready(function() {
 		if($('#client').length) {
 			window.cFind = $('#find')._search({
@@ -2771,7 +3247,7 @@ $(document)
 					});
 			});
 		}
-		if($('#zayavInfo').length) {
+		if($('#zayav-info').length) {
 			$('.hist').click(function() {
 				$('#dopLinks .sel').removeClass('sel');
 				$(this).addClass('sel');
@@ -2880,6 +3356,54 @@ $(document)
 						top:prev ? -112 : -47,
 						left:prev ? 127 : 97,
 						indent:50,
+						show:1,
+						remove:1
+					});
+				}
+			});
+			$('#ze-edit').click(function() {
+				var html =
+						'<table class="ze-edit-tab">' +
+							'<tr><td class="label">Заявка: <td><b>№' + ZAYAV.nomer + '</b>' +
+							'<tr><td class="label">Расходы:<td>' +
+							'<tr><td colspan="2" id="zes">' +
+						'</table>',
+					dialog = _dialog({
+						top:30,
+						width:510,
+						head:'Изменение расходов заявки',
+						content:html,
+						butSubmit:'Сохранить',
+						submit:submit
+					});
+				$('#zes').zayavExpense(ZAYAV.expense);
+				function submit() {
+					var send = {
+						op:'zayav_expense_edit',
+						zayav_id:ZAYAV.id,
+						expense:$('#zes').zayavExpense('get')
+					};
+					if(send.expense == 'sum_error') err('Некорректно указана сумма');
+					else {
+						dialog.process();
+						$.post(AJAX_WS, send, function(res) {
+							if(res.success) {
+								$('.ze-spisok').remove();
+								$('#ze_acc').after(res.html);
+								ZAYAV.expense = res.array;
+								dialog.close();
+								_msg('Сохранено.');
+							} else
+								dialog.abort();
+						}, 'json');
+					}
+				}
+				function err(msg) {
+					dialog.bottom.vkHint({
+						msg:'<SPAN class="red">' + msg + '</SPAN>',
+						top:-47,
+						left:167,
+						indent:40,
 						show:1,
 						remove:1
 					});
@@ -3191,5 +3715,11 @@ $(document)
 					});
 				}
 			});
+		}
+		if($('#report.salary').length) {
+			if($('#monthList').length) {
+				$('#year').years({func:salarySpisok});
+				$('#salmon')._radio({func:salarySpisok});
+			}
 		}
 	});

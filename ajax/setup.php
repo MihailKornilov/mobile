@@ -469,6 +469,101 @@ switch(@$_POST['op']) {
 		$send['html'] = utf8(setup_expense_spisok());
 		jsonSuccess($send);
 		break;
+
+	case 'zayav_expense_add':
+		$name = win1251(htmlspecialchars(trim($_POST['name'])));
+		$dop = _isnum($_POST['dop']);
+
+		if(empty($name))
+			jsonError();
+
+		$sql = "INSERT INTO `setup_zayav_expense` (
+					`name`,
+					`dop`,
+					`sort`
+				) VALUES (
+					'".addslashes($name)."',
+					".$dop.",
+					"._maxSql('setup_zayav_expense', 'sort')."
+				)";
+		query($sql);
+
+		xcache_unset(CACHE_PREFIX.'zayav_expense');
+		GvaluesCreate();
+
+		history_insert(array(
+			'type' => 1014,
+			'value' => $name
+		));
+
+		$send['html'] = utf8(setup_zayav_expense_spisok());
+		jsonSuccess($send);
+		break;
+	case 'zayav_expense_edit':
+		if(!$id = _isnum($_POST['id']))
+			jsonError();
+
+		$name = win1251(htmlspecialchars(trim($_POST['name'])));
+		$dop = _isnum($_POST['dop']);
+
+		if(empty($name))
+			jsonError();
+
+		$sql = "SELECT * FROM `setup_zayav_expense` WHERE `id`=".$id;
+		if(!$r = query_assoc($sql))
+			jsonError();
+
+		$sql = "UPDATE `setup_zayav_expense`
+				SET `name`='".addslashes($name)."',
+					`dop`=".$dop."
+				WHERE `id`=".$id;
+		query($sql);
+
+		xcache_unset(CACHE_PREFIX.'zayav_expense');
+		GvaluesCreate();
+
+		$changes = '';
+		if($r['name'] != $name)
+			$changes .= '<tr><th>Наименование:<td>'.$r['name'].'<td>»<td>'.$name;
+		if($r['dop'] != $dop)
+			$changes .= '<tr><th>Дополнительное поле:'.
+							'<td>'.($r['dop'] ? _zayavExpenseDop($r['dop']) : '').
+							'<td>»'.
+							'<td>'.($dop ? _zayavExpenseDop($dop) : '');
+		if($changes)
+			history_insert(array(
+				'type' => 1015,
+				'value' => $name,
+				'value1' => '<table>'.$changes.'</table>'
+			));
+
+		$send['html'] = utf8(setup_zayav_expense_spisok());
+		jsonSuccess($send);
+		break;
+	case 'zayav_expense_del':
+		if(!$id = _isnum($_POST['id']))
+			jsonError();
+
+		$sql = "SELECT * FROM `setup_zayav_expense` WHERE `id`=".$id;
+		if(!$r = query_assoc($sql))
+			jsonError();
+
+		if(query_value("SELECT COUNT(`id`) FROM `zayav_expense` WHERE `category_id`=".$id))
+			jsonError();
+		$sql = "DELETE FROM `setup_zayav_expense` WHERE `id`=".$id;
+		query($sql);
+
+		xcache_unset(CACHE_PREFIX.'zayav_expense');
+		GvaluesCreate();
+
+		history_insert(array(
+			'type' => 1016,
+			'value' => $r['name']
+		));
+
+		$send['html'] = utf8(setup_zayav_expense_spisok());
+		jsonSuccess($send);
+		break;
 }
 
 jsonError();
