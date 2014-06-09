@@ -2759,10 +2759,14 @@ $(document)
 					'После установки ставки сотруднику указанная сумма будет автоматически начисляться ' +
 					'на его баланс в определённый день выбранной периодичностью. ' +
 				'</div>' +
-				'<table class="salary-tab">' +
-					'<tr><td class="label">Сумма:<TD><INPUT type="text" id="sum" class="money" maxlength="11" value="' + (RATE.sum ? RATE.sum : '') + '" /> руб.' +
-					'<tr><td class="label">Период:<TD><INPUT type="hidden" id="period" />' +
-					'<tr><td class="label">День начисления:<TD><INPUT type="text" id="day" maxlength="2" value="' + (RATE.day ? RATE.day : '') + '" />' +
+				'<table class="salary-tab set">' +
+					'<tr><td class="label">Сумма:<td><input type="text" id="sum" class="money" maxlength="11" value="' + (RATE.sum ? RATE.sum : '') + '" /> руб.' +
+					'<tr><td class="label">Период:<td><input type="hidden" id="period" value="' + RATE.period + '" />' +
+					'<tr class="tr-day' + (RATE.period == 3 ? ' dn' : '') + '">' +
+						'<td class="label">День начисления:' +
+						'<td>' +
+							'<div class="div-day' + (RATE.period != 1 ? ' dn' : '') + '"><input type="text" id="day" maxlength="2" value="' + RATE.day + '" /></div>' +
+							'<div class="div-week' + (RATE.period != 2 ? ' dn' : '') + '"><input type="hidden" id="day_week" value="' + RATE.day + '" /></div>' +
 				'</table>',
 			dialog = _dialog({
 				top:30,
@@ -2775,23 +2779,49 @@ $(document)
 
 		$('#sum').focus();
 		$('#sum,#day').keyEnter(submit);
+		$('#period')._select({
+			width:70,
+			spisok:SALARY_PERIOD,
+			func:function(id) {
+				$('#day_week')._select(1);
+				$('.tr-day')[(id == 3 ? 'add' : 'remove') + 'Class']('dn');
+				$('.div-day')[(id != 1 ? 'add' : 'remove') + 'Class']('dn');
+				$('.div-week')[(id != 2 ? 'add' : 'remove') + 'Class']('dn');
+			}
+		});
+		$('#day_week')._select({
+			spisok:[
+				{uid:1,title:'Понедельник'},
+				{uid:2,title:'Вторник'},
+				{uid:3,title:'Среда'},
+				{uid:4,title:'Четверг'},
+				{uid:5,title:'Пятница'},
+				{uid:6,title:'Суббота'},
+				{uid:7,title:'Воскресенье'}
+			]
+		});
+
 		function submit() {
 			var send = {
 				op:'salary_rate_set',
 				worker_id:WORKER_ID,
 				sum:_cena($('#sum').val()),
+				period:$('#period').val() * 1,
 				day:$('#day').val() * 1
 			};
+			if(send.period == 2)
+				send.day = $('#day_week').val() * 1;
 			if(!send.sum) { err('Некорректно указана сумма.'); $('#sum').focus(); }
-			else if(!REGEXP_NUMERIC.test(send.day) || !send.day || send.day > 28) { err('Некорректно указан день.'); $('#day').focus(); }
+			else if(send.period == 1 && (!REGEXP_NUMERIC.test(send.day) || !send.day || send.day > 28)) { err('Некорректно указан день.'); $('#day').focus(); }
 			else {
 				dialog.process();
 				$.post(AJAX_WS, send, function(res) {
 					if(res.success) {
-						RATE = send.sum;
-						RATE_DAY = send.day;
+						RATE.sum = send.sum;
+						RATE.period = send.period;
+						RATE.day = send.day;
 						dialog.close();
-						_msg('Установка ставки произведена.');
+						_msg('Изменение ставки произведено.');
 						salarySpisok();
 					} else
 						dialog.abort();

@@ -178,6 +178,7 @@ function GvaluesCreate() {//Составление файла G_values.js
 		"\n".'ZE_WORKER='.query_ptpJson("SELECT `id`,1 FROM `setup_zayav_expense` WHERE `dop`=2").','.
 		"\n".'ZE_ZP='.query_ptpJson("SELECT `id`,1 FROM `setup_zayav_expense` WHERE `dop`=3").','.
 		"\n".'ZE_DOP='._selJson(_zayavExpenseDop()).','.
+		"\n".'SALARY_PERIOD='._selJson(salaryPeriod()).','.
 		"\n".'COUNTRY_SPISOK=['.
 			'{uid:1,title:"Россия"},'.
 			'{uid:2,title:"Украина"},'.

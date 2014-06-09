@@ -1953,7 +1953,8 @@ function report() {
 }//report()
 
 function history_insert($v) {
-	$v['ws_id'] = WS_ID;
+	if(empty($v['ws_id']))
+		$v['ws_id'] = WS_ID;
 	$type = $v['type'];
 	unset($v['type']);
 	_historyInsert($type, $v);
@@ -2040,6 +2041,7 @@ function history_types($v, $filter) {
 						' при внесении платежа:<div class="changes">'.$v['value'].'</div>';
 		case 30: return 'Изменение расходов'.($filter['zayav_id'] ? '' : ' по заявке '.$v['zayav_link']).':<div class="changes z">'.$v['value'].'</div>';
 
+		case 35: return 'Изменена ставка у сотрудника <u>'._viewer($v['value'], 'name').'</u>:<div class="changes">'.$v['value1'].'</div>.';
 		case 36: return
 			'Внесение начисления з/п на сумму <b>'.$v['value'].'</b> '.
 			($v['value1'] ? '<em>('.$v['value1'].')</em> ' : '').
@@ -2063,7 +2065,10 @@ function history_types($v, $filter) {
 					'в сумме <b>'.$v['value'].'</b> руб. '.
 					($v['value3'] ? '<span class="prim">('.$v['value3'].')</span>' : '');
 		case 45: return 'Установка баланса з/п в сумме <b>'.$v['value1'].'</b> руб. '.
-		'для сотрудника <u>'._viewer($v['value'], 'name').'</u>. ';
+						'для сотрудника <u>'._viewer($v['value'], 'name').'</u>. ';
+
+		case 46: return 'Автоматическое начисление з/п сотруднику <u>'._viewer($v['value1'], 'name').'</u> '.
+						'в размере <b>'.$v['value'].'</b> руб. <em>('.$v['value2'].')</em>.';
 
 		case 50: return 'Удаление начисления з/п в сумме <b>'.$v['value'].'</b> руб. у сотрудника <u>'._viewer($v['value1'], 'name').'</u>.';
 
@@ -2104,7 +2109,8 @@ function history_group($action) {
 function history_right() {
 	$sql = "SELECT DISTINCT `viewer_id_add`
 			FROM `history`
-			WHERE `ws_id`=".WS_ID;
+			WHERE `ws_id`=".WS_ID."
+			  AND `viewer_id_add`";
 	$q = query($sql);
 	$viewer = array();
 	while($r = mysql_fetch_assoc($q))
@@ -3056,7 +3062,7 @@ function salary_spisok() {
 		$balans = $start == -1 ? '' : round($w['zp'] + $r['ze'] + $start, 2);
 		$send .=
 			'<tr><td class="fio"><a href="'.URL.'&p=report&d=salary&id='.$r['viewer_id'].'" class="name">'.$w['name'].'</a>'.
-				'<td class="rate">'.($w['rate_sum'] == 0 ? '' : round($w['rate_sum'], 2)).
+				'<td class="rate">'.($w['rate_sum'] == 0 ? '' : '<b>'.round($w['rate_sum'], 2).'</b>/'.salaryPeriod($w['rate_period'])).
 				'<td class="balans" style="color:#'.($balans < 0 ? 'A00' : '090').'">'.$balans;
 	}
 	$send .= '</table>';
@@ -3113,6 +3119,16 @@ function salaryFilter($v) {
 	$v['year-mon'] = $v['year'].'-'.($v['mon'] < 10 ? 0 : '').$v['mon'];
 	return $v;
 }//salaryFilter()
+function salaryPeriod($v=false) {
+	$arr = array(
+		1 => 'месяц',
+		2 => 'неделя',
+		3 => 'день'
+	);
+	if($v == false)
+		return $arr;
+	return $arr[$v];
+}//salaryPeriod()
 function salary_worker($v) {
 	$filter = salaryFilter($v);
 	if(!query_value("SELECT COUNT(*) FROM `vk_user` WHERE `viewer_id`=".$filter['worker_id']))
@@ -3161,11 +3177,22 @@ function salary_worker_spisok($v) {
 	} else
 		$balans = '<a class="start-set">установить</a>';
 
-	$rate_sum = _viewer($filter['worker_id'], 'rate_sum');
+	$rate_sum = _cena(_viewer($filter['worker_id'], 'rate_sum'));
+	$rate_period = _viewer($filter['worker_id'], 'rate_period');
+	$rate_day = _viewer($filter['worker_id'], 'rate_day');
 	$send =
 	'<div class="uhead">'.
 		'<h1>'.
-			'Ставка: '.($rate_sum != 0 ? '<b>'.round($rate_sum, 2).'</b> руб.<span>('._viewer($filter['worker_id'], 'rate_day').'-е число месяца)</span>' : 'нет').
+			'Ставка: '.
+				($rate_sum
+					? '<b>'.$rate_sum.'</b> руб.'.
+					  '<span>('.
+						($rate_period == 1 ? $rate_day.'-е число месяца' : '').
+						($rate_period == 2 ? 'еженедельно, '.$rate_day.'-й день недели' : '').
+						($rate_period == 3 ? 'ежедневно' : '').
+					  ')</span>'
+					: 'нет'
+				).
 			'<a class="rate-set">Изменить ставку</a>'.
 		'</h1>'.
 		'Баланс: '.$balans.

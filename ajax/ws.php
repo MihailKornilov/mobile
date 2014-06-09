@@ -1981,6 +1981,58 @@ switch(@$_POST['op']) {
 		jsonSuccess($send);
 		break;
 
+	case 'salary_rate_set':
+		if(!$worker_id = _isnum($_POST['worker_id']))
+			jsonError();
+		if(!$sum = _cena($_POST['sum']))
+			jsonError();
+		if(!$period = _isnum($_POST['period']))
+			jsonError();
+
+		$day = 0;
+		switch($period) {
+			case 1:
+				if(!$day = _isnum($_POST['day']))
+					jsonError();
+				if($day > 28)
+					jsonError();
+				break;
+			case 2:
+				if(!$day = _isnum($_POST['day']))
+					jsonError();
+				if($day > 7)
+					jsonError();
+		}
+
+		$sql = "SELECT * FROM `vk_user` WHERE `ws_id`=".WS_ID." AND `viewer_id`=".$worker_id;
+		if(!$r = query_assoc($sql))
+			jsonError();
+
+		$sql = "UPDATE `vk_user`
+		        SET `rate_sum`=".$sum.",
+		            `rate_period`=".$period.",
+		            `rate_day`=".$day."
+				WHERE `viewer_id`=".$worker_id;
+		query($sql);
+
+		$changes = '';
+		if($r['rate_sum'] != $sum)
+			$changes .= '<tr><th>Сумма:<td>'.round($r['rate_sum'], 2).'<td>»<td>'.$sum;
+		if($r['rate_period'] != $period)
+			$changes .= '<tr><th>Период:<td>'.salaryPeriod($r['rate_period']).'<td>»<td>'.salaryPeriod($period);
+		if($r['rate_day'] != $day)
+			$changes .= '<tr><th>День:<td>'.($r['rate_day'] ? $r['rate_day'] : '').'<td>»<td>'.($day ? $day : '');
+		if($changes)
+			history_insert(array(
+				'type' => 35,
+				'value' => $worker_id,
+				'value1' => '<table>'.$changes.'</table>'
+			));
+
+		xcache_unset(CACHE_PREFIX.'viewer_'.$worker_id);
+
+		jsonSuccess();
+		break;
 	case 'salary_up':
 		if(!$worker_id = _isnum($_POST['worker_id']))
 			jsonError();

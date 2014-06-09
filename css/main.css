@@ -471,6 +471,7 @@ table.zayavNomerTab td{vertical-align:top}
 .salary .uhead a{color:#68A;}
 .salary .uhead a:hover{color:#357}
 .salary h1{margin-bottom:5px}
+.salary .uhead span{color:#888;margin-left:8px}
 .salary a.rate-set{color:#d33;float:right}
 .salary a.rate-set:hover{color:#d33}
 .salary .years{margin-top:25px}
@@ -482,6 +483,7 @@ table.zayavNomerTab td{vertical-align:top}
 .salary .zp-head span{float:right}
 .salary-tab{border-spacing:8px}
 .salary-tab #about{width:230px}
+.salary-tab.set .label{width:100px}
 .salary-tab #day{width:30px}
 .salary-tab .img_edit{position:relative;top:-4px;left:4px}
 
