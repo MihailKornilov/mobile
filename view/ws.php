@@ -186,27 +186,22 @@ function _clientLink($arr, $fio=0) {//Добавление имени и ссылки клиента в массив
 	return $arr;
 }//_clientLink()
 function clientFilter($v) {
-	if(!preg_match(REGEXP_WORDFIND, win1251($v['fast'])))
-		$v['fast'] = '';
-	if(!preg_match(REGEXP_BOOL, $v['dolg']))
-		$v['dolg'] = 0;
-	if(!preg_match(REGEXP_BOOL, $v['active']))
-		$v['active'] = 0;
-	if(!preg_match(REGEXP_BOOL, $v['comm']))
-		$v['comm'] = 0;
-	$filter = array(
-		'fast' => win1251(htmlspecialchars(trim($v['fast']))),
-		'dolg' => intval($v['dolg']),
-		'active' => intval($v['active']),
-		'comm' => intval($v['comm'])
+	return array(
+		'page' => _isnum(@$v['page']) ? $v['page'] : 1,
+		'limit' => _isnum(@$v['limit']) ? $v['limit'] : 20,
+		'fast' => win1251(htmlspecialchars(trim(@$v['fast']))),
+		'dolg' => _isbool(@$v['dolg']),
+		'active' => _isbool(@$v['active']),
+		'comm' => _isbool(@$v['comm'])
 	);
-	return $filter;
 }//clientFilter()
-function client_data($page=1, $filter=array()) {
-	$cond = "`ws_id`=".WS_ID." AND `deleted`=0";
+function client_data($v=array()) {
+	$filter = clientFilter($v);
+	$cond = "`ws_id`=".WS_ID." AND !`deleted`";
 	$reg = '';
 	$regEngRus = '';
-	if(!empty($filter['fast'])) {
+	$dolg = 0;
+	if($filter['fast']) {
 		$engRus = _engRusChar($filter['fast']);
 		$cond .= " AND (`fio` LIKE '%".$filter['fast']."%'
 					 OR `telefon` LIKE '%".$filter['fast']."%'
@@ -219,36 +214,41 @@ function client_data($page=1, $filter=array()) {
 		if($engRus)
 			$regEngRus = '/('.$engRus.')/i';
 	} else {
-		if(isset($filter['dolg']) && $filter['dolg'] == 1)
+		if($filter['dolg']) {
 			$cond .= " AND `balans`<0";
-		if(isset($filter['active']) && $filter['active'] == 1) {
-			$sql = "SELECT DISTINCT `client_id`
-				FROM `zayav`
-				WHERE `ws_id`=".WS_ID."
-				  AND `zayav_status`=1";
-			$q = query($sql);
-			$ids = array();
-			while($r = mysql_fetch_assoc($q))
-				$ids[] = $r['client_id'];
-			$cond .= " AND `id` IN (".(empty($ids) ? 0 : implode(',', $ids)).")";
+			$dolg = abs(query_value("SELECT SUM(`balans`) FROM `client` WHERE !`deleted` AND `balans`<0"));
 		}
-		if(isset($filter['comm']) && $filter['comm'] == 1) {
-			$sql = "SELECT DISTINCT `table_id`
-				FROM `vk_comment`
-				WHERE `status`=1 AND `table_name`='client'";
-			$q = query($sql);
-			$ids = array();
-			while($r = mysql_fetch_assoc($q))
-				$ids[] = $r['table_id'];
-			$cond .= " AND `id` IN (".(empty($ids) ? 0 : implode(',', $ids)).")";
+		if($filter['active']) {
+			$ids = query_ids("SELECT DISTINCT `client_id`
+							FROM `zayav`
+							WHERE `ws_id`=".WS_ID."
+							  AND `zayav_status`=1");
+			$cond .= " AND `id` IN (".$ids.")";
+		}
+		if($filter['comm']) {
+			$ids = query_ids("SELECT DISTINCT `table_id`
+							FROM `vk_comment`
+							WHERE `status` AND `table_name`='client'");
+			$cond .= " AND `id` IN (".$ids.")";
 		}
 	}
-	$send['all'] = query_value("SELECT COUNT(`id`) AS `all` FROM `client` WHERE ".$cond." LIMIT 1");
-	if($send['all'] == 0) {
-		$send['spisok'] = '<div class="_empty">Клиентов не найдено.</div>';
-		return $send;
-	}
-	$limit = 20;
+
+	$all = query_value("SELECT COUNT(`id`) AS `all` FROM `client` WHERE ".$cond." LIMIT 1");
+	if(!$all)
+		return array(
+			'all' => 0,
+			'result' => 'Клиентов не найдено.',
+			'spisok' => '<div class="_empty">Клиентов не найдено.</div>',
+			'filter' => $filter
+		);
+
+	$send['all'] = $all;
+	$send['result'] = 'Найден'._end($all, ' ', 'о ').$all.' клиент'._end($all, '', 'а', 'ов').
+					  ($dolg ? '<em>(Общая сумма долга = '.$dolg.' руб.)</em>' : '');
+	$send['filter'] = $filter;
+
+	$page = $filter['page'];
+	$limit = $filter['limit'];
 	$start = ($page - 1) * $limit;
 	$spisok = array();
 	$sql = "SELECT *
@@ -276,7 +276,7 @@ function client_data($page=1, $filter=array()) {
 				COUNT(`id`) AS `count`
 			FROM `zayav`
 			WHERE `ws_id`=".WS_ID."
-			  AND `zayav_status`>0
+			  AND `zayav_status`
 			  AND `client_id` IN (".implode(',', array_keys($spisok)).")
 			GROUP BY `client_id`";
 	$q = query($sql);
@@ -286,7 +286,7 @@ function client_data($page=1, $filter=array()) {
 	$sql = "SELECT
 				`table_id` AS `id`
 			FROM `vk_comment`
-			WHERE `status`=1
+			WHERE `status`
 			  AND `table_name`='client'
 			  AND `table_id` IN (".implode(',', array_keys($spisok)).")
 			GROUP BY `table_id`";
@@ -311,10 +311,11 @@ function client_data($page=1, $filter=array()) {
 	}
 	return $send;
 }//client_data()
-function client_list($data) {
+function client_list() {
+	$data = client_data();
 	return '<div id="client">'.
 		'<div id="find"></div>'.
-		'<div class="result">'.client_count($data['all']).'</div>'.
+		'<div class="result">'.$data['result'].'</div>'.
 		'<table class="tabLR">'.
 			'<tr><td class="left">'.$data['spisok'].
 				'<td class="right">'.
@@ -327,15 +328,6 @@ function client_list($data) {
 		  '</table>'.
 		'</div>';
 }//client_list()
-function client_count($count, $dolg=0) {
-	if($dolg)
-		$dolg = abs(query_value("SELECT SUM(`balans`) FROM `client` WHERE `deleted`=0 AND `balans`<0 LIMIT 1"));
-	return ($count > 0 ?
-			'Найден'._end($count, ' ', 'о ').$count.' клиент'._end($count, '', 'а', 'ов').
-			($dolg ? '<em>(Общая сумма долга = '.$dolg.' руб.)</em>' : '')
-			:
-			'Клиентов не найдено');
-}//client_count()
 
 function client_info($client_id) {
 	$sql = "SELECT * FROM `client` WHERE `ws_id`=".WS_ID." AND `id`=".$client_id;
@@ -2537,10 +2529,10 @@ function income_insert($v) {
 
 function expenseFilter($v) {
 	$send = array(
-		'page' => !empty($v['page']) && preg_match(REGEXP_NUMERIC, $v['page']) ? $v['page'] : 1,
-		'limit' => !empty($v['limit']) && preg_match(REGEXP_NUMERIC, $v['limit']) ? $v['limit'] : 30,
-		'category' => !empty($v['category']) && preg_match(REGEXP_NUMERIC, $v['category']) ? $v['category'] : 0,
-		'worker' => !empty($v['worker']) && preg_match(REGEXP_NUMERIC, $v['worker']) ? $v['worker'] : 0,
+		'page' => _isnum(@$v['page']) ? $v['page'] : 1,
+		'limit' => _isnum(@$v['limit']) ? $v['limit'] : 30,
+		'category' => _isnum(@$v['category']),
+		'worker' => _isnum(@$v['worker']),
 		//'invoice_id' => !empty($v['invoice_id']) && preg_match(REGEXP_NUMERIC, $v['invoice_id']) ? $v['invoice_id'] : 0,
 		'year' => !empty($v['year']) && preg_match(REGEXP_NUMERIC, $v['year']) ? $v['year'] : strftime('%Y'),
 		'month' => isset($v['month']) ? $v['month'] : intval(strftime('%m'))
@@ -2607,9 +2599,14 @@ function expenseMonthSum($v=array()) {
 }//expenseMonthSum()
 function expense() {
 	$data = expense_spisok();
+	$year = array();
+	for($n = 2014; $n <= strftime('%Y'); $n++)
+		$year[$n] = $n;
 	return
 	'<script type="text/javascript">'.
-		'var WORKERS='.query_selJson("SELECT `viewer_id`,CONCAT(`first_name`,' ',`last_name`) FROM `vk_user` WHERE `ws_id`=".WS_ID).';'.
+		'var WORKERS='.query_selJson("SELECT `viewer_id`,CONCAT(`first_name`,' ',`last_name`) FROM `vk_user` WHERE `ws_id`=".WS_ID).','.
+			'MON_SPISOK='._selJson(_monthDef(0, 1)).','.
+			'YEAR_SPISOK='._selJson($year).';'.
 	'</script>'.
 	'<div class="headName">Список расходов мастерской<a class="add">Внести новый расход</a></div>'.
 	'<div id="spisok">'.$data['spisok'].'</div>';

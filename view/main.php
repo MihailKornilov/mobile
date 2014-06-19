@@ -98,11 +98,11 @@ function _header() {
 		'<title>Hi-tech Service - Приложение '.API_ID.'</title>'.
 
 		//Отслеживание ошибок в скриптах
-		(SA ? '<script type="text/javascript" src="'.GSITE.'/js/errors.js?'.VERSION.'"></script>' : '').
+		(SA ? '<script type="text/javascript" src="//nyandoma'.(LOCAL ? '' : '.ru').'/js/errors.js?'.VERSION.'"></script>' : '').
 
 		//Стороние скрипты
-		'<script type="text/javascript" src="'.GSITE.'/js/jquery-2.0.3.min.js"></script>'.
-		'<script type="text/javascript" src="'.GSITE.'/vk/xd_connection'.(DEBUG ? '' : '.min').'.js"></script>'.
+		'<script type="text/javascript" src="//nyandoma'.(LOCAL ? '' : '.ru').'/js/jquery-2.0.3.min.js"></script>'.
+		'<script type="text/javascript" src="//'.(LOCAL ? 'nyandoma/vk' : 'vk.com/js/api').'/xd_connection.js?20"></script>'.
 
 		//Установка начального значения таймера.
 		(SA ? '<script type="text/javascript">var TIME=(new Date()).getTime();</script>' : '').
@@ -116,20 +116,20 @@ function _header() {
 		'</script>'.
 
 		//Подключение api VK. Стили VK должны стоять до основных стилей сайта
-		'<link href="http://nyandoma'.(LOCAL ? '' : '.ru').'/vk/vk'.(DEBUG ? '' : '.min').'.css?'.VERSION.'" rel="stylesheet" type="text/css" />'.
-		'<script type="text/javascript" src="http://nyandoma'.(LOCAL ? '' : '.ru').'/vk/vk'.(DEBUG ? '' : '.min').'.js?'.VERSION.'"></script>'.
+		'<link href="//nyandoma'.(LOCAL ? '' : '.ru').'/vk'.(defined('TEST') ? 'test' : '').'/vk'.(DEBUG ? '' : '.min').'.css?'.VERSION.'" rel="stylesheet" type="text/css" />'.
+		'<script type="text/javascript" src="//nyandoma'.(LOCAL ? '' : '.ru').'/vk'.(defined('TEST') ? 'test' : '').'/vk'.(DEBUG ? '' : '.min').'.js?'.VERSION.'"></script>'.
 
-		'<link href="'.SITE.'/css/main'.(DEBUG ? '' : '.min').'.css?'.VERSION.'" rel="stylesheet" type="text/css" />'.
-		'<script type="text/javascript" src="'.SITE.'/js/main'.(DEBUG ? '' : '.min').'.js?'.VERSION.'"></script>'.
+		'<link rel="stylesheet" type="text/css" href="/css/main'.(DEBUG ? '' : '.min').'.css?'.VERSION.'" />'.
+		'<script type="text/javascript" src="/js/main'.(DEBUG ? '' : '.min').'.js?'.VERSION.'"></script>'.
 
-		(WS_ID ? '<script type="text/javascript" src="'.SITE.'/js/ws'.(DEBUG ? '' : '.min').'.js?'.VERSION.'"></script>' : '').
-		(@$_GET['p'] == 'setup' ? '<script type="text/javascript" src="'.SITE.'/js/setup'.(DEBUG ? '' : '.min').'.js?'.VERSION.'"></script>' : '').
+		(WS_ID ? '<script type="text/javascript" src="/js/ws'.(DEBUG ? '' : '.min').'.js?'.VERSION.'"></script>' : '').
+		(@$_GET['p'] == 'setup' ? '<script type="text/javascript" src="/js/setup'.(DEBUG ? '' : '.min').'.js?'.VERSION.'"></script>' : '').
 
 		//Скрипты и стили для суперадминистратора
-		(@$_GET['p'] == 'sa' ? '<link href="'.SITE.'/css/sa'.(DEBUG ? '' : '.min').'.css?'.VERSION.'" rel="stylesheet" type="text/css" />' : '').
-		(@$_GET['p'] == 'sa' ? '<script type="text/javascript" src="'.SITE.'/js/sa'.(DEBUG ? '' : '.min').'.js?'.VERSION.'"></script>' : '').
+		(@$_GET['p'] == 'sa' ? '<link href="/css/sa'.(DEBUG ? '' : '.min').'.css?'.VERSION.'" rel="stylesheet" type="text/css" />' : '').
+		(@$_GET['p'] == 'sa' ? '<script type="text/javascript" src="/js/sa'.(DEBUG ? '' : '.min').'.js?'.VERSION.'"></script>' : '').
 
-		'<script type="text/javascript" src="'.SITE.'/js/G_values.js?'.G_VALUES.'"></script>'.
+		'<script type="text/javascript" src="/js/G_values.js?'.G_VALUES.'"></script>'.
 		'</head>'.
 		'<body>'.
 		'<div id="frameBody">'.

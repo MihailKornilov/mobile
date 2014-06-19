@@ -190,17 +190,10 @@ switch(@$_POST['op']) {
 		jsonSuccess($send);
 		break;
 	case 'client_spisok':
-		$filter = clientFilter($_POST);
-		$send = client_data(1, $filter);
-		$send['all'] = utf8(client_count($send['all'], $filter['dolg']));
-		$send['spisok'] = utf8($send['spisok']);
-		jsonSuccess($send);
-		break;
-	case 'client_next':
-		if(!preg_match(REGEXP_NUMERIC, $_POST['page']))
-			jsonError();
-		$send = client_data(intval($_POST['page']), clientFilter($_POST));
-		$send['spisok'] = utf8($send['spisok']);
+		$data = client_data($_POST);
+		if($data['filter']['page'] == 1)
+			$send['all'] = utf8($data['result']);
+		$send['spisok'] = utf8($data['spisok']);
 		jsonSuccess($send);
 		break;
 	case 'client_edit':
@@ -1810,21 +1803,22 @@ switch(@$_POST['op']) {
 		jsonSuccess($send);
 		break;
 	case 'expense_add':
-		if(!preg_match(REGEXP_NUMERIC, $_POST['expense_id']))
+		if(!$invoice_id = _isnum($_POST['invoice_id']))
 			jsonError();
-		if(!preg_match(REGEXP_NUMERIC, $_POST['worker_id']))
+		if(!$sum = _cena($_POST['sum']))
 			jsonError();
-		if(!preg_match(REGEXP_NUMERIC, $_POST['invoice_id']) || !$_POST['invoice_id'])
-			jsonError();
-		if(!preg_match(REGEXP_CENA, $_POST['sum']))
-			jsonError();
-		$expense_id = intval($_POST['expense_id']);
+
+		$expense_id = _isnum($_POST['expense_id']);
 		$prim = win1251(htmlspecialchars(trim($_POST['prim'])));
 		if(!$expense_id && empty($prim))
 			jsonError();
-		$invoice_id = intval($_POST['invoice_id']);
-		$sum = str_replace(',', '.', $_POST['sum']);
-		$worker_id = intval($_POST['worker_id']);
+
+		$worker_id = _isnum($_POST['worker_id']);
+		$mon = _isnum($_POST['mon']);
+		$year = _isnum($_POST['year']);
+		if($expense_id == 1 && (!$worker_id || !$year || !$mon))
+			jsonError();
+
 		$sql = "INSERT INTO `money` (
 					`ws_id`,
 					`sum`,
@@ -1832,6 +1826,8 @@ switch(@$_POST['op']) {
 					`invoice_id`,
 					`expense_id`,
 					`worker_id`,
+					`year`,
+					`mon`,
 					`viewer_id_add`
 				) VALUES (
 					".WS_ID.",
@@ -1840,6 +1836,8 @@ switch(@$_POST['op']) {
 					".$invoice_id.",
 					".$expense_id.",
 					".$worker_id.",
+					".$year.",
+					".$mon.",
 					".VIEWER_ID."
 				)";
 		query($sql);

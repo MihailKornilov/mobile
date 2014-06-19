@@ -136,6 +136,7 @@ var AJAX_WS = '/ajax/ws.php?' + VALUES,
 	},
 	clientFilter = function() {
 		var v = {
+			op:'client_spisok',
 			fast:cFind.inp(),
 			dolg:$('#dolg').val(),
 			active:$('#active').val(),
@@ -145,13 +146,11 @@ var AJAX_WS = '/ajax/ws.php?' + VALUES,
 		return v;
 	},
 	clientSpisok = function() {
-		var send = clientFilter(),
-			result = $('.result');
-		send.op = 'client_spisok';
+		var result = $('.result');
 		if(result.hasClass('busy'))
 			return;
 		result.addClass('busy');
-		$.post(AJAX_WS, send, function (res) {
+		$.post(AJAX_WS, clientFilter(), function (res) {
 			result.removeClass('busy');
 			if(res.success) {
 				result.html(res.all);
@@ -1107,14 +1106,12 @@ $(document)
 			return;
 		var next = $(this),
 			send = clientFilter();
-		send.op = 'client_next';
 		send.page = next.attr('val');
 		next.addClass('busy');
-		$.post(AJAX_WS, send, function (res) {
-			if(res.success) {
-				next.remove();
-				$('#client .left').append(res.spisok);
-			} else
+		$.post(AJAX_WS, send, function(res) {
+			if(res.success)
+				next.after(res.spisok).remove();
+			else
 				next.removeClass('busy');
 		}, 'json');
 	})
@@ -3581,6 +3578,9 @@ $(document)
 						'<tr><td class="label">Категория:<td><input type="hidden" id="expense_id" />' +
 							'<a href="' + URL + '&p=setup&d=expense" class="img_edit' + _tooltip('Настройка категорий расходов', -95) + '</a>' +
 						'<tr class="tr-work dn"><td class="label">Сотрудник:<td><input type="hidden" id="worker_id" />' +
+						'<tr class="tr-work dn"><td class="label">Месяц:' +
+							'<td><input type="hidden" id="tabmon" value="' + ((new Date).getMonth() + 1) + '" /> ' +
+								'<input type="hidden" id="tabyear" value="' + (new Date).getFullYear() + '" />' +
 						'<tr><td class="label">Описание:<td><input type="text" id="prim" maxlength="100">' +
 						'<tr><td class="label">Со счёта:<td><input type="hidden" id="invoice_id" value="' + (INVOICE_SPISOK.length == 1 ? INVOICE_SPISOK[0].uid : 0) + '" />' +
 						'<tr><td class="label">Сумма:<td><input type="text" id="sum" class="money" maxlength="11" /> руб.' +
@@ -3615,6 +3615,14 @@ $(document)
 						$('#sum').focus();
 					}
 				});
+				$('#tabmon')._select({
+					width:80,
+					spisok:MON_SPISOK
+				});
+				$('#tabyear')._select({
+					width:60,
+					spisok:YEAR_SPISOK
+				});
 
 				function submit() {
 					var send = {
@@ -3623,11 +3631,13 @@ $(document)
 						worker_id:$('#worker_id').val(),
 						prim:$('#prim').val(),
 						invoice_id:$('#invoice_id').val(),
-						sum:$('#sum').val()
+						sum:_cena($('#sum').val()),
+						mon:$('#tabmon').val(),
+						year:$('#tabyear').val()
 					};
 					if(!send.prim && send.expense_id == 0) { err('Выберите категорию или укажите описание.'); $('#prim').focus(); }
 					else if(send.invoice_id == 0) err('Укажите с какого счёта производится оплата.');
-					else if(!REGEXP_CENA.test(send.sum)) { err('Некорректно указана сумма.'); $('#sum').focus(); }
+					else if(!send.sum) { err('Некорректно указана сумма.'); $('#sum').focus(); }
 					else {
 						dialog.process();
 						$.post(AJAX_WS, send, function (res) {
@@ -3635,7 +3645,8 @@ $(document)
 								dialog.close();
 								_msg('Новый расход внесён.');
 								expenseSpisok();
-							}
+							} else
+								dialog.abort();
 						}, 'json');
 					}
 				}
