@@ -261,14 +261,12 @@ switch(@$_POST['op']) {
 		break;
 
 	case 'zayav_add':
-		if(!preg_match(REGEXP_NUMERIC, $_POST['client']) || !$_POST['client'])
+		if(!$client_id = _isnum($_POST['client_id']))
 			jsonError();
-		if(!preg_match(REGEXP_NUMERIC, $_POST['device']) || !$_POST['device'])
+		if(!$device = _isnum($_POST['device']))
 			jsonError();
-		$client = intval($_POST['client']);
-		$device = intval($_POST['device']);
-		$vendor = intval($_POST['vendor']);
-		$model = intval($_POST['model']);
+		$vendor = _isnum($_POST['vendor']);
+		$model = _isnum($_POST['model']);
 		if(!empty($_POST['equip'])) {
 			$ids = explode(',', $_POST['equip']);
 			for($n = 0; $n < count($ids); $n++)
@@ -276,12 +274,13 @@ switch(@$_POST['op']) {
 					jsonError();
 		}
 		$place = intval($_POST['place']);
-		$place_other = $place == 0 ? win1251(htmlspecialchars(trim($_POST['place_other']))) : '';
+		$place_other = !$place ? win1251(htmlspecialchars(trim($_POST['place_other']))) : '';
 		$imei = win1251(htmlspecialchars(trim($_POST['imei'])));
 		$serial = win1251(htmlspecialchars(trim($_POST['serial'])));
 		$color = intval($_POST['color']);
 		$color_dop = $color ? intval($_POST['color_dop']) : 0;
 		$comm = win1251(htmlspecialchars(trim($_POST['comm'])));
+		$pre_cost = _isnum($_POST['pre_cost']);
 		$reminder = intval($_POST['reminder']);
 		$reminder_txt = win1251(htmlspecialchars(trim($_POST['reminder_txt'])));
 		$reminder_day = htmlspecialchars(trim($_POST['reminder_day']));
@@ -324,12 +323,13 @@ switch(@$_POST['op']) {
 					`device_place_other`,
 
 					`barcode`,
+					`pre_cost`,
 					`viewer_id_add`,
 					`find`
 				) VALUES (
 					".WS_ID.",
 					".$nomer.",
-					".$client.",
+					".$client_id.",
 
 					".$device.",
 					".$vendor.",
@@ -349,6 +349,7 @@ switch(@$_POST['op']) {
 					'".$place_other."',
 
 					'".rand(10, 99).(time() + rand(10000, 99999))."',
+					".$pre_cost.",
 					".VIEWER_ID.",
 					'".addslashes($modelName.' '.$imei.' '.$serial)."'
 				)";
@@ -390,7 +391,7 @@ switch(@$_POST['op']) {
 		}
 		history_insert(array(
 			'type' => 1,
-			'client_id' => $client,
+			'client_id' => $client_id,
 			'zayav_id' => $send['id']
 		));
 		jsonSuccess($send);
@@ -422,11 +423,11 @@ switch(@$_POST['op']) {
 		jsonSuccess($send);
 		break;
 	case 'zayav_edit':
-		if(!preg_match(REGEXP_NUMERIC, $_POST['zayav_id']) && !$_POST['zayav_id'])
+		if(!$zayav_id = _isnum($_POST['zayav_id']))
 			jsonError();
-		if(!preg_match(REGEXP_NUMERIC, $_POST['client_id']) && !$_POST['client_id'])
+		if(!$client_id = _isnum($_POST['client_id']))
 			jsonError();
-		if(!preg_match(REGEXP_NUMERIC, $_POST['device']) && !$_POST['device'])
+		if(!$device = _isnum($_POST['device']))
 			jsonError();
 		if(!preg_match(REGEXP_NUMERIC, $_POST['vendor']))
 			jsonError();
@@ -436,9 +437,6 @@ switch(@$_POST['op']) {
 			jsonError();
 		if(!preg_match(REGEXP_NUMERIC, $_POST['color_dop']))
 			jsonError();
-		$zayav_id = intval($_POST['zayav_id']);
-		$client_id = intval($_POST['client_id']);
-		$device = intval($_POST['device']);
 		$vendor = intval($_POST['vendor']);
 		$model = intval($_POST['model']);
 		$imei = win1251(htmlspecialchars(trim($_POST['imei'])));
@@ -452,6 +450,7 @@ switch(@$_POST['op']) {
 					jsonError();
 		}
 		$equip = $_POST['equip'];
+		$pre_cost = _isnum($_POST['pre_cost']);
 
 		$sql = "SELECT * FROM `zayav` WHERE `ws_id`=".WS_ID." AND !`deleted` AND `id`=".$zayav_id;
 		if(!$z = mysql_fetch_assoc(query($sql)))
@@ -467,6 +466,7 @@ switch(@$_POST['op']) {
 					`color_id`=".$color_id.",
 					`color_dop`=".$color_dop.",
 					`equip`='".$equip."',
+					`pre_cost`=".$pre_cost.",
 					`find`='".addslashes(_modelName($model).' '.$imei.' '.$serial)."'
 				WHERE `id`=".$zayav_id;
 		query($sql);
@@ -506,6 +506,8 @@ switch(@$_POST['op']) {
 			$changes .= '<tr><th>Цвет:<td>'._color($z['color_id'], $z['color_dop']).'<td>»<td>'._color($color_id, $color_dop);
 		if($z['equip'] != $equip)
 			$changes .= '<tr><th>Комплект:<td>'.zayavEquipSpisok($z['equip']).'<td>»<td>'.zayavEquipSpisok($equip);
+		if($z['pre_cost'] != $pre_cost)
+			$changes .= '<tr><th>Стоимость ремонта:<td>'.($z['pre_cost'] ? $z['pre_cost'] : '').'<td>»<td>'.($pre_cost ? $pre_cost : '');
 		if($changes)
 			history_insert(array(
 				'type' => 7,
@@ -599,6 +601,10 @@ switch(@$_POST['op']) {
 			));
 			$send['z_status']['dtime'] = utf8(FullDataTime(curTime(), 1));
 		}
+
+		if($dev_place != $z['device_place'] && $dev_place == 2)
+			$send['comment'] = zayav_msg_to_client($zayav_id);
+
 		jsonSuccess($send);
 		break;
 	case 'zayav_accrual_add':
@@ -880,7 +886,7 @@ switch(@$_POST['op']) {
 				FROM `vk_comment`
 				WHERE `table_name`='zayav'
 				  AND `table_id`=".$zayav_id."
-				  AND `status`=1
+				  AND `status`
 				ORDER BY `id` DESC
 				LIMIT 1";
 		if($r = mysql_fetch_assoc(query($sql)))
@@ -1694,8 +1700,7 @@ switch(@$_POST['op']) {
 
 		$send = array();
 		if($v['zayav_id']) {
-			$sql = "SELECT * FROM `zayav` WHERE `id`=".$v['zayav_id'];
-			$r = mysql_fetch_assoc(query($sql));
+			$r = query_assoc("SELECT * FROM `zayav` WHERE `id`=".$v['zayav_id']);
 			if($place != $r['device_place'] || $place_other != $r['device_place_other']) {
 				$sql = "UPDATE `zayav`
 						SET `device_place`=".$place.",
@@ -1715,6 +1720,9 @@ switch(@$_POST['op']) {
 				));
 			}
 			$send['html'] = utf8(zayav_info_money($v['zayav_id']));
+
+			if($place != $r['device_place'] && $place == 2)
+				$send['comment'] = zayav_msg_to_client($v['zayav_id']);
 		}
 		jsonSuccess($send);
 		break;

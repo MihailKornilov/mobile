@@ -712,6 +712,7 @@ function zayav_add($v=array()) {
 			'<tr><td class="label topi">Местонахождение устройства<br />после внесения заявки:<td><input type="hidden" id="place" value="-1" />'.
 			'<tr><td class="label top">Неисправности: <td id="fault">'.$fault.
 			'<tr><td class="label topi">Заметка:	   <td><textarea id="comm"></textarea>'.
+			'<tr><td class="label">Предварительная стоимость:<td><input type="text" class="money" id="pre_cost" maxlength="11" /> руб.'.
 			'<tr><td class="label">Добавить напоминание:<td>'._check('reminder').
 		'</table>'.
 
@@ -748,7 +749,7 @@ function zayav_spisok($v) {
 
 	$page = $filter['page'];
 	$limit = $filter['limit'];
-	$cond = "`ws_id`=".WS_ID." AND `zayav_status`";
+	$cond = "`ws_id`=".WS_ID." AND !`deleted` AND `zayav_status`";
 
 	if($filter['find']) {
 		$cond .= " AND `find` LIKE '%".$filter['find']."%'";
@@ -1029,9 +1030,9 @@ function zayav_info($zayav_id) {
 	$sql = "SELECT *
 			FROM `zayav`
 			WHERE `ws_id`=".WS_ID."
+			  AND !`deleted`
 			  AND `zayav_status`
-			  AND `id`=".$zayav_id."
-			LIMIT 1";
+			  AND `id`=".$zayav_id;
 	if(!$z = mysql_fetch_assoc(query($sql)))
 		return 'Заявки не существует.';
 
@@ -1061,6 +1062,7 @@ function zayav_info($zayav_id) {
 			'color_id:'.$z['color_id'].','.
 			'color_dop:'.$z['color_dop'].','.
 			'equip:"'.addslashes(devEquipCheck($z['base_device_id'], $z['equip'])).'",'.
+			'pre_cost:'.$z['pre_cost'].','.
 			'images:"'.addslashes(_imageAdd(array('owner'=>'zayav'.$zayav_id))).'",'.
 			'expense:['.$expense['json'].'],'.
 			'zp_avai:'.zayav_zp_avai($z).
@@ -1101,7 +1103,8 @@ function zayav_info($zayav_id) {
 					'<tr><td class="label">Устройство: <td>'._deviceName($z['base_device_id']).'<a><b>'.MODEL.'</b></a>'.
 					'<tr><td class="label">Клиент:	 <td>'._clientLink($z['client_id']).
 					'<tr><td class="label">Дата приёма:'.
-						'<td class="dtime_add" title="Заявку внёс '._viewer($z['viewer_id_add'], 'name').'">'.FullDataTime($z['dtime_add']).
+						'<td class="dtime_add'._tooltip('Заявку внёс '._viewer($z['viewer_id_add'], 'name'), -70).FullDataTime($z['dtime_add']).
+  ($z['pre_cost'] ? '<tr><td class="label">Стоимость:<td><b class="'._tooltip('Предварительная стоимость ремонта', -10, 'l').$z['pre_cost'].'</b> руб.' : '').
 					'<tr><td class="label">Статус:'.
 						'<td><div id="status" style="background-color:#'._zayavStatusColor($z['zayav_status']).'" class="status_place">'.
 								_zayavStatusName($z['zayav_status']).
@@ -1394,7 +1397,33 @@ function zayav_zp_avai($z) {
 		'}';
 	return '['.implode(',',$send).']';
 }//zayav_zp_avai()
-
+function zayav_msg_to_client($zayav_id) {
+	$parent_id = 0;
+	$sql = "SELECT `id`,`parent_id`
+			FROM `vk_comment`
+			WHERE `table_name`='zayav'
+			  AND `table_id`=".$zayav_id."
+			  AND `status`
+			ORDER BY `id` DESC
+			LIMIT 1";
+	if($r = query_assoc($sql))
+		$parent_id = $r['parent_id'] ? $r['parent_id'] : $r['id'];
+	$sql = "INSERT INTO `vk_comment` (
+				`table_name`,
+				`table_id`,
+				`txt`,
+				`parent_id`,
+				`viewer_id_add`
+			) VALUES (
+				'zayav',
+				".$zayav_id.",
+				'Передано клиенту.',
+				".$parent_id.",
+				".VIEWER_ID."
+			)";
+	query($sql);
+	return utf8(_vkComment('zayav', $zayav_id));
+}//zayav_msg_to_client()
 
 
 

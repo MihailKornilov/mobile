@@ -1338,6 +1338,7 @@ $(document)
 					'<span class="color_dop dn"><tt>-</tt><INPUT TYPE="hidden" id="color_dop" value="' + ZAYAV.color_dop + '" /></span>' +
 			'<tr class="tr_equip' + (ZAYAV.equip ? '' : ' dn') + '">' +
 				'<td class="label r top">Комплектация:<TD class="equip_spisok">' + ZAYAV.equip +
+			'<tr><td class="label">Стоимость ремонта:<td><input type="text" class="money" id="pre_cost" maxlength="11" value="' + (ZAYAV.pre_cost ? ZAYAV.pre_cost : '') + '" /> руб.' +
 		'</TABLE>',
 			dialog = _dialog({
 				width:420,
@@ -1380,7 +1381,8 @@ $(document)
 					serial:$.trim($('#serial').val()),
 					color_id:$('#color_id').val(),
 					color_dop:$('#color_dop').val(),
-					equip:''
+					equip:'',
+					pre_cost:$('#pre_cost').val()
 				};
 			if(!$('.tr_equip').hasClass('dn')) {
 				var inp = $('.equip_spisok input'),
@@ -1394,7 +1396,10 @@ $(document)
 			}
 			if(send.deivce == 0) msg = 'Не выбрано устройство';
 			else if(send.client_id == 0) msg = 'Не выбран клиент';
-			else {
+			else if(send.pre_cost && !REGEXP_NUMERIC.test(send.pre_cost)) {
+				msg = 'Некорректно указана предварительная стоимость';
+				$('#pre_cost').focus();
+			} else {
 				dialog.process();
 				$.post(AJAX_WS, send, function (res) {
 					dialog.close();
@@ -1633,6 +1638,8 @@ $(document)
 						ZAYAV.dev_status = send.dev_status;
 						ZAYAV.dev_place = send.dev_place;
 						ZAYAV.place_other = send.place_other;
+						if(res.comment)
+							$('.vkComment').after(res.comment).remove();
 					}
 				}, 'json');
 			}
@@ -2585,9 +2592,11 @@ $(document)
 					if(res.success) {
 						dialog.close();
 						_msg('Новое платёж внесён.');
-						if(window.ZAYAV)
+						if(window.ZAYAV) {
 							$('#money_spisok').html(res.html);
-						else
+							if(res.comment)
+								$('.vkComment').after(res.comment).remove();
+						} else
 							incomeSpisok();
 					}
 				}, 'json');
@@ -3223,7 +3232,7 @@ $(document)
 					return;
 				var send = {
 					op:'zayav_add',
-					client:$('#client_id').val(),
+					client_id:$('#client_id').val(),
 					device:$('#dev_device').val(),
 					vendor:$('#dev_vendor').val(),
 					model:$('#dev_model').val(),
@@ -3235,6 +3244,7 @@ $(document)
 					color:$('#color_id').val(),
 					color_dop:$('#color_dop').val(),
 					comm:$('#comm').val(),
+					pre_cost:$('#pre_cost').val(),
 					reminder:$('#reminder').val()
 				};
 				if(!$('.tr_equip').hasClass('dn')) {
@@ -3251,10 +3261,13 @@ $(document)
 				send.reminder_day = send.reminder == 1 ? $('#reminder_day').val() : '';
 
 				var msg = '';
-				if(send.client == 0) msg = 'Не выбран клиент';
+				if(send.client_id == 0) msg = 'Не выбран клиент';
 				else if(send.device == 0) msg = 'Не выбрано устройство';
 				else if(send.place == '-1' || send.place == 0 && !send.place_other) msg = 'Не указано местонахождение устройства';
-				else if(send.reminder == 1 && !send.reminder_txt) msg = 'Не указан текст напоминания';
+				else if(send.pre_cost && (!REGEXP_NUMERIC.test(send.pre_cost) || send.pre_cost == 0)) {
+					msg = 'Некорректно указана предварительная стоимость';
+					$('#pre_cost').focus();
+				} else if(send.reminder == 1 && !send.reminder_txt) msg = 'Не указан текст напоминания';
 				else {
 					if(send.place > 0) send.place_other = '';
 					$(this).addClass('busy');
