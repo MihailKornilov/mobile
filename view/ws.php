@@ -2992,7 +2992,7 @@ function statistic() {
 				SUM(`sum`) AS `sum`,
 				DATE_FORMAT(`dtime_add`, '%Y-%m-15') AS `dtime`
 			FROM `money`
-			WHERE `deleted`=0
+			WHERE !`deleted`
 			  AND `sum`>0
 			GROUP BY DATE_FORMAT(`dtime_add`, '%Y-%m')
 			ORDER BY `dtime_add`";
@@ -3000,11 +3000,12 @@ function statistic() {
 	$prihod = array();
 	while($r = mysql_fetch_assoc($q))
 		$prihod[] = array(strtotime($r['dtime']) * 1000, intval($r['sum']));
+
 	$sql = "SELECT
 				SUM(`sum`)*-1 AS `sum`,
 				DATE_FORMAT(`dtime_add`, '%Y-%m-15') AS `dtime`
 			FROM `money`
-			WHERE `deleted`=0
+			WHERE !`deleted`
 			  AND `sum`<0
 			GROUP BY DATE_FORMAT(`dtime_add`, '%Y-%m')
 			ORDER BY `dtime_add`";
@@ -3013,12 +3014,72 @@ function statistic() {
 	while($r = mysql_fetch_assoc($q))
 		$expense[] = array(strtotime($r['dtime']) * 1000, intval($r['sum']));
 
+	$sql = "SELECT
+				COUNT(`id`) AS `count`,
+				DATE_FORMAT(`dtime_add`, '%Y-%m-15') AS `mon`
+			FROM `client`
+			GROUP BY DATE_FORMAT(`dtime_add`, '%Y-%m')
+			ORDER BY `dtime_add`";
+	$q = query($sql);
+	$client = array();
+	while($r = mysql_fetch_assoc($q))
+		$client[] = array(strtotime($r['mon']) * 1000, intval($r['count']));
+
+	//Новые заявки
+	$sql = "SELECT
+				COUNT(`id`) AS `count`,
+				DATE_FORMAT(`dtime_add`, '%Y-%m-%d') AS `day`
+			FROM `zayav`
+			WHERE !`deleted`
+			GROUP BY DATE_FORMAT(`dtime_add`, '%Y-%m-%d')
+			ORDER BY `dtime_add`";
+	$q = query($sql);
+	$zayav = array();
+	while($r = mysql_fetch_assoc($q))
+		$zayav[] = array(strtotime($r['day']) * 1000, intval($r['count']));
+
+	//Выполненные заявки
+	$sql = "SELECT
+				COUNT(`id`) AS `count`,
+				DATE_FORMAT(`zayav_status_dtime`, '%Y-%m-%d') AS `day`
+			FROM `zayav`
+			WHERE !`deleted`
+			  AND `zayav_status`=2
+			GROUP BY DATE_FORMAT(`zayav_status_dtime`, '%Y-%m-%d')
+			ORDER BY `zayav_status_dtime`";
+	$q = query($sql);
+	$zayav_ok = array();
+	while($r = mysql_fetch_assoc($q))
+		$zayav_ok[] = array(strtotime($r['day']) * 1000, intval($r['count']));
+
+	//Отменённые заявки
+	$sql = "SELECT
+				COUNT(`id`) AS `count`,
+				DATE_FORMAT(`zayav_status_dtime`, '%Y-%m-%d') AS `day`
+			FROM `zayav`
+			WHERE !`deleted`
+			  AND `zayav_status`=3
+			GROUP BY DATE_FORMAT(`zayav_status_dtime`, '%Y-%m-%d')
+			ORDER BY `zayav_status_dtime`";
+	$q = query($sql);
+	$zayav_fail = array();
+	while($r = mysql_fetch_assoc($q))
+		$zayav_fail[] = array(strtotime($r['day']) * 1000, intval($r['count']));
+
 	return
 	'<script type="text/javascript" src="http://nyandoma'.(LOCAL ? '' : '.ru').'/js/highstock.js"></script>'.
 	'<div id="statistic"></div>'.
+	'<br />'.
+	'<div id="client-count"></div>'.
+	'<br />'.
+	'<div id="zayav-count"></div>'.
 	'<script type="text/javascript">'.
-		'var statPrihod = '.json_encode($prihod).';'.
-		'var statRashod = '.json_encode($expense).';'.
+		'var statPrihod='.json_encode($prihod).','.
+			'statRashod='.json_encode($expense).','.
+			'CLIENT_COUNT='.json_encode($client).','.
+			'ZAYAV_COUNT='.json_encode($zayav).','.
+			'ZAYAV_OK='.json_encode($zayav_ok).','.
+			'ZAYAV_FAIL='.json_encode($zayav_fail).';'.
 	'</script>'.
 	'<script type="text/javascript" src="'.SITE.'/js/statistic.js"></script>';
 }//statistic()
