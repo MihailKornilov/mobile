@@ -1761,7 +1761,7 @@ $(document)
 				if(res.success) {
 					dialog.close();
 					_msg('Установка запчасти произведена.');
-					unit.after(res.zp_unit).remove();
+					unit.parent().html(res.zp_unit);
 					$('.vkComment').after(res.comment).remove();
 				}
 			},'json');
@@ -1860,6 +1860,9 @@ $(document)
 				count = 0;
 		}
 		c.html(count);
+	})
+	.on('click', '.zp-id', function() {
+		location.href = URL + '&p=zp&d=info&id=' + $(this).attr('val');
 	})
 
 	.on('click', '#zpInfo .avai_add', function() {

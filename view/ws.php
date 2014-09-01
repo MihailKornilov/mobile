@@ -1881,7 +1881,8 @@ function report() {
 		'history' => 'История действий',
 		'remind' => 'Задания'.REMIND_ACTIVE.'<div class="img_add report_remind_add"></div>',
 		'money' => 'Деньги',
-		'salary' => 'З/п сотрудников'
+		'salary' => 'З/п сотрудников',
+		'stat' => 'Статистика'
 	);
 
 	$rightLink = '<div class="rightLink">';
@@ -1936,14 +1937,12 @@ function report() {
 					$right .= expense_right();
 					break;
 				case 'invoice': $left = invoice(); break;
-				case 'stat': $left = statistic(); break;
 			}
 			$left =
 				'<div id="dopLinks">'.
 					'<a class="link'.($d1 == 'income' ? ' sel' : '').'" href="'.URL.'&p=report&d=money&d1=income">Поступления</a>'.
 					'<a class="link'.($d1 == 'expense' ? ' sel' : '').'" href="'.URL.'&p=report&d=money&d1=expense">Расходы</a>'.
 					'<a class="link'.($d1 == 'invoice' ? ' sel' : '').'" href="'.URL.'&p=report&d=money&d1=invoice">Счета</a>'.
-					'<a class="link'.($d1 == 'stat' ? ' sel' : '').'" href="'.URL.'&p=report&d=money&d1=stat">Статистика</a>'.
 				'</div>'.
 				$left;
 			break;
@@ -1962,6 +1961,7 @@ function report() {
 			} else
 				$left = salary();
 			break;
+		case 'stat': $left = statistic(); break;
 	}
 
 	return
@@ -2417,7 +2417,7 @@ function income_spisok($filter=array()) {
 	if($filter['zayav_id'])
 		$cond .= " AND `zayav_id`=".$filter['zayav_id'];
 	if(!$filter['del'] || !VIEWER_ADMIN)
-		$cond .= " AND `deleted`=0";
+		$cond .= " AND !`deleted`";
 	if($filter['day'])
 		$cond .= " AND `dtime_add` LIKE '".$filter['day']."%'";
 	if($filter['from'])
@@ -2442,7 +2442,7 @@ function income_spisok($filter=array()) {
 	$sql = "SELECT *
 			FROM `money`
 			WHERE ".$cond."
-			ORDER BY `dtime_add` ASC
+			ORDER BY `dtime_add` DESC
 			LIMIT ".$start.",".$limit;
 	$q = query($sql);
 	$money = array();
@@ -3036,7 +3036,7 @@ function statistic() {
 	$q = query($sql);
 	$zayav = array();
 	while($r = mysql_fetch_assoc($q))
-		$zayav[] = array(strtotime($r['day']) * 1000, intval($r['count']));
+		$zayav[] = array((strtotime($r['day']) + 40000) * 1000, intval($r['count']));
 
 	//Выполненные заявки
 	$sql = "SELECT
@@ -3050,7 +3050,7 @@ function statistic() {
 	$q = query($sql);
 	$zayav_ok = array();
 	while($r = mysql_fetch_assoc($q))
-		$zayav_ok[] = array(strtotime($r['day']) * 1000, intval($r['count']));
+		$zayav_ok[] = array((strtotime($r['day']) + 40000) * 1000, intval($r['count']));
 
 	//Отменённые заявки
 	$sql = "SELECT
@@ -3064,15 +3064,61 @@ function statistic() {
 	$q = query($sql);
 	$zayav_fail = array();
 	while($r = mysql_fetch_assoc($q))
-		$zayav_fail[] = array(strtotime($r['day']) * 1000, intval($r['count']));
+		$zayav_fail[] = array((strtotime($r['day']) + 40000) * 1000, intval($r['count']));
+
+
+
+	//Новые заявки - месяц
+	$sql = "SELECT
+				COUNT(`id`) AS `count`,
+				DATE_FORMAT(`dtime_add`, '%Y-%m-15') AS `mon`
+			FROM `zayav`
+			WHERE !`deleted`
+			GROUP BY DATE_FORMAT(`dtime_add`, '%Y-%m')
+			ORDER BY `dtime_add`";
+	$q = query($sql);
+	$zayavmon = array();
+	while($r = mysql_fetch_assoc($q))
+		$zayavmon[] = array(strtotime($r['mon']) * 1000, intval($r['count']));
+
+	//Выполненные заявки - месяц
+	$sql = "SELECT
+				COUNT(`id`) AS `count`,
+				DATE_FORMAT(`zayav_status_dtime`, '%Y-%m-15') AS `mon`
+			FROM `zayav`
+			WHERE !`deleted`
+			  AND `zayav_status`=2
+			GROUP BY DATE_FORMAT(`zayav_status_dtime`, '%Y-%m')
+			ORDER BY `zayav_status_dtime`";
+	$q = query($sql);
+	$zayavmon_ok = array();
+	while($r = mysql_fetch_assoc($q))
+		$zayavmon_ok[] = array(strtotime($r['mon']) * 1000, intval($r['count']));
+
+	//Отменённые заявки - месяц
+	$sql = "SELECT
+				COUNT(`id`) AS `count`,
+				DATE_FORMAT(`zayav_status_dtime`, '%Y-%m-15') AS `mon`
+			FROM `zayav`
+			WHERE !`deleted`
+			  AND `zayav_status`=3
+			GROUP BY DATE_FORMAT(`zayav_status_dtime`, '%Y-%m')
+			ORDER BY `zayav_status_dtime`";
+	$q = query($sql);
+	$zayavmon_fail = array();
+	while($r = mysql_fetch_assoc($q))
+		$zayavmon_fail[] = array(strtotime($r['mon']) * 1000, intval($r['count']));
+
 
 	return
 	'<script type="text/javascript" src="http://nyandoma'.(LOCAL ? '' : '.ru').'/js/highstock.js"></script>'.
 	'<div id="statistic"></div>'.
-	'<br />'.
+	'<br /><br />'.
 	'<div id="client-count"></div>'.
-	'<br />'.
+	'<br /><br />'.
 	'<div id="zayav-count"></div>'.
+	'<br /><br />'.
+	'<div id="zayav-count-mon"></div>'.
 	'<script type="text/javascript">'.
 		'var statPrihod='.json_encode($prihod).','.
 			'statRashod='.json_encode($expense).','.
@@ -3080,6 +3126,9 @@ function statistic() {
 			'ZAYAV_COUNT='.json_encode($zayav).','.
 			'ZAYAV_OK='.json_encode($zayav_ok).','.
 			'ZAYAV_FAIL='.json_encode($zayav_fail).';'.
+			'ZAYAVMON_COUNT='.json_encode($zayavmon).','.
+			'ZAYAVMON_OK='.json_encode($zayavmon_ok).','.
+			'ZAYAVMON_FAIL='.json_encode($zayavmon_fail).';'.
 	'</script>'.
 	'<script type="text/javascript" src="'.SITE.'/js/statistic.js"></script>';
 }//statistic()

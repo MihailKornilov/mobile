@@ -78,7 +78,7 @@ $('#zayav-count').highcharts('StockChart', {
 		selected: 0
 	},
 	title: {
-		text: 'Новые заявки по дням'
+		text: 'Заявки по дням'
 	},
 	legend: {
 		enabled: true
@@ -104,6 +104,50 @@ $('#zayav-count').highcharts('StockChart', {
 			name: 'Отменены',
 			color:'#D30000',
 			data: ZAYAV_FAIL,
+			tooltip: {
+				valueDecimals: 0
+			}
+		}
+	]
+});
+
+$('#zayav-count-mon').highcharts('StockChart', {
+	chart: {
+		zoomType: 'x',
+		type: 'spline'
+	},
+
+	rangeSelector: {
+		enabled: true,
+		selected: 4
+	},
+	title: {
+		text: 'Заявки по месяцам'
+	},
+	legend: {
+		enabled: true
+	},
+	series: [
+		{
+			name: 'Новые заявки',
+			color:'#6E6EC5',
+			data: ZAYAVMON_COUNT,
+			tooltip: {
+				valueDecimals: 0
+			}
+		},
+		{
+			name: 'Выполнены',
+			color:'#25B025',
+			data: ZAYAVMON_OK,
+			tooltip: {
+				valueDecimals: 0
+			}
+		},
+		{
+			name: 'Отменены',
+			color:'#D30000',
+			data: ZAYAVMON_FAIL,
 			tooltip: {
 				valueDecimals: 0
 			}

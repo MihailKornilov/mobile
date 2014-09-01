@@ -839,17 +839,16 @@ switch(@$_POST['op']) {
 		jsonSuccess($send);
 		break;
 	case 'zayav_zp_set':// Установка запчасти из заявки
-		if(empty($_POST['zayav_id']) || !preg_match(REGEXP_NUMERIC, $_POST['zayav_id']))
+		if(!$zayav_id = _isnum($_POST['zayav_id']))
 			jsonError();
-		if(empty($_POST['zp_id']) || !preg_match(REGEXP_NUMERIC, $_POST['zp_id']))
+		if(!$zp_id = _isnum($_POST['zp_id']))
 			jsonError();
 		if(!isset($_POST['count']))
 			$_POST['count'] = 1;
 		if(empty($_POST['count']) || !preg_match(REGEXP_NUMERIC, $_POST['count']))
 			jsonError();
 
-		$zayav_id = intval($_POST['zayav_id']);
-		$zp_id = _zpCompatId($_POST['zp_id']);
+		$compat_id = _zpCompatId($zp_id);
 		$count = intval($_POST['count']) * -1;
 		$prim = isset($_POST['prim']) ? win1251(htmlspecialchars(trim($_POST['prim']))) : '';
 
@@ -867,7 +866,7 @@ switch(@$_POST['op']) {
 					`viewer_id_add`
 				) VALUES (
 					".WS_ID.",
-					".$zp_id.",
+					".$compat_id.",
 					".$count.",
 					'set',
 					".$zayav_id.",
@@ -876,7 +875,7 @@ switch(@$_POST['op']) {
 				)";
 		query($sql);
 
-		$count = _zpAvaiSet($zp_id);
+		$count = _zpAvaiSet($compat_id);
 
 		//Удаление из заказа запчасти, привязанной к заявке
 		query("DELETE FROM `zp_zakaz` WHERE `ws_id`=".WS_ID." AND `zayav_id`=".$zayav_id." AND `zp_id`=".$zp_id);
@@ -891,8 +890,11 @@ switch(@$_POST['op']) {
 				LIMIT 1";
 		if($r = mysql_fetch_assoc(query($sql)))
 			$parent_id = $r['parent_id'] ? $r['parent_id'] : $r['id'];
+
 		$sql = "SELECT * FROM `zp_catalog` WHERE id=".$zp_id." LIMIT 1";
-		$zp = mysql_fetch_assoc(query($sql));
+		if(!$zp = query_assoc($sql))
+		jsonError();
+
 		define('MODEL', _vendorName($zp['base_vendor_id'])._modelName($zp['base_model_id']));
 		$sql = "INSERT INTO `vk_comment` (
 					`table_name`,
@@ -903,7 +905,7 @@ switch(@$_POST['op']) {
 				) VALUES (
 					'zayav',
 					".$zayav_id.",
-					'".addslashes('Установка запчасти: <a href="'.URL.'&p=zp&d=info&id='.$zp_id.'">'._zpName($zp['name_id']).' '.MODEL.'</a>')."',
+					'".addslashes('Установка запчасти: <a class="zp-id" val="'.$zp_id.'">'._zpName($zp['name_id']).' '.MODEL.'</a>')."',
 					".$parent_id.",
 					".VIEWER_ID."
 				)";
