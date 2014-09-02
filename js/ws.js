@@ -1024,7 +1024,6 @@ $(document)
 				scannerTimer = setTimeout(timeStop, 500);
 				scannerDialog = _dialog({
 					head:'Сканер штрих-кода',
-					top:60,
 					width:250,
 					content:'Получен код: <b>' + scannerWord + '</b>',
 					butSubmit:'Поиск'
@@ -1036,10 +1035,24 @@ $(document)
 				scannerDialog.process();
 				$.post(AJAX_WS, send, function(res) {
 					if(res.success) {
+						if(e.target.localName == 'input') {
+							scannerDialog.close();
+							return;
+						}
+						if(_cookie('p') == 'zayav' && _cookie('d') == 'add') {
+							$('#' + (res.imei ? 'imei' : 'serial')).val(send.word);
+							scannerDialog.close();
+							return;
+						}
 						if(res.zayav_id)
 							document.location.href = URL + '&p=zayav&d=info&id=' + res.zayav_id;
-						else
-							document.location.href = URL + '&p=zayav&d=add&' + (res.imei ? 'imei' : 'serial') + '=' + send.word;
+						else {
+							var client_id = _cookie('p') == 'client' && _cookie('d') == 'info' ? _cookie('id') : 0;
+							document.location.href =
+								URL +
+								'&p=zayav&d=add&' + (res.imei ? 'imei' : 'serial') + '=' + send.word +
+								(client_id ? '&back=client&id=' + client_id : '');
+						}
 					} else
 						scannerDialog.abort();
 				}, 'json');
@@ -2908,6 +2921,64 @@ $(document)
 			});
 		}
 	})
+	.on('click', '.salary .deduct', function() {
+		var html =
+				'<table class="salary-tab">' +
+					'<tr><td class="label">Сумма:<TD><input type="text" id="sum" class="money" maxlength="8"> руб.' +
+					'<tr><td class="label">Описание:<TD><input type="text" id="about" maxlength="100">' +
+					'<tr><td class="label">Месяц:' +
+						'<td><input type="hidden" id="tabmon" value="' + MON + '" /> ' +
+							'<input type="hidden" id="tabyear" value="' + YEAR + '" />' +
+					'</table>',
+			dialog = _dialog({
+				head:'Внесение вычета из зарплаты',
+				content:html,
+				submit:submit
+			});
+
+		$('#sum').focus();
+		$('#sum,#about').keyEnter(submit);
+		$('#tabmon')._select({
+			width:80,
+			spisok:MON_SPISOK
+		});
+		$('#tabyear')._select({
+			width:60,
+			spisok:YEAR_SPISOK
+		});
+		function submit() {
+			var send = {
+				op:'salary_deduct',
+				worker:WORKER_ID,
+				sum:$('#sum').val(),
+				about:$('#about').val(),
+				mon:$('#tabmon').val(),
+				year:$('#tabyear').val()
+			};
+			if(!REGEXP_NUMERIC.test(send.sum)) { err('Некорректно указана сумма.'); $('#sum').focus(); }
+			else {
+				dialog.process();
+				$.post(AJAX_WS, send, function(res) {
+					if(res.success) {
+						dialog.close();
+						_msg('Вычет произведён.');
+						salarySpisok();
+					} else
+						dialog.abort();
+				}, 'json');
+			}
+		}
+		function err(msg) {
+			dialog.bottom.vkHint({
+				msg:'<SPAN class="red">' + msg + '</SPAN>',
+				remove:1,
+				indent:40,
+				show:1,
+				top:-47,
+				left:93
+			});
+		}
+	})
 	.on('click', '.salary .ze_del', function() {
 		var t = $(this),
 			dialog = _dialog({
@@ -3020,6 +3091,34 @@ $(document)
 		function submit() {
 			var send = {
 				op:'expense_del',
+				id:t.attr('val')
+			};
+			dialog.process();
+			$.post(AJAX_WS, send, function(res) {
+				if(res.success) {
+					dialog.close();
+					_msg('Удалено.');
+					salarySpisok();
+				} else
+					dialog.abort();
+			}, 'json');
+		}
+	})
+	.on('click', '.salary .deduct_del', function() {
+		var t = $(this),
+			dialog = _dialog({
+				top:110,
+				width:250,
+				head:'Удаление',
+				content:'<CENTER>Подтвердите удаление записи.</CENTER>',
+				butSubmit:'Удалить',
+				submit:submit
+			});
+		while(t[0].tagName != 'TR')
+			t = t.parent();
+		function submit() {
+			var send = {
+				op:'salary_deduct_del',
 				id:t.attr('val')
 			};
 			dialog.process();

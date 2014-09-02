@@ -2079,6 +2079,42 @@ switch(@$_POST['op']) {
 
 		jsonSuccess();
 		break;
+	case 'salary_deduct':
+		if(!$worker_id = _isnum($_POST['worker']))
+			jsonError();
+		if(!$sum = _isnum($_POST['sum']))
+			jsonError();
+		if(!$year = _isnum($_POST['year']))
+			jsonError();
+		if(!$mon = _isnum($_POST['mon']))
+			jsonError();
+		$about = win1251(htmlspecialchars(trim($_POST['about'])));
+		$sql = "INSERT INTO `zayav_expense` (
+					`ws_id`,
+					`worker_id`,
+					`sum`,
+					`txt`,
+					`year`,
+					`mon`
+				) VALUES (
+					".WS_ID.",
+					".$worker_id.",
+					-".$sum.",
+					'".addslashes($about)."',
+					".$year.",
+					".$mon."
+				)";
+		query($sql);
+
+		history_insert(array(
+			'type' => 44,
+			'value' => $sum,
+			'value1' => $about,
+			'value2' => $worker_id
+		));
+
+		jsonSuccess();
+		break;
 	case 'salary_del':
 		if(!$id = _isnum($_POST['id']))
 			jsonError();
@@ -2093,6 +2129,25 @@ switch(@$_POST['op']) {
 			'type' => 50,
 			'value' => _cena($r['sum']),
 			'value1' => $r['worker_id']
+		));
+
+		jsonSuccess();
+		break;
+	case 'salary_deduct_del':
+		if(!$id = _isnum($_POST['id']))
+			jsonError();
+
+		$sql = "SELECT * FROM `zayav_expense` WHERE `id`=".$id;
+		if(!$r = query_assoc($sql))
+			jsonError();
+
+		query("DELETE FROM `zayav_expense` WHERE `id`=".$id);
+
+		history_insert(array(
+			'type' => 51,
+			'value' => round(abs($r['sum']), 2),
+			'value1' => $r['txt'],
+			'value2' => $r['worker_id']
 		));
 
 		jsonSuccess();

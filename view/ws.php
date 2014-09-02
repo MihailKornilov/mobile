@@ -424,10 +424,9 @@ function client_info($client_id) {
 					'<div id="histories">'.$history['spisok'].'</div>'.
 				'<td class="right">'.
 					'<div class="rightLink">'.
-						'<a class="sel">Информация</a>'.
-						'<a class="cedit">Редактировать</a>'.
 						'<a href="'.URL.'&p=zayav&d=add&back=client&id='.$client_id.'"><b>Новая заявка</b></a>'.
 						'<a class="remind_add">Новое задание</a>'.
+						'<a class="cedit">Редактировать</a>'.
 					'</div>'.
 					'<div id="zayav_filter">'.
 						'<div id="zayav_result">'.$zayavData['result'].'</div>'.
@@ -2087,11 +2086,18 @@ function history_types($v, $filter) {
 					($v['value3'] ? '<span class="prim">('.$v['value3'].')</span>' : '');
 		case 45: return 'Установка баланса з/п в сумме <b>'.$v['value1'].'</b> руб. '.
 						'для сотрудника <u>'._viewer($v['value'], 'name').'</u>. ';
+		case 44: return
+			'Внесение вычета из з/п на сумму <b>'.$v['value'].'</b> '.
+			($v['value1'] ? '<em>('.$v['value1'].')</em> ' : '').
+			'у сотрудника <u>'._viewer($v['value2'], 'name').'</u>.';
 
 		case 46: return 'Автоматическое начисление з/п сотруднику <u>'._viewer($v['value1'], 'name').'</u> '.
 						'в размере <b>'.$v['value'].'</b> руб. <em>('.$v['value2'].')</em>.';
 
 		case 50: return 'Удаление начисления з/п в сумме <b>'.$v['value'].'</b> руб. у сотрудника <u>'._viewer($v['value1'], 'name').'</u>.';
+		case 51: return 'Удаление вычета в сумме <b>'.$v['value'].'</b> руб. '.
+						($v['value1'] ? '<em>('.$v['value1'].')</em> ' : '').
+						'у сотрудника <u>'._viewer($v['value2'], 'name').'</u>.';
 
 		case 1001: return 'В настройках: добавление нового сотрудника <u>'._viewer($v['value'], 'name').'</u>.';
 		case 1002: return 'В настройках: удаление сотрудника <u>'._viewer($v['value'], 'name').'</u>.';
@@ -3221,7 +3227,7 @@ function salary_monthList($v) {
 			FROM `zayav_expense`
 			WHERE `worker_id`=".$filter['worker_id']."
 			  AND `year`=".$filter['year']."
-			GROUP BY DATE_FORMAT(`mon`,'%m')";
+			GROUP BY `mon`";
 	$q = query($sql);
 	while($r = mysql_fetch_assoc($q))
 		$acc[intval($r['mon'])] = round($r['sum']);
@@ -3234,7 +3240,7 @@ function salary_monthList($v) {
 			WHERE !`deleted`
 			  AND `worker_id`=".$filter['worker_id']."
 			  AND `year`=".$filter['year']."
-			GROUP BY DATE_FORMAT(`mon`,'%m')";
+			GROUP BY `mon`";
 	$q = query($sql);
 	while($r = mysql_fetch_assoc($q))
 		$zp[intval($r['mon'])] = abs(round($r['sum'], 2));
@@ -3334,7 +3340,8 @@ function salary_worker_spisok($v) {
 		'Баланс: '.$balans.
 		'<div class="a">'.
 			'<a class="up">Начислить</a> :: '.
-			'<a class="zp_add">Выдать з/п</a>'.
+			'<a class="zp_add">Выдать з/п</a> :: '.
+			'<a class="deduct">Внести вычет</a>'.
 		'</div>'.
 	'</div>'.
 	'<div id="salary-sel">&nbsp;</div>';
@@ -3374,6 +3381,19 @@ function salary_worker_acc($v) {
 			  AND `sum`>0
 			  AND `year`=".$v['year']."
 			  AND `mon`=".$v['mon']."
+		) UNION (
+			SELECT
+				'Вычет' AS `type`,
+				`id`,
+			    `sum`,
+				`txt` AS `about`,
+				0 AS `zayav_id`,
+				`dtime_add`
+			FROM `zayav_expense`
+			WHERE `worker_id`=".$v['worker_id']."
+			  AND `sum`<0
+			  AND `year`=".$v['year']."
+			  AND `mon`=".$v['mon']."
 		)
 		ORDER BY `id` DESC";
 	$q = query($sql);
@@ -3409,7 +3429,8 @@ function salary_worker_acc($v) {
 				'<td class="sum">'.round($r['sum'], 2).
 				'<td class="about">'.$about.
 				'<td class="ed">'.
-					(!$r['zayav_id'] ? '<div class="img_del ze_del'._tooltip('Удалить', -29).'</div>' : '');
+					($r['type'] == 'Начисление' && !$r['zayav_id'] ? '<div class="img_del ze_del'._tooltip('Удалить', -29).'</div>' : '').
+					($r['type'] == 'Вычет' ? '<div class="img_del deduct_del'._tooltip('Удалить', -29).'</div>' : '');
 	}
 	$send .= '</table>';
 	return $send;
