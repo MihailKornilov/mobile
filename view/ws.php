@@ -1507,7 +1507,7 @@ function zpFilter($v) {
 		'bu' => !empty($v['bu']) && preg_match(REGEXP_BOOL, $v['bu']) ? intval($v['bu']) : 0,
 	);
 }//zpFilter()
-function zp_spisok($v) {
+function zp_spisok1($v) {
 	$filter = zpFilter($v);
 	$page = $filter['page'];
 	$limit = $filter['limit'];
@@ -1674,7 +1674,7 @@ function zp_spisok($v) {
 	}
 	return $send;
 }//zp_spisok()
-function zp_list($v) {
+function zp_list1($v) {
 	$data = zp_spisok($v);
 	$filter = $data['filter'];
 	$menu = array(
@@ -1705,6 +1705,114 @@ function zp_list($v) {
 		'</script>'.
 	'</div>';
 }//zp_list()
+
+function zp_spisok($v) {
+	$filter = zpFilter($v);
+	$page = $filter['page'];
+	$limit = $filter['limit'];
+	$cond = "`id`";
+
+	$all = query_value("SELECT COUNT(`id`) FROM `zp_catalog` WHERE ".$cond." LIMIT 1");
+	if(!$all)
+		return array(
+			'all' => 0,
+			'result' => 'Запчастей не найдено',
+			'spisok' => '<div class="_empty">Запчастей не найдено</div>',
+			'filter' => $filter
+		);
+
+	$send = array(
+		'all' => $all,
+		'result' => 'Показан'._end($all, 'а ', 'о ').$all.' запчаст'._end($all, 'ь', 'и', 'ей'),
+		'spisok' => '',
+		'filter' => $filter
+	);
+
+	$start = ($page - 1) * $limit;
+	$spisok = array();
+	$sql = "SELECT
+	            *,
+	            0 AS `avai`,
+	            0 AS `zakaz`,
+	            '' AS `zz`
+			FROM `zp_catalog`
+			WHERE ".$cond."
+			ORDER BY `id` DESC
+			LIMIT ".$start.",".$limit;
+	$q = query($sql);
+	$ids = array();
+	$compat = array();
+	$img = array();
+	while($r = mysql_fetch_assoc($q)) {
+		$r['model'] = _modelName($r['base_model_id']);
+		if(!empty($filter['find'])) {
+			if(preg_match($reg, $r['model']))
+				$r['model'] = preg_replace($reg, "<em>\\1</em>", $r['model'], 1);
+			if(preg_match($reg, $r['version']))
+				$r['version'] = preg_replace($reg, "<em>\\1</em>", $r['version'], 1);
+		}
+		$r['zp_id'] = $r['compat_id'] ? $r['compat_id'] : $r['id'];
+		$compat[$r['zp_id']][] = $r['id'];
+		$ids[$r['zp_id']] = $r['zp_id'];
+		$img[] = 'zp'.$r['id'];
+		$img[] = 'zp'.$r['compat_id'];
+		$spisok[$r['id']] = $r;
+	}
+
+	$send['spisok'] = '<table class="_spisok">';
+	foreach($spisok as $id => $r) {
+		$send['spisok'] .=
+			'<tr><td>'.
+				'<a href="'.URL.'&p=zp&d=info&id='.$id.'" class="name">'.
+					_zpName($r['name_id']).
+					' '._vendorName($r['base_vendor_id']).$r['model'].
+				'</a>';
+	}
+	$send['spisok'] .= '</table>';
+
+	if($start + $limit < $all) {
+		$c = $all - $start - $limit;
+		$c = $c > $limit ? $limit : $c;
+		$send['spisok'] .= '<div class="_next" val="'.($page + 1).'"><span>Показать ещё '.$c.' запчаст'._end($c, 'ь', 'и', 'ей').'</span></div>';
+	}
+	return $send;
+}//zp_spisok()
+function zp_list($v) {
+	$data = zp_spisok($v);
+	$filter = $data['filter'];
+	$menu = array(
+		0 => 'Общий каталог',
+		1 => 'Наличие',
+		2 => 'Нет в наличии',
+		3 => 'Заказ'
+	);
+	return
+		'<div id="zp">'.
+			'<div id="zp-head">'.
+				'<table id="head-t"><tr>'.
+					'<td><div id="find"></div>'.
+					'<td><div class="vkButton"><button>Внести новую запчасть</button></div>'.
+				'</table>'.
+				'<div id="zp-filter">'.
+					'<input type="hidden" id="zp_name" value="'.$filter['name'].'" />'.
+					'<input type="hidden" id="zp_dev" value="" />'.
+					_check('bu', 'Б/у', $filter['bu']).
+					'<a class="clear">Очистить фильтр</a>'.
+				'</div>'.
+			'</div>'.
+			'<div class="result">'.$data['result'].'</div>'.
+			'<div id="zpsp">'.$data['spisok'].'</div>'.
+			'<script type="text/javascript">'.
+				'var ZP={'.
+					'find:"'.addslashes($filter['find']).'",'.
+					'device:'.$filter['device'].','.
+					'vendor:'.$filter['vendor'].','.
+					'model:'.$filter['model'].
+				'};'.
+			'</script>'.
+		'</div>';
+}//zp_list()
+
 
 function zp_info($zp_id) {
 	$sql = "SELECT * FROM `zp_catalog` WHERE `id`=".$zp_id;

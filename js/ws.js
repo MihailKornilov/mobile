@@ -3632,30 +3632,26 @@ $(document)
 			});
 			$('#find')
 				._search({
-					width:153,
+					width:250,
 					focus:1,
 					txt:'Быстрый поиск...',
 					enter:1,
 					func:zpSpisok
 				})
 				.inp(ZP.find);
-			$('#menu').rightLink(zpSpisok);
 			$('#zp_name')._select({
-				width:153,
-				title0:'Любое наименование',
+				width:170,
+				title0:'Наименование запчасти',
 				spisok:ZPNAME_SPISOK,
 				func:zpSpisok
 			});
-			$('#dev').device({
-				width:153,
-				type_no:1,
-				device_ids:WS_DEVS,
-				device_id:ZP.device,
-				vendor_id:ZP.vendor,
-				model_id:ZP.model,
+			$('#zp_dev')._select({
+				width:220,
+				title0:'Устройство',
+				spisok:DEV_SPISOK,
 				func:zpSpisok
 			});
-			$('#bu')._check(zpSpisok);
+			//$('#bu')._check(zpSpisok);
 			zpFilter();
 		}
 

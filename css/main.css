@@ -247,7 +247,17 @@
 
 
 /* Список запчастей */
-#zp .clear{float:right}
+#zp #zp-head{padding:7px 0 7px 5px;background-color:#f7f7f7}
+#zp #head-t{width:100%;position:relative}
+#zp .vkButton{position:absolute;right:10px;top:0}
+#zp #zp_dev_select{margin:0 10px}
+#zp #bu_check{position:absolute;margin-top:4px}
+#zp .clear{float:right;margin:5px 10px 0 0}
+#zp .result{border-top:#DAE1E8 solid 1px}
+#zp #zpsp{padding:10px 5px}
+#zp ._spisok{width:100%}
+#zp ._spisok td{padding:2px 4px}
+/*
 #zp .right{width:155px}
 #zp ._search{margin-top:10px}
 #zp #bu_check{margin-top:15px}
@@ -279,6 +289,7 @@
 .zp_add_dialog .label{text-align:right}
 .zp_add_dialog #version{width:192px}
 .zp_add_dialog ._image-spisok{width:260px}
+*/
 
 .avaiAddTab{width:100%}
 .avaiAddTab .left{width:250px;vertical-align:top}
