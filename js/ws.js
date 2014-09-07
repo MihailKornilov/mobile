@@ -312,13 +312,14 @@ var AJAX_WS = '/ajax/ws.php?' + VALUES,
 	zpFilter = function() {
 		var v = {
 				op:'zp_spisok',
-				find:$.trim($('#find input').val()),
-				menu:$('#menu').val(),
+				find:$.trim($('#find')._search('val')),
+				menu:$('#zp_menu').val(),
 				name:$('#zp_name').val(),
 				device:$('#dev_device').val(),
 				vendor:$('#dev_vendor').val(),
 				model:$('#dev_model').val(),
-				bu:$('#bu').val()
+				bu:$('#bu').val(),
+				sort:$('#zp_sort').val()
 			},
 			loc = '';
 		if(v.find) loc += '.find=' + escape(v.find);
@@ -328,15 +329,26 @@ var AJAX_WS = '/ajax/ws.php?' + VALUES,
 		if(v.vendor > 0) loc += '.vendor=' + v.vendor;
 		if(v.model > 0) loc += '.model=' + v.model;
 		if(v.bu > 0) loc += '.bu=' + v.bu;
+		if(v.sort > 0) loc += '.sort=' + v.sort;
 		VK.callMethod('setLocation', hashLoc + loc);
+
+		_cookie('zp_find', escape(v.find));
+		_cookie('zp_menu', v.menu);
+		_cookie('zp_name', v.name);
+		_cookie('zp_device', v.device);
+		_cookie('zp_vendor', v.vendor);
+		_cookie('zp_model', v.model);
+		_cookie('zp_bu', v.bu);
+		_cookie('zp_sort', v.sort);
+
 		return v;
 	},
 	zpSpisok = function() {
 		$('#mainLinks').addClass('busy');
 		$.post(AJAX_WS, zpFilter(), function (res) {
 			$('#mainLinks').removeClass('busy');
-			$('#zp .result').html(res.all);
-			$('#zp .left').html(res.html);
+			$('.result').html(res.all);
+			$('#zp-spisok').html(res.html);
 		}, 'json');
 	},
 	zpAvaiAdd = function(obj) {
@@ -1786,10 +1798,10 @@ $(document)
 
 	.on('click', '#zp .clear', function() {
 		$('#find')._search('clear');
-		$('#menu').rightLink(0);
+		$('#zp_menu')._dropdown(0);
 		$('#zp_name')._select(0);
 		$('#dev').device({
-			width:153,
+			width:220,
 			type_no:1,
 			device_ids:WS_DEVS,
 			func:zpSpisok
@@ -1832,6 +1844,29 @@ $(document)
 		if($('.avaiAddTab img').attr('val'))
 			$('.avaiAddTab img').addClass('fotoView');
 	})
+	.on('mouseenter', '.zp-zakaz:not(.busy)', function() {
+		window.ZAKAZ_COUNT = $(this).find('.zcol').html();
+	})
+	.on('mouseleave', '.zp-zakaz:not(.busy)', function() {
+		var t = $(this),
+			count = t.find('.zcol').html(),
+			tr = t;
+		if(count != window.ZAKAZ_COUNT) {
+			t.addClass('_busy');
+			while(tr[0].tagName != 'TR')
+				tr = tr.parent();
+			var send = {
+				op:'zp_zakaz_edit',
+				zp_id:tr.attr('val'),
+				count:count
+			};
+			$.post(AJAX_WS, send, function(res) {
+				t.removeClass('_busy');
+				if(res.success)
+					t.find('.zcol')[(count > 0 ? 'remove' : 'add') + 'Class']('no');
+			}, 'json');
+		}
+	})
 	.on('mouseenter', '.zpzakaz:not(.busy)', function() {
 		window.zakaz_count = $(this).find('tt:first').next('b').html();
 	})
@@ -1860,7 +1895,7 @@ $(document)
 			}, 'json');
 		}
 	})
-	.on('click', '.zpzakaz tt', function() {
+	.on('click', '.zpzakaz tt,.zp-zakaz tt', function() {
 		var t = $(this),
 			znak = t.html(),
 			c = t[znak == '+' ? 'prev' : 'next'](),
@@ -1873,6 +1908,7 @@ $(document)
 				count = 0;
 		}
 		c.html(count);
+		c[(count ? 'remove' : 'add') + 'Class']('no');
 	})
 	.on('click', '.zp-id', function() {
 		location.href = URL + '&p=zp&d=info&id=' + $(this).attr('val');
@@ -3639,19 +3675,40 @@ $(document)
 					func:zpSpisok
 				})
 				.inp(ZP.find);
+			$('#zp_menu')._dropdown({
+				head:'Общий каталог',
+				spisok:[
+					{uid:0,title:'Общий каталог'},
+					{uid:1,title:'Наличие'},
+					{uid:2,title:'Нет в наличии'},
+					{uid:3,title:'Заказ'}
+				],
+				func:zpSpisok
+			});
 			$('#zp_name')._select({
 				width:170,
 				title0:'Наименование запчасти',
 				spisok:ZPNAME_SPISOK,
 				func:zpSpisok
 			});
-			$('#zp_dev')._select({
+			$('#dev').device({
 				width:220,
-				title0:'Устройство',
-				spisok:DEV_SPISOK,
+				type_no:1,
+				device_ids:WS_DEVS,
+				device_id:ZP.device,
+				vendor_id:ZP.vendor,
+				model_id:ZP.model,
 				func:zpSpisok
 			});
-			//$('#bu')._check(zpSpisok);
+			$('#bu')._check(zpSpisok);
+			$('#zp_sort')._dropdown({
+				head:'по алфавиту',
+				spisok:[
+					{uid:0,title:'по алфавиту'},
+					{uid:1,title:'по дате добавления'}
+				],
+				func:zpSpisok
+			});
 			zpFilter();
 		}
 

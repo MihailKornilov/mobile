@@ -247,19 +247,60 @@
 
 
 /* Список запчастей */
+#zp{min-height:500px}
 #zp #zp-head{padding:7px 0 7px 5px;background-color:#f7f7f7}
 #zp #head-t{width:100%;position:relative}
+#zp #td-find{width:270px}
+#zp #zp_menu_dropdown{position:absolute;top:7px}
 #zp .vkButton{position:absolute;right:10px;top:0}
-#zp #zp_dev_select{margin:0 10px}
+#zp #zp-filter{width:100%}
+#zp #td-name{width:180px;vertical-align:top}
+#zp #td-dev{width:230px}
+#zp #td-bu{vertical-align:top}
 #zp #bu_check{position:absolute;margin-top:4px}
-#zp .clear{float:right;margin:5px 10px 0 0}
+#zp .clear{float:right;margin:4px 10px 0 0}
+#zp #sort{float:right;width:176px;margin-top:13px}
 #zp .result{border-top:#DAE1E8 solid 1px}
-#zp #zpsp{padding:10px 5px}
+#zp #zp-spisok{padding:10px 5px}
 #zp ._spisok{width:100%}
-#zp ._spisok td{padding:2px 4px}
+#zp ._spisok tr:not(._next) td{padding:2px 4px}
+#zp ._spisok tr:hover{background-color:#e9edf1}
+#zp em{background:#ffc;border-bottom:1px solid #FE2}
+#zp .version{color:#555;margin-left:5px}
+#zp .color{margin-left:8px;color:#444}
+#zp .zp-avai{
+	width:20px;
+	font-weight:bold;
+	color:#2A2;
+	text-align:center;
+}
+#zp .zp-zakaz{width:50px;text-align:center}
+#zp .zp-zakaz._busy *{display:none}
+#zp .zp-zakaz .zcol{font-weight:bold;color:#b44}
+#zp .zp-zakaz tt{
+	display:inline-block;
+	padding:0 4px;
+	color:#aaa;
+	cursor:pointer;
+	visibility:hidden;
+}
+#zp .zp-zakaz .no{visibility:hidden}
+#zp .zp-zakaz tt:hover{color:#004}
+#zp ._spisok tr:hover tt{visibility:visible}
+#zp ._spisok tr:hover .no{visibility:visible}
+#zp ._empty{margin:0}
+
+.zpzakaz:not(.hid),.zpzakaz:hover{color:#A33}
+.zpzakaz.busy .zzedit,
+.zpzakaz:not(:hover) .zzedit,
+.zpzakaz:not(.busy):hover .cnt{display:none}
+.zpzakaz.busy{background-position:64px 8px}
+.zpzakaz tt{display:inline-block;padding:0 4px;color:#aaa}
+.zpzakaz tt:hover{color:#004}
+
+
+
 /*
-#zp .right{width:155px}
-#zp ._search{margin-top:10px}
 #zp #bu_check{margin-top:15px}
 #zp .unit{padding:7px 0;margin:0 8px;border-bottom:#dae2e8 solid 1px}
 #zp .unit .img{width:80px;height:80px;padding-right:10px;text-align:center;vertical-align:top}
@@ -268,7 +309,6 @@
 #zp .bu{font:bold 12px Verdana;margin-right:6px;color:#800}
 #zp .name,#zp .name B,#zp .version,#zp em{font-size:12px}
 #zp .name em{font-weight:bold}
-#zp em{background:#FFC;border-bottom:1px solid #FE2}
 #zp .version{color:#555;margin:1px 0}
 #zp .color{margin-top:6px}
 #zp .color span{color:#777}
@@ -277,13 +317,6 @@
 #zp .action a{display:inline-block;padding:4px 0 4px 5px;width:105px}
 #zp .action a:hover{background-color:#e9edf1;text-decoration:none}
 #zp a.avai{color:#2A2}
-.zpzakaz:not(.hid),.zpzakaz:hover{color:#A33}
-.zpzakaz.busy .zzedit,
-.zpzakaz:not(:hover) .zzedit,
-.zpzakaz:not(.busy):hover .cnt{display:none}
-.zpzakaz.busy{background-position:64px 8px}
-.zpzakaz tt{display:inline-block;padding:0 4px;color:#aaa}
-.zpzakaz tt:hover{color:#004}
 #zp .zz{margin-top:10px;color:#777}
 .zp_add_dialog{border-spacing:10px}
 .zp_add_dialog .label{text-align:right}

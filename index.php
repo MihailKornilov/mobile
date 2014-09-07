@@ -96,10 +96,14 @@ switch($_GET['p']) {
 						$v[$arr[0]] = $arr[1];
 					}
 				} else
-					$v = $_GET;
+					foreach($_COOKIE as $k => $val) {
+						$arr = explode('zp_', $k);
+						if(isset($arr[1]))
+							$v[$arr[1]] = $val;
+					}
 
 				$v = zpfilter($v);
-				$v['find'] = unescape($v['find']);
+				$v['find'] = unescape(@$v['find']);
 				$html .= zp_list($v);
 		}
 		break;
