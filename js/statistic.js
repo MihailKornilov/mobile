@@ -155,7 +155,6 @@ $('#zayav-count-mon').highcharts('StockChart', {
 	]
 });
 
-
 $(document).ready(function() {
 
 });

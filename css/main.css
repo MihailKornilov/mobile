@@ -248,12 +248,12 @@
 
 /* Список запчастей */
 #zp{min-height:500px}
-#zp #zp-head{padding:7px 0 7px 5px;background-color:#f7f7f7}
+#zp #zp-head{padding:7px 0 0 5px;background-color:#f7f7f7}
 #zp #head-t{width:100%;position:relative}
 #zp #td-find{width:270px}
 #zp #zp_menu_dropdown{position:absolute;top:7px}
 #zp .vkButton{position:absolute;right:10px;top:0}
-#zp #zp-filter{width:100%}
+#zp #zp-filter{width:100%;padding-bottom:7px}
 #zp #td-name{width:180px;vertical-align:top}
 #zp #td-dev{width:230px}
 #zp #td-bu{vertical-align:top}
@@ -265,6 +265,7 @@
 #zp ._spisok{width:100%}
 #zp ._spisok tr:not(._next) td{padding:2px 4px}
 #zp ._spisok tr:hover{background-color:#e9edf1}
+#zp .name a{display:block;width:450px;word-wrap:break-word}
 #zp em{background:#ffc;border-bottom:1px solid #FE2}
 #zp .version{color:#555;margin-left:5px}
 #zp .color{margin-left:8px;color:#444}
@@ -289,6 +290,9 @@
 #zp ._spisok tr:hover tt{visibility:visible}
 #zp ._spisok tr:hover .no{visibility:visible}
 #zp ._empty{margin:0}
+#zp .no-avai *{color:#aaa}
+#zp .articul{width:35px;text-align:right}
+#zp .price-cena{width:35px;text-align:right}
 
 .zpzakaz:not(.hid),.zpzakaz:hover{color:#A33}
 .zpzakaz.busy .zzedit,
@@ -298,31 +302,10 @@
 .zpzakaz tt{display:inline-block;padding:0 4px;color:#aaa}
 .zpzakaz tt:hover{color:#004}
 
-
-
-/*
-#zp #bu_check{margin-top:15px}
-#zp .unit{padding:7px 0;margin:0 8px;border-bottom:#dae2e8 solid 1px}
-#zp .unit .img{width:80px;height:80px;padding-right:10px;text-align:center;vertical-align:top}
-#zp .unit IMG{cursor:pointer}
-#zp .cont{vertical-align:top;width:235px}
-#zp .bu{font:bold 12px Verdana;margin-right:6px;color:#800}
-#zp .name,#zp .name B,#zp .version,#zp em{font-size:12px}
-#zp .name em{font-weight:bold}
-#zp .version{color:#555;margin:1px 0}
-#zp .color{margin-top:6px}
-#zp .color span{color:#777}
-#zp .action{vertical-align:top}
-#zp .unit:not(:hover) .hid{visibility:hidden}
-#zp .action a{display:inline-block;padding:4px 0 4px 5px;width:105px}
-#zp .action a:hover{background-color:#e9edf1;text-decoration:none}
-#zp a.avai{color:#2A2}
-#zp .zz{margin-top:10px;color:#777}
 .zp_add_dialog{border-spacing:10px}
 .zp_add_dialog .label{text-align:right}
 .zp_add_dialog #version{width:192px}
 .zp_add_dialog ._image-spisok{width:260px}
-*/
 
 .avaiAddTab{width:100%}
 .avaiAddTab .left{width:250px;vertical-align:top}

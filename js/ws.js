@@ -341,6 +341,9 @@ var AJAX_WS = '/ajax/ws.php?' + VALUES,
 		_cookie('zp_bu', v.bu);
 		_cookie('zp_sort', v.sort);
 
+		$('#zp-filter')[(v.menu == 4 ? 'add' : 'remove') + 'Class']('dn');
+		$('#sort')[(v.menu == 4 ? 'add' : 'remove') + 'Class']('dn');
+
 		return v;
 	},
 	zpSpisok = function() {
@@ -3590,7 +3593,7 @@ $(document)
 		}
 
 		if($('#zp').length) {
-			$('.add').click(function() {
+			$('.vkButton').click(function() {
 				var html =
 						'<table class="zp_add_dialog">' +
 							'<tr><td class="label">Наименование запчасти:<td><input type="hidden" id="name_id">' +
@@ -3640,9 +3643,9 @@ $(document)
 							dialog.abort();
 							if(res.success) {
 								dialog.close();
-								$("#zp_name")._select(send.name_id);
-								$("#dev").device({
-									width:153,
+								$('#zp_name')._select(send.name_id);
+								$('#dev').device({
+									width:220,
 									type_no:1,
 									device_ids:WS_DEVS,
 									device_id:send.device_id,
@@ -3681,7 +3684,8 @@ $(document)
 					{uid:0,title:'Общий каталог'},
 					{uid:1,title:'Наличие'},
 					{uid:2,title:'Нет в наличии'},
-					{uid:3,title:'Заказ'}
+					{uid:3,title:'Заказ'},
+					{uid:4,title:'Прайсы'}
 				],
 				func:zpSpisok
 			});

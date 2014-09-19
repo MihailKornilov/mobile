@@ -39,6 +39,7 @@ $(document)
 				});
 		}, 'json');
 	})
+
 	.on('click', '.sa-ws-info .ws_enter', function() {
 		_cookie('sa_viewer_id', $(this).attr('val'));
 		document.location.reload();

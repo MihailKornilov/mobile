@@ -1508,109 +1508,6 @@ function zpFilter($v) {
 		'bu' => !empty($v['bu']) && preg_match(REGEXP_BOOL, $v['bu']) ? intval($v['bu']) : 0,
 	);
 }//zpFilter()
-function zp_spisok1($v) {
-	$filter = zpFilter($v);
-	$page = $filter['page'];
-	$limit = $filter['limit'];
-	$cond = "`id`";
-
-	$filter_clear = '<a class="clear">Очистить фильтр</a>';
-	$all = query_value("SELECT COUNT(`id`) FROM `zp_catalog` WHERE ".$cond." LIMIT 1");
-	if(!$all)
-		return array(
-			'all' => 0,
-			'result' => 'Запчастей не найдено'.$filter_clear,
-			'spisok' => '<div class="_empty">Запчастей не найдено</div>',
-			'filter' => $filter
-		);
-
-	$send = array(
-		'all' => $all,
-		'result' => 'Показан'._end($all, 'а ', 'о ').$all.' запчаст'._end($all, 'ь', 'и', 'ей').$filter_clear,
-		'spisok' => '',
-		'filter' => $filter
-	);
-
-	$start = ($page - 1) * $limit;
-	$spisok = array();
-	$sql = "SELECT
-	            *,
-	            0 AS `avai`,
-	            0 AS `zakaz`,
-	            '' AS `zz`
-			FROM `zp_catalog`
-			WHERE ".$cond."
-			ORDER BY `id` DESC
-			LIMIT ".$start.",".$limit;
-	$q = query($sql);
-	$ids = array();
-	$compat = array();
-	$img = array();
-	while($r = mysql_fetch_assoc($q)) {
-		$r['model'] = _modelName($r['base_model_id']);
-		if(!empty($filter['find'])) {
-			if(preg_match($reg, $r['model']))
-				$r['model'] = preg_replace($reg, "<em>\\1</em>", $r['model'], 1);
-			if(preg_match($reg, $r['version']))
-				$r['version'] = preg_replace($reg, "<em>\\1</em>", $r['version'], 1);
-		}
-		$r['zp_id'] = $r['compat_id'] ? $r['compat_id'] : $r['id'];
-		$compat[$r['zp_id']][] = $r['id'];
-		$ids[$r['zp_id']] = $r['zp_id'];
-		$img[] = 'zp'.$r['id'];
-		$img[] = 'zp'.$r['compat_id'];
-		$spisok[$r['id']] = $r;
-	}
-
-	$img = _imageGet(array(
-		'owner' => $img,
-		'view' => 1
-	));
-
-	// Составление ссылок на заявки, для которых сделан заказ
-	$sql = "SELECT
-				`id`,
-				`zp_id`,
-				`zayav_id`
-			FROM `zp_zakaz`
-			WHERE `ws_id`=".WS_ID."
-			  AND `zp_id` IN (".implode(',', $ids).")
-			  AND `zayav_id`>0";
-	$q = query($sql);
-	$zakaz = array();
-	while($r = mysql_fetch_assoc($q))
-		$zakaz[$r['id']] = $r;
-	$zakaz = _zayavNomerLink($zakaz);
-	foreach($zakaz as $r)
-		foreach($compat[$r['zp_id']] as $id)
-			$spisok[$id]['zz'][] = $r['zayav_link'];
-
-	$send['spisok'] = '';
-	foreach($spisok as $id => $r) {
-		$zakazEdit = '<span class="zzedit">ано: <tt>—</tt><b>'.$r['zakaz'].'</b><tt>+</tt></span>';
-		$send['spisok'] .= '<div class="unit" val="'.$id.'">'.
-			'<table>'.
-				'<tr><td class="img">'.$img['zp'.$id]['img'].
-					'<td class="cont">'.
-						($r['bu'] ? '<span class="bu">Б/у</span>' : '').
-						'<a href="'.URL.'&p=zp&d=info&id='.$id.'" class="name">'.
-							_zpName($r['name_id']).
-							' <b>'._vendorName($r['base_vendor_id']).$r['model'].'</b>'.
-						'</a>'.
-						($r['version'] ? '<div class="version">'.$r['version'].'</div>' : '').
-						'<div class="for">для '._deviceName($r['base_device_id'], 1).'</div>'.
-						($r['color_id'] ? '<div class="color"><span>Цвет:</span> '._color($r['color_id']).'</div>' : '').
-						//($r['compat_id'] == $id ? '<b>главная</b>' : '').
-						//($r['compat_id'] > 0 && $r['compat_id'] != $id ? '<b>совместимость</b>' : '').
-						($r['zz'] ? '<div class="zz">Заказано для заяв'.(count($r['zz']) > 1 ? 'ок' : 'ки').' '.implode(', ', $r['zz']).'</div>' : '').
-					'<td class="action">'.
-						($r['avai'] ? '<a class="avai avai_add">В наличии: <b>'.$r['avai'].'</b></a>' : '<a class="hid avai_add">Внести наличие</a>').
-						'<a class="zpzakaz'.($r['zakaz'] ? '' : ' hid').'">Заказ<span class="cnt">'.($r['zakaz'] ? 'ано: <b>'.$r['zakaz'].'</b>' : 'ать').'</span>'.$zakazEdit.'</a>'.
-			'</table>'.
-		'</div>';
-	}
-}//zp_spisok()
-
 function zp_spisok($v) {
 	$filter = zpFilter($v);
 	$page = $filter['page'];
@@ -1638,6 +1535,9 @@ function zp_spisok($v) {
 			$sql = "SELECT `zp_id` FROM `zp_zakaz` WHERE `ws_id`=".WS_ID." GROUP BY `zp_id`";
 			$ids = query_ids($sql);
 			$cond .= " AND `c`.`id` IN (".$ids.")";
+			break;
+		case '4':
+			return zp_price($v);
 			break;
 	}
 	if($filter['name'])
@@ -1771,6 +1671,82 @@ function zp_spisok($v) {
 
 	return $send;
 }//zp_spisok()
+function zp_price($v) {
+	$filter = zpFilter($v);
+	$page = $filter['page'];
+	$limit = $filter['limit'];
+	$cond = "`id`";
+
+	if(!empty($filter['find'])) {
+		$cond .= " AND `name` LIKE '%".$filter['find']."%'";
+		$reg = '/('.$filter['find'].')/i';
+	}
+
+	$all = query_value("SELECT COUNT(`id`) FROM `zp_price` WHERE ".$cond);
+	if(!$all)
+		return array(
+			'all' => 0,
+			'result' => 'Запчастей не найдено',
+			'spisok' => '<div class="_empty">Запчастей не найдено</div>',
+			'filter' => $filter
+		);
+
+	$send = array(
+		'all' => $all,
+		'result' => 'Показан'._end($all, 'а ', 'о ').$all.' запчаст'._end($all, 'ь', 'и', 'ей'),
+		'spisok' => '',
+		'filter' => $filter
+	);
+
+	$start = ($page - 1) * $limit;
+	$spisok = array();
+	$sql = "SELECT *
+			FROM `zp_price`
+			WHERE ".$cond."
+			ORDER BY `name`
+			LIMIT ".$start.",".$limit;
+	$q = query($sql);
+	while($r = mysql_fetch_assoc($q)) {
+		if(!empty($filter['find'])) {
+			if(preg_match($reg, $r['name']))
+				$r['name'] = preg_replace($reg, "<em>\\1</em>", $r['name'], 1);
+		}
+		$spisok[$r['id']] = $r;
+	}
+
+	$send['spisok'] =
+		$page == 1 ?
+		'<table class="_spisok">'.
+			'<tr><th>Код'.
+				'<th>Наименование.'.
+				'<th>Цена'.
+				'<th>Заказ'
+		: '';
+	foreach($spisok as $id => $r) {
+		$send['spisok'] .= '<tr val="'.$id.'"'.($r['avai'] ? '' : ' class="no-avai"').'>'.
+			'<td class="articul">'.$r['articul'].
+			'<td class="name"><a>'.$r['name'].'</a>'.
+			'<td class="price-cena">'.round($r['cena']).
+			'<td class="zp-zakaz">';
+			//	'<tt>—</tt>'.
+			//	'<span class="zcol'.($r['zakaz'] ? '' : ' no').'">'.$r['zakaz'].'</span>'.
+			//	'<tt>+</tt>';
+	}
+
+	if($start + $limit < $all) {
+		$c = $all - $start - $limit;
+		$c = $c > $limit ? $limit : $c;
+		$send['spisok'] .=
+			'<tr class="_next" val="'.($page + 1).'">'.
+				'<td colspan="4">'.
+					'<span>Показать ещё '.$c.' запчаст'._end($c, 'ь', 'и', 'ей').'</span>';
+	}
+
+	$send['spisok'] .= $page == 1 ?  '</table>' : '';
+
+	return $send;
+}//zp_price()
+
 function zp_list($v) {
 	$data = zp_spisok($v);
 	$filter = $data['filter'];

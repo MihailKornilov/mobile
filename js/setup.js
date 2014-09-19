@@ -627,6 +627,7 @@ $(document)
 			});
 		$('#name').focus().keyEnter(submit);
 		$('#dop')._radio({light:1,spisok:ZE_DOP});
+
 		function submit() {
 			var send = {
 				op:'zayav_expense_edit',
