@@ -186,14 +186,27 @@ function _clientLink($arr, $fio=0) {//Добавление имени и ссылки клиента в массив
 	return $arr;
 }//_clientLink()
 function clientFilter($v) {
-	return array(
+	$default = array(
+		'page' => 1,
+		'find' => '',
+		'dolg' => 0,
+		'active' => 0,
+		'comm' => 0
+	);
+	$filter = array(
 		'page' => _isnum(@$v['page']) ? $v['page'] : 1,
-		'limit' => _isnum(@$v['limit']) ? $v['limit'] : 20,
-		'fast' => win1251(htmlspecialchars(trim(@$v['fast']))),
+		'find' => win1251(htmlspecialchars(trim(@$v['find']))),
 		'dolg' => _isbool(@$v['dolg']),
 		'active' => _isbool(@$v['active']),
-		'comm' => _isbool(@$v['comm'])
+		'comm' => _isbool(@$v['comm']),
+		'clear' => ''
 	);
+	foreach($default as $k => $r)
+		if($r != $filter[$k]) {
+			$filter['clear'] = '<a id="filter_clear">Очистить фильтр</a>';
+			break;
+		}
+	return $filter;
 }//clientFilter()
 function client_data($v=array()) {
 	$filter = clientFilter($v);
@@ -201,16 +214,16 @@ function client_data($v=array()) {
 	$reg = '';
 	$regEngRus = '';
 	$dolg = 0;
-	if($filter['fast']) {
-		$engRus = _engRusChar($filter['fast']);
-		$cond .= " AND (`fio` LIKE '%".$filter['fast']."%'
-					 OR `telefon` LIKE '%".$filter['fast']."%'
+	if($filter['find']) {
+		$engRus = _engRusChar($filter['find']);
+		$cond .= " AND (`fio` LIKE '%".$filter['find']."%'
+					 OR `telefon` LIKE '%".$filter['find']."%'
 					 ".($engRus ?
 						   "OR `fio` LIKE '%".$engRus."%'
 							OR `telefon` LIKE '%".$engRus."%'"
 						: '')."
 					 )";
-		$reg = '/('.$filter['fast'].')/i';
+		$reg = '/('.$filter['find'].')/i';
 		if($engRus)
 			$regEngRus = '/('.$engRus.')/i';
 	} else {
@@ -237,18 +250,19 @@ function client_data($v=array()) {
 	if(!$all)
 		return array(
 			'all' => 0,
-			'result' => 'Клиентов не найдено.',
+			'result' => 'Клиентов не найдено.'.$filter['clear'],
 			'spisok' => '<div class="_empty">Клиентов не найдено.</div>',
 			'filter' => $filter
 		);
 
 	$send['all'] = $all;
 	$send['result'] = 'Найден'._end($all, ' ', 'о ').$all.' клиент'._end($all, '', 'а', 'ов').
-					  ($dolg ? '<em>(Общая сумма долга = '.$dolg.' руб.)</em>' : '');
+					  ($dolg ? '<em>(Общая сумма долга = '.$dolg.' руб.)</em>' : '').
+					  $filter['clear'];
 	$send['filter'] = $filter;
 
 	$page = $filter['page'];
-	$limit = $filter['limit'];
+	$limit = 20;
 	$start = ($page - 1) * $limit;
 	$spisok = array();
 	$sql = "SELECT *
@@ -258,7 +272,7 @@ function client_data($v=array()) {
 			LIMIT ".$start.",".$limit;
 	$q = query($sql);
 	while($r = mysql_fetch_assoc($q)) {
-		if(!empty($filter['fast'])) {
+		if(!empty($filter['find'])) {
 			if(preg_match($reg, $r['fio']))
 				$r['fio'] = preg_replace($reg, '<em>\\1</em>', $r['fio'], 1);
 			if(preg_match($reg, $r['telefon']))
@@ -311,8 +325,9 @@ function client_data($v=array()) {
 	}
 	return $send;
 }//client_data()
-function client_list() {
-	$data = client_data();
+function client_list($v) {
+	$data = client_data($v);
+	$v = $data['filter'];
 	return '<div id="client">'.
 		'<div id="find"></div>'.
 		'<div class="result">'.$data['result'].'</div>'.
@@ -320,13 +335,18 @@ function client_list() {
 			'<tr><td class="left">'.$data['spisok'].
 				'<td class="right">'.
 					'<div id="buttonCreate"><a>Новый клиент</a></div>'.
-					'<div class="filter">'.
-					   _check('dolg', 'Должники').
-					   _check('active', 'С активными заявками').
-					   _check('comm', 'Есть заметки').
+					'<div class="filter'.($v['find'] ? ' dn' : '').'">'.
+					   _check('dolg', 'Должники', $v['dolg']).
+					   _check('active', 'С активными заявками', $v['active']).
+					   _check('comm', 'Есть заметки', $v['comm']).
 					'</div>'.
 		  '</table>'.
-		'</div>';
+		'</div>'.
+		'<script type="text/javascript">'.
+			'var C={'.
+				'find:"'.unescape($v['find']).'"'.
+			'};'.
+		'</script>';
 }//client_list()
 
 function client_info($client_id) {

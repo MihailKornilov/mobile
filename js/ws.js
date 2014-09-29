@@ -136,13 +136,28 @@ var AJAX_WS = '/ajax/ws.php?' + VALUES,
 	},
 	clientFilter = function() {
 		var v = {
-			op:'client_spisok',
-			fast:cFind.inp(),
-			dolg:$('#dolg').val(),
-			active:$('#active').val(),
-			comm:$('#comm').val()
-		};
-		$('.filter')[v.fast ? 'hide' : 'show']();
+				op:'client_spisok',
+				find:$('#find')._search('val'),
+				dolg:$('#dolg').val(),
+				active:$('#active').val(),
+				comm:$('#comm').val()
+			},
+			loc = '';
+		$('.filter')[v.find ? 'hide' : 'show']();
+
+		if(v.find) loc += '.find=' + escape(v.find);
+		else {
+			if(v.dolg > 0) loc += '.dolg=' + v.dolg;
+			if(v.active > 0) loc += '.active=' + v.active;
+			if(v.comm > 0) loc += '.comm=' + v.comm;
+		}
+		VK.callMethod('setLocation', hashLoc + loc);
+
+		_cookie('client_find', escape(v.find));
+		_cookie('client_dolg', v.dolg);
+		_cookie('client_active', v.active);
+		_cookie('client_comm', v.comm);
+
 		return v;
 	},
 	clientSpisok = function() {
@@ -1142,6 +1157,13 @@ $(document)
 			else
 				next.removeClass('busy');
 		}, 'json');
+	})
+	.on('click', '#client #filter_clear', function() {
+		$('#find')._search('clear');
+		$('#dolg')._check(0);
+		$('#active')._check(0);
+		$('#comm')._check(0);
+		clientSpisok();
 	})
 
 	.on('click', '#clientInfo .cedit', function() {
@@ -3221,15 +3243,16 @@ $(document)
 		$(this).removeClass('show');
 	})
 
+
 	.ready(function() {
 		if($('#client').length) {
-			window.cFind = $('#find')._search({
+			$('#find')._search({
 				width:602,
 				focus:1,
 				enter:1,
 				txt:'Начните вводить данные клиента',
 				func:clientSpisok
-			});
+			}).inp(C.find);
 			$('#buttonCreate').vkHint({
 				msg:'<B>Внесение нового клиента в базу.</B><br /><br />' +
 					'После внесения Вы попадаете на страницу с информацией о клиенте для дальнейших действий.<br /><br />' +

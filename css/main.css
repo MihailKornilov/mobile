@@ -5,6 +5,7 @@
 #client #find{background-color:#F7F7F7;padding:10px;border-bottom:#dae1e8 solid 1px}
 #client .result.busy{background-position:585px center}
 #client .result em{color:#999;margin-left:10px;font-size:10px}
+#client #filter_clear{float:right}
 #client #dolg_check{margin-top:20px}
 #client #active_check{margin-top:10px}
 #client #comm_check{margin-top:10px}
