@@ -190,6 +190,7 @@ switch(@$_POST['op']) {
 		jsonSuccess($send);
 		break;
 	case 'client_spisok':
+		$_POST['find'] = win1251($_POST['find']);
 		$data = client_data($_POST);
 		if($data['filter']['page'] == 1)
 			$send['all'] = utf8($data['result']);

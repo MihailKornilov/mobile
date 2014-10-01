@@ -195,7 +195,7 @@ function clientFilter($v) {
 	);
 	$filter = array(
 		'page' => _isnum(@$v['page']) ? $v['page'] : 1,
-		'find' => win1251(htmlspecialchars(trim(@$v['find']))),
+		'find' => trim(@$v['find']),
 		'dolg' => _isbool(@$v['dolg']),
 		'active' => _isbool(@$v['active']),
 		'comm' => _isbool(@$v['comm']),
@@ -344,7 +344,7 @@ function client_list($v) {
 		'</div>'.
 		'<script type="text/javascript">'.
 			'var C={'.
-				'find:"'.unescape($v['find']).'"'.
+				'find:"'.$v['find'].'"'.
 			'};'.
 		'</script>';
 }//client_list()

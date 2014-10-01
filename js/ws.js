@@ -160,6 +160,7 @@ var AJAX_WS = '/ajax/ws.php?' + VALUES,
 
 		return v;
 	},
+
 	clientSpisok = function() {
 		var result = $('.result');
 		if(result.hasClass('busy'))
