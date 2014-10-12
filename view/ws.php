@@ -152,7 +152,7 @@ function viewerAdded($viewer_id) {//Вывод сотрудника, который вносил запись с уч
 
 // ---===! client !===--- Секция клиентов
 
-function _clientLink($arr, $fio=0) {//Добавление имени и ссылки клиента в массив или возврат по id
+function _clientLink($arr, $fio=0, $tel=0) {//Добавление имени и ссылки клиента в массив или возврат по id
 	$clientArr = array(is_array($arr) ? 0 : $arr);
 	if(is_array($arr)) {
 		$ass = array();
@@ -164,22 +164,22 @@ function _clientLink($arr, $fio=0) {//Добавление имени и ссылки клиента в массив
 		unset($clientArr[0]);
 	}
 	if(!empty($clientArr)) {
-		$sql = "SELECT
-					`id`,
-					`fio`,
-					`deleted`
+		$sql = "SELECT *
 		        FROM `client`
 				WHERE `ws_id`=".WS_ID."
 				  AND `id` IN (".implode(',', $clientArr).")";
 		$q = query($sql);
 		if(!is_array($arr)) {
 			if($r = mysql_fetch_assoc($q))
-				return $fio ? $r['fio'] : '<a'.($r['deleted'] ? ' class="deleted"' : '').' href="'.URL.'&p=client&d=info&id='.$r['id'].'">'.$r['fio'].'</a>';
+				return
+					$fio ? $r['fio']
+					:
+					'<a val="'.$r['id'].'" class="go-client-info'.($r['deleted'] ? ' deleted' : '').($tel && $r['telefon'] ? _tooltip($r['telefon'], -2, 'l') : '">').$r['fio'].'</a>';
 			return '';
 		}
 		while($r = mysql_fetch_assoc($q))
 			foreach($ass[$r['id']] as $id) {
-				$arr[$id]['client_link'] = '<a'.($r['deleted'] ? ' class="deleted"' : '').' href="'.URL.'&p=client&d=info&id='.$r['id'].'">'.$r['fio'].'</a>';
+				$arr[$id]['client_link'] = '<a val="'.$r['id'].'" class="go-client-info'.($r['deleted'] ? ' deleted' : '').($tel && $r['telefon'] ? _tooltip($r['telefon'], -2, 'l') : '">').$r['fio'].'</a>';
 				$arr[$id]['client_fio'] = $r['fio'];
 			}
 	}
@@ -865,7 +865,7 @@ function zayav_spisok($v) {
 	$zayavIds = implode(',', array_keys($zayav));
 
 	if(!$filter['client_id'])
-		$zayav = _clientLink($zayav);
+		$zayav = _clientLink($zayav, 0, 1);
 
 	$images = _imageGet(array(
 		'owner' => $images,
@@ -1120,7 +1120,7 @@ function zayav_info($zayav_id) {
 				'</div>'.
 				'<table class="tabInfo">'.
 					'<tr><td class="label">Устройство: <td>'._deviceName($z['base_device_id']).'<a><b>'.MODEL.'</b></a>'.
-					'<tr><td class="label">Клиент:	 <td>'._clientLink($z['client_id']).
+					'<tr><td class="label">Клиент:	 <td>'._clientLink($z['client_id'], 0, 1).
 					'<tr><td class="label">Дата приёма:'.
 						'<td class="dtime_add'._tooltip('Заявку внёс '._viewer($z['viewer_id_add'], 'name'), -70).FullDataTime($z['dtime_add']).
   ($z['pre_cost'] ? '<tr><td class="label">Стоимость:<td><b class="'._tooltip('Предварительная стоимость ремонта', -10, 'l').$z['pre_cost'].'</b> руб.' : '').
@@ -1245,7 +1245,7 @@ function zayav_expense_spisok($z, $type='html') {//Получение списка расходов зая
 			'<td class="name">'._zayavExpense($r['category_id']).
 			'<td>'.(_zayavExpense($r['category_id'], 'txt') ? $r['txt'] : '').
 				(_zayavExpense($r['category_id'], 'worker') ?
-					'<a href="'.URL.'&p=report&d=salary&id='.$r['worker_id'].'&year='.$r['year'].'&mon='.$r['mon'].'&acc_id='.$r['id'].'">'.
+					'<a class="go-report-salary" val="'.$r['worker_id'].':'.$r['year'].':'.$r['mon'].':'.$r['id'].'">'.
 						_viewer($r['worker_id'], 'name').
 					'</a>'
 				: '').
@@ -1467,14 +1467,14 @@ function _zpLink($arr) {
 		while($r = mysql_fetch_assoc($q))
 			foreach($ass[$r['id']] as $id) {
 				$arr[$id]['zp_link'] =
-					'<a href="'.URL.'&p=zp&d=info&id='.$r['id'].'">'.
+					'<a val="'.$r['id'].'" class="go-zp-info">'.
 						'<b>'._zpName($r['name_id']).'</b> для '.
 						_deviceName($r['base_device_id'], 1).
 						_vendorName($r['base_vendor_id']).
 						_modelName($r['base_model_id']).
 					'</a>';
 				$arr[$id]['zp_short']  =
-					'<a href="'.URL.'&p=zp&d=info&id='.$r['id'].'">'.
+					'<a val="'.$r['id'].'" class="go-zp-info">'.
 						'<b>'._zpName($r['name_id']).'</b> '.
 						_vendorName($r['base_vendor_id']).
 						_modelName($r['base_model_id']).

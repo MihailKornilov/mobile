@@ -541,4 +541,59 @@ function to_new_images() {//Перенос картинок в новый формат
 		query($sql);
 	}
 }
+
+
+
+function histChangeClient() { // правка ссылок c клиентами в истории
+	$sql = "SELECT * FROM `history` WHERE type=7 AND `value` LIKE '%href=%' limit 100";
+	$q = query($sql);
+	$txt = '';
+	while($r = mysql_fetch_assoc($q)) {
+		$ex = explode('href="', $r['value'], 2);
+		$ex1 = explode('">', $ex[1], 2);
+		$txt .= $ex1[0].'<br />';
+		$worker = explode('&id=', $ex1[0]);
+
+		$value = $ex[0].'class="go-client-info" val="'.$worker[1].'">'.$ex1[1];
+		$sql = "UPDATE `history` SET `value`='".addslashes($value)."' where id=".$r['id'];
+//		echo '<textarea style="width:700px;height:500px">'.$sql.'</textarea>'.$value;
+		query($sql);
+	}
+	echo $txt;
+}
+function histChangeZp() { // правка ссылок в истории (href)
+	$sql = "SELECT * FROM `history` WHERE type=30 AND `value` LIKE '%href=%' limit 100";
+	$q = query($sql);
+	$txt = '';
+	while($r = mysql_fetch_assoc($q)) {
+		$ex = explode('href="', $r['value'], 2);
+		$ex1 = explode('">', $ex[1], 2);
+		$txt .= $ex1[0].'<br />';
+		$value = '';
+
+		$id = explode('&p=zp&d=info&id=', $ex1[0]);
+		if(!empty($id[1]))
+			$value = $ex[0].'class="go-zp-info" val="'.$id[1].'">'.$ex1[1];
+
+		$id = explode('&p=report&d=salary&id=', $ex1[0]);
+		if(!empty($id[1])) {
+			$year = explode('&year=', $id[1]);
+			$mon = explode('&mon=', $year[1]);
+			$acc = explode('&acc_id=', $mon[1]);
+			$worker = $year[0];
+			$year = $mon[0];
+			$mon = $acc[0];
+			$acc = $acc[1];
+			$value = $ex[0].'class="go-report-salary" val="'.$worker.':'.$year.':'.$mon.':'.$acc.'">'.$ex1[1];
+		}
+
+		if(!$value)
+			continue;
+
+		$sql = "UPDATE `history` SET `value`='".addslashes($value)."' where id=".$r['id'];
+//		echo '<textarea style="width:700px;height:500px">'.$sql.'</textarea>'.$value;
+		query($sql);
+	}
+	echo $txt;
+}
 */

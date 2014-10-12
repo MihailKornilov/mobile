@@ -1321,6 +1321,10 @@ $(document)
 			}
 		}//submit()
 	})
+	.on('click', '.go-client-info', function(e) {
+		e.stopPropagation();
+		location.href = URL + '&p=client&d=info&id=' + $(this).attr('val');
+	})
 
 	.on('click', '#zayav ._next', function() {
 		if($(this).hasClass('busy'))
@@ -1936,7 +1940,7 @@ $(document)
 		c.html(count);
 		c[(count ? 'remove' : 'add') + 'Class']('no');
 	})
-	.on('click', '.zp-id', function() {
+	.on('click', '.zp-id,.go-zp-info', function() {
 		location.href = URL + '&p=zp&d=info&id=' + $(this).attr('val');
 	})
 
@@ -3243,7 +3247,10 @@ $(document)
 	.on('mouseenter', '.salary .show', function() {
 		$(this).removeClass('show');
 	})
-
+	.on('click', '.go-report-salary', function() {
+		var v = $(this).attr('val').split(':');
+		location.href = URL + '&p=report&d=salary&id=' + v[0] + '&year=' + v[1] + '&mon=' + v[2] + '&acc_id=' + v[3];
+	})
 
 	.ready(function() {
 		if($('#client').length) {
