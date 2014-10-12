@@ -1215,7 +1215,7 @@ $(document)
 					var send = {
 						op:'model_spisok',
 						vendor_id:VENDOR_ID,
-						find:val
+						find:escape(val)
 					};
 					path.addClass('busy');
 					$.post(AJAX_SA, send, function(res) {

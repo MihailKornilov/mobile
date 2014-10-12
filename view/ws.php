@@ -272,7 +272,7 @@ function client_data($v=array()) {
 			LIMIT ".$start.",".$limit;
 	$q = query($sql);
 	while($r = mysql_fetch_assoc($q)) {
-		if(!empty($filter['find'])) {
+		if($filter['find']) {
 			if(preg_match($reg, $r['fio']))
 				$r['fio'] = preg_replace($reg, '<em>\\1</em>', $r['fio'], 1);
 			if(preg_match($reg, $r['telefon']))
@@ -746,35 +746,65 @@ function zayav_add($v=array()) {
 }//zayav_add()
 
 function zayavFilter($v) {
-	return array(
-		'page' => !empty($v['page']) && preg_match(REGEXP_NUMERIC, $v['page']) ? intval($v['page']) : 1,
-		'limit' => !empty($v['limit']) && preg_match(REGEXP_NUMERIC, $v['limit']) ? intval($v['limit']) : 20,
-		'client_id' => !empty($v['client_id']) && preg_match(REGEXP_NUMERIC, $v['client_id']) ? intval($v['client_id']) : 0,
-		'find' => !empty($v['find']) ? htmlspecialchars(trim($v['find'])) : '',
-		'status' => !empty($v['status']) && preg_match(REGEXP_NUMERIC, $v['status']) ? intval($v['status']) : 0,
-		'zpzakaz' => !empty($v['zpzakaz']) && preg_match(REGEXP_NUMERIC, $v['zpzakaz']) ? intval($v['zpzakaz']) : 0,
-		'device' => !empty($v['device']) && preg_match(REGEXP_NUMERIC, $v['device']) ? intval($v['device']) : 0,
-		'vendor' => !empty($v['vendor']) && preg_match(REGEXP_NUMERIC, $v['vendor']) ? intval($v['vendor']) : 0,
-		'model' => !empty($v['model']) && preg_match(REGEXP_NUMERIC, $v['model']) ? intval($v['model']) : 0,
-		'devstatus' => empty($v['devstatus']) || preg_match(REGEXP_NUMERIC, $v['devstatus']) && $v['devstatus'] != -1 ? 0 : $v['devstatus'],
-		'sort' => !empty($v['sort']) && preg_match(REGEXP_NUMERIC, $v['sort']) ? intval($v['sort']) : 1,
-		'desc' => !empty($v['desc']) && preg_match(REGEXP_BOOL, $v['desc']) ? intval($v['desc']) : 0,
-		'diff' => !empty($v['diff']) ? 1 : 0,
-		'place' => !empty($v['place']) ? win1251(urldecode(htmlspecialchars(trim($v['place'])))) : ''
+	$default = array(
+		'page' => 1,
+		'limit' => 20,
+		'client_id' => 0,
+		'find' => '',
+		'sort' => 1,
+		'desc' => 0,
+		'status' => 0,
+		'zpzakaz' => 0,
+		'device' => 0,
+		'vendor' => 0,
+		'model' => 0,
+		'devstatus' => 0,
+		'diff' => 0,
+		'place' => 0,
 	);
+	$filter = array(
+		'page' => _isnum(@$v['page']) ? $v['page'] : 1,
+		'limit' => _isnum(@$v['limit']) ? $v['limit'] : 20,
+		'client_id' => _isnum(@$v['client_id']),
+		'sort' => _isnum(@$v['sort']) ? $v['sort'] : 1,
+		'desc' => _isbool(@$v['desc']),
+		'find' => trim(@$v['find']),
+		'status' => _isnum(@$v['status']),
+		'zpzakaz' => _isnum(@$v['zpzakaz']),
+		'device' => _isnum(@$v['device']),
+		'vendor' => _isnum(@$v['vendor']),
+		'model' => _isnum(@$v['model']),
+		'devstatus' => @$v['devstatus'] == -1 || _isnum(@$v['devstatus']) ? $v['devstatus'] : 0,
+		'diff' => _isbool(@$v['diff']),
+		'place' => trim(@$v['place']),
+		//'place' => !empty($v['place']) ? win1251(urldecode(htmlspecialchars(trim($v['place'])))) : '',
+		'clear' => ''
+	);
+	if(!$filter['client_id'])
+		foreach($default as $k => $r)
+			if($r != $filter[$k]) {
+				$filter['clear'] = '<a class="clear">Очистить фильтр</a>';
+				break;
+			}
+	return $filter;
 }//zayavFilter()
 function zayav_spisok($v) {
 	$filter = zayavFilter($v);
-
+//print_r($filter);
 	$page = $filter['page'];
 	$limit = $filter['limit'];
 	$cond = "`ws_id`=".WS_ID." AND !`deleted` AND `zayav_status`";
 
 	if($filter['find']) {
-		$cond .= " AND `find` LIKE '%".$filter['find']."%'";
-		if($page ==1 && preg_match(REGEXP_NUMERIC, $filter['find']))
-			$nomer = intval($filter['find']);
+		$engRus = _engRusChar($filter['find']);
+		$cond .= " AND (`find` LIKE '%".$filter['find']."%'".
+			($engRus ? " OR `find` LIKE '%".$engRus."%'" : '').")";
 		$reg = '/('.$filter['find'].')/i';
+		if($engRus)
+			$regEngRus = '/('.$engRus.')/i';
+
+		if($page ==1 && _isnum($filter['find']))
+			$nomer = intval($filter['find']);
 	} else {
 		if($filter['client_id'])
 			$cond .= " AND `client_id`=".$filter['client_id'];
@@ -793,7 +823,7 @@ function zayav_spisok($v) {
 		if($filter['model'])
 			$cond .= " AND `base_model_id`=".$filter['model'];
 		if($filter['place']) {
-			if(preg_match(REGEXP_NUMERIC, $filter['place']))
+			if(_isnum($filter['place']))
 				$cond .= " AND `device_place`=".$filter['place'];
 			elseif($filter['place'] == -1)
 				$cond .= " AND !`device_place` AND !LENGTH(`device_place_other`)";
@@ -820,19 +850,19 @@ function zayav_spisok($v) {
 		}
 	}
 
-	$filter_clear = !$filter['client_id'] ? '<a class="clear">Сбросить условия поиска</a>' : '';
+	//$filter_clear = !$filter['client_id'] ? '<a class="clear">Сбросить условия поиска</a>' : '';
 
 	if(!$all)
 		return array(
 			'all' => 0,
-			'result' => 'Заявок не найдено'.$filter_clear,
+			'result' => 'Заявок не найдено'.$filter['clear'],
 			'spisok' => '<div class="_empty">Заявок не найдено</div>',
 			'filter' => $filter
 		);
 
 	$send = array(
 		'all' => $all,
-		'result' => 'Показан'._end($all, 'а', 'о').' '.$all.' заяв'._end($all, 'ка', 'ки', 'ок').$filter_clear,
+		'result' => 'Показан'._end($all, 'а', 'о').' '.$all.' заяв'._end($all, 'ка', 'ки', 'ок').$filter['clear'],
 		'spisok' => '',
 		'filter' => $filter
 	);
@@ -910,6 +940,8 @@ function zayav_spisok($v) {
 		if($filter['find']) {
 			if(preg_match($reg, $r['model']))
 				$r['model'] = preg_replace($reg, "<em>\\1</em>", $r['model'], 1);
+			if($regEngRus && preg_match($regEngRus, $r['model']))
+				$r['model'] = preg_replace($regEngRus, '<em>\\1</em>', $r['model'], 1);
 			$r['imei'] = preg_match($reg, $r['imei']) ? preg_replace($reg, "<em>\\1</em>", $r['imei'], 1) : '';
 			$r['serial'] = preg_match($reg, $r['serial']) ? preg_replace($reg, "<em>\\1</em>", $r['serial'], 1) : '';
 		} else {
@@ -996,7 +1028,7 @@ function zayav_list($v) {
 				'vendor_ids:['._zayavBaseVendorIds().'],'.
 				'model_ids:['._zayavBaseModelIds().'],'.
 				'place_other:['.implode(',', $place_other).'],'.
-				'find:"'.unescape($v['find']).'",'.
+				'find:"'.$v['find'].'",'.
 				'device_id:'.$v['device'].','.
 				'vendor_id:'.$v['vendor'].','.
 				'model_id:'.$v['model'].','.

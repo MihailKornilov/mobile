@@ -352,11 +352,10 @@ function sa_model() {
 }//sa_model()
 function sa_model_spisok($v) {
 	$filter = array(
-		'page' => !empty($v['page']) && preg_match(REGEXP_NUMERIC, $v['page']) ? intval($v['page']) : 1,
-		'limit' => !empty($v['limit']) && preg_match(REGEXP_NUMERIC, $v['limit']) ? intval($v['limit']) : 20,
-		'find' => !empty($v['find']) ? htmlspecialchars(trim($v['find'])) : '',
-		'vendor_id' => !empty($v['vendor_id']) && preg_match(REGEXP_NUMERIC, $v['vendor_id']) ? intval($v['vendor_id']) : 0,
-
+		'page' => _isnum(@$v['page']) ? $v['page'] : 1,
+		'limit' => _isnum(@$v['limit']) ? $v['limit'] : 20,
+		'find' => unescape(@$v['find']),
+		'vendor_id' => _isnum(@$v['vendor_id'])
 	);
 
 	$page = $filter['page'];

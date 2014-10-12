@@ -197,7 +197,7 @@ var AJAX_WS = '/ajax/ws.php?' + VALUES,
 	zayavFilter = function () {
 		var v = {
 				op:'zayav_spisok',
-				find:$.trim($('#find input').val()),
+				find:$('#find')._search('val'),
 				sort:$('#sort').val(),
 				desc:$('#desc').val(),
 				status:$('#status').val(),
@@ -234,7 +234,7 @@ var AJAX_WS = '/ajax/ws.php?' + VALUES,
 		_cookie('zayav_device', v.device);
 		_cookie('zayav_vendor', v.vendor);
 		_cookie('zayav_model', v.model);
-		_cookie('zayav_place', encodeURI(v.place));
+		_cookie('zayav_place', escape(v.place));
 		_cookie('zayav_devstatus', v.devstatus);
 
 		return v;
