@@ -1123,6 +1123,8 @@ $(document)
 			id:t.attr('val')
 		};
 		$.post(AJAX_WS, send, function(res) {
+			if(e.clientY < 90)
+				tooltip.css('top', '12px');
 			tooltip
 				.html(res.html)
 				.removeClass('empty');

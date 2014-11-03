@@ -766,9 +766,9 @@ function zayavFilter($v) {
 		'page' => _isnum(@$v['page']) ? $v['page'] : 1,
 		'limit' => _isnum(@$v['limit']) ? $v['limit'] : 20,
 		'client_id' => _isnum(@$v['client_id']),
+		'find' => trim(@$v['find']),
 		'sort' => _isnum(@$v['sort']) ? $v['sort'] : 1,
 		'desc' => _isbool(@$v['desc']),
-		'find' => trim(@$v['find']),
 		'status' => _isnum(@$v['status']),
 		'zpzakaz' => _isnum(@$v['zpzakaz']),
 		'device' => _isnum(@$v['device']),
@@ -790,7 +790,7 @@ function zayavFilter($v) {
 }//zayavFilter()
 function zayav_spisok($v) {
 	$filter = zayavFilter($v);
-//print_r($filter);
+
 	$page = $filter['page'];
 	$limit = $filter['limit'];
 	$cond = "`ws_id`=".WS_ID." AND !`deleted` AND `zayav_status`";
@@ -849,8 +849,6 @@ function zayav_spisok($v) {
 			$images[] = 'dev'.$r['base_model_id'];
 		}
 	}
-
-	//$filter_clear = !$filter['client_id'] ? '<a class="clear">—бросить услови€ поиска</a>' : '';
 
 	if(!$all)
 		return array(
