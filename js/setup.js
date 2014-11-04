@@ -791,6 +791,7 @@ $(document)
 						rules_rules:$('#rules_rules').val(),
 						rules_income:$('#rules_income').val(),
 						rules_historyshow:$('#rules_historyshow').val(),
+						rules_historytransfer:$('#rules_historytransfer').val(),
 						rules_money:$('#rules_money').val()
 					},
 					but = $(this);

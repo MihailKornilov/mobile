@@ -1750,7 +1750,9 @@ function zp_price($v) {
 
 	$start = ($page - 1) * $limit;
 	$spisok = array();
-	$sql = "SELECT *
+	$sql = "SELECT
+				*,
+				0 AS `changed`
 			FROM `zp_price`
 			WHERE ".$cond."
 			ORDER BY `name`
@@ -1764,6 +1766,13 @@ function zp_price($v) {
 		$spisok[$r['id']] = $r;
 	}
 
+	$sql = "SELECT *
+			FROM `zp_price_upd`
+			WHERE `price_id` IN (".implode(',', array_keys($spisok)).")";
+	$q = query($sql);
+	while($r = mysql_fetch_assoc($q))
+		$spisok[$r['price_id']]['changed'] = 1;
+
 	$send['spisok'] =
 		$page == 1 ?
 		'<table class="_spisok">'.
@@ -1775,7 +1784,8 @@ function zp_price($v) {
 	foreach($spisok as $id => $r) {
 		$send['spisok'] .= '<tr val="'.$id.'"'.($r['avai'] ? '' : ' class="no-avai"').'>'.
 			'<td class="articul">'.$r['articul'].
-			'<td class="name"><a>'.$r['name'].'</a>'.
+			'<td class="name">'.
+				($r['changed'] ? '<a>'.$r['name'].'</a>' : $r['name']).
 			'<td class="price-cena">'.round($r['cena']).
 			'<td class="zp-zakaz">';
 			//	'<tt>—</tt>'.
@@ -2867,7 +2877,7 @@ function invoice() {
 			'<a href="'.URL.'&p=setup&d=invoice" class="add">Управление счетами</a>'.
 		'</div>'.
 		'<div id="invoice-spisok">'.invoice_spisok().'</div>'.
-		'<div class="headName">История переводов</div>'.
+		(RULES_HISTORYTRANSFER ? '<div class="headName">История переводов</div>' : '').
 		'<div class="transfer-spisok">'.transfer_spisok().'</div>';
 }//invoice()
 function invoice_spisok() {
@@ -2890,6 +2900,8 @@ function invoice_spisok() {
 	return $send;
 }//invoice_spisok()
 function transfer_spisok($v=array()) {
+	if(!RULES_HISTORYTRANSFER)
+		return  '';
 	$v = array(
 		//	'page' => !empty($v['page']) && preg_match(REGEXP_NUMERIC, $v['page']) ? $v['page'] : 1,
 		//	'limit' => !empty($v['limit']) && preg_match(REGEXP_NUMERIC, $v['limit']) ? $v['limit'] : 15,
@@ -3742,6 +3754,10 @@ function _setupRules($rls, $admin=0) {
 					'def' => 0,
 					'admin' => 1
 				),
+				'RULES_HISTORYTRANSFER' => array(// Видит историю переводов
+					'def' => 0,
+					'admin' => 1
+				),
 				'RULES_MONEY' => array(	    // Может видеть платежи: только свои, все платежи
 					'def' => 0,
 					'admin' => 1
@@ -3812,6 +3828,7 @@ function setup_worker_rules($viewer_id) {
 						_check('rules_rules', 'Настройка прав сотрудников', $rule['RULES_RULES']).
 						_check('rules_income', 'Счета и виды платежей', $rule['RULES_INCOME']).
 				'<tr><td class="lab">Видит историю действий:<td>'._check('rules_historyshow', '', $rule['RULES_HISTORYSHOW']).
+				'<tr><td class="lab">Видит историю переводов:<td>'._check('rules_historytransfer', '', $rule['RULES_HISTORYTRANSFER']).
 				'<tr><td class="lab">Может видеть платежи:<td><input type="hidden" id="rules_money" value="'.$rule['RULES_MONEY'].'" />'.
 			'</table>'.
 			'</div>'.
