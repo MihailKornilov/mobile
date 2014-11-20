@@ -250,19 +250,27 @@ var AJAX_WS = '/ajax/ws.php?' + VALUES,
 			$('#mainLinks').removeClass('busy');
 		}, 'json');
 	},
-	zayavInfoMoneyUpdate = function(res) {
-		$('b.acc').html(res.acc);
-		$('.acc_tr')[(res.acc == 0 ? 'add' : 'remove') + 'Class']('dn');
-		$('b.op').html(res.opl);
-		$('.op_tr')[(res.opl == 0 ? 'add' : 'remove') + 'Class']('dn');
-		$('.dopl')
-			[(res.diff == 0 ? 'add' : 'remove') + 'Class']('dn')
-			.html((res.diff > 0 ? '+' : '') + res.diff);
-		var del = res.acc == 0 && res.opl == 0;
-		$('.delete')[(del ? 'remove' : 'add') + 'Class']('dn');
-		$('#ze_acc h1').html(res.acc_sum);
-		$('.ze-spisok').remove();
-		$('#ze_acc').after(res.expense);
+	zayavMoneyUpdate = function() {//обновление информации о платежах
+		var send = {
+			op:'zayav_money_update',
+			zayav_id:ZAYAV.id
+		};
+		$.post(AJAX_WS, send, function(res) {
+			if(res.success) {
+				$('b.acc').html(res.acc);
+				$('.acc_tr')[(!res.acc ? 'add' : 'remove') + 'Class']('dn');
+				$('b.op').html(res.opl);
+				$('.op_tr')[(!res.opl ? 'add' : 'remove') + 'Class']('dn');
+				$('.dopl')
+					[(!res.diff ? 'add' : 'remove') + 'Class']('dn')
+					.html((res.diff > 0 ? '+' : '') + res.diff);
+				//обновление расходов по заявке
+				$('.ze-spisok').remove();
+				$('#ze_acc').html(res.acc_sum).after(res.html);
+				ZAYAV.expense = res.array;
+				ZAYAV.worker_zp = res.worker_zp;
+			}
+		}, 'json');
 	},
 	zayavDevSelect = function(dev) {
 		modelImageGet(dev);
@@ -1008,7 +1016,7 @@ $.fn.zayavExpense = function(o) {
 					tddop.html('');
 					zesum.focus();
 				}
-				zesum.val('');
+				zesum.val(id == 1 ? ZAYAV.worker_zp : '');
 				if(id && !ptab.next().hasClass('ptab'))
 					itemAdd();
 				tdmon.addClass('dn');
@@ -1589,7 +1597,7 @@ $(document)
 						dialog.close();
 						_msg('Начисление успешно произведено!');
 						$('#money_spisok').html(res.html);
-						zayavInfoMoneyUpdate(res);
+						zayavMoneyUpdate();
 						if(res.status) {
 							$('#status')
 								.html(res.status.name)
@@ -1623,7 +1631,7 @@ $(document)
 		$.post(AJAX_WS, send, function(res) {
 			if(res.success) {
 				tr.find('.deleting').html('Начисление удалено. <a class="acc_rest" val="' + send.id + '">Восстановить</a>');
-				zayavInfoMoneyUpdate(res);
+				zayavMoneyUpdate();
 			}
 		}, 'json');
 	})
@@ -1638,7 +1646,7 @@ $(document)
 		$.post(AJAX_WS, send, function(res) {
 			if(res.success) {
 				tr.after(res.html).remove();
-				zayavInfoMoneyUpdate(res);
+				zayavMoneyUpdate();
 			}
 		}, 'json');
 	})
@@ -1797,7 +1805,9 @@ $(document)
 		var html = '<CENTER class="zayav_zp_set">' +
 			'Установка запчасти<br />' + unit.find('a:first').html() + '.<br />' +
 			(unit.find('.color').length > 0 ? unit.find('.color').html() + '.<br />' : '') +
-			'<br />Информация об установке также<br />будет добавлена в заметки к заявке.' +
+			'<br />Информация об установке также' +
+			'<br />будет добавлена в заметки' +
+			'<br />и в расходы по заявке.' +
 		'</CENTER>',
 		dialog = _dialog({
 			top:150,
@@ -1816,11 +1826,13 @@ $(document)
 			dialog.process();
 			$.post(AJAX_WS, send, function(res) {
 				if(res.success) {
+					zayavMoneyUpdate();
 					dialog.close();
 					_msg('Установка запчасти произведена.');
 					unit.parent().html(res.zp_unit);
 					$('.vkComment').after(res.comment).remove();
-				}
+				} else
+					dialog.abort();
 			},'json');
 		}
 	})
@@ -2675,11 +2687,12 @@ $(document)
 				$.post(AJAX_WS, send, function (res) {
 					if(res.success) {
 						dialog.close();
-						_msg('Новое платёж внесён.');
+						_msg('Новый платёж внесён.');
 						if(window.ZAYAV) {
 							$('#money_spisok').html(res.html);
 							if(res.comment)
 								$('.vkComment').after(res.comment).remove();
+							zayavMoneyUpdate();
 						} else
 							incomeSpisok();
 					}
@@ -2710,8 +2723,11 @@ $(document)
 		};
 		$.post(AJAX_WS, send, function(res) {
 			t.removeClass('deleting');
-			if(res.success)
+			if(res.success) {
 				t.addClass('deleted');
+				if(window.ZAYAV)
+					zayavMoneyUpdate();
+			}
 		}, 'json');
 	})
 	.on('click', '.income-rest', function() {
@@ -2723,8 +2739,11 @@ $(document)
 			id:t.attr('val')
 		};
 		$.post(AJAX_WS, send, function(res) {
-			if(res.success)
+			if(res.success) {
 				t.removeClass('deleted');
+				if(window.ZAYAV)
+					zayavMoneyUpdate();
+			}
 		}, 'json');
 	})
 
@@ -3602,9 +3621,7 @@ $(document)
 						dialog.process();
 						$.post(AJAX_WS, send, function(res) {
 							if(res.success) {
-								$('.ze-spisok').remove();
-								$('#ze_acc').after(res.html);
-								ZAYAV.expense = res.array;
+								zayavMoneyUpdate();
 								dialog.close();
 								_msg('Сохранено.');
 							} else

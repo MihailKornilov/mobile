@@ -185,7 +185,16 @@
 	border-bottom:#e9edf1 solid 1px;
 	padding:5px 7px;
 }
-#zayav-info #ze-edit{float:right}
+#zayav-info #ze-edit{
+	float:right;
+	background-color:#fff;
+	width:16px;
+	height:16px;
+	margin:-2px -5px 0 0;
+	border:#ddd solid 1px;
+	background-position:2px 2px;
+}
+#zayav-info #ze-edit:hover{background-position:2px -13px}
 .ze-edit-tab{border-spacing:8px}
 .ze-edit-tab .label{width:60px}
 .ze-spisok *{font-size:10px}

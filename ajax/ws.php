@@ -656,10 +656,7 @@ switch(@$_POST['op']) {
 		query($sql);
 
 		clientBalansUpdate($z['client_id']);
-		$send = zayavBalansUpdate($zayav_id);
-		$z['accrual_sum'] = $send['acc'];
-		$send['acc_sum'] = utf8(zayav_acc_sum($z));
-		$send['expense'] = utf8(zayav_expense_spisok($z));
+		zayavBalansUpdate($zayav_id);
 
 		history_insert(array(
 			'type' => 5,
@@ -731,10 +728,7 @@ switch(@$_POST['op']) {
 		query($sql);
 
 		clientBalansUpdate($r['client_id']);
-		$send = zayavBalansUpdate($r['zayav_id']);
-		$z['accrual_sum'] = $send['acc'];
-		$send['acc_sum'] = utf8(zayav_acc_sum($z));
-		$send['expense'] = utf8(zayav_expense_spisok($z));
+		zayavBalansUpdate($r['zayav_id']);
 
 		history_insert(array(
 			'type' => 8,
@@ -743,7 +737,7 @@ switch(@$_POST['op']) {
 			'value' => $r['sum'],
 			'value1' => $r['prim']
 		));
-		jsonSuccess($send);
+		jsonSuccess();
 		break;
 	case 'zayav_accrual_rest':
 		if(!$id = _isnum($_POST['id']))
@@ -771,10 +765,7 @@ switch(@$_POST['op']) {
 		query($sql);
 
 		clientBalansUpdate($r['client_id']);
-		$send = zayavBalansUpdate($r['zayav_id']);
-		$z['accrual_sum'] = $send['acc'];
-		$send['acc_sum'] = utf8(zayav_acc_sum($z));
-		$send['expense'] = utf8(zayav_expense_spisok($z));
+		zayavBalansUpdate($r['zayav_id']);
 
 		history_insert(array(
 			'type' => 27,
@@ -857,6 +848,10 @@ switch(@$_POST['op']) {
 		if(!$z = mysql_fetch_assoc(query($sql)))
 			jsonError();
 
+		$sql = "SELECT * FROM `zp_catalog` WHERE id=".$zp_id." LIMIT 1";
+		if(!$zp = query_assoc($sql))
+			jsonError();
+
 		$sql = "INSERT INTO `zp_move` (
 					`ws_id`,
 					`zp_id`,
@@ -892,10 +887,6 @@ switch(@$_POST['op']) {
 		if($r = mysql_fetch_assoc(query($sql)))
 			$parent_id = $r['parent_id'] ? $r['parent_id'] : $r['id'];
 
-		$sql = "SELECT * FROM `zp_catalog` WHERE id=".$zp_id." LIMIT 1";
-		if(!$zp = query_assoc($sql))
-		jsonError();
-
 		define('MODEL', _vendorName($zp['base_vendor_id'])._modelName($zp['base_model_id']));
 		$sql = "INSERT INTO `vk_comment` (
 					`table_name`,
@@ -919,6 +910,23 @@ switch(@$_POST['op']) {
 			'value' => $count,
 			'zp_id' => $zp_id
 		));
+
+		//добавление запчасти в расходы по заявке
+		$cena = query_value("SELECT `cena` FROM `zp_move` WHERE `zp_id`=".$compat_id." AND `type`='' ORDER BY `id` DESC LIMIT 1");
+		$sql = "INSERT INTO `zayav_expense` (
+							`ws_id`,
+							`zayav_id`,
+							`category_id`,
+							`zp_id`,
+							`sum`
+						) VALUES (
+							".WS_ID.",
+							".$zayav_id.",
+							2,
+							".$compat_id.",
+							".$cena."
+						)";
+		query($sql);
 
 		$zp['avai'] = $count;
 		$send['zp_unit'] = utf8(zayav_zp($zp));
@@ -1115,11 +1123,30 @@ switch(@$_POST['op']) {
 				'value' => '<table>'.$changes.'</table>'
 			));
 		}
+		jsonSuccess();
+		break;
+	case 'zayav_money_update':
+		if(!$zayav_id = _isnum($_POST['zayav_id']))
+			jsonError();
+
+		$sql = "SELECT * FROM `zayav` WHERE `ws_id`=".WS_ID." AND !`deleted` AND `id`=".$zayav_id;
+		if(!$z = query_assoc($sql))
+			jsonError();
+
+		$send = zayavBalansUpdate($zayav_id);
+
 		$expense = zayav_expense_spisok($z, 'all');
 		$send['html'] = utf8($expense['html']);
 		foreach($expense['array'] as $n => $r)
 			$expense['array'][$n][1] = utf8($expense['array'][$n][1]);
 		$send['array'] = $expense['array'];
+		$send['acc_sum'] = utf8(zayav_acc_sum($z));
+
+		//подсчёт начисления зп для сотрудника
+		$acc_sum = query_value("SELECT SUM(`sum`) FROM `accrual` WHERE !`deleted` AND `zayav_id`=".$zayav_id);
+		$expense_sum = query_value("SELECT SUM(`sum`) FROM `zayav_expense` WHERE `zayav_id`=".$zayav_id." AND `category_id`!=1");
+		$send['worker_zp'] = round(($acc_sum - $expense_sum) * 0.3);
+
 		jsonSuccess($send);
 		break;
 

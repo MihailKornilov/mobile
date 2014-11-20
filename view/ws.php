@@ -1092,6 +1092,8 @@ function zayav_info($zayav_id) {
 	unset($status[0]);
 	$expense = zayav_expense_spisok($z, 'all');
 	$history = history(array('zayav_id'=>$zayav_id));
+	$acc_sum = query_value("SELECT SUM(`sum`) FROM `accrual` WHERE !`deleted` AND `zayav_id`=".$zayav_id);
+	$expense_sum = query_value("SELECT SUM(`sum`) FROM `zayav_expense` WHERE `zayav_id`=".$zayav_id." AND `category_id`!=1");
 
 	return '<script type="text/javascript">'.
 		'var STATUS='._selJson($status).','.
@@ -1114,7 +1116,8 @@ function zayav_info($zayav_id) {
 			'pre_cost:'.$z['pre_cost'].','.
 			'images:"'.addslashes(_imageAdd(array('owner'=>'zayav'.$zayav_id))).'",'.
 			'expense:['.$expense['json'].'],'.
-			'zp_avai:'.zayav_zp_avai($z).
+			'zp_avai:'.zayav_zp_avai($z).','.
+			'worker_zp:'.round(($acc_sum - $expense_sum) * 0.3).
 		'},'.
 		'WORKER_SPISOK='.query_selJson("SELECT `viewer_id`,CONCAT(`first_name`,' ',`last_name`) FROM `vk_user`
 										 WHERE `ws_id`=".WS_ID."
@@ -1164,13 +1167,13 @@ function zayav_info($zayav_id) {
 						'<span class="dopl'.(DOPL ? '' : ' dn')._tooltip('Необходимая доплата', -60).(DOPL > 0 ? '+' : '').DOPL.'</span>'.
 				'</table>'.
 				'<div id="kvit_spisok">'.zayav_kvit($zayav_id).'</div>'.
-				'<div class="headBlue">Расходы</div>'.
-				'<div id="ze_acc">'.
-					'<a id="ze-edit">Изменить</a>'.
-					'<h1>'.zayav_acc_sum($z).'</h1>'.
-				'</div>'.
+				'<div class="headBlue">Расходы<div id="ze-edit" class="img_edit'._tooltip('Изменить расходы по заявке', -88).'</div></div>'.
+				'<div id="ze_acc">'.zayav_acc_sum($z).'</div>'.
 				$expense['html'].
-				'<div class="headBlue rm">Задания<a class="add remind_add">Добавить задание</a></div>'.
+				'<div class="headBlue rm">'.
+					'<a href="'.URL.'&p=report&d=remind"><b>Задания</b></a>'.
+					'<a class="add remind_add">Добавить задание</a>'.
+				'</div>'.
 				'<div id="remind_spisok">'.remind_spisok(remind_data(1, array('zayav'=>$z['id']))).'</div>'.
 				_vkComment('zayav', $z['id']).
 				'<div class="headBlue mon">Начисления и платежи'.
@@ -1446,7 +1449,7 @@ function zayav_zp_avai($z) {
 		'}';
 	return '['.implode(',',$send).']';
 }//zayav_zp_avai()
-function zayav_msg_to_client($zayav_id) {
+function zayav_msg_to_client($zayav_id) {//сообщение о передачи устройства клиенту после внесения платежа
 	$parent_id = 0;
 	$sql = "SELECT `id`,`parent_id`
 			FROM `vk_comment`
