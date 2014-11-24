@@ -266,6 +266,9 @@ switch(@$_POST['op']) {
 			jsonError();
 		if(!$device = _isnum($_POST['device']))
 			jsonError();
+		if(!preg_match(REGEXP_DATE, $_POST['day_finish']))
+			jsonError();
+
 		$vendor = _isnum($_POST['vendor']);
 		$model = _isnum($_POST['model']);
 		if(!empty($_POST['equip'])) {
@@ -282,6 +285,7 @@ switch(@$_POST['op']) {
 		$color_dop = $color ? intval($_POST['color_dop']) : 0;
 		$comm = win1251(htmlspecialchars(trim($_POST['comm'])));
 		$pre_cost = _isnum($_POST['pre_cost']);
+		$day_finish = $_POST['day_finish'];
 		$reminder = intval($_POST['reminder']);
 		$reminder_txt = win1251(htmlspecialchars(trim($_POST['reminder_txt'])));
 		$reminder_day = htmlspecialchars(trim($_POST['reminder_day']));
@@ -325,6 +329,7 @@ switch(@$_POST['op']) {
 
 					`barcode`,
 					`pre_cost`,
+					`day_finish`,
 					`viewer_id_add`,
 					`find`
 				) VALUES (
@@ -351,6 +356,7 @@ switch(@$_POST['op']) {
 
 					'".rand(10, 99).(time() + rand(10000, 99999))."',
 					".$pre_cost.",
+					'".$day_finish."',
 					".VIEWER_ID.",
 					'".addslashes($modelName.' '.$imei.' '.$serial)."'
 				)";
@@ -407,10 +413,57 @@ switch(@$_POST['op']) {
 		jsonSuccess($send);
 		break;
 	case 'equip_check_get':
-		if(!preg_match(REGEXP_NUMERIC, $_POST['device_id']) && $_POST['device_id'] == 0)
+		if(!$device_id = _isnum($_POST['device_id']))
 			jsonError();
-		$device_id = intval($_POST['device_id']);
 		$send['spisok'] = utf8(devEquipCheck($device_id));
+		jsonSuccess($send);
+		break;
+	case 'zayav_day_finish':
+		if(!preg_match(REGEXP_DATE, $_POST['day']))
+			jsonError();
+
+		$day = $_POST['day'];
+
+		$send['html'] = utf8(_zayavFinishCalendar($day));
+		jsonSuccess($send);
+		break;
+	case 'zayav_day_finish_next':
+		if(!preg_match(REGEXP_DATE, $_POST['day']))
+			jsonError();
+
+		$day = $_POST['day'];
+
+		$send['html'] = utf8(_zayavFinishCalendar($day, $_POST['mon']));
+		jsonSuccess($send);
+		break;
+	case 'zayav_day_finish_save':
+		if(!preg_match(REGEXP_DATE, $_POST['day']))
+			jsonError();
+
+		$day = $_POST['day'];
+		$zayav_id = _isnum($_POST['zayav_id']);
+
+		if($zayav_id) {
+			$sql = "SELECT * FROM `zayav` WHERE `ws_id`=".WS_ID." AND !`deleted` AND `id`=".$zayav_id;
+			if(!$z = query_assoc($sql))
+				jsonError();
+			if($z['day_finish'] != $day) {
+				query("UPDATE `zayav` SET `day_finish`='".$day."' WHERE `id`=".$zayav_id);
+				history_insert(array(
+					'type' => 52,
+					'client_id' => $z['client_id'],
+					'zayav_id' => $zayav_id,
+					'value' => '<table><tr>'.
+								'<th>Срок:'.
+								'<td>'.($z['day_finish'] == '0000-00-00' ? 'не указан' : FullData($z['day_finish'], 0, 1, 1)).
+								'<td>»'.
+								'<td>'.FullData($day, 0, 1, 1).
+							   '</table>'
+				));
+			}
+		}
+
+		$send['data'] = utf8(FullData($day, 1, 0, 1));
 		jsonSuccess($send);
 		break;
 	case 'zayav_spisok':

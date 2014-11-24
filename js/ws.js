@@ -201,6 +201,7 @@ var AJAX_WS = '/ajax/ws.php?' + VALUES,
 				sort:$('#sort').val(),
 				desc:$('#desc').val(),
 				status:$('#status').val(),
+				finish:$('#day_finish').val(),
 				diff:$('#diff').val(),
 				zpzakaz:$('#zpzakaz').val(),
 				device:$('#dev_device').val(),
@@ -210,11 +211,14 @@ var AJAX_WS = '/ajax/ws.php?' + VALUES,
 				devstatus:$('#devstatus').val()
 			},
 			loc = '';
+		if(v.status != '1')
+			v.finish = '0000-00-00';
 		if(v.sort != '1') loc += '.sort=' + v.sort;
 		if(v.desc != '0') loc += '.desc=' + v.desc;
 		if(v.find) loc += '.find=' + escape(v.find);
 		else {
 			if(v.status > 0) loc += '.status=' + v.status;
+			if(v.finish != '0000-00-00') loc += '.finish=' + v.finish;
 			if(v.diff > 0) loc += '.diff=' + v.diff;
 			if(v.zpzakaz > 0) loc += '.zpzakaz=' + v.zpzakaz;
 			if(v.device > 0) loc += '.device=' + v.device;
@@ -229,6 +233,7 @@ var AJAX_WS = '/ajax/ws.php?' + VALUES,
 		_cookie('zayav_sort', v.sort);
 		_cookie('zayav_desc', v.desc);
 		_cookie('zayav_status', v.status);
+		_cookie('zayav_finish', v.finish);
 		_cookie('zayav_diff', v.diff);
 		_cookie('zayav_zpzakaz', v.zpzakaz);
 		_cookie('zayav_device', v.device);
@@ -1336,6 +1341,68 @@ $(document)
 		location.href = URL + '&p=client&d=info&id=' + $(this).attr('val');
 	})
 
+	.on('click', '#day-finish-link', function(e) {//открытие календаря ремонтов
+		e.stopPropagation();
+		if($(this).hasClass('_busy'))
+			return;
+		var dialog = _dialog({
+				top:40,
+				width:480,
+				head:'Календарь ремонтов',
+				load:1,
+				butSubmit:''
+			}),
+			send = {
+				op:'zayav_day_finish',
+				day:$('#day_finish').val()
+			};
+		$.post(AJAX_WS, send, function(res) {
+			if(res.success)
+				dialog.content.html(res.html);
+			else
+				dialog.loadError();
+		}, 'json');
+		$(document)
+			.off('click', '#zayav-finish-calendar td.d:not(.old)')
+			.on('click', '#zayav-finish-calendar td.d:not(.old)', function() {
+				if($('#day-finish-link').hasClass('_busy'))
+					return;
+				dialog.close();
+				$('#day-finish-link').addClass('_busy');
+				send = {
+					op:'zayav_day_finish_save',
+					day:$(this).attr('val'),
+					zayav_id:window.ZAYAV ? ZAYAV.id : 0
+				};
+				$.post(AJAX_WS, send, function(res) {
+					$('#day-finish-link').removeClass('_busy');
+					if(res.success) {
+						$('#day_finish').val(send.day);
+						$('#day-finish-link span').html(res.data);
+						if($('#zayav').length)
+							zayavSpisok();
+					}
+
+				}, 'json');
+			});
+	})
+	.on('click', '#zayav-finish-calendar .ch', function() {//перемотка календаря ремонтов
+		if($('#fc-head').hasClass('_busy'))
+			return;
+		$('#fc-head').addClass('_busy');
+		var send = {
+			op:'zayav_day_finish_next',
+			mon:$(this).attr('val'),
+			day:$('#day_finish').val()
+		};
+		$.post(AJAX_WS, send, function(res) {
+			if(res.success)
+				$('#zayav-finish-calendar').after(res.html).remove();
+			else
+				$('#fc-head').removeClass('_busy');
+		}, 'json');
+	})
+
 	.on('click', '#zayav ._next', function() {
 		if($(this).hasClass('busy'))
 			return;
@@ -1376,6 +1443,8 @@ $(document)
 		$('#sort')._radio(1);
 		$('#desc')._check(0);
 		$('#status').rightLink(0);
+		$('#day_finish').val('0000-00-00');
+		$('#day-finish-link span').html('не указан');
 		$('#diff')._check(0);
 		$('#zpzakaz')._radio(0);
 		$('#dev').device({
@@ -3438,6 +3507,7 @@ $(document)
 					color_dop:$('#color_dop').val(),
 					comm:$('#comm').val(),
 					pre_cost:$('#pre_cost').val(),
+					day_finish:$('#day_finish').val(),
 					reminder:$('#reminder').val()
 				};
 				if(!$('.tr_equip').hasClass('dn')) {
@@ -3460,7 +3530,8 @@ $(document)
 				else if(send.pre_cost && (!REGEXP_NUMERIC.test(send.pre_cost) || send.pre_cost == 0)) {
 					msg = 'Некорректно указана предварительная стоимость';
 					$('#pre_cost').focus();
-				} else if(send.reminder == 1 && !send.reminder_txt) msg = 'Не указан текст напоминания';
+				} else if(send.day_finish == '0000-00-00') msg = 'Не указан срок выполнения ремонта';
+				else if(send.reminder == 1 && !send.reminder_txt) msg = 'Не указан текст напоминания';
 				else {
 					if(send.place > 0) send.place_other = '';
 					$(this).addClass('busy');

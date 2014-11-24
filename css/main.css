@@ -52,6 +52,10 @@
 #zayav #spisok{padding-bottom:10px;background-color:#f7f7f7;vertical-align:top}
 #zayav .right{border:0;width:155px;padding-bottom:300px}
 #zayav .condLost.hide{display:none}
+#zayav .rightLink a:not(.sel) #srok{display:none}
+#zayav #srok,#zayav #srok *{font-size:10px}
+#zayav #srok{margin-top:8px}
+#zayav #day-finish-link{color:#BCDCFF}
 .zayav_unit{
 	cursor:pointer;
 	margin:10px 5px 0 10px;
@@ -136,6 +140,47 @@
 #zayavAdd #reminder_tab{display:none;border-spacing:8px;position:relative;top:-8px}
 #zayavAdd #reminder_txt{width:260px}
 #zayavAdd .vkButton{margin:10px 7px 0 206px}
+
+#day-finish-link{display:inline-block;cursor:pointer;color:#2B587A}
+#day-finish-link:hover{text-decoration:underline}
+#day-finish-link._busy span{visibility:hidden}
+
+#zayav-finish-calendar #fc-head{width:100%}
+#zayav-finish-calendar #fc-head td{padding:10px;text-align:center}
+#zayav-finish-calendar #fc-head td.ch{
+	width:47px;
+	cursor:pointer;
+	font-size:18px;
+	font-weight:bold;
+	color:#aaa;
+}
+#zayav-finish-calendar #fc-head td.ch:hover{background-color:#f7f7fd;color:#555}
+#zayav-finish-calendar #fc-head span{font-size:14px}
+#zayav-finish-calendar #fc-head._busy span{visibility:hidden}
+#zayav-finish-calendar #fc-mon{width:100%;border-collapse:collapse}
+#zayav-finish-calendar #fc-mon td{border:#ddd solid 1px}
+#zayav-finish-calendar #week-name td{
+	font-weight:bold;
+	font-size:13px;
+	background-color:#eee;
+	color:#555;
+	text-align:center;
+	padding:10px;
+}
+#zayav-finish-calendar td.d{width:47px;height:40px;text-align:center}
+#zayav-finish-calendar td.d.old{background-color:#f8f8f8;color:#888}
+#zayav-finish-calendar td.d.sel{background-color:#ffb}
+#zayav-finish-calendar td.d:not(.old):hover{cursor:pointer;background-color:#afa}
+#zayav-finish-calendar td.d b{
+	display:inline-block;
+	font-size:13px;
+	padding:1px 5px;
+	border:#cec solid 1px;
+	background-color:#dfd;
+	color:#080;
+}
+
+
 
 /* Информация о заявке */
 #zayav-info .delete{float:right;margin-top:4px}

@@ -1,6 +1,5 @@
 <?php
 require_once('config.php');
-require_once('view/ws.php');
 
 _hashRead();
 _header();
