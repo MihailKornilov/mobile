@@ -179,7 +179,17 @@
 	background-color:#dfd;
 	color:#080;
 }
-
+#zayav-finish-calendar #fc-cancel{
+	border:#cec solid 1px;
+	padding:10px;
+	text-align:center;
+	font-size:12px;
+	margin-top:10px;
+	cursor:pointer;
+	color:#555;
+}
+#zayav-finish-calendar #fc-cancel:hover{background-color:#afa}
+#zayav-finish-calendar .fc-old-sel:hover{cursor:pointer;text-decoration:underline}
 
 
 /* Информация о заявке */

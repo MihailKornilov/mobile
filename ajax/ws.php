@@ -423,8 +423,9 @@ switch(@$_POST['op']) {
 			jsonError();
 
 		$day = $_POST['day'];
+		$zayav_spisok = _isbool($_POST['zayav_spisok']);
 
-		$send['html'] = utf8(_zayavFinishCalendar($day));
+		$send['html'] = utf8(_zayavFinishCalendar($day, '', $zayav_spisok));
 		jsonSuccess($send);
 		break;
 	case 'zayav_day_finish_next':
@@ -432,8 +433,9 @@ switch(@$_POST['op']) {
 			jsonError();
 
 		$day = $_POST['day'];
+		$zayav_spisok = _isbool($_POST['zayav_spisok']);
 
-		$send['html'] = utf8(_zayavFinishCalendar($day, $_POST['mon']));
+		$send['html'] = utf8(_zayavFinishCalendar($day, $_POST['mon'], $zayav_spisok));
 		jsonSuccess($send);
 		break;
 	case 'zayav_day_finish_save':
@@ -463,7 +465,7 @@ switch(@$_POST['op']) {
 			}
 		}
 
-		$send['data'] = utf8(FullData($day, 1, 0, 1));
+		$send['data'] = utf8($day == '0000-00-00' ? 'не указан' : FullData($day, 1, 0, 1));
 		jsonSuccess($send);
 		break;
 	case 'zayav_spisok':

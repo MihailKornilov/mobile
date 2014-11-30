@@ -717,7 +717,7 @@ function _zayavFinish($day='0000-00-00') {
 		'<input type="hidden" id="day_finish" value="'.$day.'" />'.
 		'<div id="day-finish-link"><span>'.($day == '0000-00-00' ? 'не указан' : FullData($day, 1, 0, 1)).'</span></div>';
 }//_zayavFinish()
-function _zayavFinishCalendar($selDay='0000-00-00', $mon='') {
+function _zayavFinishCalendar($selDay='0000-00-00', $mon='', $zayav_spisok=0) {
 	if(!$mon)
 		$mon = $selDay != '0000-00-00' ? substr($selDay, 0, 7) : strftime('%Y-%m');
 	$day = $mon.'-01';
@@ -774,14 +774,16 @@ function _zayavFinishCalendar($selDay='0000-00-00', $mon='') {
 		$send .=
 			'<td class="d '.$cur.$old.$sel.'"'.$val.'>'.
 				($cur ? '<u>'.$n.'</u>' : $n).
-				(isset($days[$day]) ? ': <b>'.$days[$day].'</b>' : '');
+				(isset($days[$day]) ? ': <b'.($old && $zayav_spisok ? ' class="fc-old-sel" val="'.$day.'"' : '').'>'.$days[$day].'</b>' : '');
 		$week++;
 		if($week > 7)
 			$week = 1;
 		if($week == 1 && $n < $dayCount)
 			$send .= '<tr>';
 	}
-	$send .= '</table></div>';
+	$send .= '</table>'.
+			($zayav_spisok && $selDay != '0000-00-00' ? '<div id="fc-cancel" val="0000-00-00">День не указан</div>' : '').
+		'</div>';
 
 	return $send;
 }//_zayavFinishCalendar()

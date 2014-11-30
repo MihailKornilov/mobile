@@ -1354,7 +1354,8 @@ $(document)
 			}),
 			send = {
 				op:'zayav_day_finish',
-				day:$('#day_finish').val()
+				day:$('#day_finish').val(),
+				zayav_spisok:$('#zayav').length
 			};
 		$.post(AJAX_WS, send, function(res) {
 			if(res.success)
@@ -1363,8 +1364,8 @@ $(document)
 				dialog.loadError();
 		}, 'json');
 		$(document)
-			.off('click', '#zayav-finish-calendar td.d:not(.old)')
-			.on('click', '#zayav-finish-calendar td.d:not(.old)', function() {
+			.off('click', '#zayav-finish-calendar td.d:not(.old),#fc-cancel,.fc-old-sel')
+			.on('click', '#zayav-finish-calendar td.d:not(.old),#fc-cancel,.fc-old-sel', function() {
 				if($('#day-finish-link').hasClass('_busy'))
 					return;
 				dialog.close();
@@ -1393,7 +1394,8 @@ $(document)
 		var send = {
 			op:'zayav_day_finish_next',
 			mon:$(this).attr('val'),
-			day:$('#day_finish').val()
+			day:$('#day_finish').val(),
+			zayav_spisok:$('#zayav').length
 		};
 		$.post(AJAX_WS, send, function(res) {
 			if(res.success)
