@@ -1,6 +1,6 @@
 <?php
 require_once('config.php');
-require_once(VKPATH.'/vk_ajax.php');
+require_once(API_PATH.'/vk_ajax.php');
 
 switch(@$_POST['op']) {
 	case 'cache_clear':

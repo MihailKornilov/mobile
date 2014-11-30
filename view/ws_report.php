@@ -419,11 +419,23 @@ function income_path($data) {
 		(DAY ? '<a href="'.URL.'&p=report&d=money&d1=income&d2=month&mon='.YEAR.'-'.MON.'">'._monthDef(MON, 1).'</a> » ' : (MON ? '<b>'._monthDef(MON, 1).'</b>' : '')).
 		(DAY ? '<b>'.intval(DAY).$to.'</b>' : '');
 }//income_path()
-function income_all() {
+function income_all() {//Суммы платежей по годам
 	$sql = "SELECT DATE_FORMAT(`dtime_add`,'%Y') AS `year`,
 				   SUM(`sum`) AS `sum`
 			FROM `money`
-			WHERE `deleted`=0
+			WHERE !`deleted`
+			  AND `sum`<0
+			GROUP BY DATE_FORMAT(`dtime_add`,'%Y')
+			ORDER BY `dtime_add` ASC";
+	$q = query($sql);
+	$expense = array();
+	while($r = mysql_fetch_assoc($q))
+		$expense[$r['year']] = round(abs($r['sum']), 2);
+
+	$sql = "SELECT DATE_FORMAT(`dtime_add`,'%Y') AS `year`,
+				   SUM(`sum`) AS `sum`
+			FROM `money`
+			WHERE !`deleted`
 			  AND `sum`>0
 			GROUP BY DATE_FORMAT(`dtime_add`,'%Y')
 			ORDER BY `dtime_add` ASC";
@@ -432,17 +444,35 @@ function income_all() {
 	while($r = mysql_fetch_assoc($q))
 		$spisok[$r['year']] = '<tr>'.
 			'<td><a href="'.URL.'&p=report&d=money&d1=income&d2=year&year='.$r['year'].'">'.$r['year'].'</a>'.
-			'<td class="r"><b>'._sumSpace($r['sum']).'</b>';
+			'<td class="r"><b>'._sumSpace($r['sum']).'</b>'.
+			'<td class="r">'.(isset($expense[$r['year']]) ? _sumSpace($expense[$r['year']]) : '').
+			'<td class="r">'.(isset($expense[$r['year']]) ? _sumSpace($r['sum'] - $expense[$r['year']]) : '');
 
 	return
 	'<div class="headName">Суммы платежей по годам</div>'.
 	'<table class="_spisok">'.
 		'<tr><th>Год'.
-			'<th>Всего'.
+			'<th>Платежи'.
+			'<th>Расход'.
+			'<th>Чистый доход'.
 			implode('', $spisok).
 	'</table>';
 }//income_all()
-function income_year($year) {
+function income_year($year) {//Суммы платежей по месяцам
+	$sql = "SELECT DATE_FORMAT(`dtime_add`,'%m') AS `mon`,
+				   SUM(`sum`) AS `sum`
+			FROM `money`
+			WHERE !`deleted`
+			  AND `sum`<0
+			  AND `dtime_add` LIKE '".$year."%'
+			GROUP BY DATE_FORMAT(`dtime_add`,'%m')
+			ORDER BY `dtime_add` ASC";
+	$q = query($sql);
+	$expense = array();
+	while($r = mysql_fetch_assoc($q))
+		$expense[$r['mon']] = round(abs($r['sum']), 2);
+
+
 	$spisok = array();
 	for($n = 1; $n <= (strftime('%Y', time()) == $year ? intval(strftime('%m', time())) : 12); $n++)
 		$spisok[$n] =
@@ -451,7 +481,7 @@ function income_year($year) {
 	$sql = "SELECT DATE_FORMAT(`dtime_add`,'%m') AS `mon`,
 				   SUM(`sum`) AS `sum`
 			FROM `money`
-			WHERE `deleted`=0
+			WHERE !`deleted`
 			  AND `sum`>0
 			  AND `dtime_add` LIKE '".$year."%'
 			GROUP BY DATE_FORMAT(`dtime_add`,'%m')
@@ -460,14 +490,18 @@ function income_year($year) {
 	while($r = mysql_fetch_assoc($q))
 		$spisok[intval($r['mon'])] =
 			'<tr><td class="r"><a href="'.URL.'&p=report&d=money&d1=income&d2=month&mon='.$year.'-'.$r['mon'].'">'._monthDef($r['mon'], 1).'</a>'.
-				'<td class="r"><b>'._sumSpace($r['sum']).'</b>';
+				'<td class="r"><b>'._sumSpace($r['sum']).'</b>'.
+				'<td class="r">'.(isset($expense[$r['mon']]) ? _sumSpace($expense[$r['mon']]) : '').
+				'<td class="r">'.(isset($expense[$r['mon']]) ? _sumSpace($r['sum'] - $expense[$r['mon']]) : '');
 
 	return
 	'<div class="headName">Суммы платежей по месяцам за '.$year.' год</div>'.
 	'<div class="inc-path">'.income_path($year).'</div>'.
 	'<table class="_spisok">'.
 		'<tr><th>Месяц'.
-			'<th>Всего'.
+			'<th>Платежи'.
+			'<th>Расход'.
+			'<th>Чистый доход'.
 			implode('', $spisok).
 	'</table>';
 }//income_year()

@@ -1,4 +1,4 @@
-var AJAX_WS = '/ajax/ws.php?' + VALUES,
+var AJAX_WS = APP_HTML + '/ajax/ws.php?' + VALUES,
 	scannerWord = '',
 	scannerTime = 0,
 	scannerTimer,
@@ -335,7 +335,7 @@ var AJAX_WS = '/ajax/ws.php?' + VALUES,
 			'height=500,' +
 			'left=20,' +
 			'top=20';
-		window.open(SITE + '/view/kvit_html.php?' + VALUES + '&id=' + id, 'kvit', params);
+		window.open(APP_HTML + '/view/kvit_html.php?' + VALUES + '&id=' + id, 'kvit', params);
 	},
 
 	zpFilter = function() {
@@ -2037,17 +2037,19 @@ $(document)
 			.width(80);
 	})
 	.on('click', '#zpInfo .edit', function() {
-		var html = '<table class="zp_add_dialog">' +
+		var html =
+			'<table class="zp_add_dialog">' +
 				'<tr><td class="label">Наименование запчасти:<td><input type="hidden" id="name_id" value="' + ZP.name_id + '">' +
 				'<tr><td class="label topi">Устройство:<td id="add_dev">' +
 				'<tr><td><td>' + ZP.images +
 				'<tr><td class="label">Версия:<td><input type="text" id="version" value="' + ZP.version + '">' +
 				'<tr><td class="label">Б/у:<td><input type="hidden" id="add_bu" value="' + ZP.bu + '">' +
 				'<tr><td class="label">Цвет:<td><input type="hidden" id="color_id" value="' + ZP.color_id + '">' +
+				'<tr><td class="label">Радиомастер:<td><input type="hidden" id="price_id" value="' + ZP.price_id + '">' +
 			'</table>',
 			dialog = _dialog({
 				top:30,
-				width:450,
+				width:500,
 				head:'Редактирование запчасти',
 				content:html,
 				butSubmit:'Сохранить',
@@ -2071,7 +2073,27 @@ $(document)
 			spisok:COLOR_SPISOK
 		});
 		$('#add_bu')._check();
-
+		$('#price_id')._select({
+			width:300,
+			title0:'Начните вводить данные...',
+			spisok:[],
+			write:1,
+			nofind:'Запчастей не найдено',
+			funcKeyup:priceGet
+		});
+		priceGet();
+		function priceGet(val) {
+			var send = {
+				op:'zp_price_get',
+				val:val || ''
+			};
+			$('#price_id')._select('process');
+			$.post(AJAX_WS, send, function(res) {
+				$('#price_id')._select('cancel');
+				if(res.success)
+					$('#price_id')._select(res.spisok);
+			}, 'json');
+		}
 		function submit() {
 			var msg,
 				send = {
@@ -2083,7 +2105,8 @@ $(document)
 					model_id:$('#add_dev_model').val(),
 					version:$('#version').val(),
 					bu:$('#add_bu').val(),
-					color_id:$('#color_id').val()
+					color_id:$('#color_id').val(),
+					price_id:$('#price_id').val()
 				};
 			if(send.name_id == 0) msg = 'Не указано наименование запчасти.';
 			else if(send.device_id == 0) msg = 'Не выбрано устройство';

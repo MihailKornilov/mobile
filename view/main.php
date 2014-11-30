@@ -91,45 +91,30 @@ function _header() {
 	global $html;
 	$html =
 		'<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">'.
-//		'<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">'.
 		'<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="ru" lang="ru">'.
+
 		'<head>'.
 		'<meta http-equiv="content-type" content="text/html; charset=windows-1251" />'.
 		'<title>Hi-tech Service - Приложение '.API_ID.'</title>'.
 
-		//Отслеживание ошибок в скриптах
-		(SA ? '<script type="text/javascript" src="//nyandoma'.(LOCAL ? '' : '.ru').'/js/errors.js?'.VERSION.'"></script>' : '').
+		_api_scripts().
 
-		//Стороние скрипты
-		'<script type="text/javascript" src="//nyandoma'.(LOCAL ? '' : '.ru').'/js/jquery-2.0.3.min.js"></script>'.
-		'<script type="text/javascript" src="//'.(LOCAL ? 'nyandoma/vk' : 'vk.com/js/api').'/xd_connection.js?20"></script>'.
+		(defined('WS_DEVS') ? '<script type="text/javascript">var WS_DEVS=['.WS_DEVS.'];</script>' : '').
 
-		//Установка начального значения таймера.
-		(SA ? '<script type="text/javascript">var TIME=(new Date()).getTime();</script>' : '').
+		'<script type="text/javascript" src="'.APP_HTML.'/js/G_values.js?'.G_VALUES.'"></script>'.
 
-		'<script type="text/javascript">'.
-			(LOCAL ? 'for(var i in VK)if(typeof VK[i]=="function")VK[i]=function(){return false};' : '').
-			'var DOMAIN="'.DOMAIN.'",'.
-				'VALUES="'.VALUES.'",'.
-				(defined('WS_DEVS') ? 'WS_DEVS=['.WS_DEVS.'],' : '').
-				'VIEWER_ID='.VIEWER_ID.';'.
-		'</script>'.
+		'<link rel="stylesheet" type="text/css" href="'.APP_HTML.'/css/main'.(DEBUG ? '' : '.min').'.css?'.VERSION.'" />'.
+		'<script type="text/javascript" src="'.APP_HTML.'/js/main'.(DEBUG ? '' : '.min').'.js?'.VERSION.'"></script>'.
 
-		//Подключение api VK. Стили VK должны стоять до основных стилей сайта
-		'<link href="//nyandoma'.(LOCAL ? '' : '.ru').'/vk'.(defined('TEST') ? 'test' : '').'/vk'.(DEBUG ? '' : '.min').'.css?'.VERSION.'" rel="stylesheet" type="text/css" />'.
-		'<script type="text/javascript" src="//nyandoma'.(LOCAL ? '' : '.ru').'/vk'.(defined('TEST') ? 'test' : '').'/vk'.(DEBUG ? '' : '.min').'.js?'.VERSION.'"></script>'.
-
-		'<link rel="stylesheet" type="text/css" href="/css/main'.(DEBUG ? '' : '.min').'.css?'.VERSION.'" />'.
-		'<script type="text/javascript" src="/js/main'.(DEBUG ? '' : '.min').'.js?'.VERSION.'"></script>'.
-
-		(WS_ID ? '<script type="text/javascript" src="/js/ws'.(DEBUG ? '' : '.min').'.js?'.VERSION.'"></script>' : '').
-		(@$_GET['p'] == 'setup' ? '<script type="text/javascript" src="/js/setup'.(DEBUG ? '' : '.min').'.js?'.VERSION.'"></script>' : '').
+		(WS_ID ? '<script type="text/javascript" src="'.APP_HTML.'/js/ws'.(DEBUG ? '' : '.min').'.js?'.VERSION.'"></script>' : '').
+		(@$_GET['p'] == 'setup' ? '<script type="text/javascript" src="'.APP_HTML.'/js/setup'.(DEBUG ? '' : '.min').'.js?'.VERSION.'"></script>' : '').
 
 		//Скрипты и стили для суперадминистратора
-		(@$_GET['p'] == 'sa' ? '<link href="/css/sa'.(DEBUG ? '' : '.min').'.css?'.VERSION.'" rel="stylesheet" type="text/css" />' : '').
-		(@$_GET['p'] == 'sa' ? '<script type="text/javascript" src="/js/sa'.(DEBUG ? '' : '.min').'.js?'.VERSION.'"></script>' : '').
+		(@$_GET['p'] == 'sa' ?
+			'<link rel="stylesheet" type="text/css" href="'.APP_HTML.'/css/sa'.(DEBUG ? '' : '.min').'.css?'.VERSION.'" />'.
+			'<script type="text/javascript" src="'.APP_HTML.'/js/sa'.(DEBUG ? '' : '.min').'.js?'.VERSION.'"></script>'
+		: '').
 
-		'<script type="text/javascript" src="/js/G_values.js?'.G_VALUES.'"></script>'.
 		'</head>'.
 		'<body>'.
 		'<div id="frameBody">'.
@@ -252,7 +237,7 @@ function GvaluesCreate() {//Составление файла G_values.js
 		"\n".'MODEL_ASS={0:""};'.
 		"\n".'for(k in MODEL_SPISOK){for(n=0;n<MODEL_SPISOK[k].length;n++){var sp=MODEL_SPISOK[k][n];MODEL_ASS[sp.uid]=sp.title;}}';
 
-	$fp = fopen(PATH.'js/G_values.js', 'w+');
+	$fp = fopen(APP_PATH.'/js/G_values.js', 'w+');
 	fwrite($fp, $save);
 	fclose($fp);
 
@@ -519,7 +504,7 @@ function ws_create_step1() {
 /*
 function to_new_images() {//Перенос картинок в новый формат
 	define('IMLINK', 'http://'.DOMAIN.'/files/images/');
-	define('IMPATH', PATH.'files/images/');
+	define('IMPATH', APP_PATH.'files/images/');
 	$sql = "SELECT * FROM `images` WHERE !LENGTH(`path`) LIMIT 1000";
 	$q = query($sql);
 	while($r = mysql_fetch_assoc($q)) {

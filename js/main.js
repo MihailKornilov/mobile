@@ -1,5 +1,4 @@
-var	SITE = 'http://' + DOMAIN,
-	hashLoc,
+var	hashLoc,
 	hashSet = function(hash) {
 		if(!hash && !hash.p)
 			return;

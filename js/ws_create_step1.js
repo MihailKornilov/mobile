@@ -16,6 +16,7 @@ var cityGet = function(val) {
 if(!COUNTRY_ASS[COUNTRY_ID])
 	$('#countries').val(1); //если нет, устанавливается Россия
 
+
 $('#countries')._select({
 	width:180,
 	spisok:COUNTRY_SPISOK,

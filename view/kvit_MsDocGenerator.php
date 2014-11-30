@@ -1,6 +1,6 @@
 <?php
 require_once('../config.php');
-require_once(VKPATH.'clsMsDocGenerator.php');
+require_once(API_PATH.'/clsMsDocGenerator.php');
 require_once(DOCUMENT_ROOT.'/view/ws.php');
 
 if(!preg_match(REGEXP_NUMERIC, $_GET['id'])) {

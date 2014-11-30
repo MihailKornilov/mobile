@@ -316,6 +316,7 @@
 #zp .clear{float:right;margin:4px 10px 0 0}
 #zp #sort{float:right;width:176px;margin-top:13px}
 #zp .result{border-top:#DAE1E8 solid 1px}
+#zp #xls-zakaz{margin-left:20px;color:#999}
 #zp #zp-spisok{padding:10px 5px}
 #zp ._spisok{width:100%}
 #zp ._spisok tr:not(._next) td{padding:2px 4px}
@@ -324,6 +325,7 @@
 #zp em{background:#ffc;border-bottom:1px solid #FE2}
 #zp .version{color:#555;margin-left:5px}
 #zp .color{margin-left:8px;color:#444}
+#zp .cena{float:right;color:#888}
 #zp .zp-avai{
 	width:20px;
 	font-weight:bold;
@@ -377,14 +379,14 @@
 
 
 
-#zpInfo .ztab{width:100%;border-spacing:10px}
+#zpInfo .ztab{width:100%;border-spacing:10px;min-height:600px}
 #zpInfo .left{vertical-align:top}
 #zpInfo .name{color:#45688E;font-weight:bold;font-size:12px;margin-top:5px}
 #zpInfo .name span,.compatAddTab .bu{font:bold 12px Verdana;margin-right:8px;color:#800}
 #zpInfo .name em{font-weight:bold;font-size:12px;margin-left:12px;color:#777}
 #zpInfo .for{font-size:12px;margin-top:4px}
 #zpInfo .for a{font-size:12px}
-#zpInfo .prop,.compatAddTab .prop{border-spacing:2px;margin:5px 0 0 5px}
+#zpInfo .prop,.compatAddTab .prop{border-spacing:4px;margin:5px 0 0 3px}
 #zpInfo .avai{margin:5px 0 0 7px;font-weight:bold;color:#0b0}
 #zpInfo .avai.no{color:#555}
 #zpInfo .added{color:#aaa;margin-top:6px;font-size:10px;text-align:right}

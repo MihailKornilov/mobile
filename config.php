@@ -1,14 +1,11 @@
 <?php
 define('DOCUMENT_ROOT', dirname(__FILE__));
 define('NAMES', 'cp1251');
-define('DOMAIN', defined('CRON') && CRON ? 'mobile.nyandoma.ru' : $_SERVER['SERVER_NAME']);
-define('LOCAL', DOMAIN == 'mobile');
 
 require_once(DOCUMENT_ROOT.'/syncro.php');
 define('DATABASE', $mysql['database']);
 
-$SA[2170788] = 1;// Корнилов Виталий
-require_once(VKPATH.'/vk.php');
+require_once(API_PATH.'/vk.php');
 define('SA_VIEWER_ID', SA && @$_COOKIE['sa_viewer_id'] ? intval($_COOKIE['sa_viewer_id']) : 0);
 //define('VIEWER_ID', SA_VIEWER_ID ? SA_VIEWER_ID : $_GET['viewer_id']);
 _appAuth();

@@ -1,4 +1,4 @@
-var AJAX_SETUP = '/ajax/setup.php?' + VALUES;
+var AJAX_SETUP = APP_HTML + '/ajax/setup.php?' + VALUES;
 
 $(document)
 	.on('click', '#setup_info #devs div', function() {

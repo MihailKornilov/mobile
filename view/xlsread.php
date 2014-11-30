@@ -1,6 +1,6 @@
 <?php
 require_once '../config.php';
-include_once VKPATH.'excel/PHPExcel/IOFactory.php';
+include_once API_PATH.'/excel/PHPExcel/IOFactory.php';
 
 set_time_limit(300);
 

@@ -8,7 +8,7 @@ $mysql = array(
 );
 
 define('API_ID', 2031819);
-define('PATH', 'c:/www/mobile/');
+define('APP_PATH', 'c:/www/mobile/');
 define('VKPATH', 'c:/www/nyandoma/vk/');
 define('CACHE_PREFIX', 'mobile_');
 

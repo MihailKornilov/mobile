@@ -1713,7 +1713,8 @@ function zp_spisok($v) {
 
 	$send = array(
 		'all' => $all,
-		'result' => 'Показан'._end($all, 'а ', 'о ').$all.' запчаст'._end($all, 'ь', 'и', 'ей'),
+		'result' => 'Показан'._end($all, 'а ', 'о ').$all.' запчаст'._end($all, 'ь', 'и', 'ей').
+					($filter['menu'] == 3 ? '<a id="xls-zakaz" href="'.SITE.'/view/xls_zakaz.php?'.VALUES.'">Экспорт в xsl</a>' : ''),
 		'spisok' => '',
 		'filter' => $filter
 	);
@@ -1724,7 +1725,8 @@ function zp_spisok($v) {
 	            `c`.*,
 	            0 AS `avai`,
 	            0 AS `zakaz`,
-	            '' AS `zz`
+	            '' AS `zz`,
+				`p`.`cena`
 			FROM `zp_catalog` `c`
 
 				LEFT JOIN `setup_zp_name` `s`
@@ -1735,6 +1737,9 @@ function zp_spisok($v) {
 
 				LEFT JOIN `base_vendor` `v`
 				ON `c`.`base_vendor_id`=`v`.`id`
+
+				LEFT JOIN `zp_price` `p`
+				ON `c`.`price_id`=`p`.`id`
 
 			WHERE ".$cond."
 			ORDER BY ".$sort."
@@ -1799,6 +1804,7 @@ function zp_spisok($v) {
 				'</a>'.
 				($r['version'] ? '<span class="version">'.$r['version'].'</span>' : '').
 				($r['color_id'] ? '<u class="color">'._color($r['color_id']).'</u>' : '').
+				($r['cena'] ? '<b class="cena">'.round($r['cena']).'</b>' : '').
 			'<td class="zp-avai">'.($r['avai'] ? $r['avai'] : '').
 			'<td class="zp-zakaz">'.
 				'<tt>—</tt>'.
@@ -1959,6 +1965,8 @@ function zp_info($zp_id) {
 	$compatSpisok = zp_compat_spisok($zp_id, $compat_id);
 	$compatCount = count($compatSpisok);
 
+	$price = $zp['price_id'] ? query_assoc("SELECT * FROM `zp_price` WHERE `id`=".$zp['price_id']) : array();
+
 	return
 	'<script type="text/javascript">'.
 		'var ZP={'.
@@ -1975,7 +1983,8 @@ function zp_info($zp_id) {
 			'name:"'._zpName($zp['name_id']).' <b>'._vendorName($zp['base_vendor_id'])._modelName($zp['base_model_id']).'</b>",'.
 			'for:"для '._deviceName($zp['base_device_id'], 1).'",'.
 			'count:'.($avai ? $avai : 0).','.
-			'images:"'.addslashes(_imageAdd(array('owner'=>'zp'.$compat_id))).'"'.
+			'images:"'.addslashes(_imageAdd(array('owner'=>'zp'.$compat_id))).'",'.
+			'price_id:'.$zp['price_id'].
 		'};'.
 	'</script>'.
 	'<div id="zpInfo">'.
@@ -1992,6 +2001,7 @@ function zp_info($zp_id) {
 					'</div>'.
 					'<table class="prop">'.
 						($zp['color_id'] ? '<tr><td class="label">Цвет:<td>'._color($zp['color_id']) : '').
+						($zp['price_id'] ? '<tr><td class="label top">Прайс:<td><u>'.$price['articul'].'</u>: '.$price['name'].' - <b>'.round($price['cena']).'</b>' : '').
 						//'<tr><td class="label">id:<td>'.$zp['id'].
 						//'<tr><td class="label">compat_id:<td>'.$zp['compat_id'].
 					'</table>'.

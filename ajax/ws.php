@@ -1314,29 +1314,21 @@ switch(@$_POST['op']) {
 		jsonSuccess();
 		break;
 	case 'zp_edit':
-		if(!preg_match(REGEXP_NUMERIC, $_POST['zp_id']) || $_POST['zp_id'] == 0)
+		if(!$zp_id = _isnum($_POST['zp_id']))
 			jsonError();
-		if(!preg_match(REGEXP_NUMERIC, $_POST['name_id']) || $_POST['name_id'] == 0)
+		if(!$name_id = _isnum($_POST['name_id']))
 			jsonError();
-		if(!preg_match(REGEXP_NUMERIC, $_POST['device_id']) || $_POST['device_id'] == 0)
+		if(!$device_id = _isnum($_POST['device_id']))
 			jsonError();
-		if(!preg_match(REGEXP_NUMERIC, $_POST['vendor_id']) || $_POST['vendor_id'] == 0)
+		if(!$vendor_id = _isnum($_POST['vendor_id']))
 			jsonError();
-		if(!preg_match(REGEXP_NUMERIC, $_POST['model_id']) || $_POST['model_id'] == 0)
-			jsonError();
-		if(!preg_match(REGEXP_BOOL, $_POST['bu']))
-			jsonError();
-		if(!preg_match(REGEXP_NUMERIC, $_POST['color_id']))
+		if(!$model_id = _isnum($_POST['model_id']))
 			jsonError();
 
-		$zp_id = intval($_POST['zp_id']);
-		$name_id = intval($_POST['name_id']);
-		$device_id = intval($_POST['device_id']);
-		$vendor_id = intval($_POST['vendor_id']);
-		$model_id = intval($_POST['model_id']);
 		$version = win1251(htmlspecialchars(trim($_POST['version'])));
-		$bu = intval($_POST['bu']);
-		$color_id = intval($_POST['color_id']);
+		$bu = _isbool($_POST['bu']);
+		$color_id = _isnum($_POST['color_id']);
+		$price_id = _isnum($_POST['price_id']);
 
 		$sql = "UPDATE `zp_catalog`
 				SET `name_id`=".$name_id.",
@@ -1346,6 +1338,7 @@ switch(@$_POST['op']) {
 					`version`='".$version."',
 					`bu`=".$bu.",
 					`color_id`=".$color_id.",
+					`price_id`=".$price_id.",
 					`find`='".addslashes(_modelName($model_id).' '.$version)."'
 				WHERE `id`=".$zp_id;
 		query($sql);
@@ -1356,11 +1349,10 @@ switch(@$_POST['op']) {
 					SET `name_id`=".$name_id.",
 						`version`='".$version."',
 						`bu`=".$bu.",
-						`color_id`=".$color_id."
+						`price_id`=".$price_id."
 					WHERE `id`=".$compat_id;
 			query($sql);
 		}
-
 
 		jsonSuccess();
 		break;
@@ -1607,6 +1599,23 @@ switch(@$_POST['op']) {
 		$spisok = zp_compat_spisok($zp_id);
 		$send['count'] = utf8(zp_compat_count(count($spisok)));
 		$send['spisok'] = utf8(implode($spisok));
+		jsonSuccess($send);
+		break;
+	case 'zp_price_get':
+		$send['spisok'] = array();
+		$val = win1251(htmlspecialchars(trim($_POST['val'])));
+		$sql = "SELECT *
+				FROM `zp_price`
+				WHERE `id`".(!empty($val) ? " AND `name` LIKE '%".$val."%'" : '')."
+				ORDER BY `name`
+				LIMIT 50";
+		$q = query($sql);
+		while($r = mysql_fetch_assoc($q))
+			$send['spisok'][] = array(
+				'uid' => $r['id'],
+				'title' => utf8(htmlspecialchars_decode($r['name'])),
+				'content' => utf8(htmlspecialchars_decode($r['name'])).': <b>'.round($r['cena']).'</b>'
+			);
 		jsonSuccess($send);
 		break;
 

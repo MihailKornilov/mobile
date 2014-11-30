@@ -143,7 +143,7 @@ function kvit_content() {
 
 
 require_once '../config.php';
-require_once VKPATH.'excel/PHPExcel.php';
+require_once API_PATH.'/excel/PHPExcel.php';
 require_once(DOCUMENT_ROOT.'/view/ws.php');
 
 set_time_limit(10);
@@ -245,7 +245,7 @@ $table->addCell(mm(40))->addText(utf8(FullData(curTime())), null, _bot() + _top(
 
 
 
-$section->addImage(PATH.'files/images/zayav3563-w3td2ojt0a-big.jpg');
+$section->addImage(APP_PATH.'/files/images/zayav3563-w3td2ojt0a-big.jpg');
 
 
 mysql_close();
