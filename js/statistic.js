@@ -107,6 +107,14 @@ $('#zayav-count').highcharts('StockChart', {
 			tooltip: {
 				valueDecimals: 0
 			}
+		},
+		{
+			name: 'Выданы',
+			color:'#eeee00',
+			data: ZAYAV_SENT,
+			tooltip: {
+				valueDecimals: 0
+			}
 		}
 	]
 });
@@ -148,6 +156,14 @@ $('#zayav-count-mon').highcharts('StockChart', {
 			name: 'Отменены',
 			color:'#D30000',
 			data: ZAYAVMON_FAIL,
+			tooltip: {
+				valueDecimals: 0
+			}
+		},
+		{
+			name: 'Выданы',
+			color:'#eeee00',
+			data: ZAYAVMON_SENT,
 			tooltip: {
 				valueDecimals: 0
 			}

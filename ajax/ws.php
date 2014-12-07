@@ -613,16 +613,14 @@ switch(@$_POST['op']) {
 		jsonSuccess($send);
 		break;
 	case 'zayav_status_place':
-		if(!preg_match(REGEXP_NUMERIC, $_POST['zayav_id']) && $_POST['zayav_id'] == 0)
+		if(!$zayav_id = _isnum($_POST['zayav_id']))
 			jsonError();
-		if(!preg_match(REGEXP_NUMERIC, $_POST['zayav_status']) && $_POST['zayav_status'] == 0)
+		if(!$zayav_status = _isnum($_POST['zayav_status']))
 			jsonError();
 		if(!preg_match(REGEXP_NUMERIC, $_POST['dev_status']))
 			jsonError();
 		if(!preg_match(REGEXP_NUMERIC, $_POST['dev_place']))
 			jsonError();
-		$zayav_id = intval($_POST['zayav_id']);
-		$zayav_status = intval($_POST['zayav_status']);
 		$dev_status = intval($_POST['dev_status']);
 		$dev_place = intval($_POST['dev_place']);
 		$place_other = $dev_place == 0 ? win1251(htmlspecialchars(trim($_POST['place_other']))) : '';
@@ -638,6 +636,7 @@ switch(@$_POST['op']) {
 					`device_place`=".$dev_place.",
 					`device_place_other`='".$place_other."'
 					".($z['zayav_status'] != $zayav_status ? ",`zayav_status`=".$zayav_status.",`zayav_status_dtime`=CURRENT_TIMESTAMP" : '')."
+					".($z['device_place'] != $dev_place ? ",`device_place_dtime`=CURRENT_TIMESTAMP" : '')."
 				WHERE `id`=".$zayav_id;
 		query($sql);
 
@@ -1798,7 +1797,8 @@ switch(@$_POST['op']) {
 			if($place != $r['device_place'] || $place_other != $r['device_place_other']) {
 				$sql = "UPDATE `zayav`
 						SET `device_place`=".$place.",
-							`device_place_other`='".$place_other."'
+							`device_place_other`='".$place_other."',
+							`device_place_dtime`=CURRENT_TIMESTAMP
 						WHERE `id`=".$v['zayav_id'];
 				query($sql);
 				history_insert(array(

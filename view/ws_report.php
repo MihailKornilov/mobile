@@ -1239,6 +1239,21 @@ function statistic() {
 	while($r = mysql_fetch_assoc($q))
 		$zayav_fail[] = array((strtotime($r['day']) + 40000) * 1000, intval($r['count']));
 
+	//Выданные устройства
+	$sql = "SELECT
+				COUNT(`id`) AS `count`,
+				DATE_FORMAT(`device_place_dtime`, '%Y-%m-%d') AS `day`
+			FROM `zayav`
+			WHERE !`deleted`
+			  AND `device_place`=2
+			  AND `device_place_dtime`!='0000-00-00 00:00:00'
+			GROUP BY DATE_FORMAT(`device_place_dtime`, '%Y-%m-%d')
+			ORDER BY `device_place_dtime`";
+	$q = query($sql);
+	$zayav_sent = array();
+	while($r = mysql_fetch_assoc($q))
+		$zayav_sent[] = array((strtotime($r['day']) + 40000) * 1000, intval($r['count']));
+
 
 
 	//Новые заявки - месяц
@@ -1282,9 +1297,23 @@ function statistic() {
 	while($r = mysql_fetch_assoc($q))
 		$zayavmon_fail[] = array(strtotime($r['mon']) * 1000, intval($r['count']));
 
+	//Выданные устройства - месяц
+	$sql = "SELECT
+				COUNT(`id`) AS `count`,
+				DATE_FORMAT(`device_place_dtime`, '%Y-%m-15') AS `day`
+			FROM `zayav`
+			WHERE !`deleted`
+			  AND `device_place`=2
+			  AND `device_place_dtime`!='0000-00-00 00:00:00'
+			GROUP BY DATE_FORMAT(`device_place_dtime`, '%Y-%m')
+			ORDER BY `device_place_dtime`";
+	$q = query($sql);
+	$zayavmon_sent = array();
+	while($r = mysql_fetch_assoc($q))
+		$zayavmon_sent[] = array((strtotime($r['day']) + 40000) * 1000, intval($r['count']));
 
 	return
-	'<script type="text/javascript" src="http://nyandoma'.(LOCAL ? '' : '.ru').'/js/highstock.js"></script>'.
+	'<script type="text/javascript" src="/.vkapp/.js/highstock.js"></script>'.
 	'<div id="statistic"></div>'.
 	'<br /><br />'.
 	'<div id="client-count"></div>'.
@@ -1298,12 +1327,14 @@ function statistic() {
 			'CLIENT_COUNT='.json_encode($client).','.
 			'ZAYAV_COUNT='.json_encode($zayav).','.
 			'ZAYAV_OK='.json_encode($zayav_ok).','.
-			'ZAYAV_FAIL='.json_encode($zayav_fail).';'.
+			'ZAYAV_FAIL='.json_encode($zayav_fail).','.
+			'ZAYAV_SENT='.json_encode($zayav_sent).','.
 			'ZAYAVMON_COUNT='.json_encode($zayavmon).','.
 			'ZAYAVMON_OK='.json_encode($zayavmon_ok).','.
-			'ZAYAVMON_FAIL='.json_encode($zayavmon_fail).';'.
+			'ZAYAVMON_FAIL='.json_encode($zayavmon_fail).','.
+			'ZAYAVMON_SENT='.json_encode($zayavmon_sent).';'.
 	'</script>'.
-	'<script type="text/javascript" src="'.SITE.'/js/statistic.js"></script>';
+	'<script type="text/javascript" src="'.APP_HTML.'/js/statistic.js"></script>';
 }//statistic()
 
 function salary() {

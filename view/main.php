@@ -489,7 +489,7 @@ function ws_create_step1() {
 
 		'<div class="vkButton"><button>Готово</button></div>'.
 		'<div class="vkCancel"><button>Отмена</button></div>'.
-		'<script type="text/javascript" src="'.SITE.'/js/ws_create_step1'.(DEBUG ? '' : '.min').'.js?'.VERSION.'"></script>'.
+		'<script type="text/javascript" src="'.APP_HTML.'/js/ws_create_step1'.(DEBUG ? '' : '.min').'.js?'.VERSION.'"></script>'.
 	'</div>';
 }//ws_create_step1()
 

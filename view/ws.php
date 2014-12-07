@@ -1245,7 +1245,7 @@ function zayav_info($zayav_id) {
 				'<div class="headName">'.
 					'Заявка №'.$z['nomer'].
 					'<a class="img_print'._tooltip('Распечатать квитанцию', -75).'</a>'.
-					//'<a href="'.SITE.'/view/_kvit.php?'.VALUES.'&id='.$zayav_id.'" class="img_word" title="Распечатать квитанцию в Microsoft Word"></a>'.
+					//'<a href="'.APP_HTML.'/view/_kvit.php?'.VALUES.'&id='.$zayav_id.'" class="img_word" title="Распечатать квитанцию в Microsoft Word"></a>'.
 				'</div>'.
 				'<table class="tabInfo">'.
 					'<tr><td class="label">Устройство: <td>'._deviceName($z['base_device_id']).'<a><b>'.MODEL.'</b></a>'.
@@ -1716,7 +1716,7 @@ function zp_spisok($v) {
 	$send = array(
 		'all' => $all,
 		'result' => 'Показан'._end($all, 'а ', 'о ').$all.' запчаст'._end($all, 'ь', 'и', 'ей').
-					($filter['menu'] == 3 ? '<a id="xls-zakaz" href="'.SITE.'/view/xls_zakaz.php?'.VALUES.'">Экспорт в xsl</a>' : ''),
+					($filter['menu'] == 3 ? '<a id="xls-zakaz" href="'.APP_HTML.'/view/xls_zakaz.php?'.VALUES.'">Экспорт в xsl</a>' : ''),
 		'spisok' => '',
 		'filter' => $filter
 	);
