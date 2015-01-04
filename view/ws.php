@@ -1343,14 +1343,6 @@ function zayav_expense_test($v) {// ѕроверка корректности данных расходов за€вки
 			$ids[1] = '';
 		if(!_cena($ids[2]))
 			return false;
-		if(_zayavExpense($ids[0], 'worker') && !_isnum($ids[3]))
-			return false;
-		if(_zayavExpense($ids[0], 'worker') && !_isnum($ids[4]))
-			return false;
-		if(!$ids[1]) {
-			$ids[3] = 0;
-			$ids[4] = 0;
-		}
 		$send[] = $ids;
 	}
 	return $send;
@@ -1386,18 +1378,14 @@ function zayav_expense_spisok($z, $type='html') {//ѕолучение списка расходов за€
 			(_zayavExpense($r['category_id'], 'txt') ? '"'.$r['txt'].'"' : '').
 			(_zayavExpense($r['category_id'], 'worker') ? intval($r['worker_id']) : '').
 			(_zayavExpense($r['category_id'], 'zp') ? intval($r['zp_id']) : '').','.
-			$sum.','.
-			intval($r['mon']).','.
-			intval($r['year']).
+			$sum.
 		']';
 		$array[] = array(
 			intval($r['category_id']),
 				(_zayavExpense($r['category_id'], 'txt') ? $r['txt'] : '').
 				(_zayavExpense($r['category_id'], 'worker') ? intval($r['worker_id']) : '').
 				(_zayavExpense($r['category_id'], 'zp') ? intval($r['zp_id']) : ''),
-			$sum,
-			intval($r['mon']),
-			intval($r['year'])
+			$sum
 		);
 	}
 	if(!empty($arr))
@@ -1573,8 +1561,6 @@ function zayav_msg_to_client($zayav_id) {//сообщение о передачи устройства клиен
 	query($sql);
 	return utf8(_vkComment('zayav', $zayav_id));
 }//zayav_msg_to_client()
-
-
 
 
 

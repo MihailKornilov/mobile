@@ -124,13 +124,35 @@ switch(@$_POST['op']) {
 		$send['html'] = utf8(setup_worker_spisok());
 		jsonSuccess($send);
 		break;
+	case 'worker_name_save':
+		if(!RULES_WORKER)
+			jsonError();
+		if(!$viewer_id = _isnum($_POST['viewer_id']))
+			jsonError();
+
+		$u = _viewer($viewer_id);
+		if($u['ws_id'] != WS_ID)
+			jsonError();
+
+		$first_name = win1251(htmlspecialchars(trim($_POST['first_name'])));
+		$last_name = win1251(htmlspecialchars(trim($_POST['last_name'])));
+
+		$sql = "UPDATE `vk_user`
+				SET `first_name`='".addslashes($first_name)."',
+					`last_name`='".addslashes($last_name)."'
+				WHERE `viewer_id`=".$viewer_id;
+		query($sql);
+
+		xcache_unset(CACHE_PREFIX.'viewer_'.$viewer_id);
+		GvaluesCreate();
+
+		jsonSuccess();
+		break;
 	case 'worker_dop_save':
 		if(!RULES_WORKER)
 			jsonError();
-		if(!preg_match(REGEXP_NUMERIC, $_POST['viewer_id']))
+		if(!$viewer_id = _isnum($_POST['viewer_id']))
 			jsonError();
-
-		$viewer_id = intval($_POST['viewer_id']);
 
 		$u = _viewer($viewer_id);
 		if($u['ws_id'] != WS_ID)

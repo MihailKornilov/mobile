@@ -908,9 +908,7 @@ $.fn.zayavExpense = function(o) {
 					attr = id + u.attr('val'),
 					cat_id = $('#' + attr + 'cat').val(),
 					sum = _cena(u.find('.zesum').val()),
-					dop = '',
-					mon = 0,
-					year = 0;
+					dop = '';
 				if(cat_id == 0)
 					continue;
 				if(!sum)
@@ -919,31 +917,19 @@ $.fn.zayavExpense = function(o) {
 					dop = u.find('.zetxt').val();
 				else if(ZE_WORKER[cat_id]) {
 					dop = $('#' + attr + 'worker').val();
-					if(dop > 0) {
-						mon = $('#' + attr + 'mon').val();
-						year = $('#' + attr + 'year').val();
-					}
 				} else if(ZE_ZP[cat_id])
 					dop = $('#' + attr + 'zp').val();
 
 				send.push(cat_id + ':' +
 						  dop + ':' +
-						  sum + ':' +
-						  mon + ':' +
-						  year);
+						  sum);
 			}
 			return send.join();
 		}
 	}
 
 	t.html('<div id="_ze-edit"></div>');
-	var ze = t.find('#_ze-edit'),
-		zemon = [], // Преобразование списка месяцев из ассоциативного
-		zeyear = [];// Список годов
-	for(var k in  MONTH_DEF)
-		zemon.push({uid:k,title:MONTH_DEF[k]});
-	for(n = 2014; n <= (new Date()).getFullYear(); n++)
-		zeyear.push({uid:n,title:n});
+	var ze = t.find('#_ze-edit');
 
 	if(typeof o == 'object')
 		for(n = 0; n < o.length; n++)
@@ -956,16 +942,12 @@ $.fn.zayavExpense = function(o) {
 			v = [
 				0, //0 - категория
 				'',//1 - описание, id сотрудника или id запчасти
-				'',//2 - сумма
-				0, //3 - месяц
-				0  //4 - год
+				'' //2 - сумма
 			];
 		var attr = id + num,
 			attr_cat = attr + 'cat',
 			attr_worker = attr + 'worker',
 			attr_zp = attr + 'zp',
-			attr_mon = attr + 'mon',
-			attr_year = attr + 'year',
 			html =
 				'<table id="ptab'+ num + '" class="ptab" val="' + num + '"><tr>' +
 					'<td><input type="hidden" id="' + attr_cat + '" value="' + v[0] + '" />' +
@@ -974,16 +956,12 @@ $.fn.zayavExpense = function(o) {
 						(v[0] && ZE_WORKER[v[0]] ? '<input type="hidden" id="' + attr_worker + '" value="' + v[1] + '" />' : '') +
 						(v[0] && ZE_ZP[v[0]] ? '<input type="hidden" id="' + attr_zp + '" value="' + v[1] + '" />' : '') +
 					'<td class="tdsum' + (v[0] ? '' : ' dn') + '">' +
-						'<input type="text" class="zesum" maxlength="6"' + (v[5] ? ' disabled' : '') + ' tabindex="' + (num * 10) + '" value="' + v[2] + '" />руб.' +
-					'<td class="tdmon' + (v[0] && ZE_WORKER[v[0]] ? '' : ' dn') + '">' +
-						'<input type="hidden" id="' + attr_mon + '" value="' + (v[3] || (new Date()).getMonth() + 1) + '" />' +
-						'<input type="hidden" id="' + attr_year + '" value="' + (v[4] || (new Date()).getFullYear()) + '" />' +
+						'<input type="text" class="zesum" maxlength="6" tabindex="' + (num * 10) + '" value="' + v[2] + '" />руб.' +
 				'</table>';
 		ze.append(html);
 		var ptab = $('#ptab' + num),
 			tddop = ptab.find('.tddop'),
-			zesum = ptab.find('.zesum'),
-			tdmon = ptab.find('.tdmon');
+			zesum = ptab.find('.zesum');
 		$('#' + attr_cat)._select({
 			width:130,
 			disabled:0,
@@ -997,19 +975,18 @@ $.fn.zayavExpense = function(o) {
 				} else if(ZE_WORKER[id]) {
 					tddop.html('<input type="hidden" id="' + attr_worker + '" />');
 					$('#' + attr_worker)._select({
-						width:150,
+						width:240,
 						title0:'Сотрудник не указан',
 						spisok:WORKER_SPISOK,
 						func:function(v) {
 							zesum.focus();
-							tdmon[(v ? 'remove' : 'add') + 'Class']('dn');
 						}
 					});
 					zesum.focus();
 				} else if(ZE_ZP[id]) {
 					tddop.html('<input type="hidden" id="' + attr_zp + '" />');
 					$('#' + attr_zp)._select({
-						width:150,
+						width:240,
 						title0:'Запчасть не выбрана',
 						spisok:ZAYAV.zp_avai,
 						func:function(v) {
@@ -1024,31 +1001,27 @@ $.fn.zayavExpense = function(o) {
 				zesum.val(id == 1 ? ZAYAV.worker_zp : '');
 				if(id && !ptab.next().hasClass('ptab'))
 					itemAdd();
-				tdmon.addClass('dn');
 			}
 		});
 		if(v[0] && ZE_WORKER[v[0]])
 			$('#' + attr_worker)._select({
-				width:150,
+				width:240,
 				disabled:0,
 				title0:'Сотрудник',
 				spisok:WORKER_SPISOK,
 				func:function(v) {
 					zesum.focus();
-					tdmon[(v ? 'remove' : 'add') + 'Class']('dn');
 				}
 			});
 		if(v[0] && ZE_ZP[v[0]])
 			$('#' + attr_zp)._select({
-				width:150,
+				width:240,
 				title0:'Запчасть не выбрана',
 				spisok:ZAYAV.zp_avai,
 				func:function(v) {
 					zesum.focus();
 				}
 			});
-		$('#' + attr_mon)._dropdown({disabled:0,spisok:zemon});
-		$('#' + attr_year)._dropdown({disabled:0,spisok:zeyear});
 		num++;
 	}
 	return t;
@@ -3042,6 +3015,124 @@ $(document)
 			});
 		}
 	})
+	.on('click', '.salary .bonus', function() {// внесение бонуса по платежам
+		var n,
+			year = [],
+			week = [],
+			html =
+				'<table class="salary-tab">' +
+					'<tr><td class="label">Процент:<td>' + PROCENT +
+					'<tr><td class="label">Год:<td><input type="hidden" id="b-year" value="2015" />' +
+					'<tr><td class="label">Неделя:<td><input type="hidden" id="week" />' +
+					'<tr><td class="label">Сумма:<td><input type="text" id="sum" class="money" disabled /> руб.' +
+				'</table>' +
+				'<div id="bonus-spisok"></div>',
+			dialog = _dialog({
+				top:20,
+				width:450,
+				head:'Формирование бонуса по платежам',
+				content:html,
+				submit:submit
+			});
+
+		for(n = 2014; n <= 2015; n++)
+			year.push({uid:n,title:n});
+		$('#b-year')._select({
+			width:100,
+			spisok:year,
+			func:bonus_spisok
+		});
+
+		for(n = 1; n <= 53; n++)
+			week.push({uid:n,title:n});
+		$('#week')._select({
+			title0:'Неделя',
+			width:100,
+			spisok:week,
+			func:bonus_spisok
+		});
+
+		function bonus_spisok() {
+			var send = {
+				op:'salary_bonus_spisok',
+				worker_id:WORKER_ID,
+				year:$('#b-year').val(),
+				week:$('#week').val() * 1
+			};
+			if(!send.week) {
+				$('#bonus-spisok').html('');
+				$('#sum').val('');
+				return;
+			}
+			$.post(AJAX_WS, send, function(res) {
+				if(res.success) {
+					$('#bonus-spisok').html(res.spisok);
+					bonus_sum();
+					$('.i-expense').keyup(function() {
+						var t = $(this),
+							expense = t.val(),
+							money = t.parent().parent().find('b').html(),
+							bns = t.parent().parent().find('.bns');
+						if(!REGEXP_NUMERIC.test(expense))
+							return;
+						bns.html(Math.round((money - expense) * PROCENT / 100));
+						bonus_sum();
+					});
+				}
+			}, 'json');
+		}
+		function bonus_sum() {
+			var bns = $('.bns'),
+				sum = 0,
+				send = [];
+			for(n = 0; n < bns.length; n++) {
+				var eq = bns.eq(n);
+				sum += eq.html() * 1;
+				send.push(eq.attr('val') + ':' + eq.parent().find('.i-expense').val() + ':' + eq.html());
+			}
+			$('#sum').val(sum);
+			return send.join();
+		}
+		function submit() {
+			var send = {
+				op:'salary_bonus',
+				worker_id:WORKER_ID,
+				year:$('#b-year').val(),
+				week:$('#week').val(),
+				bonus:bonus_sum()
+			};
+			dialog.process();
+			$.post(AJAX_WS, send, function(res) {
+				if(res.success) {
+					dialog.close();
+					_msg('Бонус начислен.');
+					salarySpisok();
+				} else
+					dialog.abort();
+			}, 'json');
+		}
+	})
+	.on('click', '.salary .bonus-show', function() {
+		var dialog = _dialog({
+			top:20,
+			width:500,
+			head:'Просмотр бонуса по платежам',
+			load:1,
+			butSubmit:'',
+			butCancel:'Закрыть'
+		});
+
+		var send = {
+			op:'salary_bonus_show',
+			expense_id:$(this).attr('val')
+		};
+		$.post(AJAX_WS, send, function (res) {
+			if(res.success)
+				dialog.content.html(res.html);
+			else
+				dialog.loadError();
+		}, 'json');
+	})
 	.on('click', '.salary .up', function() {
 		var html =
 				'<table class="salary-tab">' +
@@ -3333,30 +3424,15 @@ $(document)
 				worker_id:WORKER_ID,
 				sum:_cena($('#sum').val())
 			};
-			if(!send.sum) {
-				err('Некорректно указана сумма.');
-				$('#sum').focus();
-			} else {
-				dialog.process();
-				$.post(AJAX_WS, send, function (res) {
-					if(res.success) {
-						dialog.close();
-						_msg('Установка произведёна.');
-						$('#spisok').html(res.html);
-					} else
-						dialog.abort();
-				}, 'json');
-			}
-		}
-		function err(msg) {
-			dialog.bottom.vkHint({
-				msg:'<SPAN class="red">' + msg + '</SPAN>',
-				remove:1,
-				indent:40,
-				show:1,
-				top:-47,
-				left:93
-			});
+			dialog.process();
+			$.post(AJAX_WS, send, function (res) {
+				if(res.success) {
+					dialog.close();
+					_msg('Установка произведена.');
+					$('#spisok').html(res.html);
+				} else
+					dialog.abort();
+			}, 'json');
 		}
 	})
 	.on('mouseenter', '.salary .show', function() {

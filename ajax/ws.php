@@ -1163,8 +1163,8 @@ switch(@$_POST['op']) {
 							".(_zayavExpense($r[0], 'worker') ? intval($r[1]) : 0).",
 							".(_zayavExpense($r[0], 'zp') ? intval($r[1]) : 0).",
 							".$r[2].",
-							".$r[3].",
-							".$r[4]."
+							".intval(strftime('%m')).",
+							".strftime('%Y')."
 						)";
 				query($sql);
 			}
@@ -2300,8 +2300,7 @@ switch(@$_POST['op']) {
 	case 'salary_start_set':
 		if(!$worker_id = _isnum($_POST['worker_id']))
 			jsonError();
-		if(!$sum = _cena($_POST['sum']))
-			jsonError();
+		$sum = _cena($_POST['sum']);
 
 		$sql = "SELECT * FROM `vk_user` WHERE `ws_id`=".WS_ID." AND `viewer_id`=".$worker_id;
 		if(!$r = query_assoc($sql))
@@ -2338,6 +2337,97 @@ switch(@$_POST['op']) {
 	case 'salary_spisok':
 		$send['html'] = utf8(salary_worker_spisok($_POST));
 		$send['month'] = utf8(salary_monthList($_POST));
+		jsonSuccess($send);
+		break;
+	case 'salary_bonus_spisok':
+		if(!$worker_id = _isnum($_POST['worker_id']))
+			jsonError();
+		if(!$year = _isnum($_POST['year']))
+			jsonError();
+		if(!$week = _isnum($_POST['week']))
+			jsonError();
+		$send['spisok'] = utf8(salary_worker_bonus($worker_id, $year, $week));
+		jsonSuccess($send);
+		break;
+	case 'salary_bonus':
+		if(!$worker_id = _isnum($_POST['worker_id']))
+			jsonError();
+		if(!$year = _isnum($_POST['year']))
+			jsonError();
+		if(!$week = _isnum($_POST['week']))
+			jsonError();
+
+		$bonus = array();
+		$bonusSum = 0;
+		foreach(explode(',', $_POST['bonus']) as $ex) {
+			$r = explode(':', $ex);
+			if(!$id = _isnum($r[0]))
+				jsonError();
+			$expense = _isnum($r[1]);
+			$sum = intval($r[2]);
+			$bonus[$id] = array(
+				'expense' => $expense,
+				'sum' => $sum
+			);
+			$bonusSum += $sum;
+		}
+
+		$sql = "INSERT INTO `zayav_expense` (
+					`ws_id`,
+					`worker_id`,
+					`sum`,
+					`mon`,
+					`year`
+				) VALUES (
+					".WS_ID.",
+					".$worker_id.",
+					".$bonusSum.",
+					".intval(strftime('%m')).",
+					".strftime('%Y')."
+				)";
+		query($sql);
+		$insert_id = mysql_insert_id();
+
+		$first_day = date('Y-m-d', ($week - 1) * 7 * 86400 + strtotime('1/1/' . $year) - date('w', strtotime('1/1/' . $year)) * 86400 + 86400);
+		$last_day = date('Y-m-d', $week * 7 * 86400 + strtotime('1/1/' . $year) - date('w', strtotime('1/1/' . $year)) * 86400);
+		$about = 'Ѕонус по платежам, '._viewerRules($worker_id, 'RULES_MONEY_PROCENT').'%:'.
+				 '<br />'.
+				 '<a class="bonus-show" val="'.$insert_id.'">'.
+					$week.'-€ недел€ ('.FullData($first_day).' - '.FullData($last_day).')'.
+				 '</a>.';
+		query("UPDATE `zayav_expense` SET `txt`='".addslashes($about)."' WHERE `id`=".$insert_id);
+
+		// ¬несение списка бонусов
+		$arr = array();
+		foreach($bonus as $id => $r)
+			$arr[] = '('.
+				WS_ID.','.
+				$insert_id.','.
+				$id.','.
+				$r['expense'].','.
+				$r['sum'].
+			')';
+		$sql = "INSERT INTO `zayav_expense_bonus` (
+					`ws_id`,
+					`expense_id`,
+					`money_id`,
+					`expense`,
+					`bonus`
+				) VALUES ".implode(',', $arr);
+		query($sql);
+
+		jsonSuccess();
+		break;
+	case 'salary_bonus_show':// просмотр бонуса по платежам
+		if(!$expense_id = _isnum($_POST['expense_id']))
+			jsonError();
+
+		$sql = "SELECT * FROM `zayav_expense` WHERE `id`=".$expense_id;
+		if(!$r = query_assoc($sql))
+			jsonError();
+
+		$send['html'] = utf8(salary_worker_bonus_show($r));
+
 		jsonSuccess($send);
 		break;
 }

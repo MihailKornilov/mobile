@@ -738,7 +738,7 @@ $(document)
 		if($('#setup_rules').length) {
 			$('.g-save').click(function() {
 				var send = {
-						op:'setup_worker_save',
+						op:'worker_name_save',
 						viewer_id:RULES_VIEWER_ID,
 						first_name:$('#first_name').val(),
 						last_name:$('#last_name').val(),
@@ -749,7 +749,7 @@ $(document)
 				else if(!send.last_name) { err('Не указана фамилия'); $('#last_name').focus(); }
 				else {
 					but.addClass('busy');
-					$.post(AJAX_MAIN, send, function(res) {
+					$.post(AJAX_SETUP, send, function(res) {
 						but.removeClass('busy');
 						if(res.success)
 							_msg('Сохранено.');
@@ -808,7 +808,8 @@ $(document)
 				var send = {
 						op:'worker_dop_save',
 						viewer_id:RULES_VIEWER_ID,
-						rules_getmoney:$('#rules_getmoney').val()
+						rules_getmoney:$('#rules_getmoney').val(),
+						rules_money_procent:$('#rules_money_procent').val()
 					},
 					but = $(this);
 				if(but.hasClass('busy'))

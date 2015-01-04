@@ -117,6 +117,9 @@ function _setupRules($rls, $admin=0) {
 		'RULES_GETMONEY' => array(	// Может принимать и передавать деньги:
 			'def' => 0
 		),
+		'RULES_MONEY_PROCENT' => array(	// процент от платежей
+			'def' => 0
+		),
 		'RULES_APPENTER' => array(	// Разрешать вход в приложение
 			'def' => 0,
 			'admin' => 1,
@@ -187,6 +190,7 @@ function setup_worker_rules($viewer_id) {
 		'<div class="headName">Дополнительно</div>'.
 		'<table class="rtab">'.
 			'<tr><td class="lab">Может принимать<br />и передавать деньги:<td>'._check('rules_getmoney', '', $rule['RULES_GETMONEY']).
+			'<tr><td class="lab">Процент от платежей:<td><input type="text" id="rules_money_procent" value="'.$rule['RULES_MONEY_PROCENT'].'" maxlength="2" />'.
 			'<tr><td><td><div class="vkButton dop-save"><button>Сохранить</button></div>'.
 		'</table>'.
 
@@ -218,7 +222,7 @@ function setup_worker_rules_save($post, $viewer_id) {
 	$rules = array();
 	foreach($post as $i => $v)
 		if(preg_match('/^rules_/', $i))
-			if(!preg_match(REGEXP_BOOL, $v))
+			if(!preg_match(REGEXP_NUMERIC, $v))
 				jsonError();
 			else
 				$rules[strtoupper($i)] = $v;

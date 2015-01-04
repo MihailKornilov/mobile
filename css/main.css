@@ -260,7 +260,7 @@
 .ze-spisok .itog{text-align:right}
 /* Изменение списка расходов в заявке */
 #_ze-edit .ptab{margin-bottom:6px}
-#_ze-edit .zetxt{width:142px;margin-right:5px}
+#_ze-edit .zetxt{width:232px;margin-right:5px}
 #_ze-edit ._select{margin-right:5px}
 #_ze-edit .zesum{width:40px;margin-right:3px;text-align:right}
 #_ze-edit ._dropdown{margin-left:4px}
@@ -580,6 +580,7 @@ table.zayavNomerTab td{vertical-align:top}
 .salary-tab.set .label{width:100px}
 .salary-tab #day{width:30px}
 .salary-tab .img_edit{position:relative;top:-4px;left:4px}
+.i-expense{width:30px}
 
 
 
@@ -633,6 +634,7 @@ table.zayavNomerTab td{vertical-align:top}
 #setup_rules .lab{width:150px;text-align:right}
 #setup_rules .rtab input{width:160px}
 #setup_rules .setup-div div{display:block;margin-bottom:5px;color:#555}
+#setup_rules #rules_money_procent{width:30px}
 
 #setup_info .tab{margin:10px 0 30px 0;border-spacing:10px}
 #setup_info .tab .label{text-align:right}
