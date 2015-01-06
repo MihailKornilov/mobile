@@ -2037,6 +2037,7 @@ $(document)
 		});
 		$('#add_dev').device({
 			width:200,
+			add:1,
 			device_id:ZP.device,
 			vendor_id:ZP.vendor,
 			model_id:ZP.model
@@ -3842,7 +3843,7 @@ $(document)
 					spisok:COLOR_SPISOK
 				});
 				$('#add_bu')._check();
-				$('#add_dev').device({width:200});
+				$('#add_dev').device({width:200,add:1});
 
 				function submit() {
 					var send = {

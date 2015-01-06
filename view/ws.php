@@ -1877,7 +1877,7 @@ function zp_price($v) {
 		$send['spisok'] .= '<tr val="'.$id.'"'.($r['avai'] ? '' : ' class="no-avai"').'>'.
 			'<td class="articul">'.$r['articul'].
 			'<td class="name">'.
-				($r['changed'] ? '<a>'.$r['name'].'</a>' : $r['name']).
+				($r['changed'] ? '<a>'.$r['name'].'</a>' : '<div class="nam">'.$r['name'].'</div>').
 			'<td class="price-cena">'.round($r['cena']).
 			'<td class="zp-zakaz">';
 			//	'<tt>—</tt>'.
@@ -1989,7 +1989,14 @@ function zp_info($zp_id) {
 					'</div>'.
 					'<table class="prop">'.
 						($zp['color_id'] ? '<tr><td class="label">Цвет:<td>'._color($zp['color_id']) : '').
-						($zp['price_id'] ? '<tr><td class="label top">Прайс:<td><u>'.$price['articul'].'</u>: '.$price['name'].' - <b>'.round($price['cena']).'</b>' : '').
+						($zp['price_id'] ?
+							'<tr><td class="label top">Прайс:'.
+								'<td><div class="price-name">'.
+										'<u>'.$price['articul'].'</u>: '.
+										$price['name'].
+										' - <b>'.round($price['cena']).'</b>'.
+									'</div>'
+						: '').
 						//'<tr><td class="label">id:<td>'.$zp['id'].
 						//'<tr><td class="label">compat_id:<td>'.$zp['compat_id'].
 					'</table>'.

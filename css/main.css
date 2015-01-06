@@ -331,7 +331,7 @@
 #zp ._spisok{width:100%}
 #zp ._spisok tr:not(._next) td{padding:2px 4px}
 #zp ._spisok tr:hover{background-color:#e9edf1}
-#zp .name a{display:block;width:450px;word-wrap:break-word}
+#zp .name a,#zp .name div.nam{display:block;width:450px;word-wrap:break-word}
 #zp em{background:#ffc;border-bottom:1px solid #FE2}
 #zp .version{color:#555;margin-left:5px}
 #zp .color{margin-left:8px;color:#444}
@@ -389,7 +389,7 @@
 
 
 
-#zpInfo .ztab{width:100%;border-spacing:10px;min-height:600px}
+#zpInfo .ztab{width:100%;border-spacing:10px;min-height:800px}
 #zpInfo .left{vertical-align:top}
 #zpInfo .name{color:#45688E;font-weight:bold;font-size:12px;margin-top:5px}
 #zpInfo .name span,.compatAddTab .bu{font:bold 12px Verdana;margin-right:8px;color:#800}
@@ -399,6 +399,7 @@
 #zpInfo .prop,.compatAddTab .prop{border-spacing:4px;margin:5px 0 0 3px}
 #zpInfo .avai{margin:5px 0 0 7px;font-weight:bold;color:#0b0}
 #zpInfo .avai.no{color:#555}
+#zpInfo .price-name{width:340px;word-wrap:break-word}
 #zpInfo .added{color:#aaa;margin-top:6px;font-size:10px;text-align:right}
 #zpInfo .headBlue{margin-top:10px}
 #zpInfo .compatCount{background-color:#f1f1f1;color:#777;padding:3px 8px}
