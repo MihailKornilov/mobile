@@ -6,7 +6,7 @@ function kvit_head() {
 			'<td class="rekvisit">'.
 				'<h1>Мастерская «<b>Ремонт мобильных телефонов в Няндоме</b>»</h1>'.
 				'<h1>Адрес: г.Няндома, ул.Североморская, рядом с магазином "Уют".</h1>'.
-				'<h2>Телефон: 8 964 299 94 89. Время работы: пн-пт, 10:00-19:00.</h2>'.
+				'<h2>Телефон: 8 964 299 94 89. Время работы: пн-пт, 11:00-19:00.</h2>'.
 	'</table>';
 }//kvit_head()
 function kvit_name($nomer, $barcode=0) {
@@ -89,7 +89,7 @@ $sql = "SELECT * FROM `zayav` WHERE `ws_id`=".WS_ID." AND !`deleted` AND `id`=".
 if(!$z = query_assoc($sql))
 	die(win1251('Заявки не существует.'));
 
-define('BARCODE', '<img src="'.API_HTML.'/vk/barcode/barcode.php?code='.$z['barcode'].'&encoding=ean&mode=gif" />');
+define('BARCODE', '<img src="'.API_HTML.'/barcode/barcode.php?code='.$z['barcode'].'&encoding=ean&mode=gif" />');
 
 
 echo '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">'.
@@ -100,7 +100,7 @@ echo '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www
 		'<link href="'.APP_HTML.'/css/kvit_html'.(DEBUG ? '' : '.min').'.css?'.VERSION.'" rel="stylesheet" type="text/css" />'.
 	'</head>'.
 	'<body>'.
-		'<img src="'.API_HTML.'/vk/img/printer.png" class="printer" onclick="this.style.display=\'none\';window.print()" title="Распечатать" />'.
+		'<img src="'.API_HTML.'/img/printer.png" class="printer" onclick="this.style.display=\'none\';window.print()" title="Распечатать" />'.
 		kvit_head().
 		kvit_name($k['nomer']).
 		kvit_content($k).

@@ -357,9 +357,16 @@
 #zp ._spisok tr:hover tt{visibility:visible}
 #zp ._spisok tr:hover .no{visibility:visible}
 #zp ._empty{margin:0}
-#zp .no-avai *{color:#aaa}
 #zp .articul{width:35px;text-align:right}
-#zp .price-cena{width:35px;text-align:right}
+#zp .articul s{color:#aaa}
+#zp .price-cena{width:35px;text-align:right;color:#ddd}
+#zp ._spisok tr:hover .price-cena{color:#000}
+
+#price-info-tab #head{border-spacing:6px}
+#price-info-tab .label{text-align:right}
+#price-info-tab .headName{margin:15px 0 5px}
+#price-info-tab .row{color:#777;width:75px}
+#price-info-tab span{color:#777;font-size:10px;margin-left:20px}
 
 .zpzakaz:not(.hid),.zpzakaz:hover{color:#A33}
 .zpzakaz.busy .zzedit,

@@ -1874,10 +1874,10 @@ function zp_price($v) {
 				'<th>Заказ'
 		: '';
 	foreach($spisok as $id => $r) {
-		$send['spisok'] .= '<tr val="'.$id.'"'.($r['avai'] ? '' : ' class="no-avai"').'>'.
-			'<td class="articul">'.$r['articul'].
+		$send['spisok'] .= '<tr val="'.$id.'">'.
+			'<td class="articul">'.($r['avai'] ? $r['articul'] : '<s>'.$r['articul'].'</s>').
 			'<td class="name">'.
-				($r['changed'] ? '<a>'.$r['name'].'</a>' : '<div class="nam">'.$r['name'].'</div>').
+				($r['changed'] ? '<a class="price-info" val="'.$id.'">'.$r['name'].'</a>' : '<div class="nam">'.$r['name'].'</div>').
 			'<td class="price-cena">'.round($r['cena']).
 			'<td class="zp-zakaz">';
 			//	'<tt>—</tt>'.

@@ -2001,6 +2001,33 @@ $(document)
 	.on('click', '.zp-id,.go-zp-info', function() {
 		location.href = URL + '&p=zp&d=info&id=' + $(this).attr('val');
 	})
+	.on('click', '.price-info', function() {
+		var dialog = _dialog({
+				top:20,
+				width:550,
+				head:'Информация о запчасти',
+				load:1,
+				butSubmit:'',
+				butCancel:'Закрыть'
+			}),
+			send = {
+				op:'zp_price_info',
+				id:$(this).attr('val')
+			};
+		$.post(AJAX_WS, send, function(res) {
+			var html =
+				'<div id="price-info-tab">' +
+					'<table id="head">' +
+						'<tr><td class="label">Артикул:<td>' + res.articul +
+						'<tr><td class="label">Наименование:<td>' + res.name +
+						'<tr><td class="label">Цена:<td><b>' + res.cena + '</b>' +
+					'</table>' +
+					'<div class="headName">Изменения:</div>' +
+					res.upd +
+				'</div>';
+			dialog.content.html(html);
+		}, 'json');
+	})
 
 	.on('click', '#zpInfo .avai_add', function() {
 		var obj = ZP;

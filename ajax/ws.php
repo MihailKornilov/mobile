@@ -1619,6 +1619,44 @@ switch(@$_POST['op']) {
 			);
 		jsonSuccess($send);
 		break;
+	case 'zp_price_info':
+		if(!$id = _isnum($_POST['id']))
+			jsonError();
+		if(!$zp = query_assoc("SELECT * FROM `zp_price` WHERE `id`=".$id))
+			jsonError();
+
+		$ass = array(
+			'name' => 'Наименование',
+			'cena' => 'Цена'
+		);
+		$sql = "SELECT * FROM `zp_price_upd` WHERE `price_id`=".$zp['id']." ORDER BY `dtime_add` DESC";
+		$q = query($sql);
+		$upd = '';
+		while($r = mysql_fetch_assoc($q)) {
+			$diff = '';
+			if($r['row'] == 'cena') {
+				$res = $r['new'] - $r['old'];
+				$diff = '<span>'.($res > 0 ? '+' : '').$res.'</span>';
+			}
+			$upd .=
+				'<tr><td class="row">'.$ass[$r['row']].
+					'<td>'.($r['row'] == 'cena' ? '<b>'.$r['old'].'</b>' : $r['old']).
+					'<td>'.($r['row'] == 'cena' ? '<b>'.$r['new'].'</b>' : $r['new']).$diff.
+					'<td class="dtime">'.FullData($r['dtime_add']);
+		}
+
+		if($upd)
+			$upd = '<table class="_spisok _money">'.$upd.'</table>';
+
+		$send = array(
+			'articul' => $zp['articul'],
+			'name' => utf8($zp['name']),
+			'cena' => round($zp['cena'], 2),
+			'upd' => utf8($upd)
+		);
+
+		jsonSuccess($send);
+		break;
 
 	case 'remind_spisok':
 		if(!preg_match(REGEXP_NUMERIC, $_POST['status']))
