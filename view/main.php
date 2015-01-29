@@ -78,7 +78,6 @@ function _cacheClear($ws_id=WS_ID) {
 	xcache_unset(CACHE_PREFIX.'device_status');
 	xcache_unset(CACHE_PREFIX.'device_equip');
 	xcache_unset(CACHE_PREFIX.'invoice');
-	xcache_unset(CACHE_PREFIX.'income');
 	xcache_unset(CACHE_PREFIX.'expense');
 	xcache_unset(CACHE_PREFIX.'zayav_expense');
 	xcache_unset(CACHE_PREFIX.'remind_active'.$ws_id);
@@ -149,7 +148,6 @@ function GvaluesCreate() {//Составление файла G_values.js
 	"\n".'var COLOR_SPISOK='.query_selJson("SELECT `id`,`name` FROM `setup_color_name` ORDER BY `name` ASC").','.
 		"\n".'COLORPRE_SPISOK='.query_selJson("SELECT `id`,`predlog` FROM `setup_color_name` ORDER BY `predlog` ASC").','.
 		"\n".'INVOICE_SPISOK='.query_selJson("SELECT `id`,`name` FROM `invoice` ORDER BY `id`").','.
-		"\n".'INCOME_SPISOK='.query_selJson("SELECT `id`,`name` FROM `setup_income` ORDER BY `sort`").','.
 		"\n".'EXPENSE_SPISOK='.query_selJson("SELECT `id`,`name` FROM `setup_expense` ORDER BY `sort` ASC").','.
 		"\n".'EXPENSE_WORKER='.query_ptpJson("SELECT `id`,`show_worker` FROM `setup_expense` WHERE `show_worker`").','.
 		"\n".'FAULT_ASS='.query_ptpJson("SELECT `id`,`name` FROM `setup_fault` ORDER BY `sort`").','.

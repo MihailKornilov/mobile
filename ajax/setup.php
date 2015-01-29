@@ -182,18 +182,9 @@ switch(@$_POST['op']) {
 	case 'invoice_add':
 		$name = win1251(htmlspecialchars(trim($_POST['name'])));
 		$about = win1251(htmlspecialchars(trim($_POST['about'])));
-		$types = trim($_POST['types']);
 		if(empty($name))
 			jsonError();
 
-		if(!empty($types)) {
-			foreach(explode(',', $types) as $id)
-				if(!preg_match(REGEXP_NUMERIC, $id))
-					jsonError();
-			$income = query_value("SELECT `name` FROM `setup_income` WHERE `id` IN (".$types.") AND `invoice_id` LIMIT 1");
-			if($income)
-				jsonError('Вид платежа <u>'.$income.'</u> задействован в другом счёте');
-		}
 		$sql = "INSERT INTO `invoice` (
 					`ws_id`,
 					`name`,
@@ -204,9 +195,6 @@ switch(@$_POST['op']) {
 					'".addslashes($about)."'
 				)";
 		query($sql);
-
-		if(!empty($types))
-			query("UPDATE `setup_income` SET `invoice_id`=".mysql_insert_id()." WHERE `id` IN (".$types.")");
 
 		xcache_unset(CACHE_PREFIX.'invoice');
 		GvaluesCreate();
@@ -225,23 +213,9 @@ switch(@$_POST['op']) {
 		$invoice_id = intval($_POST['id']);
 		$name = win1251(htmlspecialchars(trim($_POST['name'])));
 		$about = win1251(htmlspecialchars(trim($_POST['about'])));
-		$types = trim($_POST['types']);
 		if(empty($name))
 			jsonError();
 
-		if(!empty($types)) {
-			foreach(explode(',', $types) as $id)
-				if(!preg_match(REGEXP_NUMERIC, $id))
-					jsonError();
-			$income = query_value("SELECT `name`
-								   FROM `setup_income`
-								   WHERE `id` IN (".$types.")
-								     AND `invoice_id`
-								     AND `invoice_id`!=".$invoice_id."
-								   LIMIT 1");
-			if($income)
-				jsonError('Вид платежа <u>'.$income.'</u> задействован в другом счёте');
-		}
 
 		$sql = "SELECT * FROM `invoice` WHERE `id`=".$invoice_id;
 		if(!$r = mysql_fetch_assoc(query($sql)))
@@ -252,10 +226,6 @@ switch(@$_POST['op']) {
 					`about`='".addslashes($about)."'
 				WHERE `id`=".$invoice_id;
 		query($sql);
-
-		query("UPDATE `setup_income` SET `invoice_id`=0 WHERE `invoice_id`=".$invoice_id);
-		if(!empty($types))
-			query("UPDATE `setup_income` SET `invoice_id`=".$invoice_id." WHERE `id` IN (".$types.")");
 
 
 		xcache_unset(CACHE_PREFIX.'invoice');
@@ -297,97 +267,6 @@ switch(@$_POST['op']) {
 		));
 
 		$send['html'] = utf8(setup_invoice_spisok());
-		jsonSuccess($send);
-		break;
-
-	case 'income_add':
-		$name = win1251(htmlspecialchars(trim($_POST['name'])));
-		if(empty($name))
-			jsonError();
-		$sql = "INSERT INTO `setup_income` (
-					`ws_id`,
-					`name`,
-					`sort`
-				) VALUES (
-					".WS_ID.",
-					'".addslashes($name)."',
-					"._maxSql('setup_income')."
-				)";
-		query($sql);
-
-		xcache_unset(CACHE_PREFIX.'income');
-		GvaluesCreate();
-
-		history_insert(array(
-			'type' => 1011,
-			'value' => $name
-		));
-
-		$send['html'] = utf8(setup_income_spisok());
-		jsonSuccess($send);
-		break;
-	case 'income_edit':
-		if(!preg_match(REGEXP_NUMERIC, $_POST['id']))
-			jsonError();
-
-		$id = intval($_POST['id']);
-		$name = win1251(htmlspecialchars(trim($_POST['name'])));
-
-		if(empty($name))
-			jsonError();
-
-		$sql = "SELECT * FROM `setup_income` WHERE `id`=".$id;
-		if(!$r = mysql_fetch_assoc(query($sql)))
-			jsonError();
-
-		$sql = "UPDATE `setup_income`
-				SET `name`='".addslashes($name)."'
-				WHERE `id`=".$id;
-		query($sql);
-
-		xcache_unset(CACHE_PREFIX.'income');
-		GvaluesCreate();
-
-		$changes = '';
-		if($r['name'] != $name)
-			$changes .= '<tr><th>Наименование:<td>'.$r['name'].'<td>»<td>'.$name;
-		if($changes)
-			history_insert(array(
-				'type' => 1012,
-				'value' => $name,
-				'value1' => '<table>'.$changes.'</table>'
-			));
-
-		$send['html'] = utf8(setup_income_spisok());
-		jsonSuccess($send);
-		break;
-	case 'income_del':
-		if(!preg_match(REGEXP_NUMERIC, $_POST['id']))
-			jsonError();
-		$id = intval($_POST['id']);
-
-		// Нельзя удалить наличный платёж
-		if($id == 1)
-			jsonError();
-
-		$sql = "SELECT * FROM `setup_income` WHERE `id`=".$id;
-		if(!$r = mysql_fetch_assoc(query($sql)))
-			jsonError();
-
-		if(query_value("SELECT COUNT(`id`) FROM `money` WHERE `income_id`=".$id))
-			jsonError();
-		$sql = "DELETE FROM `setup_income` WHERE `id`=".$id;
-		query($sql);
-
-		xcache_unset(CACHE_PREFIX.'income');
-		GvaluesCreate();
-
-		history_insert(array(
-			'type' => 1013,
-			'value' => $r['name']
-		));
-
-		$send['html'] = utf8(setup_income_spisok());
 		jsonSuccess($send);
 		break;
 

@@ -1360,7 +1360,7 @@ switch(@$_POST['op']) {
 	case 'zp_sale':// Продажа запчасти
 		if(!preg_match(REGEXP_NUMERIC, $_POST['zp_id']) || !$_POST['zp_id'])
 			jsonError();
-		if(!preg_match(REGEXP_NUMERIC, $_POST['income_id']) || !$_POST['income_id'])
+		if(!preg_match(REGEXP_NUMERIC, $_POST['invoice_id']) || !$_POST['invoice_id'])
 			jsonError();
 		if(!preg_match(REGEXP_NUMERIC, $_POST['count']) || !$_POST['count'])
 			jsonError();
@@ -1373,7 +1373,7 @@ switch(@$_POST['op']) {
 		$count = intval($_POST['count']);
 
 		$v = array(
-			'income_id' => $_POST['income_id'],
+			'invoice_id' => $_POST['invoice_id'],
 			'zp_id' => _zpCompatId($_POST['zp_id']),
 			'client_id' => intval($_POST['client_id']),
 			'sum' => round($count * $cena, 2),
@@ -1813,7 +1813,7 @@ switch(@$_POST['op']) {
 	case 'income_add':
 		if(!preg_match(REGEXP_NUMERIC, $_POST['zayav_id']))
 			jsonError();
-		if(!preg_match(REGEXP_NUMERIC, $_POST['income_id']) || !$_POST['income_id'])
+		if(!preg_match(REGEXP_NUMERIC, $_POST['invoice_id']) || !$_POST['invoice_id'])
 			jsonError();
 		if(!preg_match(REGEXP_CENA, $_POST['sum']))
 			jsonError();
@@ -1893,7 +1893,7 @@ switch(@$_POST['op']) {
 			'zp_id' => $r['zp_id'],
 			'value' => round($r['sum'], 2),
 			'value1' => $r['prim'],
-			'value2' => $r['income_id']
+			'value2' => $r['invoice_id']
 		));
 		jsonSuccess();
 		break;
@@ -1930,7 +1930,7 @@ switch(@$_POST['op']) {
 			'zp_id' => $r['zp_id'],
 			'value' => round($r['sum'], 2),
 			'value1' => $r['prim'],
-			'value2' => $r['income_id']
+			'value2' => $r['invoice_id']
 		));
 
 		jsonSuccess();

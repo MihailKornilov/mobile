@@ -16,10 +16,8 @@ function setup() {
 		unset($pages['info']);
 	if(!RULES_WORKER)
 		unset($pages['worker']);
-	if(!RULES_INCOME) {
+	if(!RULES_INVOICE)
 		unset($pages['invoice']);
-		unset($pages['income']);
-	}
 
 	$d = empty($_GET['d']) ? 'my' : $_GET['d'];
 
@@ -35,7 +33,6 @@ function setup() {
 			$left = setup_worker();
 			break;
 		case 'invoice': $left = setup_invoice(); break;
-		case 'income': $left = setup_income(); break;
 		case 'expense': $left = setup_expense(); break;
 		case 'zayavexpense': $left = setup_zayav_expense(); break;
 	}
@@ -136,7 +133,7 @@ function _setupRules($rls, $admin=0) {
 					'def' => 0,
 					'admin' => 1
 				),
-				'RULES_INCOME' => array(	// Счета и виды платежей
+				'RULES_INVOICE' => array(	// Счета
 					'def' => 0,
 					'admin' => 1
 				),
@@ -206,7 +203,7 @@ function setup_worker_rules($viewer_id) {
 						_check('rules_rekvisit', 'Информация о мастерской', $rule['RULES_INFO']).
 						_check('rules_worker', 'Сотрудники', $rule['RULES_WORKER']).
 						_check('rules_rules', 'Настройка прав сотрудников', $rule['RULES_RULES']).
-						_check('rules_income', 'Счета и виды платежей', $rule['RULES_INCOME']).
+						_check('rules_invoice', 'Счета', $rule['RULES_INVOICE']).
 				'<tr><td class="lab">Видит историю действий:<td>'._check('rules_historyshow', '', $rule['RULES_HISTORYSHOW']).
 				'<tr><td class="lab">Видит историю переводов:<td>'._check('rules_historytransfer', '', $rule['RULES_HISTORYTRANSFER']).
 				'<tr><td class="lab">Может видеть платежи:<td><input type="hidden" id="rules_money" value="'.$rule['RULES_MONEY'].'" />'.
@@ -263,21 +260,9 @@ function setup_invoice_spisok() {
 	while($r = mysql_fetch_assoc($q))
 		$spisok[$r['id']] = $r;
 
-	$sql = "SELECT *
-	        FROM `setup_income`
-	        WHERE `ws_id`=".WS_ID."
-	          AND `invoice_id`
-	        ORDER BY `sort`";
-	$q = query($sql);
-	while($r = mysql_fetch_assoc($q)) {
-		$spisok[$r['invoice_id']]['type_name'][] = $r['name'];
-		$spisok[$r['invoice_id']]['type_id'][] = $r['id'];
-	}
-
 	$send =
 		'<table class="_spisok">'.
 			'<tr><th class="name">Наименование'.
-				'<th class="type">Виды платежей'.
 				'<th class="set">';
 	foreach($spisok as $id => $r)
 		$send .=
@@ -285,74 +270,12 @@ function setup_invoice_spisok() {
 				'<td class="name">'.
 					'<div>'.$r['name'].'</div>'.
 					'<pre>'.$r['about'].'</pre>'.
-				'<td class="type">'.
-					(isset($r['type_name']) ? implode('<br />', $r['type_name']) : '').
-					'<input type="hidden" class="type_id" value="'.(isset($r['type_id']) ? implode(',', $r['type_id']) : 0).'" />'.
 				'<td class="set">'.
 					'<div class="img_edit'._tooltip('Изменить', -33).'</div>';
 					//'<div class="img_del"></div>'
 	$send .= '</table>';
 	return $send;
 }//setup_invoice_spisok()
-
-function setup_income() {
-	return
-	'<div id="setup_income">'.
-		'<div class="headName">Настройки видов платежей<a class="add">Добавить</a></div>'.
-		'<div class="spisok">'.setup_income_spisok().'</div>'.
-	'</div>';
-}//setup_income()
-function setup_income_spisok() {
-	$sql = "SELECT `i`.*,
-				   COUNT(`m`.`id`) AS `money`
-			FROM `setup_income` AS `i`
-			  LEFT JOIN `money` AS `m`
-			  ON `i`.`id`=`m`.`income_id`
-			WHERE `i`.`ws_id`=".WS_ID."
-			GROUP BY `i`.`id`
-			ORDER BY `i`.`sort`";
-	$q = query($sql);
-	if(!mysql_num_rows($q))
-		return 'Список пуст.';
-
-	$income = array();
-	while($r = mysql_fetch_assoc($q))
-		$income[$r['id']] = $r;
-
-	$sql = "SELECT `i`.`id`,
-				   COUNT(`m`.`id`) AS `del`
-			FROM `setup_income` AS `i`,
-				 `money` AS `m`
-			WHERE `i`.`ws_id`=".WS_ID."
-			  AND `i`.`id`=`m`.`income_id`
-			  AND `m`.`deleted`
-			GROUP BY `i`.`id`";
-	$q = query($sql);
-	while($r = mysql_fetch_assoc($q))
-		$income[$r['id']]['del'] = $r['del'];
-
-	$send =
-		'<table class="_spisok">'.
-			'<tr><th class="name">Наименование'.
-				'<th class="money">Кол-во<br />платежей'.
-				'<th class="set">'.
-		'</table>'.
-		'<dl class="_sort" val="setup_income">';
-	foreach($income as $id => $r) {
-		$money = $r['money'] ? '<b>'.$r['money'].'</b>' : '';
-		$money .= isset($r['del']) ? ' <span class="del" title="В том числе удалённые">('.$r['del'].')</span>' : '';
-		$send .='<dd val="'.$id.'">'.
-			'<table class="_spisok">'.
-				'<tr><td class="name">'.$r['name'].
-					'<td class="money">'.$money.
-					'<td class="set">'.
-						'<div class="img_edit'._tooltip('Изменить', -33).'</div>'.
-						(!$r['money'] && $id > 1 ? '<div class="img_del'._tooltip('Удалить', -29).'</div>' : '').
-			'</table>';
-	}
-	$send .= '</dl>';
-	return $send;
-}//setup_income_spisok()
 
 function setup_expense() {
 	return

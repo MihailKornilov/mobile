@@ -2196,7 +2196,7 @@ $(document)
 		if(zpAvaiNo(ZP.count))
 			return;
 		var html = '<table class="zp_dec_dialog">' +
-				'<tr><td class="label">Вид платежа:<td><input type="hidden" id="income_id" value="' + (INCOME_SPISOK.length == 1 ? INCOME_SPISOK[0].uid : 0) + '" />' +
+				'<tr><td class="label">Счёт:<td><input type="hidden" id="invoice_id" value="' + (INVOICE_SPISOK.length == 1 ? INVOICE_SPISOK[0].uid : 0) + '" />' +
 				'<tr><td class="label">Цена за ед.:<td><input type="text" id="cena" class="money" maxlength="11" /> руб.' +
 				'<tr><td class="label">Количество:' +
 					'<td><input type="text" id="count" value="1" maxlength="11" />' +
@@ -2212,10 +2212,10 @@ $(document)
 				submit:submit
 			});
 
-		$('#income_id')._select({
+		$('#invoice_id')._select({
 			width:240,
 			title0:'Не выбран',
-			spisok:INCOME_SPISOK,
+			spisok:INVOICE_SPISOK,
 			func:function() {
 				$('#cena').focus();
 			}
@@ -2228,13 +2228,13 @@ $(document)
 			var send = {
 				op:'zp_sale',
 				zp_id:ZP.id,
-				income_id:$('#income_id').val(),
+				invoice_id:$('#invoice_id').val(),
 				count:$('#count').val(),
 				cena:$('#cena').val(),
 				client_id:$('#client_id').val(),
 				prim:$('#prim').val()
 			};
-			if(send.income_id == 0) err('Не указан вид платежа');
+			if(send.invoice_id == 0) err('Не указан счёт');
 			else if(!REGEXP_NUMERIC.test(send.count) || send.count > ZP.count || send.count == 0) {
 				err('Некорректно указано количество');
 				$('#count').focus();
@@ -2739,7 +2739,7 @@ $(document)
 		var html = '<TABLE id="income-add-tab">' +
 			'<input type="hidden" id="zayav_id" value="' + (window.ZAYAV ? ZAYAV.id : 0) + '" />' +
 			(window.ZAYAV ? '<tr><td class="label">Заявка:<td><b>№' + ZAYAV.nomer + '</b>' : '') +
-			'<tr><td class="label">Вид платежа:<td><input type="hidden" id="income_id" value="' + (INCOME_SPISOK.length == 1 ? INCOME_SPISOK[0].uid : 0) + '" />' +
+			'<tr><td class="label">Счёт:<td><input type="hidden" id="invoice_id" value="' + (INVOICE_SPISOK.length == 1 ? INVOICE_SPISOK[0].uid : 0) + '" />' +
 			'<tr><td class="label">Сумма:<td><input type="text" id="sum" class="money" maxlength="11" /> руб.' +
 			'<tr><td class="label">Описание:<td><input type="text" id="prim" maxlength="100" />' +
 			(window.ZAYAV ? '<tr><td class="label topi">Местонахождение<br />устройства:<td><input type="hidden" id="place" value="-1" />' : '') +
@@ -2750,10 +2750,10 @@ $(document)
 				content:html,
 				submit:submit
 			});
-		$('#income_id')._select({
+		$('#invoice_id')._select({
 			width:218,
 			title0:'Не выбран',
-			spisok:INCOME_SPISOK,
+			spisok:INVOICE_SPISOK,
 			func:function() {
 				$('#sum').focus();
 			}
@@ -2767,13 +2767,13 @@ $(document)
 			var send = {
 				op:'income_add',
 				zayav_id:$('#zayav_id').val(),
-				income_id:$('#income_id').val(),
+				invoice_id:$('#invoice_id').val(),
 				sum:$('#sum').val(),
 				prim:$('#prim').val(),
 				place:window.ZAYAV ? $('#place').val() : 0,
 				place_other:window.ZAYAV ? $('#place_other').val() : ''
 			};
-			if(send.income_id == 0) err('Не указан вид платежа');
+			if(send.invoice_id == 0) err('Не указан счёт');
 			else if(!REGEXP_CENA.test(send.sum)) { err('Некорректно указана сумма'); $('#sum').focus(); }
 			else if(!window.ZAYAV && !send.prim) { err('Не указано описание'); $('#prim').focus(); }
 			else if(window.ZAYAV && send.place == -1) err('Не указано местонахождение устройства');

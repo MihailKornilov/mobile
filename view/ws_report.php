@@ -131,7 +131,7 @@ function history_types($v, $filter) {
 						($filter['zayav_id'] ? '' : ' для заявки '.$v['zayav_link'].'.');
 		case 6: return
 			'Внесён платёж '.
-			($v['value2'] ? '<span class="oplata">'._income($v['value2']).'</span> ' : '').
+			($v['value2'] ? '<span class="oplata">'._invoice($v['value2']).'</span> ' : '').
 			'на сумму <b>'.$v['value'].'</b> руб. '.
 			($v['value1'] ? '<span class="prim">('.$v['value1'].')</span> ' : '').
 			($v['zayav_id'] && !$filter['zayav_id'] ? 'по заявке '.$v['zayav_link'].'. ' : '').
@@ -147,7 +147,7 @@ function history_types($v, $filter) {
 				'.';
 		case 9:
 			return 'Удалён платёж '.
-				($v['value2'] ? '<span class="oplata">'._income($v['value2']).'</span> ' : '').
+				($v['value2'] ? '<span class="oplata">'._invoice($v['value2']).'</span> ' : '').
 				'на сумму <b>'.$v['value'].'</b> руб. '.
 				($v['value1'] ? '<span class="prim">('.$v['value1'].')</span> ' : '').
 				($v['zayav_id'] && !$filter['zayav_id'] ? ' у заявки '.$v['zayav_link'] : '').
@@ -166,7 +166,7 @@ function history_types($v, $filter) {
 		case 18: return 'Внесено наличие запчасти '.$v['zp_link'].' в количестве '.$v['value'].' шт.';
 		case 19:
 			return 'Восстановлен платёж '.
-				($v['value2'] ? '<span class="oplata">'._income($v['value2']).'</span> ' : '').
+				($v['value2'] ? '<span class="oplata">'._invoice($v['value2']).'</span> ' : '').
 				'на сумму <b>'.$v['value'].'</b> руб. '.
 				($v['value1'] ? '<span class="prim">('.$v['value1'].')</span> ' : '').
 				($v['zayav_id'] && !$filter['zayav_id'] ? ' у заявки '.$v['zayav_link'] : '').
@@ -671,7 +671,7 @@ function income_insert($v) {
 		'client_id' => empty($v['client_id']) ? 0 : intval($v['client_id']),
 		'zayav_id' => empty($v['zayav_id']) ? 0 : intval($v['zayav_id']),
 		'zp_id' => empty($v['zp_id']) ? 0 : intval($v['zp_id']),
-		'income_id' => intval($v['income_id']),
+		'invoice_id' => intval($v['invoice_id']),
 		'sum' => round(str_replace(',', '.', $v['sum']), 2),
 		'prim' => win1251(htmlspecialchars(trim($v['prim'])))
 	);
@@ -689,7 +689,6 @@ function income_insert($v) {
 				`zayav_id`,
 				`zp_id`,
 				`invoice_id`,
-				`income_id`,
 				`sum`,
 				`prim`,
 				`viewer_id_add`
@@ -698,8 +697,7 @@ function income_insert($v) {
 				".$v['client_id'].",
 				".$v['zayav_id'].",
 				".$v['zp_id'].",
-				"._income($v['income_id'], 'invoice').",
-				".$v['income_id'].",
+				".$v['invoice_id'].",
 				".$v['sum'].",
 				'".addslashes($v['prim'])."',
 				".VIEWER_ID."
@@ -721,7 +719,7 @@ function income_insert($v) {
 		'zp_id' => $v['zp_id'],
 		'value' => $v['sum'],
 		'value1' => $v['prim'],
-		'value2' => $v['income_id']
+		'value2' => $v['invoice_id']
 	));
 
 	return $v;
@@ -981,7 +979,6 @@ function invoice_history($v) {
 	$sql = "SELECT `h`.*,
 				   IFNULL(`m`.`zayav_id`,0) AS `zayav_id`,
 				   IFNULL(`m`.`zp_id`,0) AS `zp_id`,
-				   IFNULL(`m`.`income_id`,0) AS `income_id`,
 				   IFNULL(`m`.`expense_id`,0) AS `expense_id`,
 				   IFNULL(`m`.`worker_id`,0) AS `worker_id`,
 				   IFNULL(`m`.`prim`,'') AS `prim`,

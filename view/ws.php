@@ -114,36 +114,6 @@ function _invoice($type_id=false, $i='name') {//Список изделий для заявок
 		return constant('INVOICE_START_'.$type_id);
 	return constant('INVOICE_'.$type_id);
 }//_invoice()
-function _income($type_id=false, $i='name') {//Список изделий для заявок
-	if(!defined('INCOME_LOADED') || $type_id === false) {
-		$key = CACHE_PREFIX.'income';
-		$arr = xcache_get($key);
-		if(empty($arr)) {
-			$sql = "SELECT * FROM `setup_income` ORDER BY `sort`";
-			$q = query($sql);
-			while($r = mysql_fetch_assoc($q))
-				$arr[$r['id']] = array(
-					'name' => $r['name'],
-					'invoice_id' => $r['invoice_id']
-				);
-			xcache_set($key, $arr, 86400);
-		}
-		if(!defined('INCOME_LOADED')) {
-			foreach($arr as $id => $r) {
-				define('INCOME_'.$id, $r['name']);
-				define('INCOME_INVOICE_'.$id, $r['invoice_id']);
-			}
-			define('INCOME_0', '');
-			define('INCOME_INVOICE_0', 0);
-			define('INCOME_LOADED', true);
-		}
-	}
-	if($type_id === false)
-		return $arr;
-	if($i == 'invoice')
-		return constant('INCOME_INVOICE_'.$type_id);
-	return constant('INCOME_'.$type_id);
-}//_income()
 
 function viewerAdded($viewer_id) {//Вывод сотрудника, который вносил запись с учётом пола
 	return 'Вн'.(_viewer($viewer_id, 'sex') == 1 ? 'есла' : 'ёс').' '._viewer($viewer_id, 'name');
