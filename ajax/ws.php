@@ -2057,6 +2057,28 @@ switch(@$_POST['op']) {
 		$send['html'] = utf8(invoice_spisok());
 		jsonSuccess($send);
 		break;
+	case 'invoice_reset':
+		if(!$invoice_id = _isnum($_POST['invoice_id']))
+			jsonError();
+
+		$sql = "SELECT * FROM `invoice` WHERE `id`=".$invoice_id;
+		if(!$r = mysql_fetch_assoc(query($sql)))
+			jsonError();
+
+		if($r['start'] == -1 || !VIEWER_ADMIN)
+			jsonError();
+
+		query("UPDATE `invoice` SET `start`=-1 WHERE `id`=".$invoice_id);
+		xcache_unset(CACHE_PREFIX.'invoice');
+
+		history_insert(array(
+			'type' => 53,
+			'value' => $invoice_id
+		));
+
+		$send['html'] = utf8(invoice_spisok());
+		jsonSuccess($send);
+		break;
 	case 'invoice_history':
 		if(empty($_POST['invoice_id']) || !preg_match(REGEXP_NUMERIC, $_POST['invoice_id']))
 			jsonError();

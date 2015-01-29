@@ -2919,6 +2919,33 @@ $(document)
 			});
 		}
 	})
+	.on('click', '.invoice_reset', function() {
+		var t = $(this),
+			html = 'Сумма на счёте будет сброшена.';
+		var dialog = _dialog({
+				width:320,
+				head:'Сброс суммы счёта',
+				content:html,
+				butSubmit:'Применить',
+				submit:submit
+			});
+
+		function submit() {
+			var send = {
+				op:'invoice_reset',
+				invoice_id:t.attr('val')
+			};
+			dialog.process();
+			$.post(AJAX_WS, send, function(res) {
+				if(res.success) {
+					$('#invoice-spisok').html(res.html);
+					dialog.close();
+					_msg('Сумма сброшена');
+				} else
+					dialog.abort();
+			}, 'json');
+		}
+	})
 	.on('click', '#report.invoice .img_note', function() {
 		var dialog = _dialog({
 			top:20,

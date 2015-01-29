@@ -230,6 +230,9 @@ function history_types($v, $filter) {
 
 		case 52: return 'Изменение срока выполнения'.($filter['zayav_id'] ? '' : ' заявки '.$v['zayav_link']).':<div class="changes">'.$v['value'].'</div>';
 
+		case 53: return 'Сброс суммы на счёте <span class="oplata">'._invoice($v['value']).'</span>.';
+
+
 		case 1001: return 'В настройках: добавление нового сотрудника <u>'._viewer($v['value'], 'name').'</u>.';
 		case 1002: return 'В настройках: удаление сотрудника <u>'._viewer($v['value'], 'name').'</u>.';
 
@@ -913,7 +916,12 @@ function invoice_spisok() {
 			'<td class="balans"><b>'._sumSpace(_invoiceBalans($r['id'])).'</b> руб.'.
 			'<td><div val="'.$r['id'].'" class="img_note'._tooltip('Посмотреть историю операций', -95).'</div>'
 		: '').
-		(VIEWER_ADMIN || $r['start'] != -1 ? '<td><a class="invoice_set" val="'.$r['id'].'">Установить<br />текущую сумму</a>' : '');
+		(VIEWER_ADMIN || $r['start'] != -1 ?
+			'<td><a class="invoice_set" val="'.$r['id'].'">Установить<br />текущую<br />сумму</a>'
+		: '').
+		(VIEWER_ADMIN && $r['start'] != -1 ?
+			'<td><a class="invoice_reset" val="'.$r['id'].'">Сбросить<br />сумму</a>'
+		: '');
 	$send .= '</table>';
 	return $send;
 }//invoice_spisok()
