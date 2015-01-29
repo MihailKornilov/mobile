@@ -887,18 +887,7 @@ function _invoiceBalans($invoice_id, $start=false) {// Получение текущего баланс
 	return round($income - $start - $from + $to, 2);
 }//_invoiceBalans()
 function invoice() {
-	$sql = "SELECT `viewer_id` FROM `vk_user_rules` WHERE `key`='RULES_GETMONEY' AND `value`";
-	$q = query($sql);
-	$worker_getmoney = array();
-	while($r = mysql_fetch_assoc($q))
-		$worker_getmoney[] = '{'.
-				'uid:'.$r['viewer_id'].','.
-				'title:"'.addslashes(_viewer($r['viewer_id'], 'name')).'"'.
-			'}';
 	return
-		'<script type="text/javascript">'.
-			'var W_GETMONEY=['.implode(',', $worker_getmoney).'];'.
-		'</script>'.
 		'<div class="headName">'.
 			'Счета'.
 			'<a class="add transfer">Перевод между счетами</a>'.

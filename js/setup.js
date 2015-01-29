@@ -677,7 +677,6 @@ $(document)
 				var send = {
 						op:'worker_dop_save',
 						viewer_id:RULES_VIEWER_ID,
-						rules_getmoney:$('#rules_getmoney').val(),
 						rules_money_procent:$('#rules_money_procent').val()
 					},
 					but = $(this);

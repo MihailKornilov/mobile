@@ -4126,11 +4126,6 @@ $(document)
 						butSubmit:'Применить',
 						submit:submit
 					});
-				if(window.W_GETMONEY && !window.CSMOVE) {//Проверка открывалось ли это окно прежде
-					for(n = 0; n < W_GETMONEY.length; n++)
-						INVOICE_SPISOK.push(W_GETMONEY[n]);
-					window.CSMOVE = 1;
-				}
 				$('#from')._select({
 					width:218,
 					title0:'Не выбран',
