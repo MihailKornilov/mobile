@@ -187,7 +187,7 @@ function history_types($v, $filter) {
 		case 28: return 'Установка текущей суммы для счёта <span class="oplata">'._invoice($v['value1']).'</span>: <b>'.$v['value'].'</b> руб.';
 		case 29: return 'Изменение местонахождения устройства'.
 						($filter['zayav_id'] ? '' : ' по заявке '.$v['zayav_link']).
-						' при внесении платежа:<div class="changes">'.$v['value'].'</div>';
+						':<div class="changes">'.$v['value'].'</div>';
 		case 30: return 'Изменение расходов'.($filter['zayav_id'] ? '' : ' по заявке '.$v['zayav_link']).':<div class="changes z">'.$v['value'].'</div>';
 
 		case 35: return 'Изменена ставка у сотрудника <u>'._viewer($v['value'], 'name').'</u>:<div class="changes">'.$v['value1'].'</div>.';

@@ -54,7 +54,7 @@
 #zayav .rightLink a:not(.sel) #srok{display:none}
 #zayav #srok,#zayav #srok *{font-size:10px}
 #zayav #srok{margin-top:8px}
-#zayav #day-finish-link{color:#BCDCFF}
+#zayav .day-finish-link{color:#BCDCFF}
 .zayav_unit{
 	cursor:pointer;
 	margin:10px 5px 0 10px;
@@ -140,9 +140,9 @@
 #zayavAdd #reminder_txt{width:260px}
 #zayavAdd .vkButton{margin:10px 7px 0 206px}
 
-#day-finish-link{display:inline-block;cursor:pointer;color:#2B587A}
-#day-finish-link:hover{text-decoration:underline}
-#day-finish-link._busy span{visibility:hidden}
+.day-finish-link{display:inline-block;cursor:pointer;color:#2B587A}
+.day-finish-link:hover{text-decoration:underline}
+.day-finish-link._busy span{visibility:hidden}
 
 #zayav-finish-calendar #fc-head{width:100%}
 #zayav-finish-calendar #fc-head td{padding:10px;text-align:center}
@@ -308,6 +308,22 @@
 .zayav-print #preview{display:block;padding:10px;text-align:center}
 .zayav-print #preview._busy span{visibility:hidden}
 .zayav-print #preview:hover{background-color:#e9edf1;text-decoration:none}
+#zayav-status{margin:10px}
+#zayav-status .st{
+	padding:10px 15px;
+	font-size:13px;
+	font-weight:bold;
+	border:#ddd solid 1px;
+	color:#357;
+	cursor:pointer;
+	margin-bottom:10px;
+}
+#zayav-status .st:hover{border-color:#BBD}
+#zayav-status .c1{background-color:#E8E8FF}
+#zayav-status .c2{background-color:#CFC}
+#zayav-status .c3{background-color:#FDD}
+#zayav-status .about{color:#777;margin-top:3px}
+#zayav-status #zs-tab{border-spacing:8px;display:none}
 
 
 /* Список запчастей */

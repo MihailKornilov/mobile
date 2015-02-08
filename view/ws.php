@@ -695,7 +695,7 @@ function _zayavExpenseDop($id=false) {
 function _zayavFinish($day='0000-00-00') {
 	return
 		'<input type="hidden" id="day_finish" value="'.$day.'" />'.
-		'<div id="day-finish-link"><span>'.($day == '0000-00-00' ? 'не указан' : FullData($day, 1, 0, 1)).'</span></div>';
+		'<div class="day-finish-link"><span>'.($day == '0000-00-00' ? 'не указан' : FullData($day, 1, 0, 1)).'</span></div>';
 }//_zayavFinish()
 function _zayavFinishCalendar($selDay='0000-00-00', $mon='', $zayav_spisok=0) {
 	if(!$mon)
@@ -1175,7 +1175,7 @@ function zayav_info($zayav_id) {
 			'device:'.$z['base_device_id'].','.
 			'vendor:'.$z['base_vendor_id'].','.
 			'model:'.$z['base_model_id'].','.
-			'z_status:'.$z['zayav_status'].','.
+			'status:'.$z['zayav_status'].','.
 			'dev_place:'.$z['device_place'].','.
 			'place_other:"'.$z['device_place_other'].'",'.
 			'imei:"'.$z['imei'].'",'.
@@ -1264,7 +1264,7 @@ function zayav_info($zayav_id) {
 						($z['serial'] ? '<tr><th>serial:	 <td>'.$z['serial'] : '').
 						($z['equip'] ? '<tr><th valign="top">Комплект:<td>'.zayavEquipSpisok($z['equip']) : '').
 						($z['color_id'] ? '<tr><th>Цвет:  <td>'._color($z['color_id'], $z['color_dop']) : '').
-						'<tr><th>Нахождение:<td><a class="dev_place status_place">'.($z['device_place'] ? @_devPlace($z['device_place']) : $z['device_place_other']).'</a>'.
+						'<tr><th>Нахождение:<td><a class="dev_place">'.($z['device_place'] ? @_devPlace($z['device_place']) : $z['device_place_other']).'</a>'.
 					'</table>'.
 				'</dev>'.
 

@@ -93,9 +93,9 @@ var AJAX_WS = APP_HTML + '/ajax/ws.php?' + VALUES,
 
 	clientAdd = function(callback) {
 		var html = '<table style="border-spacing:10px">' +
-				'<tr><td class="label">Имя:<TD><input type="text" id="fio" style="width:220px;">' +
-				'<tr><td class="label">Телефон:<TD><input type="text" id="telefon" style=width:220px;>' +
-			'</TABLE>',
+				'<tr><td class="label">Имя:<td><input type="text" id="fio" style="width:220px;">' +
+				'<tr><td class="label">Телефон:<td><input type="text" id="telefon" style=width:220px;>' +
+			'</table>',
 			dialog = _dialog({
 				width:340,
 				head:'Добавление нoвого клиента',
@@ -666,7 +666,7 @@ $.fn.device = function(o) {
 	if (o.add > 0) {
 		o.device_funcAdd = function() {
 			var html = '<table class="device-add-tab">' +
-				'<tr><td class="label">Название:<TD><input type="text" id="daname">' +
+				'<tr><td class="label">Название:<td><input type="text" id="daname">' +
 				'</table>';
 			dialog = _dialog({
 				width:300,
@@ -679,9 +679,9 @@ $.fn.device = function(o) {
 				.keyEnter(deviceAddSubmit);
 		};
 		o.vendor_funcAdd = function () {
-			var html ='<TABLE class="device-add-tab">' +
-				'<TR><TD class="label">Название:<TD><input type="text" id="vaname">' +
-				'</TABLE>';
+			var html ='<table class="device-add-tab">' +
+				'<tr><td class="label">Название:<td><input type="text" id="vaname">' +
+				'</table>';
 			dialog = _dialog({
 				width:300,
 				head:'Добавление нoвого производителя',
@@ -693,9 +693,9 @@ $.fn.device = function(o) {
 				.keyEnter(vendorAddSubmit);
 		};
 		o.model_funcAdd = function(){
-			var html = '<TABLE class="device-add-tab">' +
-				'<TR><TD class="label">Название:<TD><input type="text" id="maname">' +
-				'</TABLE>';
+			var html = '<table class="device-add-tab">' +
+				'<tr><td class="label">Название:<td><input type="text" id="maname">' +
+				'</table>';
 			dialog = _dialog({
 				width:300,
 				head:'Добавление нoвой модели',
@@ -1157,12 +1157,12 @@ $(document)
 	})
 
 	.on('click', '#clientInfo .cedit', function() {
-		var html = '<TABLE class="client_edit">' +
-			'<tr><td class="label">Имя:<TD><input type="text" id="fio" value="' + $('.fio').html() + '">' +
-			'<tr><td class="label">Телефон:<TD><input type="text" id="telefon" value="' + $('.telefon').html() + '">' +
-			'<tr><td class="label">Объединить:<TD><input type="hidden" id="join">' +
-			'<TR class=tr_join><TD class="label">с клиентом:<TD><input type="hidden" id="client2">' +
-			'</TABLE>';
+		var html = '<table class="client_edit">' +
+			'<tr><td class="label">Имя:<td><input type="text" id="fio" value="' + $('.fio').html() + '">' +
+			'<tr><td class="label">Телефон:<td><input type="text" id="telefon" value="' + $('.telefon').html() + '">' +
+			'<tr><td class="label">Объединить:<td><input type="hidden" id="join">' +
+			'<TR class=tr_join><td class="label">с клиентом:<td><input type="hidden" id="client2">' +
+			'</table>';
 		var dialog = _dialog({
 			head:'Редактирование данных клиента',
 			top:60,
@@ -1250,12 +1250,12 @@ $(document)
 		}, 'json');
 	})
 	.on('click', '#clientInfo .remind_add', function() {
-		var html = '<TABLE class="remind_add_tab">' +
-			'<tr><td class="label">Клиент:<TD><b>' + CLIENT.fio + '</b>' +
-			'<tr><td class="label top">Описание задания:<TD><TEXTAREA id="txt"></TEXTAREA>' +
+		var html = '<table class="remind_add_tab">' +
+			'<tr><td class="label">Клиент:<td><b>' + CLIENT.fio + '</b>' +
+			'<tr><td class="label top">Описание задания:<td><TEXTAREA id="txt"></TEXTAREA>' +
 			'<tr><td class="label">Крайний день выполнения:<td><input type="hidden" id="data">' +
 			'<tr><td class="label">Личное:<td><input type="hidden" id="private">' +
-			'</TABLE>';
+			'</table>';
 		var dialog = _dialog({
 				top:60,
 				width:480,
@@ -1315,9 +1315,11 @@ $(document)
 		location.href = URL + '&p=client&d=info&id=' + $(this).attr('val');
 	})
 
-	.on('click', '#day-finish-link', function(e) {//открытие календаря ремонтов
+	.on('click', '.day-finish-link', function(e) {//открытие календаря ремонтов
 		e.stopPropagation();
-		if($(this).hasClass('_busy'))
+		var t = $(this),
+			save = t.hasClass('no-save') ? 0 : 1;
+		if(t.hasClass('_busy'))
 			return;
 		var dialog = _dialog({
 				top:40,
@@ -1340,20 +1342,21 @@ $(document)
 		$(document)
 			.off('click', '#zayav-finish-calendar td.d:not(.old),#fc-cancel,.fc-old-sel')
 			.on('click', '#zayav-finish-calendar td.d:not(.old),#fc-cancel,.fc-old-sel', function() {
-				if($('#day-finish-link').hasClass('_busy'))
+				if(t.hasClass('_busy'))
 					return;
 				dialog.close();
-				$('#day-finish-link').addClass('_busy');
+				t.addClass('_busy');
 				send = {
 					op:'zayav_day_finish_save',
 					day:$(this).attr('val'),
-					zayav_id:window.ZAYAV ? ZAYAV.id : 0
+					zayav_id:window.ZAYAV ? ZAYAV.id : 0,
+					save:save
 				};
 				$.post(AJAX_WS, send, function(res) {
-					$('#day-finish-link').removeClass('_busy');
+					t.removeClass('_busy');
 					if(res.success) {
-						$('#day_finish').val(send.day);
-						$('#day-finish-link span').html(res.data);
+						t.prev('input').val(send.day);
+						t.find('span').html(res.data);
 						if($('#zayav').length)
 							zayavSpisok();
 					}
@@ -1420,7 +1423,7 @@ $(document)
 		$('#desc')._check(0);
 		$('#status').rightLink(0);
 		$('#day_finish').val('0000-00-00');
-		$('#day-finish-link span').html('не указан');
+		$('.day-finish-link span').html('не указан');
 		$('#diff')._check(0);
 		$('#zpzakaz')._radio(0);
 		$('#dev').device({
@@ -1436,9 +1439,9 @@ $(document)
 	})
 
 	.on('click', '#zayav-info .zedit', function() {
-		var html = '<TABLE class="zayav-info-edit">' +
+		var html = '<table class="zayav-info-edit">' +
 			'<tr><td class="label r">Клиент:		<td><input type="hidden" id="client_id" value="' + ZAYAV.client_id + '">' +
-			'<tr><td class="label r top">Устройство:<TD><TABLE><TD id="dev"><TD id="device_image"></TABLE>' +
+			'<tr><td class="label r top">Устройство:<td><table><td id="dev"><td id="device_image"></table>' +
 			'<tr><td><td>' + ZAYAV.images +
 			'<tr><td class="label r">IMEI:		  <td><input type="text" id="imei" maxlength="20" value="' + ZAYAV.imei + '">' +
 			'<tr><td class="label r">Серийный номер:<td><input type="text" id="serial" maxlength="30" value="' + ZAYAV.serial + '">' +
@@ -1446,9 +1449,9 @@ $(document)
 				'<td><INPUT type="hidden" id="color_id" value="' + ZAYAV.color_id + '" />' +
 					'<span class="color_dop dn"><tt>-</tt><INPUT TYPE="hidden" id="color_dop" value="' + ZAYAV.color_dop + '" /></span>' +
 			'<tr class="tr_equip' + (ZAYAV.equip ? '' : ' dn') + '">' +
-				'<td class="label r top">Комплектация:<TD class="equip_spisok">' + ZAYAV.equip +
+				'<td class="label r top">Комплектация:<td class="equip_spisok">' + ZAYAV.equip +
 			'<tr><td class="label">Стоимость ремонта:<td><input type="text" class="money" id="pre_cost" maxlength="11" value="' + (ZAYAV.pre_cost ? ZAYAV.pre_cost : '') + '" /> руб.' +
-		'</TABLE>',
+		'</table>',
 			dialog = _dialog({
 				width:420,
 				top:30,
@@ -1527,12 +1530,12 @@ $(document)
 		}
 	})
 	.on('click', '#zayav-info .remind_add', function() {
-		var html = '<TABLE class="remind_add_tab">' +
-			'<tr><td class="label">Заявка:<TD>№<b>' + ZAYAV.nomer + '</b>' +
-			'<tr><td class="label top">Описание задания:<TD><TEXTAREA id="txt"></TEXTAREA>' +
+		var html = '<table class="remind_add_tab">' +
+			'<tr><td class="label">Заявка:<td>№<b>' + ZAYAV.nomer + '</b>' +
+			'<tr><td class="label top">Описание задания:<td><TEXTAREA id="txt"></TEXTAREA>' +
 			'<tr><td class="label">Крайний день выполнения:<td><input type="hidden" id="data">' +
 			'<tr><td class="label">Личное:<td><input type="hidden" id="private">' +
-		'</TABLE>';
+		'</table>';
 		var dialog = _dialog({
 				top:60,
 				width:480,
@@ -1589,17 +1592,17 @@ $(document)
 		}//submit()
 	})
 	.on('click', '#zayav-info .acc_add', function() {
-		var html = '<TABLE class="zayav_accrual_add">' +
-				'<tr><td class="label">Сумма: <TD><input type="text" id="sum" class="money" maxlength="5" /> руб.' +
-				'<tr><td class="label">Примечание:<em>(не обязательно)</em><TD><input type="text" id="prim" maxlength="100" />' +
+		var html = '<table class="zayav_accrual_add">' +
+				'<tr><td class="label">Сумма: <td><input type="text" id="sum" class="money" maxlength="5" /> руб.' +
+				'<tr><td class="label">Примечание:<em>(не обязательно)</em><td><input type="text" id="prim" maxlength="100" />' +
 				'<tr><td class="label">Статус заявки: <td><input type="hidden" id="acc_status" value="2" />' +
 				'<tr><td class="label">Добавить напоминание:<td><input type="hidden" id="acc_remind" />' +
-			'</TABLE>' +
+			'</table>' +
 
-			'<TABLE class="zayav_accrual_add remind">' +
-				'<tr><td class="label">Содержание:<TD><input type="text" id="reminder_txt" value="Позвонить и сообщить о готовности.">' +
+			'<table class="zayav_accrual_add remind">' +
+				'<tr><td class="label">Содержание:<td><input type="text" id="reminder_txt" value="Позвонить и сообщить о готовности.">' +
 				'<tr><td class="label">Дата:<td><input type="hidden" id="reminder_day">' +
-			'</TABLE>';
+			'</table>';
 		var dialog = _dialog({
 			top:60,
 			width:420,
@@ -1692,52 +1695,89 @@ $(document)
 		}, 'json');
 	})
 	.on('click', '#zayav-info .status_place', function() {
-		var html = '<TABLE style="border-spacing:8px">' +
-			'<TR><TD class="label r topi">Статус заявки:<TD><input type="hidden" id="z_status" value="' + ZAYAV.z_status + '">' +
-			'<TR><TD class="label r topi">Местонахождение устройства:<TD><input type="hidden" id="place" value="' + ZAYAV.dev_place + '">' +
-			'</TABLE>',
+		var html =
+			'<div id="zayav-status">' +
+		(ZAYAV.status != 1 ?
+				'<div class="st c1" val="1">' +
+					'Ожидает выполнения' +
+					'<div class="about">Возобновление работы по заявке.</div>' +
+				'</div>'
+		: '') +
+		(ZAYAV.status != 2 ?
+				'<div class="st c2" val="2">' +
+					'Выполнено' +
+					'<div class="about">' +
+						'Заявка выполнена успешно.<br />' +
+						'Не забудьте расписать расходы по заявке, проверьте начисления.<br />' +
+						'Добавьте напоминание, если необходимо.' +
+					'</div>' +
+				'</div>'
+		: '') +
+		(ZAYAV.status != 3 ?
+				'<div class="st c3" val="3">' +
+					'Заявка отменена' +
+					'<div class="about">Отмена заявки по какой-либо причине.</div>' +
+				'</div>'
+		: '') +
+				'<input type="hidden" id="zs-status" />' +
+				'<table id="zs-tab">' +
+					'<tr><td class="label r topi">Местонахождение устройства:<td><input type="hidden" id="place" value="-1" />' +
+					'<tr id="zs-srok" class="dn">' +
+						'<td class="label r">Срок выполнения:' +
+						'<td><input type="hidden" id="zs-day_finish" value="0000-00-00" />' +
+							'<div class="day-finish-link no-save"><span>не указан</span></div>' +
+				'</table>' +
+
+			'</div>',
+
 			dialog = _dialog({
-				width:400,
 				top:30,
-				head:'Изменение статуса заявки и состояния устройства',
+				width:420,
+				head:'Изменение статуса заявки',
 				content:html,
 				butSubmit:'Сохранить',
 				submit:submit
 			});
-		$('#z_status')._radio({
-			spisok:STATUS,
-			light:1
-		});
 		zayavPlace(ZAYAV.place_other);
+		$('.st').click(function() {
+			var t = $(this),
+				v = t.attr('val');
+			t.parent().find('.st').hide();
+			t.show();
+			$('#zs-status').val(v);
+			$('#zs-tab').show();
+			if(v == 1)
+				$('#zs-srok').removeClass('dn');
+		});
+
 
 		function submit() {
 			var send = {
 				op:'zayav_status_place',
 				zayav_id:ZAYAV.id,
-				zayav_status:$('#z_status').val(),
-				dev_place:$('#place').val(),
-				place_other:$('#place_other').val()
+				status:$('#zs-status').val() * 1,
+				place:$('#place').val() * 1,
+				place_other:$('#place_other').val(),
+				day_finish:$('#zs-day_finish').val()
 			};
 			if(send.dev_place > 0)
 				send.place_other = '';
-			if(send.dev_place == 0 && send.place_other == '') { err('Не указано местонахождение устройства'); $('#place_other').focus(); }
+			if(!send.status)
+				err('Выберите статус заявки');
+			else if(send.place == -1 || send.place == 0 && send.place_other == '') {
+				err('Не указано местонахождение устройства');
+				$('#place_other').focus();
+			} else if(send.status == 1 && send.day_finish == '0000-00-00')
+				err('Не указан срок выполнения');
 			else {
 				dialog.process();
 				$.post(AJAX_WS, send, function(res) {
 					if(res.success) {
 						dialog.close();
 						_msg('Изменения сохранены.');
-						$('#status')
-							.html(res.z_status.name)
-							.css('background-color', '#' + res.z_status.color);
-						$('#status_dtime').html(res.z_status.dtime);
-						$('.dev_place').html(res.dev_place);
-						ZAYAV.z_status = send.zayav_status;
-						ZAYAV.dev_place = send.dev_place;
-						ZAYAV.place_other = send.place_other;
-						if(res.comment)
-							$('.vkComment').after(res.comment).remove();
-					}
+						document.location.reload();
+					} else
+						dialog.abort();
 				}, 'json');
 			}
 		}
@@ -1746,6 +1786,55 @@ $(document)
 				msg:'<SPAN class=red>' + msg + '</SPAN>',
 				top:-47,
 				left:103,
+				indent:50,
+				show:1,
+				remove:1
+			});
+		}
+	})
+	.on('click', '#zayav-info .dev_place', function() {
+		var html =
+				'<table class="device-add-tab">' +
+					'<tr><td class="label r topi">Местонахождение устройства:<td><input type="hidden" id="place" value="-1" />' +
+				'</table>',
+
+			dialog = _dialog({
+				head:'Изменение местонахождения устройства',
+				content:html,
+				butSubmit:'Сохранить',
+				submit:submit
+			});
+		zayavPlace(ZAYAV.place_other);
+
+		function submit() {
+			var send = {
+				op:'zayav_device_place',
+				zayav_id:ZAYAV.id,
+				place:$('#place').val() * 1,
+				place_other:$('#place_other').val()
+			};
+			if(send.dev_place > 0)
+				send.place_other = '';
+			if(send.place == -1 || send.place == 0 && send.place_other == '') {
+				err('Не указано местонахождение устройства');
+				$('#place_other').focus();
+			} else {
+				dialog.process();
+				$.post(AJAX_WS, send, function(res) {
+					if(res.success) {
+						dialog.close();
+						_msg('Изменения сохранены.');
+						document.location.reload();
+					} else
+						dialog.abort();
+				}, 'json');
+			}
+		}
+		function err(msg) {
+			dialog.bottom.vkHint({
+				msg:'<SPAN class=red>' + msg + '</SPAN>',
+				top:-47,
+				left:80,
 				indent:50,
 				show:1,
 				remove:1
@@ -1771,19 +1860,19 @@ $(document)
 	})
 	.on('click', '#zayav-info .zpAdd', function() {
 		var html = '<div class="zayav_zp_add">' +
-				'<CENTER>Добавление запчасти к устройству<br />' +
+				'<center>Добавление запчасти к устройству<br />' +
 					'<b>' +
 						DEV_ASS[ZAYAV.device] + ' ' +
 						VENDOR_ASS[ZAYAV.vendor] + ' ' +
 						MODEL_ASS[ZAYAV.model] +
 					'</b>.'+
-				'</CENTER>' +
-				'<TABLE style="border-spacing:6px">' +
-					'<TR><TD class="label r">Наименование запчасти:<TD><input type="hidden" id="name_id">' +
-					'<TR><TD class="label r">Версия:<TD><input type="text" id="version" maxlength="30">' +
-					'<TR><TD class="label r">Цвет:<TD><input type="hidden" id="color_id">' +
-					'<TR><TD class="label r">Б/у:<TD><input type="hidden" id="bu">' +
-				'</TABLE>' +
+				'</center>' +
+				'<table style="border-spacing:6px">' +
+					'<tr><td class="label r">Наименование запчасти:<td><input type="hidden" id="name_id" />' +
+					'<tr><td class="label r">Версия:<td><input type="text" id="version" maxlength="30" />' +
+					'<tr><td class="label r">Цвет:<td><input type="hidden" id="color_id" />' +
+					'<tr><td class="label r">Б/у:<td><input type="hidden" id="bu" />' +
+				'</table>' +
 			'</div>',
 			dialog = _dialog({
 				top:40,
@@ -1834,13 +1923,13 @@ $(document)
 	})
 	.on('click', '#zayav-info .set', function() {
 		var unit = $(this).parent().parent();
-		var html = '<CENTER class="zayav_zp_set">' +
+		var html = '<center class="zayav_zp_set">' +
 			'Установка запчасти<br />' + unit.find('a:first').html() + '.<br />' +
 			(unit.find('.color').length > 0 ? unit.find('.color').html() + '.<br />' : '') +
 			'<br />Информация об установке также' +
 			'<br />будет добавлена в заметки' +
 			'<br />и в расходы по заявке.' +
-		'</CENTER>',
+		'</center>',
 		dialog = _dialog({
 			top:150,
 			width:400,
@@ -2490,16 +2579,16 @@ $(document)
 		$(this).parent().parent().find('.hist').slideToggle();
 	})
 	.on('click', '.report_remind_add', function() {
-		var html = '<TABLE class="remind_add_tab">' +
+		var html = '<table class="remind_add_tab">' +
 			'<tr><td class="label">Назначение:<td><input type="hidden" id="destination" />' +
-			'<tr><td class="label topi" id="target_name"><TD id="target">' +
-			'</TABLE>' +
+			'<tr><td class="label topi" id="target_name"><td id="target">' +
+			'</table>' +
 
-			'<TABLE class="remind_add_tab" id="tab_content">' +
-			'<tr><td class="label top">Задание:<TD><TEXTAREA id=txt></TEXTAREA>' +
+			'<table class="remind_add_tab" id="tab_content">' +
+			'<tr><td class="label top">Задание:<td><TEXTAREA id=txt></TEXTAREA>' +
 			'<tr><td class="label">Крайний день выполнения:<td><input type="hidden" id="data" />' +
 			'<tr><td class="label">Личное:<td><input type="hidden" id="priv" />' +
-			'</TABLE>';
+			'</table>';
 		var dialog = _dialog({
 			top:30,
 			width:480,
@@ -2623,18 +2712,18 @@ $(document)
 			};
 		$.post(AJAX_WS, send, function(res) {
 			curDay = res.day;
-			var html = '<TABLE class="remind_action_tab">' +
+			var html = '<table class="remind_action_tab">' +
 				'<tr><td class="label">' + (res.client ? 'Клиент:' : '') + (res.zayav ? 'Заявка:' : '') +
-					'<TD>' + (res.client ? res.client : '') + (res.zayav ? res.zayav : '') +
-				'<tr><td class="label">Задание:<TD><B>' + res.txt + '</B>' +
-				'<tr><td class="label">Внёс:<TD>' + res.viewer + ', ' + res.dtime +
+					'<td>' + (res.client ? res.client : '') + (res.zayav ? res.zayav : '') +
+				'<tr><td class="label">Задание:<td><B>' + res.txt + '</B>' +
+				'<tr><td class="label">Внёс:<td>' + res.viewer + ', ' + res.dtime +
 				'<tr><td class="label top">Действие:<td><input type="hidden" id=action value="0">' +
-				'</TABLE>' +
+				'</table>' +
 
-				'<TABLE class="remind_action_tab" id="new_action">' +
-				'<tr><td class="label" id="new_about"><TD id="new_title">' +
-				'<tr><td class="label top" id="new_comm"><TD><TEXTAREA id="comment"></TEXTAREA>' +
-				'</TABLE>';
+				'<table class="remind_action_tab" id="new_action">' +
+				'<tr><td class="label" id="new_about"><td id="new_title">' +
+				'<tr><td class="label top" id="new_comm"><td><TEXTAREA id="comment"></TEXTAREA>' +
+				'</table>';
 			dialog.content.html(html);
 
 			$('#action')._radio({
@@ -2724,14 +2813,14 @@ $(document)
 		}, 'json');
 	})
 	.on('click', '.income-add', function() {
-		var html = '<TABLE id="income-add-tab">' +
+		var html = '<table id="income-add-tab">' +
 			'<input type="hidden" id="zayav_id" value="' + (window.ZAYAV ? ZAYAV.id : 0) + '" />' +
 			(window.ZAYAV ? '<tr><td class="label">Заявка:<td><b>№' + ZAYAV.nomer + '</b>' : '') +
 			'<tr><td class="label">Счёт:<td><input type="hidden" id="invoice_id" value="' + (INVOICE_SPISOK.length == 1 ? INVOICE_SPISOK[0].uid : 1) + '" />' +
 			'<tr><td class="label">Сумма:<td><input type="text" id="sum" class="money" maxlength="11" /> руб.' +
 			'<tr><td class="label">Описание:<td><input type="text" id="prim" maxlength="100" />' +
 			(window.ZAYAV ? '<tr><td class="label topi">Местонахождение<br />устройства:<td><input type="hidden" id="place" value="-1" />' : '') +
-			'</TABLE>';
+			'</table>';
 		var dialog = _dialog({
 				width:380,
 				head:'Внесение платежа',
@@ -3179,8 +3268,8 @@ $(document)
 	.on('click', '.salary .up', function() {
 		var html =
 				'<table class="salary-tab">' +
-					'<tr><td class="label">Сумма:<TD><INPUT type="text" id="sum" class="money" maxlength="8"> руб.' +
-					'<tr><td class="label">Описание:<TD><INPUT type="text" id="about" maxlength="50">' +
+					'<tr><td class="label">Сумма:<td><INPUT type="text" id="sum" class="money" maxlength="8"> руб.' +
+					'<tr><td class="label">Описание:<td><INPUT type="text" id="about" maxlength="50">' +
 					'<tr><td class="label">Месяц:' +
 						'<td><input type="hidden" id="tabmon" value="' + MON + '" /> ' +
 							'<input type="hidden" id="tabyear" value="' + YEAR + '" />' +
@@ -3239,8 +3328,8 @@ $(document)
 	.on('click', '.salary .deduct', function() {
 		var html =
 				'<table class="salary-tab">' +
-					'<tr><td class="label">Сумма:<TD><input type="text" id="sum" class="money" maxlength="8"> руб.' +
-					'<tr><td class="label">Описание:<TD><input type="text" id="about" maxlength="100">' +
+					'<tr><td class="label">Сумма:<td><input type="text" id="sum" class="money" maxlength="8"> руб.' +
+					'<tr><td class="label">Описание:<td><input type="text" id="about" maxlength="100">' +
 					'<tr><td class="label">Месяц:' +
 						'<td><input type="hidden" id="tabmon" value="' + MON + '" /> ' +
 							'<input type="hidden" id="tabyear" value="' + YEAR + '" />' +
@@ -3300,7 +3389,7 @@ $(document)
 				top:110,
 				width:250,
 				head:'Удаление',
-				content:'<CENTER>Подтвердите удаление записи.</CENTER>',
+				content:'<center>Подтвердите удаление записи.</center>',
 				butSubmit:'Удалить',
 				submit:submit
 			});
@@ -3399,7 +3488,7 @@ $(document)
 				top:110,
 				width:250,
 				head:'Удаление з/п',
-				content:'<CENTER>Подтвердите удаление записи.</CENTER>',
+				content:'<center>Подтвердите удаление записи.</center>',
 				butSubmit:'Удалить',
 				submit:submit
 			});
@@ -3425,7 +3514,7 @@ $(document)
 				top:110,
 				width:250,
 				head:'Удаление',
-				content:'<CENTER>Подтвердите удаление записи.</CENTER>',
+				content:'<center>Подтвердите удаление записи.</center>',
 				butSubmit:'Удалить',
 				submit:submit
 			});
@@ -3450,7 +3539,7 @@ $(document)
 	.on('click', '.salary .start-set', function() {
 		var html =
 				'<table class="salary-tab">' +
-					'<tr><td class="label">Сумма:<TD><INPUT type="text" id="sum" class="money" maxlength="8"> руб.' +
+					'<tr><td class="label">Сумма:<td><INPUT type="text" id="sum" class="money" maxlength="8"> руб.' +
 				'</table>',
 			dialog = _dialog({
 				head:'Установка баланса по зарплате сотрудника',
@@ -3704,7 +3793,7 @@ $(document)
 						top:110,
 						width:250,
 						head:'Удаление заявки',
-						content:'<CENTER>Подтвердите удаление заявки.</CENTER>',
+						content:'<center>Подтвердите удаление заявки.</center>',
 						butSubmit:'Удалить',
 						submit:function() {
 							var send = {
@@ -4003,7 +4092,7 @@ $(document)
 		if($('#report.expense').length) {
 			$('.add').click(function() {
 				var html =
-					'<TABLE id="expense-add-tab">' +
+					'<table id="expense-add-tab">' +
 						'<tr><td class="label">Категория:<td><input type="hidden" id="expense_id" />' +
 							'<a href="' + URL + '&p=setup&d=expense" class="img_edit' + _tooltip('Настройка категорий расходов', -95) + '</a>' +
 						'<tr class="tr-work dn"><td class="label">Сотрудник:<td><input type="hidden" id="worker_id" />' +
@@ -4013,7 +4102,7 @@ $(document)
 						'<tr><td class="label">Описание:<td><input type="text" id="prim" maxlength="100">' +
 						'<tr><td class="label">Со счёта:<td><input type="hidden" id="invoice_id" value="' + (INVOICE_SPISOK.length == 1 ? INVOICE_SPISOK[0].uid : 1) + '" />' +
 						'<tr><td class="label">Сумма:<td><input type="text" id="sum" class="money" maxlength="11" /> руб.' +
-					'</TABLE>',
+					'</table>',
 					dialog = _dialog({
 						width:380,
 						head:'Внесение расхода',

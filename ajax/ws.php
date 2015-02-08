@@ -442,26 +442,14 @@ switch(@$_POST['op']) {
 
 		$day = $_POST['day'];
 		$zayav_id = _isnum($_POST['zayav_id']);
+		$save = _isbool($_POST['save']);
 
-		if($zayav_id) {
-			$sql = "SELECT * FROM `zayav` WHERE `ws_id`=".WS_ID." AND !`deleted` AND `id`=".$zayav_id;
-			if(!$z = query_assoc($sql))
-				jsonError();
-			if($z['day_finish'] != $day) {
-				query("UPDATE `zayav` SET `day_finish`='".$day."' WHERE `id`=".$zayav_id);
-				history_insert(array(
-					'type' => 52,
-					'client_id' => $z['client_id'],
-					'zayav_id' => $zayav_id,
-					'value' => '<table><tr>'.
-								'<th>Срок:'.
-								'<td>'.($z['day_finish'] == '0000-00-00' ? 'не указан' : FullData($z['day_finish'], 0, 1, 1)).
-								'<td>»'.
-								'<td>'.FullData($day, 0, 1, 1).
-							   '</table>'
-				));
-			}
-		}
+		$sql = "SELECT * FROM `zayav` WHERE `ws_id`=".WS_ID." AND !`deleted` AND `id`=".$zayav_id;
+		if(!$z = query_assoc($sql))
+			jsonError();
+
+		if($zayav_id && $save)
+			zayav_day_finish_change($zayav_id, $day);
 
 		$send['data'] = utf8($day == '0000-00-00' ? 'не указан' : FullData($day, 1, 0, 1));
 		jsonSuccess($send);
@@ -613,47 +601,63 @@ switch(@$_POST['op']) {
 	case 'zayav_status_place':
 		if(!$zayav_id = _isnum($_POST['zayav_id']))
 			jsonError();
-		if(!$zayav_status = _isnum($_POST['zayav_status']))
+		if(!$zayav_status = _isnum($_POST['status']))
 			jsonError();
-		if(!preg_match(REGEXP_NUMERIC, $_POST['dev_place']))
+
+		if(!preg_match(REGEXP_NUMERIC, $_POST['place']))
 			jsonError();
-		$dev_place = intval($_POST['dev_place']);
+		$dev_place = intval($_POST['place']);
 		$place_other = $dev_place == 0 ? win1251(htmlspecialchars(trim($_POST['place_other']))) : '';
 		if($dev_place == 0 && !$place_other)
 			jsonError();
 
-		$sql = "SELECT * FROM `zayav` WHERE `ws_id`=".WS_ID." AND !`deleted` AND `id`=".$zayav_id." LIMIT 1";
+		if(!preg_match(REGEXP_DATE, $_POST['day_finish']))
+			jsonError();
+		$day_finish = $_POST['day_finish'];
+
+		$sql = "SELECT * FROM `zayav` WHERE `ws_id`=".WS_ID." AND !`deleted` AND `id`=".$zayav_id;
 		if(!$z = mysql_fetch_assoc(query($sql)))
 			jsonError();
 
+		if($z['zayav_status'] == $zayav_status)
+			jsonError();
+
 		$sql = "UPDATE `zayav`
-				SET `device_place`=".$dev_place.",
-					`device_place_other`='".$place_other."'
-					".($z['zayav_status'] != $zayav_status ? ",`zayav_status`=".$zayav_status.",`zayav_status_dtime`=CURRENT_TIMESTAMP" : '')."
-					".($z['device_place'] != $dev_place ? ",`device_place_dtime`=CURRENT_TIMESTAMP" : '')."
+				SET `zayav_status`=".$zayav_status.",
+					`zayav_status_dtime`=CURRENT_TIMESTAMP
 				WHERE `id`=".$zayav_id;
 		query($sql);
 
-		$send['z_status'] = _zayavStatus($zayav_status);
-		$send['z_status']['name'] = utf8($send['z_status']['name']);
-		$send['z_status']['dtime'] = utf8(FullDataTime($z['zayav_status_dtime'], 1));
-		$send['dev_place'] = utf8($dev_place > 0 ? _devPlace($dev_place) : $place_other);
+		history_insert(array(
+			'type' => 4,
+			'client_id' => $z['client_id'],
+			'zayav_id' => $zayav_id,
+			'value' => $zayav_status,
+			'value1' => $z['zayav_status']
+		));
 
-		if($z['zayav_status'] != $zayav_status) {
-			history_insert(array(
-				'type' => 4,
-				'client_id' => $z['client_id'],
-				'zayav_id' => $zayav_id,
-				'value' => $zayav_status,
-				'value1' => $z['zayav_status']
-			));
-			$send['z_status']['dtime'] = utf8(FullDataTime(curTime(), 1));
-		}
+		zayav_place_change($zayav_id, $dev_place, $place_other);
+		zayav_day_finish_change($zayav_id, $day_finish);
 
-		if($dev_place != $z['device_place'] && $dev_place == 2)
-			$send['comment'] = zayav_msg_to_client($zayav_id);
+		jsonSuccess();
+		break;
+	case 'zayav_device_place':
+		if(!$zayav_id = _isnum($_POST['zayav_id']))
+			jsonError();
+		if(!preg_match(REGEXP_NUMERIC, $_POST['place']))
+			jsonError();
+		$dev_place = intval($_POST['place']);
+		$place_other = $dev_place == 0 ? win1251(htmlspecialchars(trim($_POST['place_other']))) : '';
+		if($dev_place == 0 && !$place_other)
+			jsonError();
 
-		jsonSuccess($send);
+		$sql = "SELECT * FROM `zayav` WHERE `ws_id`=".WS_ID." AND !`deleted` AND `id`=".$zayav_id;
+		if(!$z = mysql_fetch_assoc(query($sql)))
+			jsonError();
+
+		zayav_place_change($zayav_id, $dev_place, $place_other);
+
+		jsonSuccess();
 		break;
 	case 'zayav_accrual_add':
 		if(!$zayav_id = _isnum($_POST['zayav_id']))
@@ -1819,32 +1823,9 @@ switch(@$_POST['op']) {
 			jsonError();
 
 		$send = array();
-		if($v['zayav_id']) {
-			$r = query_assoc("SELECT * FROM `zayav` WHERE `id`=".$v['zayav_id']);
-			if($place != $r['device_place'] || $place_other != $r['device_place_other']) {
-				$sql = "UPDATE `zayav`
-						SET `device_place`=".$place.",
-							`device_place_other`='".$place_other."',
-							`device_place_dtime`=CURRENT_TIMESTAMP
-						WHERE `id`=".$v['zayav_id'];
-				query($sql);
-				history_insert(array(
-					'type' => 29,
-					'client_id' => $v['client_id'],
-					'zayav_id' => $v['zayav_id'],
-					'value' =>
-						'<table><tr>'.
-							'<td>'.($r['device_place'] ? @_devPlace($r['device_place']) : $r['device_place_other']).
-							'<td>»'.
-							'<td>'.($place ? @_devPlace($place) : $place_other).
-						'</table>'
-				));
-			}
-			$send['html'] = utf8(zayav_info_money($v['zayav_id']));
+		if($v['zayav_id'])
+			$send = zayav_place_change($v['zayav_id'], $place, $place_other);
 
-			if($place != $r['device_place'] && $place == 2)
-				$send['comment'] = zayav_msg_to_client($v['zayav_id']);
-		}
 		jsonSuccess($send);
 		break;
 	case 'income_del':
@@ -2482,3 +2463,53 @@ switch(@$_POST['op']) {
 }
 
 jsonError();
+
+
+function zayav_place_change($zayav_id, $place, $place_other) {//изменение местонахожнения устройства и внесение истории
+	$r = query_assoc("SELECT * FROM `zayav` WHERE `id`=".$zayav_id);
+	if($place != $r['device_place'] || $place_other != $r['device_place_other']) {
+		$sql = "UPDATE `zayav`
+						SET `device_place`=".$place.",
+							`device_place_other`='".$place_other."',
+							`device_place_dtime`=CURRENT_TIMESTAMP
+						WHERE `id`=".$zayav_id;
+		query($sql);
+		history_insert(array(
+			'type' => 29,
+			'client_id' => $r['client_id'],
+			'zayav_id' => $zayav_id,
+			'value' =>
+				'<table><tr>'.
+					'<td>'.($r['device_place'] ? @_devPlace($r['device_place']) : $r['device_place_other']).
+					'<td>»'.
+					'<td>'.($place ? @_devPlace($place) : $place_other).
+				'</table>'
+		));
+	}
+	$send['html'] = utf8(zayav_info_money($zayav_id));
+
+	if($place != $r['device_place'] && $place == 2)
+		$send['comment'] = zayav_msg_to_client($zayav_id);
+	return $send;
+}//zayav_place_change()
+function zayav_day_finish_change($zayav_id, $day) {//изменение срока выполнения
+	$sql = "SELECT * FROM `zayav` WHERE `ws_id`=".WS_ID." AND !`deleted` AND `id`=".$zayav_id;
+	$z = query_assoc($sql);
+	if($day != $z['day_finish'] && $day != '0000-00-00') {
+		query("UPDATE `zayav` SET `day_finish`='".$day."' WHERE `id`=".$zayav_id);
+		history_insert(array(
+			'type' => 52,
+			'client_id' => $z['client_id'],
+			'zayav_id' => $zayav_id,
+			'value' => '<table><tr>'.
+				'<th>Срок:'.
+					'<td>'.($z['day_finish'] == '0000-00-00' ? 'не указан' : FullData($z['day_finish'], 0, 1, 1)).
+					'<td>»'.
+					'<td>'.FullData($day, 0, 1, 1).
+				'</table>'
+		));
+	}
+}//zayav_day_finish_change()
+
+
+
