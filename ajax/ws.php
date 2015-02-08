@@ -323,7 +323,6 @@ switch(@$_POST['op']) {
 					`zayav_status`,
 					`zayav_status_dtime`,
 
-					`device_status`,
 					`device_place`,
 					`device_place_other`,
 
@@ -350,7 +349,6 @@ switch(@$_POST['op']) {
 					1,
 					current_timestamp,
 
-					1,
 					".addslashes($place).",
 					'".$place_other."',
 
@@ -617,11 +615,8 @@ switch(@$_POST['op']) {
 			jsonError();
 		if(!$zayav_status = _isnum($_POST['zayav_status']))
 			jsonError();
-		if(!preg_match(REGEXP_NUMERIC, $_POST['dev_status']))
-			jsonError();
 		if(!preg_match(REGEXP_NUMERIC, $_POST['dev_place']))
 			jsonError();
-		$dev_status = intval($_POST['dev_status']);
 		$dev_place = intval($_POST['dev_place']);
 		$place_other = $dev_place == 0 ? win1251(htmlspecialchars(trim($_POST['place_other']))) : '';
 		if($dev_place == 0 && !$place_other)
@@ -632,8 +627,7 @@ switch(@$_POST['op']) {
 			jsonError();
 
 		$sql = "UPDATE `zayav`
-				SET `device_status`=".$dev_status.",
-					`device_place`=".$dev_place.",
+				SET `device_place`=".$dev_place.",
 					`device_place_other`='".$place_other."'
 					".($z['zayav_status'] != $zayav_status ? ",`zayav_status`=".$zayav_status.",`zayav_status_dtime`=CURRENT_TIMESTAMP" : '')."
 					".($z['device_place'] != $dev_place ? ",`device_place_dtime`=CURRENT_TIMESTAMP" : '')."
@@ -644,7 +638,6 @@ switch(@$_POST['op']) {
 		$send['z_status']['name'] = utf8($send['z_status']['name']);
 		$send['z_status']['dtime'] = utf8(FullDataTime($z['zayav_status_dtime'], 1));
 		$send['dev_place'] = utf8($dev_place > 0 ? _devPlace($dev_place) : $place_other);
-		$send['dev_status'] = utf8(_devStatus($dev_status));
 
 		if($z['zayav_status'] != $zayav_status) {
 			history_insert(array(
@@ -669,8 +662,6 @@ switch(@$_POST['op']) {
 			jsonError();
 		if(!preg_match(REGEXP_NUMERIC, $_POST['status']) || !$_POST['status'])
 			jsonError();
-		if(!preg_match(REGEXP_NUMERIC, $_POST['dev_status']))
-			jsonError();
 		if(!preg_match(REGEXP_BOOL, $_POST['remind']))
 			jsonError();
 		$remind = intval($_POST['remind']);
@@ -686,7 +677,6 @@ switch(@$_POST['op']) {
 		$sum = intval($_POST['sum']);
 		$prim = win1251(htmlspecialchars(trim($_POST['prim'])));
 		$status = intval($_POST['status']);
-		$dev_status = intval($_POST['dev_status']);
 
 		$sql = "SELECT * FROM `zayav` WHERE `ws_id`=".WS_ID." AND !`deleted` AND `id`=".$zayav_id;
 		if(!$z = query_assoc($sql))
@@ -720,12 +710,11 @@ switch(@$_POST['op']) {
 		));
 
 		//Обновление статуса заявки, если изменялся
-		$sql = "UPDATE `zayav`
-				SET `device_status`=".$dev_status."
-					".($z['zayav_status'] != $status ? ",`zayav_status`=".$status.",`zayav_status_dtime`=CURRENT_TIMESTAMP" : '')."
-				WHERE `id`=".$zayav_id;
-		query($sql);
 		if($z['zayav_status'] != $status) {
+			$sql = "UPDATE `zayav`
+					SET `zayav_status`=".$status.",`zayav_status_dtime`=CURRENT_TIMESTAMP
+					WHERE `id`=".$zayav_id;
+			query($sql);
 			history_insert(array(
 				'type' => 4,
 				'client_id' => $z['client_id'],

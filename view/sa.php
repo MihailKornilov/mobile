@@ -30,7 +30,6 @@ function sa_index() {
 		'<A href="'.URL.'&p=sa&d=equip">Комплектация устройств</A><br />'.
 		'<A href="'.URL.'&p=sa&d=fault">Виды неисправностей</A><br />'.
 		//'<A href="'.URL.'&p=sa&d=dev-spec">Характеристики устройств для информации</A><br />'.
-		'<A href="'.URL.'&p=sa&d=devstatus">Статусы устройств в заявках</A><br />'.
 		'<br />'.
 		'<A href="'.URL.'&p=sa&d=color">Цвета для устройств и запчастей</A><br />'.
 		'<br />'.
@@ -523,52 +522,6 @@ function sa_fault_spisok() {
 	$send .= '</dl>';
 	return $send;
 }//sa_fault_spisok()
-
-function sa_devstatus() {
-	return '<div class="path">'.sa_cookie_back().'<a href="'.URL.'&p=sa">Администрирование</a> » Статусы устройств в заявках</div>'.
-		'<div class="sa-devstatus">'.
-		'<div class="headName">Статусы устройств в заявках<a class="add">Добавить</a></div>'.
-		'<div class="spisok">'.sa_devstatus_spisok().'</div>'.
-	'</div>';
-
-}//sa_devstatus()
-function sa_devstatus_spisok() {
-	$sql = "SELECT
-	            `s`.*,
-				COUNT(`z`.`id`) AS `count`
-	        FROM `setup_device_status` AS `s`
-	        	LEFT JOIN `zayav` AS `z`
-	        	ON `s`.`id`=`z`.`device_status` AND !`z`.`deleted`
-	        GROUP BY `s`.`id`
-	        ORDER BY `s`.`sort`";
-	$q = query($sql);
-
-	$nullCount = query_value("SELECT COUNT(`id`) FROM `zayav` WHERE !`deleted` AND !`device_status`");
-
-	$send =
-		'<table class="_spisok">'.
-			'<tr><th class="name">Наименование'.
-				'<th class="count">Кол-во<br />заявок'.
-				'<th class="set">'.
-		($nullCount ?
-			'<tr><td class="name"><b>Не известно</b>'.
-				'<td class="count">'.$nullCount.
-				'<td>'
-		: '').
-		'</table>'.
-		'<dl class="_sort" val="setup_device_status">';
-	while($r = mysql_fetch_assoc($q))
-		$send .= '<dd val="'.$r['id'].'">'.
-			'<table class="_spisok">'.
-			'<tr><td class="name">'.$r['name'].
-				'<td class="count">'.($r['count'] ? $r['count'] : '').
-				'<td class="set">'.
-					'<div class="img_edit"></div>'.
-					($r['count'] ? '' : '<div class="img_del"></div>').
-			'</table>';
-	$send .= '</dl>';
-	return $send;
-}//sa_devstatus_spisok()
 
 function sa_color() {
 	return '<div class="path">'.sa_cookie_back().'<a href="'.URL.'&p=sa">Администрирование</a> » Цвета</div>'.

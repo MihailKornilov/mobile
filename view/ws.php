@@ -827,7 +827,6 @@ function zayavFilter($v) {
 		'device' => 0,
 		'vendor' => 0,
 		'model' => 0,
-		'devstatus' => 0,
 		'diff' => 0,
 		'place' => 0,
 	);
@@ -844,7 +843,6 @@ function zayavFilter($v) {
 		'device' => _isnum(@$v['device']),
 		'vendor' => _isnum(@$v['vendor']),
 		'model' => _isnum(@$v['model']),
-		'devstatus' => @$v['devstatus'] == -1 || _isnum(@$v['devstatus']) ? $v['devstatus'] : 0,
 		'diff' => _isbool(@$v['diff']),
 		'place' => trim(@$v['place']),
 		//'place' => !empty($v['place']) ? win1251(urldecode(htmlspecialchars(trim($v['place'])))) : '',
@@ -903,8 +901,6 @@ function zayav_spisok($v) {
 			else
 				$cond .= " AND !`device_place` AND `device_place_other`='".$filter['place']."'";
 		}
-		if($filter['devstatus'])
-			$cond .= " AND `device_status`=".$filter['devstatus'];
 	}
 
 	$all = query_value("SELECT COUNT(*) FROM `zayav` USE INDEX (`i_zayav_status`) WHERE ".$cond." LIMIT 1");
@@ -1093,7 +1089,6 @@ function zayav_list($v) {
 						_radio('zpzakaz', array(0=>'Все заявки',1=>'Да',2=>'Нет'), $v['zpzakaz'], 1).
 						'<div class="findHead">Устройство</div><div id="dev"></div>'.
 						'<div class="findHead">Нахождение устройства</div><INPUT TYPE="hidden" id="device_place" value="'.$v['place'].'">'.
-						'<div class="findHead">Состояние устройства</div><INPUT TYPE="hidden" id="devstatus" value="'.$v['devstatus'].'">'.
 					'</div>'.
 		'</table>'.
 		'<script type="text/javascript">'.
@@ -1181,7 +1176,6 @@ function zayav_info($zayav_id) {
 			'vendor:'.$z['base_vendor_id'].','.
 			'model:'.$z['base_model_id'].','.
 			'z_status:'.$z['zayav_status'].','.
-			'dev_status:'.$z['device_status'].','.
 			'dev_place:'.$z['device_place'].','.
 			'place_other:"'.$z['device_place_other'].'",'.
 			'imei:"'.$z['imei'].'",'.
@@ -1271,7 +1265,6 @@ function zayav_info($zayav_id) {
 						($z['equip'] ? '<tr><th valign="top">Комплект:<td>'.zayavEquipSpisok($z['equip']) : '').
 						($z['color_id'] ? '<tr><th>Цвет:  <td>'._color($z['color_id'], $z['color_dop']) : '').
 						'<tr><th>Нахождение:<td><a class="dev_place status_place">'.($z['device_place'] ? @_devPlace($z['device_place']) : $z['device_place_other']).'</a>'.
-						'<tr><th>Состояние: <td><a class="dev_status status_place">'._devStatus($z['device_status']).'</a>'.
 					'</table>'.
 				'</dev>'.
 

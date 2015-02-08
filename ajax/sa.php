@@ -23,7 +23,6 @@ switch(@$_POST['op']) {
 			'setup_device_place' => "Местонахождения устройств",
 			'setup_device_specific_item' => "Элементы характеристик",
 			'setup_device_specific_razdel' => "Разделы характеристик",
-			'setup_device_status' => "Состояния устройств",
 			'setup_fault' => "Неисправности",
 			'setup_zayavki_category' => "Категории заявок",
 			'setup_zayavki_status' => "Статусы заявок",
@@ -584,67 +583,6 @@ switch(@$_POST['op']) {
 		GvaluesCreate();
 
 		$send['html'] = utf8(sa_fault_spisok());
-		jsonSuccess($send);
-		break;
-
-	case 'devstatus_add':
-		$name = win1251(htmlspecialchars(trim($_POST['name'])));
-		if(empty($name))
-			jsonError();
-		$sql = "INSERT INTO `setup_device_status` (
-					`name`,
-					`sort`
-				) VALUES (
-					'".addslashes($name)."',
-					"._maxSql('setup_device_status')."
-				)";
-		query($sql);
-
-		GvaluesCreate();
-		xcache_unset(CACHE_PREFIX.'device_status');
-
-		$send['html'] = utf8(sa_devstatus_spisok());
-		jsonSuccess($send);
-		break;
-	case 'devstatus_edit':
-		if(!preg_match(REGEXP_NUMERIC, $_POST['id']) || !$_POST['id'])
-			jsonError();
-		$id = intval($_POST['id']);
-		$name = win1251(htmlspecialchars(trim($_POST['name'])));
-		if(empty($name))
-			jsonError();
-
-		$sql = "UPDATE `setup_device_status`
-				SET `name`='".addslashes($name)."'
-				WHERE `id`=".$id;
-		query($sql);
-
-		GvaluesCreate();
-		xcache_unset(CACHE_PREFIX.'device_status');
-
-		$send['html'] = utf8(sa_devstatus_spisok());
-		jsonSuccess($send);
-		break;
-	case 'devstatus_del':
-		if(!preg_match(REGEXP_NUMERIC, $_POST['id']) || !$_POST['id'])
-			jsonError();
-		$id = intval($_POST['id']);
-
-		$sql = "SELECT * FROM `setup_device_status` WHERE `id`=".$id;
-		if(!$r = mysql_fetch_assoc(query($sql)))
-			jsonError();
-
-		$sql = "SELECT COUNT(`id`) FROM `zayav` WHERE !`deleted` AND `device_status`=".$id;
-		if(query_value($sql))
-			jsonError();
-
-		$sql = "DELETE FROM `setup_device_status` WHERE `id`=".$id;
-		query($sql);
-
-		GvaluesCreate();
-		xcache_unset(CACHE_PREFIX.'device_status');
-
-		$send['html'] = utf8(sa_devstatus_spisok());
 		jsonSuccess($send);
 		break;
 

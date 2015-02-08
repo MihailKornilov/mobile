@@ -210,8 +210,7 @@ var AJAX_WS = APP_HTML + '/ajax/ws.php?' + VALUES,
 				device:$('#dev_device').val(),
 				vendor:$('#dev_vendor').val(),
 				model:$('#dev_model').val(),
-				place:$('#device_place').val(),
-				devstatus:$('#devstatus').val()
+				place:$('#device_place').val()
 			},
 			loc = '';
 		if(v.status != '1')
@@ -228,7 +227,6 @@ var AJAX_WS = APP_HTML + '/ajax/ws.php?' + VALUES,
 			if(v.vendor > 0) loc += '.vendor=' + v.vendor;
 			if(v.model > 0) loc += '.model=' + v.model;
 			if(v.place != 0) loc += '.place=' + v.place;
-			if(v.devstatus > 0) loc += '.devstatus=' + v.devstatus;
 		}
 		VK.callMethod('setLocation', hashLoc + loc);
 
@@ -243,7 +241,6 @@ var AJAX_WS = APP_HTML + '/ajax/ws.php?' + VALUES,
 		_cookie('zayav_vendor', v.vendor);
 		_cookie('zayav_model', v.model);
 		_cookie('zayav_place', escape(v.place));
-		_cookie('zayav_devstatus', v.devstatus);
 
 		return v;
 	},
@@ -1435,7 +1432,6 @@ $(document)
 			func:zayavSpisok
 		});
 		$('#device_place')._select(0);
-		$('#devstatus')._select(0);
 		zayavSpisok();
 	})
 
@@ -1597,7 +1593,6 @@ $(document)
 				'<tr><td class="label">Сумма: <TD><input type="text" id="sum" class="money" maxlength="5" /> руб.' +
 				'<tr><td class="label">Примечание:<em>(не обязательно)</em><TD><input type="text" id="prim" maxlength="100" />' +
 				'<tr><td class="label">Статус заявки: <td><input type="hidden" id="acc_status" value="2" />' +
-				'<tr><td class="label">Состояние устройства:<td><input type="hidden" id="acc_dev_status" value="5" />' +
 				'<tr><td class="label">Добавить напоминание:<td><input type="hidden" id="acc_remind" />' +
 			'</TABLE>' +
 
@@ -1615,7 +1610,6 @@ $(document)
 		$('#sum').focus();
 		$('#sum,#prim,#reminder_txt').keyEnter(submit);
 		$('#acc_status')._dropdown({spisok:STATUS});
-		$('#acc_dev_status')._dropdown({spisok:DEVSTATUS_SPISOK});
 		$('#acc_remind')._check();
 		$('#acc_remind_check').click(function(id) {
 			$('.zayav_accrual_add.remind').toggle();
@@ -1630,7 +1624,6 @@ $(document)
 					sum:$('#sum').val(),
 					prim:$('#prim').val(),
 					status:$('#acc_status').val(),
-					dev_status:$('#acc_dev_status').val(),
 					remind:$('#acc_remind').val(),
 					remind_txt:$('#reminder_txt').val(),
 					remind_day:$('#reminder_day').val()
@@ -1702,7 +1695,6 @@ $(document)
 		var html = '<TABLE style="border-spacing:8px">' +
 			'<TR><TD class="label r topi">Статус заявки:<TD><input type="hidden" id="z_status" value="' + ZAYAV.z_status + '">' +
 			'<TR><TD class="label r topi">Местонахождение устройства:<TD><input type="hidden" id="place" value="' + ZAYAV.dev_place + '">' +
-			'<TR><TD class="label r topi">Состояние устройства:<TD><input type="hidden" id="dev_status" value="' + ZAYAV.dev_status + '">' +
 			'</TABLE>',
 			dialog = _dialog({
 				width:400,
@@ -1717,24 +1709,18 @@ $(document)
 			light:1
 		});
 		zayavPlace(ZAYAV.place_other);
-		$('#dev_status')._radio({
-			spisok:DEVSTATUS_SPISOK,
-			light:1
-		});
 
 		function submit() {
 			var send = {
 				op:'zayav_status_place',
 				zayav_id:ZAYAV.id,
 				zayav_status:$('#z_status').val(),
-				dev_status:$('#dev_status').val(),
 				dev_place:$('#place').val(),
 				place_other:$('#place_other').val()
 			};
 			if(send.dev_place > 0)
 				send.place_other = '';
 			if(send.dev_place == 0 && send.place_other == '') { err('Не указано местонахождение устройства'); $('#place_other').focus(); }
-			else if(send.dev_status == 0) err('Не указано состояние устройства');
 			else {
 				dialog.process();
 				$.post(AJAX_WS, send, function(res) {
@@ -1745,10 +1731,8 @@ $(document)
 							.html(res.z_status.name)
 							.css('background-color', '#' + res.z_status.color);
 						$('#status_dtime').html(res.z_status.dtime);
-						$('.dev_status').html(res.dev_status);
 						$('.dev_place').html(res.dev_place);
 						ZAYAV.z_status = send.zayav_status;
-						ZAYAV.dev_status = send.dev_status;
 						ZAYAV.dev_place = send.dev_place;
 						ZAYAV.place_other = send.place_other;
 						if(res.comment)
@@ -3603,15 +3587,6 @@ $(document)
 				width:155,
 				title0:'Любое местонахождение',
 				spisok:DEVPLACE_SPISOK,
-				func:zayavSpisok
-			});
-			// Состояние устройства
-			DEVSTATUS_SPISOK.splice(0, 1);
-			DEVSTATUS_SPISOK.push({uid:-1, title:'не известно', content:'<B>не известно</B>'});
-			$('#devstatus')._select({
-				width:155,
-				title0:'Любое состояние',
-				spisok:DEVSTATUS_SPISOK,
 				func:zayavSpisok
 			});
 			//подсвечивание просмотренной заявки

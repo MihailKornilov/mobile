@@ -75,7 +75,6 @@ function _cacheClear($ws_id=WS_ID) {
 	xcache_unset(CACHE_PREFIX.'model_name_count');
 	xcache_unset(CACHE_PREFIX.'zp_name');
 	xcache_unset(CACHE_PREFIX.'color_name');
-	xcache_unset(CACHE_PREFIX.'device_status');
 	xcache_unset(CACHE_PREFIX.'device_equip');
 	xcache_unset(CACHE_PREFIX.'invoice');
 	xcache_unset(CACHE_PREFIX.'expense');
@@ -152,7 +151,6 @@ function GvaluesCreate() {//Составление файла G_values.js
 		"\n".'EXPENSE_WORKER='.query_ptpJson("SELECT `id`,`show_worker` FROM `setup_expense` WHERE `show_worker`").','.
 		"\n".'FAULT_ASS='.query_ptpJson("SELECT `id`,`name` FROM `setup_fault` ORDER BY `sort`").','.
 		"\n".'ZPNAME_SPISOK='.query_selJson("SELECT `id`,`name` FROM `setup_zp_name` ORDER BY `name`").','.
-		"\n".'DEVSTATUS_SPISOK='.query_selJson("SELECT `id`,`name` FROM `setup_device_status` ORDER BY `sort`").','.
 		"\n".'DEVPLACE_SPISOK='._selJson(_devPlace()).','.
 		"\n".'DEV_SPISOK='.query_selJson("SELECT `id`,`name` FROM `base_device` ORDER BY `sort`").','.
 		"\n".'DEV_ASS=_toAss(DEV_SPISOK),'.
@@ -382,24 +380,6 @@ function _devPlace($place_id=false) {
 		return $arr;
 	return isset($arr[$place_id]) ? $arr[$place_id] : '';
 }//_devPlace()
-function _devStatus($status_id) {
-	if(!defined('DEV_STATUS_LOADED')) {
-		$key = CACHE_PREFIX.'device_status';
-		$zp = xcache_get($key);
-		if(empty($zp)) {
-			$sql = "SELECT `id`,`name` FROM `setup_device_status` ORDER BY `id` ASC";
-			$q = query($sql);
-			while($r = mysql_fetch_assoc($q))
-				$zp[$r['id']] = $r['name'];
-			xcache_set($key, $zp, 86400);
-		}
-		foreach($zp as $id => $name)
-			define('DEV_STATUS_'.$id, $name);
-		define('DEV_STATUS_0', 'не известно');
-		define('DEV_STATUS_LOADED', true);
-	}
-	return constant('DEV_STATUS_'.$status_id);
-}//_devStatus()
 
 function equipCache() {
 	$key = CACHE_PREFIX.'device_equip';
