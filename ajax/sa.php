@@ -93,6 +93,7 @@ switch(@$_POST['op']) {
 				  LEFT JOIN `money` AS `m`
 				  ON !`m`.`deleted`
 					AND `c`.`id`=`m`.`client_id`
+					AND !`m`.`zp_id`
 					AND `m`.`sum`>0
 				WHERE `c`.`ws_id`=".$ws_id."
 				  AND !`c`.`deleted`

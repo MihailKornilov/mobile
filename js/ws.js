@@ -140,7 +140,8 @@ var AJAX_WS = APP_HTML + '/ajax/ws.php?' + VALUES,
 				find:$('#find')._search('val'),
 				dolg:$('#dolg').val(),
 				active:$('#active').val(),
-				comm:$('#comm').val()
+				comm:$('#comm').val(),
+				opl:$('#opl').val()
 			},
 			loc = '';
 		$('.filter')[v.find ? 'hide' : 'show']();
@@ -150,6 +151,7 @@ var AJAX_WS = APP_HTML + '/ajax/ws.php?' + VALUES,
 			if(v.dolg > 0) loc += '.dolg=' + v.dolg;
 			if(v.active > 0) loc += '.active=' + v.active;
 			if(v.comm > 0) loc += '.comm=' + v.comm;
+			if(v.opl > 0) loc += '.opl=' + v.opl;
 		}
 		VK.callMethod('setLocation', hashLoc + loc);
 
@@ -157,6 +159,7 @@ var AJAX_WS = APP_HTML + '/ajax/ws.php?' + VALUES,
 		_cookie('client_dolg', v.dolg);
 		_cookie('client_active', v.active);
 		_cookie('client_comm', v.comm);
+		_cookie('client_opl', v.opl);
 
 		return v;
 	},
@@ -1152,6 +1155,7 @@ $(document)
 		$('#dolg')._check(0);
 		$('#active')._check(0);
 		$('#comm')._check(0);
+		$('#opl')._check(0);
 		clientSpisok();
 	})
 
@@ -2739,7 +2743,7 @@ $(document)
 		var html = '<TABLE id="income-add-tab">' +
 			'<input type="hidden" id="zayav_id" value="' + (window.ZAYAV ? ZAYAV.id : 0) + '" />' +
 			(window.ZAYAV ? '<tr><td class="label">Заявка:<td><b>№' + ZAYAV.nomer + '</b>' : '') +
-			'<tr><td class="label">Счёт:<td><input type="hidden" id="invoice_id" value="' + (INVOICE_SPISOK.length == 1 ? INVOICE_SPISOK[0].uid : 0) + '" />' +
+			'<tr><td class="label">Счёт:<td><input type="hidden" id="invoice_id" value="' + (INVOICE_SPISOK.length == 1 ? INVOICE_SPISOK[0].uid : 1) + '" />' +
 			'<tr><td class="label">Сумма:<td><input type="text" id="sum" class="money" maxlength="11" /> руб.' +
 			'<tr><td class="label">Описание:<td><input type="text" id="prim" maxlength="100" />' +
 			(window.ZAYAV ? '<tr><td class="label topi">Местонахождение<br />устройства:<td><input type="hidden" id="place" value="-1" />' : '') +
@@ -3518,9 +3522,10 @@ $(document)
 				indent:40,
 				delayShow:1000
 			}).click(clientAdd);
-			$('#dolg')._check(clientSpisok)
-			$('#active')._check(clientSpisok)
-			$('#comm')._check(clientSpisok)
+			$('#dolg')._check(clientSpisok);
+			$('#active')._check(clientSpisok);
+			$('#comm')._check(clientSpisok);
+			$('#opl')._check(clientSpisok);
 			$('#dolg_check').vkHint({
 				msg:'<b>Список должников.</b><br /><br />' +
 					'Выводятся клиенты, у которых баланс менее 0. Также в результате отображается общая сумма долга.',
@@ -4031,7 +4036,7 @@ $(document)
 							'<td><input type="hidden" id="tabmon" value="' + ((new Date).getMonth() + 1) + '" /> ' +
 								'<input type="hidden" id="tabyear" value="' + (new Date).getFullYear() + '" />' +
 						'<tr><td class="label">Описание:<td><input type="text" id="prim" maxlength="100">' +
-						'<tr><td class="label">Со счёта:<td><input type="hidden" id="invoice_id" value="' + (INVOICE_SPISOK.length == 1 ? INVOICE_SPISOK[0].uid : 0) + '" />' +
+						'<tr><td class="label">Со счёта:<td><input type="hidden" id="invoice_id" value="' + (INVOICE_SPISOK.length == 1 ? INVOICE_SPISOK[0].uid : 1) + '" />' +
 						'<tr><td class="label">Сумма:<td><input type="text" id="sum" class="money" maxlength="11" /> руб.' +
 					'</TABLE>',
 					dialog = _dialog({
@@ -4141,8 +4146,8 @@ $(document)
 			$('.transfer').click(function() {
 				var t = $(this),
 					html = '<table class="_dialog-tab">' +
-							'<tr><td class="label">Со счёта:<td><input type="hidden" id="from" />' +
-							'<tr><td class="label">На счёт:<td><input type="hidden" id="to" />' +
+							'<tr><td class="label">Со счёта:<td><input type="hidden" id="from" value="1" />' +
+							'<tr><td class="label">На счёт:<td><input type="hidden" id="to" value="2" />' +
 							'<tr><td class="label">Сумма:<td><input type="text" id="sum" class="money" /> руб. ' +
 							'<tr><td class="label">Комментарий:<td><input type="text" id="about" />' +
 						'</table>',

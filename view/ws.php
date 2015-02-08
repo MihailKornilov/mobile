@@ -13,7 +13,7 @@ function _remindActiveSet() { //Получение количества активных напоминаний
 		$count = $r['count'];
 		xcache_set($key, $count, 7200);
 	}
-	define('REMIND_ACTIVE', $count > 0 ? ' (<b>'.$count.'</b>)' : '');
+	define('REMIND_ACTIVE', $count > 0 ? ' <b>'.$count.'</b>' : '');
 }//_remindActiveSet()
 function _mainLinks() {
 	global $html;
@@ -172,7 +172,8 @@ function clientFilter($v) {
 		'find' => '',
 		'dolg' => 0,
 		'active' => 0,
-		'comm' => 0
+		'comm' => 0,
+		'opl' => 0
 	);
 	$filter = array(
 		'page' => _isnum(@$v['page']) ? $v['page'] : 1,
@@ -180,6 +181,7 @@ function clientFilter($v) {
 		'dolg' => _isbool(@$v['dolg']),
 		'active' => _isbool(@$v['active']),
 		'comm' => _isbool(@$v['comm']),
+		'opl' => _isbool(@$v['opl']),
 		'clear' => ''
 	);
 	foreach($default as $k => $r)
@@ -195,6 +197,7 @@ function client_data($v=array()) {
 	$reg = '';
 	$regEngRus = '';
 	$dolg = 0;
+	$plus = 0;
 	if($filter['find']) {
 		$engRus = _engRusChar($filter['find']);
 		$cond .= " AND (`fio` LIKE '%".$filter['find']."%'
@@ -225,6 +228,10 @@ function client_data($v=array()) {
 							WHERE `status` AND `table_name`='client'");
 			$cond .= " AND `id` IN (".$ids.")";
 		}
+		if($filter['opl']) {
+			$cond .= " AND `balans`>0";
+			$plus = abs(query_value("SELECT SUM(`balans`) FROM `client` WHERE !`deleted` AND `balans`>0"));
+		}
 	}
 
 	$all = query_value("SELECT COUNT(`id`) AS `all` FROM `client` WHERE ".$cond." LIMIT 1");
@@ -239,6 +246,7 @@ function client_data($v=array()) {
 	$send['all'] = $all;
 	$send['result'] = 'Найден'._end($all, ' ', 'о ').$all.' клиент'._end($all, '', 'а', 'ов').
 					  ($dolg ? '<em>(Общая сумма долга = '.$dolg.' руб.)</em>' : '').
+					  ($plus ? '<em>(Сумма = '.$plus.' руб.)</em>' : '').
 					  $filter['clear'];
 	$send['filter'] = $filter;
 
@@ -320,6 +328,7 @@ function client_list($v) {
 					   _check('dolg', 'Должники', $v['dolg']).
 					   _check('active', 'С активными заявками', $v['active']).
 					   _check('comm', 'Есть заметки', $v['comm']).
+					   _check('opl', 'Внесена предоплата', $v['opl']).
 					'</div>'.
 		  '</table>'.
 		'</div>'.
@@ -447,6 +456,7 @@ function clientBalansUpdate($client_id, $ws_id=WS_ID) {//Обновление баланса клие
 						   WHERE `ws_id`=".$ws_id."
 							 AND !`deleted`
 							 AND `client_id`=".$client_id."
+							 AND !`zp_id`
 							 AND `sum`>0");
 	$acc = query_value("SELECT IFNULL(SUM(`sum`),0)
 						FROM `accrual`
