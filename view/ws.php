@@ -1,20 +1,4 @@
 <?php
-function _remindActiveSet() { //Получение количества активных напоминаний
-	$key = CACHE_PREFIX.'remind_active'.WS_ID;
-	$count = xcache_get($key);
-	if(!strlen($count)) {
-		$sql = "SELECT COUNT(`id`) AS `count`
-				FROM `reminder`
-				WHERE `ws_id`=".WS_ID."
-				  AND `day`<=DATE_FORMAT(CURRENT_TIMESTAMP, '%Y-%m-%d')
-				  AND `status`=1
-				  AND (`private`=0 OR `private`=1 AND `viewer_id_add`=".VIEWER_ID.")";
-		$r = mysql_fetch_assoc(query($sql));
-		$count = $r['count'];
-		xcache_set($key, $count, 7200);
-	}
-	define('REMIND_ACTIVE', $count > 0 ? ' <b>'.$count.'</b>' : '');
-}//_remindActiveSet()
 function _mainLinks() {
 	global $html;
 	_remindActiveSet();
@@ -56,7 +40,7 @@ function _mainLinks() {
 
 function _expense($type_id=false, $i='name') {//Список изделий для заявок
 	if(!defined('EXPENSE_LOADED') || $type_id === false) {
-		$key = CACHE_PREFIX.'expense';
+		$key = CACHE_PREFIX.'expense'.WS_ID;
 		$arr = xcache_get($key);
 		if(empty($arr)) {
 			$sql = "SELECT * FROM `setup_expense` ORDER BY `sort`";
@@ -86,11 +70,14 @@ function _expense($type_id=false, $i='name') {//Список изделий для заявок
 }//_expense()
 function _invoice($type_id=false, $i='name') {//Список изделий для заявок
 	if(!defined('INVOICE_LOADED') || $type_id === false) {
-		$key = CACHE_PREFIX.'invoice';
+		$key = CACHE_PREFIX.'invoice'.WS_ID;
 		$arr = xcache_get($key);
 		if(empty($arr)) {
 			$arr = array();
-			$sql = "SELECT * FROM `invoice` ORDER BY `id`";
+			$sql = "SELECT *
+					FROM `invoice`
+					WHERE `ws_id`=".WS_ID."
+					ORDER BY `id`";
 			$q = query($sql);
 			while($r = mysql_fetch_assoc($q)) {
 				$r['start'] = round($r['start'], 2);
@@ -166,6 +153,32 @@ function _clientLink($arr, $fio=0, $tel=0) {//Добавление имени и ссылки клиента 
 	}
 	return $arr;
 }//_clientLink()
+function _clientValues($arr) {//данные о заявке, подставляемые в список
+	$ids = array();
+	$arrIds = array();
+	foreach($arr as $key => $r)
+		if(!empty($r['client_id'])) {
+			$ids[$r['client_id']] = 1;
+			$arrIds[$r['client_id']][] = $key;
+		}
+	if(empty($ids))
+		return $arr;
+
+	$sql = "SELECT *
+		        FROM `client`
+				WHERE `ws_id`=".WS_ID."
+				  AND `id` IN (".implode(',', array_keys($ids)).")";
+	$q = query($sql);
+	while($r = mysql_fetch_assoc($q))
+		foreach($arrIds[$r['id']] as $id) {
+			$arr[$id] += array(
+				'client_link' => '<a val="'.$r['id'].'" class="go-client-info'.($r['deleted'] ? ' deleted' : '').'">'.$r['fio'].'</a>',
+				'client_telefon' => $r['telefon'],
+				'client_fio' => $r['fio']
+			);
+		}
+	return $arr;
+}//_clientValues()
 function clientFilter($v) {
 	$default = array(
 		'page' => 1,
@@ -213,7 +226,7 @@ function client_data($v=array()) {
 	} else {
 		if($filter['dolg']) {
 			$cond .= " AND `balans`<0";
-			$dolg = abs(query_value("SELECT SUM(`balans`) FROM `client` WHERE !`deleted` AND `balans`<0"));
+			$dolg = abs(query_value("SELECT SUM(`balans`) FROM `client` WHERE `ws_id`=".WS_ID." AND !`deleted` AND `balans`<0"));
 		}
 		if($filter['active']) {
 			$ids = query_ids("SELECT DISTINCT `client_id`
@@ -395,7 +408,7 @@ function client_info($client_id) {
 		$money .= '</table>';
 	}
 
-	$remindData = remind_data(1, array('client'=>$client_id));
+	$remind = _remind_spisok(array('client_id'=>$client_id));
 
 	$history = history(array('client_id'=>$client_id,'limit'=>15));
 
@@ -421,21 +434,21 @@ function client_info($client_id) {
 						'<div class="dtime">Клиента внёс '._viewer($client['viewer_id_add'], 'name').' '.FullData($client['dtime_add'], 1).'</div>'.
 					'</div>'.
 					'<div id="dopLinks">'.
-						'<a class="link sel" val="zayav">Заявки'.($zayavData['all'] ? ' (<b>'.$zayavData['all'].'</b>)' : '').'</a>'.
-						'<a class="link" val="money">Платежи'.($moneyCount ? ' (<b>'.$moneyCount.'</b>)' : '').'</a>'.
-						'<a class="link" val="remind">Задания'.(!empty($remindData) ? ' (<b>'.$remindData['all'].'</b>)' : '').'</a>'.
-						'<a class="link" val="comm">Заметки'.($commCount ? ' (<b>'.$commCount.'</b>)' : '').'</a>'.
-						'<a class="link" val="hist">История'.($history['all'] ? ' (<b>'.$history['all'].'</b>)' : '').'</a>'.
+						'<a class="link sel" val="zayav">Заявки'.($zayavData['all'] ? ' <b class="count">'.$zayavData['all'].'</b>' : '').'</a>'.
+						'<a class="link" val="money">Платежи'.($moneyCount ? ' <b class="count">'.$moneyCount.'</b>' : '').'</a>'.
+						'<a class="link" val="remind">Напоминания'.($remind['all'] ? ' <b class="count">'.$remind['all'].'</b>' : '').'</a>'.
+						'<a class="link" val="comm">Заметки'.($commCount ? ' <b class="count">'.$commCount.'</b>' : '').'</a>'.
+						'<a class="link" val="hist">История'.($history['all'] ? ' <b class="count">'.$history['all'].'</b>' : '').'</a>'.
 					'</div>'.
 					'<div id="zayav_spisok">'.$zayavData['spisok'].'</div>'.
 					'<div id="money_spisok">'.$money.'</div>'.
-					'<div id="remind_spisok">'.(!empty($remindData) ? remind_spisok($remindData) : '<div class="_empty">Заданий нет.</div>').'</div>'.
+					'<div id="remind-spisok">'.$remind['spisok'].'</div>'.
 					'<div id="comments">'._vkComment('client', $client_id).'</div>'.
 					'<div id="histories">'.$history['spisok'].'</div>'.
 				'<td class="right">'.
 					'<div class="rightLink">'.
 						'<a href="'.URL.'&p=zayav&d=add&back=client&id='.$client_id.'"><b>Новая заявка</b></a>'.
-						'<a class="remind_add">Новое задание</a>'.
+						'<a class="_remind-add">Новое напоминание</a>'.
 						'<a class="cedit">Редактировать</a>'.
 					'</div>'.
 					'<div id="zayav_filter">'.
@@ -584,6 +597,33 @@ function _zayavLink($arr, $noHint=0) {
 		}
 	return $arr;
 }//_zayavLink()
+function _zayavValues($arr, $noHint=0) {//данные о заявке, подставляемые в список
+	$ids = array();
+	$arrIds = array();
+	foreach($arr as $key => $r)
+		if(!empty($r['zayav_id'])) {
+			$ids[$r['zayav_id']] = 1;
+			$arrIds[$r['zayav_id']][] = $key;
+		}
+	if(empty($ids))
+		return $arr;
+	$sql = "SELECT
+	            *,
+	            ".$noHint." AS `nohint`
+			FROM `zayav`
+			WHERE `ws_id`=".WS_ID."
+			  AND `id` IN (".implode(',', array_keys($ids)).")";
+	$q = query($sql);
+	while($r = mysql_fetch_assoc($q))
+		foreach($arrIds[$r['id']] as $id) {
+			$arr[$id] += array(
+				'zayav_link' => _zayavNomerLinkForming($r),
+				'zayav_status_color' => _zayavStatusColor($r['zayav_status']),
+				'zayav_add' => FullData($r['dtime_add'], 1)
+			);
+		}
+	return $arr;
+}//_zayavValues()
 function _zayavBaseDeviceIds($client_id=0) { //список id устройств, которые используются в заявках
 	$ids = array();
 	$sql = "SELECT `b`.`id`
@@ -647,7 +687,7 @@ function _zayavImg($z, $size='s') {
 }//_zayavImg()
 function _zayavExpense($type_id=false, $i='name') {//Список расходов заявки
 	if(!defined('ZE_LOADED') || $type_id === false) {
-		$key = CACHE_PREFIX.'zayav_expense';
+		$key = CACHE_PREFIX.'zayav_expense'.WS_ID;
 		$arr = xcache_get($key);
 		if(empty($arr)) {
 			$sql = "SELECT * FROM `setup_zayav_expense` ORDER BY `sort`";
@@ -725,7 +765,8 @@ function _zayavFinishCalendar($selDay='0000-00-00', $mon='', $zayav_spisok=0) {
 				DATE_FORMAT(`day_finish`,'%Y-%m-%d') AS `day`,
 				COUNT(`id`) AS `count`
 			FROM `zayav`
-			WHERE !`deleted`
+			WHERE `ws_id`=".WS_ID."
+			  AND !`deleted`
 			  AND `zayav_status`=1
 			  AND `day_finish` LIKE ('".$mon."%')
 			GROUP BY DATE_FORMAT(`day_finish`,'%d')";
@@ -784,6 +825,7 @@ function zayav_add($v=array()) {
 		case 'client': $back = 'client'.($client_id > 0 ? '&d=info&id='.$client_id : ''); break;
 		default: $back = 'zayav';
 	}
+
 	return '<div id="zayavAdd">'.
 		'<div class="headName">Внесение новой заявки</div>'.
 		'<table style="border-spacing:8px">'.
@@ -800,12 +842,6 @@ function zayav_add($v=array()) {
 			'<tr><td class="label topi">Заметка:	 <td><textarea id="comm"></textarea>'.
 			'<tr><td class="label">Предварительная стоимость:<td><input type="text" class="money" id="pre_cost" maxlength="11" /> руб.'.
 			'<tr><td class="label">Срок:<td>'._zayavFinish().
-			'<tr><td class="label">Добавить напоминание:<td>'._check('reminder').
-		'</table>'.
-
-		'<table id="reminder_tab">'.
-			'<tr><td class="label">Содержание: <td><INPUT TYPE="text" id="reminder_txt" />'.
-			'<tr><td class="label">Дата:	   <td><INPUT TYPE="hidden" id="reminder_day" />'.
 		'</table>'.
 
 		'<div class="vkButton"><button>Внести</button></div>'.
@@ -1171,6 +1207,7 @@ function zayav_info($zayav_id) {
 		'ZAYAV={'.
 			'id:'.$zayav_id.','.
 			'nomer:'.$z['nomer'].','.
+			'head:"№<b>'.$z['nomer'].'</b>",'.
 			'client_id:'.$z['client_id'].','.
 			'device:'.$z['base_device_id'].','.
 			'vendor:'.$z['base_vendor_id'].','.
@@ -1242,10 +1279,10 @@ function zayav_info($zayav_id) {
 				'<div id="ze_acc">'.zayav_acc_sum($z).'</div>'.
 				$expense['html'].
 				'<div class="headBlue rm">'.
-					'<a href="'.URL.'&p=report&d=remind"><b>Задания</b></a>'.
-					'<a class="add remind_add">Добавить задание</a>'.
+					'<a href="'.URL.'&p=report&d=remind"><b>Напоминания</b></a>'.
+					'<div class="img_add _remind-add'._tooltip('Новое напоминание', -60).'</div>'.
 				'</div>'.
-				'<div id="remind_spisok">'.remind_spisok(remind_data(1, array('zayav'=>$z['id']))).'</div>'.
+				'<div id="remind-spisok">'._remind_spisok(array('zayav_id'=>$z['id']), 'spisok').'</div>'.
 				_vkComment('zayav', $z['id']).
 				'<div class="headBlue mon">Начисления и платежи'.
 					'<a class="add income-add">Принять платёж</a>'.

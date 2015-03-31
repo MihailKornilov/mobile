@@ -286,24 +286,16 @@ switch(@$_POST['op']) {
 		$comm = win1251(htmlspecialchars(trim($_POST['comm'])));
 		$pre_cost = _isnum($_POST['pre_cost']);
 		$day_finish = $_POST['day_finish'];
-		$reminder = intval($_POST['reminder']);
-		$reminder_txt = win1251(htmlspecialchars(trim($_POST['reminder_txt'])));
-		$reminder_day = htmlspecialchars(trim($_POST['reminder_day']));
-		if($reminder) {
-			if(!$reminder_txt)
-				jsonError();
-			if(!preg_match(REGEXP_DATE, $reminder_day))
-				jsonError();
-		}
+
 		$modelName = '';
 		if($model > 0) {
 			$sql = "select `name` FROM `base_model` WHERE `id`=".$model;
 			$r = mysql_fetch_assoc(query($sql));
 			$modelName = $r['name'];
 		}
-		$sql = "SELECT IFNULL(MAX(`nomer`),0)+1 AS `nomer` FROM `zayav` WHERE `ws_id`=".WS_ID." LIMIT 1";
-		$r = mysql_fetch_assoc(query($sql));
-		$nomer = $r['nomer'];
+
+		$sql = "SELECT IFNULL(MAX(`nomer`),0)+1 FROM `zayav` WHERE `ws_id`=".WS_ID." LIMIT 1";
+		$nomer = query_value($sql);
 
 		$sql = "INSERT INTO `zayav` (
 					`ws_id`,
@@ -376,24 +368,6 @@ switch(@$_POST['op']) {
 			query($sql);
 		}
 
-		if($reminder) {
-			$sql = "INSERT INTO `reminder` (
-				`ws_id`,
-				`zayav_id`,
-				`txt`,
-				`day`,
-				`history`,
-				`viewer_id_add`
-			 ) VALUES (
-				".WS_ID.",
-				".$send['id'].",
-				'".$reminder_txt."',
-				'".$reminder_day."',
-				'".FullDataTime(curTime())." "._viewer(VIEWER_ID, 'name')." добавил напоминание для заявки.',
-				".VIEWER_ID."
-			)";
-			query($sql);
-		}
 		history_insert(array(
 			'type' => 1,
 			'client_id' => $client_id,
@@ -444,12 +418,12 @@ switch(@$_POST['op']) {
 		$zayav_id = _isnum($_POST['zayav_id']);
 		$save = _isbool($_POST['save']);
 
-		$sql = "SELECT * FROM `zayav` WHERE `ws_id`=".WS_ID." AND !`deleted` AND `id`=".$zayav_id;
-		if(!$z = query_assoc($sql))
-			jsonError();
-
-		if($zayav_id && $save)
+		if($zayav_id && $save) {
+			$sql = "SELECT * FROM `zayav` WHERE `ws_id`=".WS_ID." AND !`deleted` AND `id`=".$zayav_id;
+			if(!$z = query_assoc($sql))
+				jsonError();
 			zayav_day_finish_change($zayav_id, $day);
+		}
 
 		$send['data'] = utf8($day == '0000-00-00' ? 'не указан' : FullData($day, 1, 0, 1));
 		jsonSuccess($send);
@@ -587,7 +561,7 @@ switch(@$_POST['op']) {
 			jsonError();
 
 		query("UPDATE `zayav` SET `deleted`=1 WHERE `id`=".$zayav_id);
-		query("UPDATE `reminder` SET `status`=0 WHERE `status`=1 AND `zayav_id`=".$zayav_id);
+		query("UPDATE `remind` SET `status`=0 WHERE `status`=1 AND `zayav_id`=".$zayav_id, GLOBAL_MYSQL_CONNECT);
 
 		history_insert(array(
 			'type' => 2,
@@ -733,23 +707,12 @@ switch(@$_POST['op']) {
 
 		//Внесение напоминания, если есть
 		if($remind) {
-			$sql = "INSERT INTO `reminder` (
-				`ws_id`,
-				`zayav_id`,
-				`txt`,
-				`day`,
-				`history`,
-				`viewer_id_add`
-			 ) VALUES (
-				".WS_ID.",
-				".$zayav_id.",
-				'".$remind_txt."',
-				'".$remind_day."',
-				'".FullDataTime(curTime())." "._viewer(VIEWER_ID, 'name')." добавил напоминание при внесении начисления.',
-				".VIEWER_ID."
-			)";
-			query($sql);
-			$send['remind'] = utf8(remind_spisok(remind_data(1, array('zayav'=>$zayav_id))));
+			_remind_add(array(
+				'zayav_id' => $zayav_id,
+				'txt' => $remind_txt,
+				'day' => $remind_day
+			));
+			$send['remind'] = utf8(_remind_spisok(array('zayav_id'=>$zayav_id), 'spisok'));
 		}
 
 		$send['html'] = utf8(zayav_info_money($zayav_id));
@@ -1651,147 +1614,6 @@ switch(@$_POST['op']) {
 		jsonSuccess($send);
 		break;
 
-	case 'remind_spisok':
-		if(!preg_match(REGEXP_NUMERIC, $_POST['status']))
-			jsonError();
-		if(!preg_match(REGEXP_BOOL, $_POST['private']))
-			jsonError();
-		$filter = array(
-			'status' => intval($_POST['status']),
-			'private' => intval($_POST['private'])
-		);
-		$data = remind_data(1, $filter);
-		$send['html'] = utf8(!empty($data) ? remind_spisok($data) : '<div class="_empty">Заданий не найдено.</div>');
-		jsonSuccess($send);
-		break;
-	case 'report_remind_add':
-		if(!preg_match(REGEXP_NUMERIC, $_POST['client_id']))
-			jsonError();
-		if(!preg_match(REGEXP_NUMERIC, $_POST['zayav_id']))
-			jsonError();
-		if(!preg_match(REGEXP_DATE, $_POST['day']))
-			jsonError();
-		if(!preg_match(REGEXP_BOOL, $_POST['private']))
-			jsonError();
-		if(empty($_POST['txt']))
-			jsonError();
-		$client_id = intval($_POST['client_id']);
-		$zayav_id = intval($_POST['zayav_id']);
-		$txt = win1251(htmlspecialchars(trim($_POST['txt'])));
-		$private = intval($_POST['private']);
-		$sql = "INSERT INTO `reminder` (
-					`ws_id`,
-					`client_id`,
-					`zayav_id`,
-					`txt`,
-					`day`,
-					`private`,
-					`history`,
-					`viewer_id_add`
-				) VALUES (
-					".WS_ID.",
-					".$client_id.",
-					".$zayav_id.",
-					'".$txt."',
-					'".$_POST['day']."',
-					".$private.",
-					'".FullDataTime(curTime())." "._viewer(VIEWER_ID, 'name')." создал задание.',
-					".VIEWER_ID."
-				)";
-		query($sql);
-		history_insert(array(
-			'type' => 20,
-			'client_id' => $client_id,
-			'zayav_id' => $zayav_id
-		));
-		$filter = array();
-		if(isset($_POST['from_zayav']) && $zayav_id)
-			$filter['zayav'] = $zayav_id;
-		if(isset($_POST['from_client']) && $client_id)
-			$filter['client'] = $client_id;
-		$send['html'] = utf8(remind_spisok(remind_data(1, $filter)));
-		xcache_unset(CACHE_PREFIX.'remind_active'.WS_ID);
-		jsonSuccess($send);
-		break;
-	case 'remind_next':
-		if(!preg_match(REGEXP_NUMERIC, $_POST['page']))
-			jsonError();
-		if(!preg_match(REGEXP_NUMERIC, $_POST['status']))
-			jsonError();
-		if(!preg_match(REGEXP_BOOL, $_POST['private']))
-			jsonError();
-		$filter = array(
-			'status' => intval($_POST['status']),
-			'private' => intval($_POST['private'])
-		);
-		$send['html'] = utf8(remind_spisok(remind_data(intval($_POST['page']), $filter)));
-		jsonSuccess($send);
-		break;
-	case 'report_remind_get':
-		if(!preg_match(REGEXP_NUMERIC, $_POST['id']))
-			jsonError();
-		$sql = "SELECT
-					`client_id`,
-					`zayav_id`,
-					`txt`,
-					`day`,
-					`dtime_add` AS `dtime`,
-					`viewer_id_add`
-				FROM `reminder` WHERE `id`=".intval($_POST['id'])." AND `status`=1";
-		if(!$r = mysql_fetch_assoc(query($sql)))
-			jsonError();
-		$r['viewer'] = utf8(_viewer($r['viewer_id_add'], 'link'));
-		if($r['client_id'] > 0)
-			$r['client'] = utf8(_clientLink($r['client_id']));
-		if($r['zayav_id'] > 0)
-			$r['zayav'] = utf8(_zayavNomerLink($r['zayav_id'], 1));
-		$r['txt'] = utf8($r['txt']);
-		$r['dtime'] = utf8(FullDataTime($r['dtime']));
-		unset($r['client_id']);
-		unset($r['zayav_id']);
-		unset($r['viewer_id_add']);
-		jsonSuccess($r);
-		break;
-	case 'report_remind_edit':
-		if(!preg_match(REGEXP_NUMERIC, $_POST['id']))
-			jsonError();
-		if(!preg_match(REGEXP_NUMERIC, $_POST['status']))
-			jsonError();
-		if(!preg_match(REGEXP_NUMERIC, $_POST['action']))
-			jsonError();
-		if(!preg_match(REGEXP_DATE, $_POST['day']))
-			jsonError();
-		if(!preg_match(REGEXP_NUMERIC, $_POST['from_zayav']))
-			jsonError();
-		if(!preg_match(REGEXP_NUMERIC, $_POST['from_client']))
-			jsonError();
-		$history = win1251(htmlspecialchars(trim($_POST['history'])));
-		$action = '';
-		switch($_POST['action']) {
-			case 1: $action = " указал новую дату: ".FullData($_POST['day']).". Причина: ".$history; break;
-			case 2: $action = " выполнил задание.".($history ? " (".$history.")" : ''); break;
-			case 3: $action = " отменил задание. Причина: ".$history; break;
-		}
-		$sql = "UPDATE `reminder`
-				SET `day`='".$_POST['day']."',
-					`status`=".$_POST['status'].",
-					`history`=CONCAT(`history`,'<BR>".FullDataTime(curTime())." "._viewer(VIEWER_ID, 'name').$action."')
-				WHERE `id`=".intval($_POST['id']);
-		query($sql);
-		$filter = array();
-		if($_POST['from_zayav'])
-			$filter['zayav'] = $_POST['from_zayav'];
-		if($_POST['from_client'])
-			$filter['client'] = $_POST['from_client'];
-		$data = remind_data(1, $filter);
-		$html = remind_spisok($data);
-		if(empty($data) && !isset($filter['zayav']))
-			$html = '<div class="_empty">Заданий нет.</div>';
-		$send['html'] = utf8($html);
-		xcache_unset(CACHE_PREFIX.'remind_active'.WS_ID);
-		jsonSuccess($send);
-		break;
-
 	case 'income_spisok':
 		$data = income_spisok($_POST);
 		$send['html'] = utf8($data['spisok']);
@@ -1996,23 +1818,21 @@ switch(@$_POST['op']) {
 		break;
 
 	case 'invoice_set':
-		if(!preg_match(REGEXP_NUMERIC, $_POST['invoice_id']) || !$_POST['invoice_id'])
+		if(!$invoice_id = _isnum($_POST['invoice_id']))
 			jsonError();
-		if(!preg_match(REGEXP_CENA, $_POST['sum']))
+		if(!$sum = _cena($_POST['sum']))
 			jsonError();
 
-		$invoice_id = intval($_POST['invoice_id']);
-		$sum = round(str_replace(',', '.', $_POST['sum']), 2);
-
-		$sql = "SELECT * FROM `invoice` WHERE `id`=".$invoice_id;
+		$sql = "SELECT * FROM `invoice` WHERE `ws_id`=".WS_ID." AND `id`=".$invoice_id;
 		if(!$r = mysql_fetch_assoc(query($sql)))
 			jsonError();
 
-		if($r['start'] != -1 && !VIEWER_ADMIN)
+		//if($r['start'] != -1 && !VIEWER_ADMIN)
+		if($r['start'] != -1)
 			jsonError();
 
 		query("UPDATE `invoice` SET `start`="._invoiceBalans($invoice_id, $sum)." WHERE `id`=".$invoice_id);
-		xcache_unset(CACHE_PREFIX.'invoice');
+		xcache_unset(CACHE_PREFIX.'invoice'.WS_ID);
 		invoice_history_insert(array(
 			'action' => 5,
 			'invoice_id' => $invoice_id
@@ -2039,7 +1859,7 @@ switch(@$_POST['op']) {
 			jsonError();
 
 		query("UPDATE `invoice` SET `start`=-1 WHERE `id`=".$invoice_id);
-		xcache_unset(CACHE_PREFIX.'invoice');
+		xcache_unset(CACHE_PREFIX.'invoice'.WS_ID);
 
 		history_insert(array(
 			'type' => 53,
@@ -2074,6 +1894,7 @@ switch(@$_POST['op']) {
 		$invoice_from = $from > 100 ? 0 : $from;
 		$invoice_to = $to > 100 ? 0 : $to;
 		$sql = "INSERT INTO `invoice_transfer` (
+					`ws_id`,
 					`invoice_from`,
 					`invoice_to`,
 					`worker_from`,
@@ -2082,6 +1903,7 @@ switch(@$_POST['op']) {
 					`about`,
 					`viewer_id_add`
 				) VALUES (
+					".WS_ID.",
 					".$invoice_from.",
 					".$invoice_to.",
 					".($from > 100 ? $from : 0).",

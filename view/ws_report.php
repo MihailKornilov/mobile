@@ -1,13 +1,13 @@
 <?php
 
 // ---===! report !===--- Секция отчётов
-
+/*
 function report() {
 	$d = empty($_GET['d']) ? 'history' : $_GET['d'];
 	$d1 = '';
 	$pages = array(
 		'history' => 'История действий',
-		'remind' => 'Задания'.REMIND_ACTIVE.'<div class="img_add report_remind_add"></div>',
+		'remind' => 'Напоминания'.REMIND_ACTIVE.'<div class="img_add _remind-add"></div>',
 		'money' => 'Деньги',
 		'salary' => 'З/п сотрудников',
 		'stat' => 'Статистика'
@@ -28,9 +28,9 @@ function report() {
 			$right .= history_right();
 			break;
 		case 'remind':
-			$data = remind_data();
-			$left = !empty($data) ? remind_spisok($data) : '<div class="_empty">Заданий нет.</div>';
-			$right .= remind_right();
+			$remind = _remind();
+			$left = $remind['spisok'];
+			$right .= $remind['right'];
 			break;
 		case 'money':
 			$d1 = empty($_GET['d1']) ? 'income' : $_GET['d1'];
@@ -94,11 +94,110 @@ function report() {
 
 	return
 	'<table class="tabLR '.($d1 ? $d1 : $d).'" id="report">'.
-		'<tr><td class="left">'.$left.
+		'<tr><td class="left"'.($d == 'remind' ? ' id="remind-spisok"' : '').'>'.$left.
 			'<td class="right">'.
 				$rightLink.
 				$right.
 	'</table>';
+}//report()
+*/
+function report() {
+	$d = empty($_GET['d']) ? 'history' : $_GET['d'];
+	$d1 = '';
+	$pages = array(
+		'history' => 'История действий',
+		'remind' => 'Напоминания'.REMIND_ACTIVE.'<div class="img_add _remind-add"></div>',
+		'money' => 'Деньги',
+		'salary' => 'З/п сотрудников',
+		'stat' => 'Статистика'
+	);
+
+	$rightLink = '<div class="rightLink">';
+	if($pages)
+		foreach($pages as $p => $name)
+			$rightLink .= '<a href="'.URL.'&p=report&d='.$p.'"'.($d == $p ? ' class="sel"' : '').'>'.$name.'</a>';
+	$rightLink .= '</div>';
+
+	$right = '';
+	switch($d) {
+		default: $d = 'history';
+		case 'histoty':
+			$data = history();
+			$left = $data['spisok'];
+			$right .= history_right();
+			break;
+		case 'remind':
+			$remind = _remind();
+			$left = $remind['spisok'];
+			$right .= $remind['right'];
+			break;
+		case 'money':
+			$d1 = empty($_GET['d1']) ? 'income' : $_GET['d1'];
+			switch($d1) {
+				default:
+					$d1 = 'income';
+					switch(@$_GET['d2']) {
+						case 'all': $left = income_all(); break;
+						case 'year':
+							if(empty($_GET['year']) || !preg_match(REGEXP_YEAR, $_GET['year'])) {
+								$left = 'Указан некорректный год.';
+								break;
+							}
+							$left = income_year(intval($_GET['year']));
+							break;
+						case 'month':
+							if(empty($_GET['mon']) || !preg_match(REGEXP_YEARMONTH, $_GET['mon'])) {
+								$left = 'Указан некорректный месяц.';
+								break;
+							}
+							$left = income_month($_GET['mon']);
+							break;
+						default:
+							if(!_calendarDataCheck(@$_GET['day']))
+								$_GET['day'] = _calendarWeek();
+							$left = income_day($_GET['day']);
+							$right = income_right($_GET['day']);
+					}
+					break;
+				case 'expense':
+					$left = expense();
+					$right .= expense_right();
+					break;
+				case 'invoice': $left = invoice(); break;
+			}
+			$left =
+				'<div id="dopLinks">'.
+				'<a class="link'.($d1 == 'income' ? ' sel' : '').'" href="'.URL.'&p=report&d=money&d1=income">Платежи</a>'.
+				'<a class="link'.($d1 == 'expense' ? ' sel' : '').'" href="'.URL.'&p=report&d=money&d1=expense">Расходы</a>'.
+				'<a class="link'.($d1 == 'invoice' ? ' sel' : '').'" href="'.URL.'&p=report&d=money&d1=invoice">Счета</a>'.
+				'</div>'.
+				$left;
+			break;
+		case 'salary':
+			if($worker_id = _isnum(@$_GET['id'])) {
+				$v = salaryFilter(array(
+					'worker_id' => $worker_id,
+					'mon' => intval(@$_GET['mon']),
+					'year' => intval(@$_GET['year']),
+					'acc_id' => intval(@$_GET['acc_id'])
+				));
+				$left = salary_worker($v);
+				if(defined('WORKER_OK'))
+					$right = '<input type="hidden" id="year" value="'.$v['year'].'" />'.
+						'<div id="monthList">'.salary_monthList($v).'</div>';
+			} else
+				$left = salary();
+			break;
+		case 'stat': $left = statistic(); break;
+	}
+
+	return
+		'<table class="tabLR '.($d1 ? $d1 : $d).'" id="report">'.
+		'<tr><td class="left">'.$left.
+			'<td class="right">'.
+				$rightLink.
+				$right.
+		'</table>';
 }//report()
 
 function history_insert($v) {
@@ -298,111 +397,6 @@ function history($v=array()) {
 	);
 }//history()
 
-function remind_right() {
-	return
-		'<div class="findHead">Категории заданий</div>'.
-		_radio('status', array(1=>'Активные',2=>'Выполнены',0=>'Отменены'), 1, 1).
-		_check('private', 'Личное');
-}//remind_right()
-function remind_data($page=1, $filter=array()) {
-	$cond = "`ws_id`=".WS_ID." AND `status`=".(isset($filter['status']) ? intval($filter['status']) : 1);
-	if(!empty($filter['private']))
-		$cond .= " AND `private`=1";
-	if(!empty($filter['zayav']))
-		$cond .= " AND `zayav_id`=".intval($filter['zayav']);
-	if(!empty($filter['client'])) {
-		$client_id = intval($filter['client']);
-		$cond .= " AND `client_id`=".$client_id;
-		$sql = "SELECT `id` FROM `zayav` WHERE `ws_id`=".WS_ID." AND `zayav_status`>0 AND `client_id`=".$client_id;
-		$q = query($sql);
-		$zayav_ids = array();
-		while($r = mysql_fetch_assoc($q))
-			$zayav_ids[] = $r['id'];
-		if(!empty($zayav_ids))
-			$cond .= " OR `ws_id`=".WS_ID." AND `status`=1 AND `zayav_id` IN (".implode(',', $zayav_ids).")";
-	}
-	$send['all'] = query_value("SELECT COUNT(`id`) FROM `reminder` WHERE ".$cond);
-	if(!$send['all'])
-		return array();
-
-	$limit = 20;
-	$start = ($page - 1) * $limit;
-	$sql = "SELECT *
-			FROM `reminder`
-			WHERE ".$cond."
-			ORDER BY `day` ASC,`id` DESC
-			LIMIT ".$start.",".$limit;
-	$q = query($sql);
-	$send['spisok'] = array();
-	while($r = mysql_fetch_assoc($q))
-		$send['spisok'][$r['id']] = $r;
-	$send['spisok'] = _clientLink($send['spisok']);
-	$send['spisok'] = _zayavNomerLink($send['spisok']);
-	if($start + $limit < $send['all']) {
-		$send['page'] = ++$page;
-		$c = $send['all'] - $start - $limit;
-		$send['c'] = $c > $limit ? $limit : $c;
-	}
-	$send['filter'] = $filter;
-	return $send;
-}//remind_data()
-function remind_spisok($data) {
-	if(empty($data['spisok']))
-		return '';
-	$send = '';
-	$today = strtotime(strftime("%Y-%m-%d", time()));
-	foreach($data['spisok'] as $r) {
-		$day_leave = (strtotime($r['day']) - $today) / 3600 / 24;
-		$leave = '';
-		if($day_leave < 0)
-			$leave = 'просрочен'._end($day_leave * -1, ' ', 'о ').round($day_leave * -1)._end($day_leave * -1, ' день', ' дня', ' дней');
-		elseif($day_leave > 2)
-			$leave = 'остал'._end($day_leave, 'ся ', 'ось ').$day_leave._end($day_leave, ' день', ' дня', ' дней');
-		else
-			switch($day_leave) {
-				case 0: $leave = 'сегодня'; break;
-				case 1: $leave = 'завтра'; break;
-				case 2: $leave = 'послезавтра'; break;
-			}
-
-		if($r['status'] == 0) $color = 'grey';
-		elseif($r['status'] == 2) $color = 'green';
-		elseif($day_leave > 0) $color = 'blue';
-		elseif($day_leave < 0) $color = 'redd';
-		else $color = 'yellow';
-		// состояние задачи
-		switch($r['status']) {
-			case 2: $rem_cond = "<EM>Выполнено.</EM>"; break;
-			case 0: $rem_cond = "<EM>Отменено.</EM>"; break;
-			default:
-				$rem_cond = '<EM>Выполнить '.($day_leave == 0 ? '' : 'до ').'</EM>'.
-					($day_leave >= 0 && $day_leave < 3 ? $leave : FullData($r['day'], 1)).
-					($day_leave > 2 || $day_leave < 0 ? '<SPAN>, '.$leave.'</SPAN>' : '');
-		}
-		$send .= '<div class="remind_unit '.$color.'">'.
-			'<div class="txt">'.
-				($r['private'] ? '<u>Личное.</u> ' : '').
-				($r['client_id'] && empty($data['filter']['client']) ? 'Клиент '.$r['client_link'].': ' : '').
-				($r['zayav_id'] && empty($data['filter']['zayav']) ? 'Заявка '.@$r['zayav_link'].': ' : '').
-				'<b>'.$r['txt'].'</b>'.
-			'</div>'.
-			'<div class="day">'.
-				'<div class="action">'.
-					($r['status'] == 1 ? '<a class="edit" val="'.$r['id'].'">Действие</a> :: ' : '').
-					'<a class="hist_a">История</a>'.
-				'</div>'.
-				$rem_cond.
-				'<div class="hist">'.$r['history'].'</div>'.
-			'</div>'.
-		'</div>';
-	}
-	if(isset($data['page']))
-		$send .= '<div class="_next" id="remind_next" val="'.$data['page'].'">'.
-					'<span>Показать ещё '.$data['c'].' задани'._end($data['c'], 'е', 'я', 'й').'</span>'.
-				 '</div>';
-	return $send;
-}//remind_spisok()
-
 function income_path($data) {
 	$ex = explode(':', $data);
 	$d = explode('-', $ex[0]);
@@ -426,7 +420,8 @@ function income_all() {//Суммы платежей по годам
 	$sql = "SELECT DATE_FORMAT(`dtime_add`,'%Y') AS `year`,
 				   SUM(`sum`) AS `sum`
 			FROM `money`
-			WHERE !`deleted`
+			WHERE `ws_id`=".WS_ID."
+			  AND !`deleted`
 			  AND `sum`<0
 			GROUP BY DATE_FORMAT(`dtime_add`,'%Y')
 			ORDER BY `dtime_add` ASC";
@@ -438,7 +433,8 @@ function income_all() {//Суммы платежей по годам
 	$sql = "SELECT DATE_FORMAT(`dtime_add`,'%Y') AS `year`,
 				   SUM(`sum`) AS `sum`
 			FROM `money`
-			WHERE !`deleted`
+			WHERE `ws_id`=".WS_ID."
+			  AND !`deleted`
 			  AND `sum`>0
 			GROUP BY DATE_FORMAT(`dtime_add`,'%Y')
 			ORDER BY `dtime_add` ASC";
@@ -465,7 +461,8 @@ function income_year($year) {//Суммы платежей по месяцам
 	$sql = "SELECT DATE_FORMAT(`dtime_add`,'%m') AS `mon`,
 				   SUM(`sum`) AS `sum`
 			FROM `money`
-			WHERE !`deleted`
+			WHERE `ws_id`=".WS_ID."
+			  AND !`deleted`
 			  AND `sum`<0
 			  AND `dtime_add` LIKE '".$year."%'
 			GROUP BY DATE_FORMAT(`dtime_add`,'%m')
@@ -484,7 +481,8 @@ function income_year($year) {//Суммы платежей по месяцам
 	$sql = "SELECT DATE_FORMAT(`dtime_add`,'%m') AS `mon`,
 				   SUM(`sum`) AS `sum`
 			FROM `money`
-			WHERE !`deleted`
+			WHERE `ws_id`=".WS_ID."
+			  AND !`deleted`
 			  AND `sum`>0
 			  AND `dtime_add` LIKE '".$year."%'
 			GROUP BY DATE_FORMAT(`dtime_add`,'%m')
@@ -518,7 +516,8 @@ function income_month($mon) {
 	$sql = "SELECT DATE_FORMAT(`dtime_add`,'%d') AS `day`,
 				   SUM(`sum`) AS `sum`
 			FROM `money`
-			WHERE `deleted`=0
+			WHERE `ws_id`=".WS_ID."
+			  AND !`deleted`
 			  AND `sum`>0
 			  AND `dtime_add` LIKE '".$mon."%'
 			GROUP BY DATE_FORMAT(`dtime_add`,'%d')
@@ -541,7 +540,8 @@ function income_month($mon) {
 function income_days($month=0) {
 	$sql = "SELECT DATE_FORMAT(`dtime_add`,'%Y-%m-%d') AS `day`
 			FROM `money`
-			WHERE !`deleted`
+			WHERE `ws_id`=".WS_ID."
+			  AND !`deleted`
 			  AND `sum`>0
 			  AND `dtime_add` LIKE ('".($month ? $month : strftime('%Y-%m'))."%')
 			GROUP BY DATE_FORMAT(`dtime_add`,'%d')";
@@ -663,7 +663,7 @@ function income_unit($r) {
 	return
 		'<tr'.($r['deleted'] ? ' class="deleted"' : '').' val="'.$r['id'].'">'.
 			'<td class="sum">'._sumSpace($r['sum']).
-			'<td>'.$about.
+			'<td><span class="type">'._invoice($r['invoice_id']).':</span> '.$about.
 			'<td class="dtime'._tooltip(viewerAdded($r['viewer_id_add']), -20).FullDataTime($r['dtime_add']).
 			'<td class="ed">'.
 				'<div class="img_del income-del'._tooltip('Удалить платёж', -54).'</div>'.
@@ -884,9 +884,9 @@ function expense_spisok($v=array()) {
 function _invoiceBalans($invoice_id, $start=false) {// Получение текущего баланса счёта
 	if($start === false)
 		$start = _invoice($invoice_id, 'start');
-	$income = query_value("SELECT IFNULL(SUM(`sum`),0) FROM `money` WHERE !`deleted` AND `invoice_id`=".$invoice_id);
-	$from = query_value("SELECT IFNULL(SUM(`sum`),0) FROM `invoice_transfer` WHERE `invoice_from`=".$invoice_id);
-	$to = query_value("SELECT IFNULL(SUM(`sum`),0) FROM `invoice_transfer` WHERE `invoice_to`=".$invoice_id);
+	$income = query_value("SELECT IFNULL(SUM(`sum`),0) FROM `money` WHERE !`deleted` AND `ws_id`=".WS_ID." AND `invoice_id`=".$invoice_id);
+	$from = query_value("SELECT IFNULL(SUM(`sum`),0) FROM `invoice_transfer` WHERE `ws_id`=".WS_ID." AND `invoice_from`=".$invoice_id);
+	$to = query_value("SELECT IFNULL(SUM(`sum`),0) FROM `invoice_transfer` WHERE `ws_id`=".WS_ID." AND `invoice_to`=".$invoice_id);
 	return round($income - $start - $from + $to, 2);
 }//_invoiceBalans()
 function invoice() {
@@ -916,9 +916,8 @@ function invoice_spisok() {
 			'<td class="balans"><b>'._sumSpace(_invoiceBalans($r['id'])).'</b> руб.'.
 			'<td><div val="'.$r['id'].'" class="img_note'._tooltip('Посмотреть историю операций', -95).'</div>'
 		: '').
-		(VIEWER_ADMIN || $r['start'] != -1 ?
-			'<td><a class="invoice_set" val="'.$r['id'].'">Установить<br />текущую<br />сумму</a>'
-		: '').
+		//(VIEWER_ADMIN || $r['start'] != -1 ?
+			'<td><a class="invoice_set" val="'.$r['id'].'">Установить<br />текущую<br />сумму</a>'.
 		(VIEWER_ADMIN && $r['start'] != -1 ?
 			'<td><a class="invoice_reset" val="'.$r['id'].'">Сбросить<br />сумму</a>'
 		: '');
@@ -934,7 +933,7 @@ function transfer_spisok($v=array()) {
 	);
 	$sql = "SELECT *
 	        FROM `invoice_transfer`
-	        WHERE `id`
+	        WHERE `ws_id`=".WS_ID."
 	        ORDER BY `id` DESC";
 	$q = query($sql);
 	$send = '<table class="_spisok _money">'.
@@ -968,7 +967,7 @@ function invoice_history($v) {
 				'<input type="hidden" id="invoice_history_id" value="'.$v['invoice_id'].'" />'
 			: '';
 
-	$all = query_value("SELECT COUNT(*) FROM `invoice_history` WHERE `invoice_id`=".$v['invoice_id']);
+	$all = query_value("SELECT COUNT(*) FROM `invoice_history` WHERE `ws_id`=".WS_ID." AND `invoice_id`=".$v['invoice_id']);
 	if(!$all)
 		return $send.'<br />Истории нет.';
 
@@ -985,10 +984,11 @@ function invoice_history($v) {
 				   IFNULL(`i`.`worker_to`,0) AS `worker_to`
 			FROM `invoice_history` `h`
 				LEFT JOIN `money` `m`
-				ON `h`.`table`='money' AND `h`.`table_id`=`m`.`id`
+				ON `m`.`ws_id`=".WS_ID." AND `h`.`table`='money' AND `h`.`table_id`=`m`.`id`
 				LEFT JOIN `invoice_transfer` `i`
-				ON `h`.`table`='invoice_transfer' AND `h`.`table_id`=`i`.`id`
-			WHERE `h`.`invoice_id`=".$v['invoice_id']."
+				ON `i`.`ws_id`=".WS_ID." AND `h`.`table`='invoice_transfer' AND `h`.`table_id`=`i`.`id`
+			WHERE `h`.`ws_id`=".WS_ID."
+			  AND `h`.`invoice_id`=".$v['invoice_id']."
 			ORDER BY `h`.`id` DESC
 			LIMIT ".$start.",".$v['limit'];
 	$q = query($sql);
@@ -1099,6 +1099,7 @@ function invoice_history_insert($v) {
 		'worker_id' => empty($v['worker_id']) ? 0 : $v['worker_id'],
 		'invoice_id' => empty($v['invoice_id']) ? 0 : $v['invoice_id']
 	);
+
 	if($v['table']) {
 		$r = query_assoc("SELECT * FROM `".$v['table']."` WHERE `id`=".$v['id']);
 		$v['sum'] = abs($r['sum']);
@@ -1135,6 +1136,7 @@ function invoice_history_insert_sql($invoice_id, $v) {
 	if(_invoice($invoice_id, 'start') == -1)
 		return;
 	$sql = "INSERT INTO `invoice_history` (
+				`ws_id`,
 				`action`,
 				`table`,
 				`table_id`,
@@ -1143,7 +1145,8 @@ function invoice_history_insert_sql($invoice_id, $v) {
 				`balans`,
 				`viewer_id_add`
 			) VALUES (
-				".$v['action'].",
+				".WS_ID.",
+				'".$v['action']."',
 				'".$v['table']."',
 				".$v['id'].",
 				".$invoice_id.",
@@ -1159,7 +1162,8 @@ function statistic() {
 				SUM(`sum`) AS `sum`,
 				DATE_FORMAT(`dtime_add`, '%Y-%m-15') AS `dtime`
 			FROM `money`
-			WHERE !`deleted`
+			WHERE `ws_id`=".WS_ID."
+			  AND !`deleted`
 			  AND `sum`>0
 			GROUP BY DATE_FORMAT(`dtime_add`, '%Y-%m')
 			ORDER BY `dtime_add`";
@@ -1172,7 +1176,8 @@ function statistic() {
 				SUM(`sum`)*-1 AS `sum`,
 				DATE_FORMAT(`dtime_add`, '%Y-%m-15') AS `dtime`
 			FROM `money`
-			WHERE !`deleted`
+			WHERE `ws_id`=".WS_ID."
+			  AND !`deleted`
 			  AND `sum`<0
 			GROUP BY DATE_FORMAT(`dtime_add`, '%Y-%m')
 			ORDER BY `dtime_add`";
@@ -1185,6 +1190,7 @@ function statistic() {
 				COUNT(`id`) AS `count`,
 				DATE_FORMAT(`dtime_add`, '%Y-%m-15') AS `mon`
 			FROM `client`
+			WHERE `ws_id`=".WS_ID."
 			GROUP BY DATE_FORMAT(`dtime_add`, '%Y-%m')
 			ORDER BY `dtime_add`";
 	$q = query($sql);
@@ -1197,7 +1203,8 @@ function statistic() {
 				COUNT(`id`) AS `count`,
 				DATE_FORMAT(`dtime_add`, '%Y-%m-%d') AS `day`
 			FROM `zayav`
-			WHERE !`deleted`
+			WHERE `ws_id`=".WS_ID."
+			  AND !`deleted`
 			GROUP BY DATE_FORMAT(`dtime_add`, '%Y-%m-%d')
 			ORDER BY `dtime_add`";
 	$q = query($sql);
@@ -1210,7 +1217,8 @@ function statistic() {
 				COUNT(`id`) AS `count`,
 				DATE_FORMAT(`zayav_status_dtime`, '%Y-%m-%d') AS `day`
 			FROM `zayav`
-			WHERE !`deleted`
+			WHERE `ws_id`=".WS_ID."
+			  AND !`deleted`
 			  AND `zayav_status`=2
 			GROUP BY DATE_FORMAT(`zayav_status_dtime`, '%Y-%m-%d')
 			ORDER BY `zayav_status_dtime`";
@@ -1224,7 +1232,8 @@ function statistic() {
 				COUNT(`id`) AS `count`,
 				DATE_FORMAT(`zayav_status_dtime`, '%Y-%m-%d') AS `day`
 			FROM `zayav`
-			WHERE !`deleted`
+			WHERE `ws_id`=".WS_ID."
+			  AND !`deleted`
 			  AND `zayav_status`=3
 			GROUP BY DATE_FORMAT(`zayav_status_dtime`, '%Y-%m-%d')
 			ORDER BY `zayav_status_dtime`";
@@ -1238,7 +1247,8 @@ function statistic() {
 				COUNT(`id`) AS `count`,
 				DATE_FORMAT(`device_place_dtime`, '%Y-%m-%d') AS `day`
 			FROM `zayav`
-			WHERE !`deleted`
+			WHERE `ws_id`=".WS_ID."
+			  AND !`deleted`
 			  AND `device_place`=2
 			  AND `device_place_dtime`!='0000-00-00 00:00:00'
 			GROUP BY DATE_FORMAT(`device_place_dtime`, '%Y-%m-%d')
@@ -1255,7 +1265,8 @@ function statistic() {
 				COUNT(`id`) AS `count`,
 				DATE_FORMAT(`dtime_add`, '%Y-%m-15') AS `mon`
 			FROM `zayav`
-			WHERE !`deleted`
+			WHERE `ws_id`=".WS_ID."
+			  AND !`deleted`
 			GROUP BY DATE_FORMAT(`dtime_add`, '%Y-%m')
 			ORDER BY `dtime_add`";
 	$q = query($sql);
@@ -1268,7 +1279,8 @@ function statistic() {
 				COUNT(`id`) AS `count`,
 				DATE_FORMAT(`zayav_status_dtime`, '%Y-%m-15') AS `mon`
 			FROM `zayav`
-			WHERE !`deleted`
+			WHERE `ws_id`=".WS_ID."
+			  AND !`deleted`
 			  AND `zayav_status`=2
 			GROUP BY DATE_FORMAT(`zayav_status_dtime`, '%Y-%m')
 			ORDER BY `zayav_status_dtime`";
@@ -1282,7 +1294,8 @@ function statistic() {
 				COUNT(`id`) AS `count`,
 				DATE_FORMAT(`zayav_status_dtime`, '%Y-%m-15') AS `mon`
 			FROM `zayav`
-			WHERE !`deleted`
+			WHERE `ws_id`=".WS_ID."
+			  AND !`deleted`
 			  AND `zayav_status`=3
 			GROUP BY DATE_FORMAT(`zayav_status_dtime`, '%Y-%m')
 			ORDER BY `zayav_status_dtime`";
@@ -1296,7 +1309,8 @@ function statistic() {
 				COUNT(`id`) AS `count`,
 				DATE_FORMAT(`device_place_dtime`, '%Y-%m-15') AS `mon`
 			FROM `zayav`
-			WHERE !`deleted`
+			WHERE `ws_id`=".WS_ID."
+			  AND !`deleted`
 			  AND `device_place`=2
 			  AND `device_place_dtime`!='0000-00-00 00:00:00'
 			GROUP BY DATE_FORMAT(`device_place_dtime`, '%Y-%m')
@@ -1346,6 +1360,7 @@ function salary_spisok() {
 			FROM `vk_user` AS `u`
 				LEFT JOIN `money` AS `m`
 				ON `u`.`viewer_id`=`m`.`worker_id`
+					AND `m`.`ws_id`=".WS_ID."
 					AND !`m`.`deleted`
 					AND `m`.`worker_id`
 					AND `m`.`sum`<0
@@ -1364,6 +1379,7 @@ function salary_spisok() {
 			FROM `zayav_expense` AS `e`,
 			 	 `zayav` AS `z`
 			WHERE `z`.`ws_id`=".WS_ID."
+			  AND `e`.`ws_id`=".WS_ID."
 			  AND `e`.`worker_id`
 			  AND `z`.`id`=`e`.`zayav_id`
 			  AND !`z`.`deleted`
@@ -1379,6 +1395,7 @@ function salary_spisok() {
 			FROM `vk_user` AS `u`
 				LEFT JOIN `zayav_expense` AS `e`
 				ON `u`.`viewer_id`=`e`.`worker_id`
+					AND `e`.`ws_id`=".WS_ID."
 					AND `e`.`worker_id`
 					AND !`e`.`zayav_id`
 			WHERE `u`.`ws_id`=".WS_ID."
@@ -1417,7 +1434,8 @@ function salary_monthList($v) {
 	            `mon`,
 				SUM(`sum`) AS `sum`
 			FROM `zayav_expense`
-			WHERE `worker_id`=".$filter['worker_id']."
+			WHERE `ws_id`=".WS_ID."
+			  AND `worker_id`=".$filter['worker_id']."
 			  AND `year`=".$filter['year']."
 			GROUP BY `mon`";
 	$q = query($sql);
@@ -1429,7 +1447,8 @@ function salary_monthList($v) {
 	            `mon`,
 				SUM(`sum`) AS `sum`
 			FROM `money`
-			WHERE !`deleted`
+			WHERE `ws_id`=".WS_ID."
+			  AND !`deleted`
 			  AND `worker_id`=".$filter['worker_id']."
 			  AND `year`=".$filter['year']."
 			GROUP BY `mon`";
@@ -1675,7 +1694,8 @@ function salary_worker_bonus($worker_id, $year, $week) {// формирование бонуса п
 
 	$sql = "SELECT *
 			FROM `money`
-			WHERE !`deleted`
+			WHERE `ws_id`=".WS_ID."
+			  AND !`deleted`
 			  AND `sum`>0
 			  AND `dtime_add`>'".$first_day." 00:00:00'
 			  AND `dtime_add`<='".$last_day." 23:59:59'

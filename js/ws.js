@@ -469,18 +469,6 @@ var AJAX_WS = APP_HTML + '/ajax/ws.php?' + VALUES,
 		}, 'json');
 	},
 
-	remindSpisok = function() {
-		var send = {
-			op:'remind_spisok',
-			status:$('#status').val(),
-			private:$('#private').val()
-		};
-		$('#mainLinks').addClass('busy');
-		$.post(AJAX_WS, send, function (res) {
-			$('.left').html(res.html);
-			$('#mainLinks').removeClass('busy');
-		}, 'json');
-	},
 	incomeSpisok = function() {
 		var send = {
 			op:'income_spisok',
@@ -1360,7 +1348,6 @@ $(document)
 						if($('#zayav').length)
 							zayavSpisok();
 					}
-
 				}, 'json');
 			});
 	})
@@ -1513,10 +1500,13 @@ $(document)
 				$('#pre_cost').focus();
 			} else {
 				dialog.process();
-				$.post(AJAX_WS, send, function (res) {
-					dialog.close();
-					_msg('Данные изменены!');
-					document.location.reload();
+				$.post(AJAX_WS, send, function(res) {
+					if(res.success) {
+						dialog.close();
+						_msg('Данные изменены!');
+						document.location.reload();
+					} else
+						dialog.abort();
 				}, 'json');
 			}
 			if(msg)
@@ -1535,7 +1525,7 @@ $(document)
 			'<tr><td class="label top">Описание задания:<td><TEXTAREA id="txt"></TEXTAREA>' +
 			'<tr><td class="label">Крайний день выполнения:<td><input type="hidden" id="data">' +
 			'<tr><td class="label">Личное:<td><input type="hidden" id="private">' +
-		'</table>';
+			'</table>';
 		var dialog = _dialog({
 				top:60,
 				width:480,
@@ -1559,14 +1549,14 @@ $(document)
 
 		function submit() {
 			var send = {
-					op:'report_remind_add',
-					from_zayav:1,
-					client_id:0,
-					zayav_id:ZAYAV.id,
-					txt:txt.val(),
-					day:day.val(),
-					private:priv.val()
-				};
+				op:'report_remind_add',
+				from_zayav:1,
+				client_id:0,
+				zayav_id:ZAYAV.id,
+				txt:txt.val(),
+				day:day.val(),
+				private:priv.val()
+			};
 			if(!send.txt) {
 				dialog.bottom.vkHint({
 					msg:'<SPAN class=red>Не указано содержание напоминания.</SPAN>',
@@ -1649,7 +1639,7 @@ $(document)
 							$('#status_dtime').html(res.status.dtime);
 						}
 						if(res.remind)
-							$('#remind_spisok').html(res.remind);
+							$('#remind-spisok').html(res.remind);
 					}
 				}, 'json');
 			}
@@ -2575,225 +2565,6 @@ $(document)
 		return false;
 	})
 
-	.on('click', '.remind_unit .hist_a', function() {
-		$(this).parent().parent().find('.hist').slideToggle();
-	})
-	.on('click', '.report_remind_add', function() {
-		var html = '<table class="remind_add_tab">' +
-			'<tr><td class="label">Назначение:<td><input type="hidden" id="destination" />' +
-			'<tr><td class="label topi" id="target_name"><td id="target">' +
-			'</table>' +
-
-			'<table class="remind_add_tab" id="tab_content">' +
-			'<tr><td class="label top">Задание:<td><TEXTAREA id=txt></TEXTAREA>' +
-			'<tr><td class="label">Крайний день выполнения:<td><input type="hidden" id="data" />' +
-			'<tr><td class="label">Личное:<td><input type="hidden" id="priv" />' +
-			'</table>';
-		var dialog = _dialog({
-			top:30,
-			width:480,
-			head:'Добавление нового задания',
-			content:html,
-			butSubmit:'Добавить',
-			submit:submit
-		});
-
-		$('#destination')._select({
-			width:150,
-			title0:'Не указано',
-			spisok:[
-				{uid:1,title:'Клиент'},
-				{uid:2,title:'Заявка'},
-				{uid:3,title:'Произвольное задание'}
-			],
-			func:destination
-		});
-
-		$('#txt').autosize();
-		$('#data')._calendar();
-		$('#priv')._check();
-		$('#priv_check').vkHint({
-			msg:'Задание сможете<br />видеть только Вы.',
-			top:-71,
-			left:-11,
-			indent:'left',
-			delayShow:1000
-		});
-
-		function destination(id) {
-			$('#target').html('');
-			$('#target_name').html('');
-			$('#txt').val('');
-			$('#tab_content').css('display', id > 0 ? 'block' : 'none');
-			if(id == 1) {
-				$('#target_name').html('Клиент:');
-				$('#target').html('<div id="client_id"></div>');
-				$('#client_id').clientSel();
-			}
-			if(id == 2) {
-				$('#target_name').html('Номер заявки:');
-				$('#target').html('<input type="text" id="zayavNomer" />');
-				$('#zayavNomer').focus();
-			}
-		}
-
-		function submit() {
-			var client_id = $('#destination').val() == 1 ? $('#client_id').val() : 0,
-				zayav_id = $('#zayavNomerId').length > 0 ? $('#zayavNomerId').val() : 0,
-				send = {
-					op:'report_remind_add',
-					client_id:client_id,
-					zayav_id:zayav_id,
-					txt:$('#txt').val(),
-					day:$('#data').val(),
-					private:$('#priv').val()
-				},
-				msg;
-			if($('#destination').val() == 0) msg = 'Не выбрано назначение.';
-			else if($('#destination').val() == 1 && send.client_id == 0) msg = 'Не выбран клиент.';
-			else if($('#destination').val() == 2 && send.zayav_id == 0) {
-				msg = 'Не указан номер заявки.';
-				$('#zayavNomer').focus();
-			} else if(!send.txt) msg = 'Не указано содержание напоминания.';
-			else {
-				dialog.process();
-				$.post(AJAX_WS, send, function(res) {
-					if(res.success) {
-						dialog.close();
-						_msg('Новое задание успешно добавлено.');
-						$('.left').html(res.html);
-					}
-				}, 'json');
-			}
-			if(msg)
-				dialog.bottom.vkHint({
-					msg:'<SPAN class=red>' + msg + '</SPAN>',
-					remove:1,
-					indent:40,
-					show:1,
-					top:-48,
-					left:150
-				});
-		}
-		return false;
-	})
-	.on('click', '#remind_next', function() {
-		var next = $(this),
-			send = {
-				op:'remind_next',
-				page:$(this).attr('val'),
-				status:$('#status').val(),
-				private:$('#private').val()
-			};
-		if(next.hasClass('busy'))
-			return;
-		next.addClass('busy');
-		$.post(AJAX_WS, send, function (res) {
-			if(res.success)
-				next.after(res.html).remove();
-			else
-				next.removeClass('busy');
-		}, 'json');
-	})
-	.on('click', '.remind_unit .edit', function() {
-		var dialog = _dialog({
-				top:30,
-				width:400,
-				head:'Новое действие для напоминания',
-				load:1,
-				butSubmit:'Применить',
-				submit:submit
-			}),
-			curDay,
-			id = $(this).attr('val'),
-			send = {
-				op:'report_remind_get',
-				id:id
-			};
-		$.post(AJAX_WS, send, function(res) {
-			curDay = res.day;
-			var html = '<table class="remind_action_tab">' +
-				'<tr><td class="label">' + (res.client ? 'Клиент:' : '') + (res.zayav ? 'Заявка:' : '') +
-					'<td>' + (res.client ? res.client : '') + (res.zayav ? res.zayav : '') +
-				'<tr><td class="label">Задание:<td><B>' + res.txt + '</B>' +
-				'<tr><td class="label">Внёс:<td>' + res.viewer + ', ' + res.dtime +
-				'<tr><td class="label top">Действие:<td><input type="hidden" id=action value="0">' +
-				'</table>' +
-
-				'<table class="remind_action_tab" id="new_action">' +
-				'<tr><td class="label" id="new_about"><td id="new_title">' +
-				'<tr><td class="label top" id="new_comm"><td><TEXTAREA id="comment"></TEXTAREA>' +
-				'</table>';
-			dialog.content.html(html);
-
-			$('#action')._radio({
-				spisok:[
-					{uid:1, title:'Перенести на другую дату'},
-					{uid:2, title:'Выполнено'},
-					{uid:3, title:'Отменить'}
-				],
-				func:function(id) {
-					$('#new_action').show();
-					$('#comment').val('');
-					$('#new_about').html('');
-					$('#new_title').html('');
-					if (id == 1) {
-						$('#new_about').html('Дата:');
-						$('#new_title').html('<INPUT type="hidden" id="data">');
-						$('#new_comm').html('Причина:');
-						$('#new_action #data')._calendar();
-					}
-					if(id == 2) $('#new_comm').html('Комментарий:');
-					if(id == 3) $('#new_comm').html('Причина:');
-				}
-			});
-
-			$('#comment').autosize();
-		}, 'json');
-
-		function submit () {
-			var send = {
-				op:'report_remind_edit',
-				id:id,
-				action:parseInt($('#action').val()),
-				day:curDay,
-				status:1,
-				history:$('#comment').val(),
-				from_zayav:typeof ZAYAV == 'undefined' ? 0 : ZAYAV.id,
-				from_client:window.CLIENT ? CLIENT.id : 0
-			};
-			switch(send.action) {
-				case 1: send.day = $('#data').val(); break;
-				case 2: send.status = 2; break; // выполнено
-				case 3: send.status = 0;		// отменено
-			}
-
-			var msg;
-			if(!send.action) msg = 'Укажите новое действие.';
-			else if((send.action == 1 || send.action == 3) && !send.history) msg = 'Не указана причина.';
-			else if(send.action == 1 && send.day == curDay) msg = 'Выберите новую дату.';
-			else {
-				dialog.process();
-				$.post(AJAX_WS, send, function(res) {
-					if(res.success) {
-						dialog.close();
-						_msg('Задание отредактировано.');
-						$('#remind_spisok').html(res.html);
-					}
-				}, 'json');
-			}
-			if(msg)
-				dialog.bottom.vkHint({
-					msg:'<SPAN class="red">' + msg + '</SPAN>',
-					remove:1,
-					indent:40,
-					show:1,
-					top:-48,
-					left:115
-				});
-		}
-	})
-
 	.on('click', '#income_next', function() {
 		var next = $(this),
 			send = {
@@ -2816,7 +2587,7 @@ $(document)
 		var html = '<table id="income-add-tab">' +
 			'<input type="hidden" id="zayav_id" value="' + (window.ZAYAV ? ZAYAV.id : 0) + '" />' +
 			(window.ZAYAV ? '<tr><td class="label">Заявка:<td><b>№' + ZAYAV.nomer + '</b>' : '') +
-			'<tr><td class="label">Счёт:<td><input type="hidden" id="invoice_id" value="' + (INVOICE_SPISOK.length == 1 ? INVOICE_SPISOK[0].uid : 1) + '" />' +
+			'<tr><td class="label">Счёт:<td><input type="hidden" id="invoice_id" value="' + (INVOICE_SPISOK.length ? INVOICE_SPISOK[0].uid : 0) + '" />' +
 			'<tr><td class="label">Сумма:<td><input type="text" id="sum" class="money" maxlength="11" /> руб.' +
 			'<tr><td class="label">Описание:<td><input type="text" id="prim" maxlength="100" />' +
 			(window.ZAYAV ? '<tr><td class="label topi">Местонахождение<br />устройства:<td><input type="hidden" id="place" value="-1" />' : '') +
@@ -3619,7 +3390,8 @@ $(document)
 				$('#zayav_filter').css('display', val == 'zayav' ? 'block' : 'none');
 				$('#zayav_spisok').css('display', val == 'zayav' ? 'block' : 'none');
 				$('#money_spisok').css('display', val == 'money' ? 'block' : 'none');
-				$('#remind_spisok').css('display', val == 'remind' ? 'block' : 'none');
+				$('#remind-spisok').css('display', val == 'remind' ? 'block' : 'none');
+				//$('#remind_spisok').css('display', val == 'remind' ? 'block' : 'none');
 				$('#comments').css('display', val == 'comm' ? 'block' : 'none');
 				$('#histories').css('display', val == 'hist' ? 'block' : 'none');
 			});
@@ -3706,11 +3478,6 @@ $(document)
 				$('#comm').val(arr.join(', '));
 			});
 			$('#comm').autosize();
-			$('#reminder_check').click(function(id) {
-				$('#reminder_tab').toggle();
-				$('#reminder_txt').focus();
-			});
-			$('#reminder_day')._calendar();
 			$('.vkCancel').click(function() {
 				location.href = URL + '&p=' + $(this).attr('val');
 			});
@@ -3732,8 +3499,7 @@ $(document)
 					color_dop:$('#color_dop').val(),
 					comm:$('#comm').val(),
 					pre_cost:$('#pre_cost').val(),
-					day_finish:$('#day_finish').val(),
-					reminder:$('#reminder').val()
+					day_finish:$('#day_finish').val()
 				};
 				if(!$('.tr_equip').hasClass('dn')) {
 					var inp = $('.equip_spisok input'),
@@ -3745,9 +3511,6 @@ $(document)
 					}
 					send.equip = arr.join();
 				}
-				send.reminder_txt = send.reminder == 1 ? $('#reminder_txt').val() : '';
-				send.reminder_day = send.reminder == 1 ? $('#reminder_day').val() : '';
-
 				var msg = '';
 				if(send.client_id == 0) msg = 'Не выбран клиент';
 				else if(send.device == 0) msg = 'Не выбрано устройство';
@@ -3756,7 +3519,6 @@ $(document)
 					msg = 'Некорректно указана предварительная стоимость';
 					$('#pre_cost').focus();
 				} else if(send.day_finish == '0000-00-00') msg = 'Не указан срок выполнения ремонта';
-				else if(send.reminder == 1 && !send.reminder_txt) msg = 'Не указан текст напоминания';
 				else {
 					if(send.place > 0) send.place_other = '';
 					$(this).addClass('busy');
@@ -4081,10 +3843,6 @@ $(document)
 				func:_history
 			});
 		}
-		if($('#report.remind').length) {
-			$('#status')._radio(remindSpisok);
-			$('#private')._check(remindSpisok);
-		}
 		if($('#report.income').length) {
 			window._calendarFilter = incomeSpisok;
 			$('#del')._check(incomeSpisok);
@@ -4209,9 +3967,11 @@ $(document)
 		if($('#report.invoice').length) {
 			$('.transfer').click(function() {
 				var t = $(this),
+					from = INVOICE_SPISOK[0] ? INVOICE_SPISOK[0].uid : 0,
+					to = INVOICE_SPISOK[1] ? INVOICE_SPISOK[1].uid : 0,
 					html = '<table class="_dialog-tab">' +
-							'<tr><td class="label">Со счёта:<td><input type="hidden" id="from" value="1" />' +
-							'<tr><td class="label">На счёт:<td><input type="hidden" id="to" value="2" />' +
+							'<tr><td class="label">Со счёта:<td><input type="hidden" id="from" value="' + from + '" />' +
+							'<tr><td class="label">На счёт:<td><input type="hidden" id="to" value="' + to + '" />' +
 							'<tr><td class="label">Сумма:<td><input type="text" id="sum" class="money" /> руб. ' +
 							'<tr><td class="label">Комментарий:<td><input type="text" id="about" />' +
 						'</table>',

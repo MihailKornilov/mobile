@@ -327,7 +327,8 @@ function setup_zayav_expense_spisok() {
 				   COUNT(`z`.`id`) AS `use`
 			FROM `setup_zayav_expense` AS `s`
 			  LEFT JOIN `zayav_expense` AS `z`
-			  ON `s`.`id`=`z`.`category_id`
+			  ON `z`.`ws_id`=".WS_ID." AND `s`.`id`=`z`.`category_id`
+			WHERE `s`.`ws_id`=".WS_ID."
 			GROUP BY `s`.`id`
 			ORDER BY `s`.`sort`";
 	$q = query($sql);

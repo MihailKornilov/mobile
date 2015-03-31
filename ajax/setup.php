@@ -196,7 +196,7 @@ switch(@$_POST['op']) {
 				)";
 		query($sql);
 
-		xcache_unset(CACHE_PREFIX.'invoice');
+		xcache_unset(CACHE_PREFIX.'invoice'.WS_ID);
 		GvaluesCreate();
 
 		history_insert(array(
@@ -228,7 +228,7 @@ switch(@$_POST['op']) {
 		query($sql);
 
 
-		xcache_unset(CACHE_PREFIX.'invoice');
+		xcache_unset(CACHE_PREFIX.'invoice'.WS_ID);
 		GvaluesCreate();
 
 		$changes = '';
@@ -258,7 +258,7 @@ switch(@$_POST['op']) {
 		query("DELETE FROM `invoice` WHERE `id`=".$invoice_id);
 		query("UPDATE `setup_income` SET `invoice_id`=0 WHERE `invoice_id`=".$invoice_id);
 
-		xcache_unset(CACHE_PREFIX.'invoice');
+		xcache_unset(CACHE_PREFIX.'invoice'.WS_ID);
 		GvaluesCreate();
 
 		history_insert(array(
@@ -293,7 +293,7 @@ switch(@$_POST['op']) {
 				)";
 		query($sql);
 
-		xcache_unset(CACHE_PREFIX.'expense');
+		xcache_unset(CACHE_PREFIX.'expense'.WS_ID);
 		GvaluesCreate();
 
 		history_insert(array(
@@ -327,7 +327,7 @@ switch(@$_POST['op']) {
 				WHERE `id`=".$id;
 		query($sql);
 
-		xcache_unset(CACHE_PREFIX.'expense');
+		xcache_unset(CACHE_PREFIX.'expense'.WS_ID);
 		GvaluesCreate();
 
 		$changes = '';
@@ -359,7 +359,7 @@ switch(@$_POST['op']) {
 		$sql = "DELETE FROM `setup_expense` WHERE `id`=".$id;
 		query($sql);
 
-		xcache_unset(CACHE_PREFIX.'expense');
+		xcache_unset(CACHE_PREFIX.'expense'.WS_ID);
 		GvaluesCreate();
 
 		history_insert(array(
@@ -379,17 +379,19 @@ switch(@$_POST['op']) {
 			jsonError();
 
 		$sql = "INSERT INTO `setup_zayav_expense` (
+					`ws_id`,
 					`name`,
 					`dop`,
 					`sort`
 				) VALUES (
+					".WS_ID.",
 					'".addslashes($name)."',
 					".$dop.",
 					"._maxSql('setup_zayav_expense', 'sort')."
 				)";
 		query($sql);
 
-		xcache_unset(CACHE_PREFIX.'zayav_expense');
+		xcache_unset(CACHE_PREFIX.'zayav_expense'.WS_ID);
 		GvaluesCreate();
 
 		history_insert(array(
@@ -420,7 +422,7 @@ switch(@$_POST['op']) {
 				WHERE `id`=".$id;
 		query($sql);
 
-		xcache_unset(CACHE_PREFIX.'zayav_expense');
+		xcache_unset(CACHE_PREFIX.'zayav_expense'.WS_ID);
 		GvaluesCreate();
 
 		$changes = '';
@@ -454,7 +456,7 @@ switch(@$_POST['op']) {
 		$sql = "DELETE FROM `setup_zayav_expense` WHERE `id`=".$id;
 		query($sql);
 
-		xcache_unset(CACHE_PREFIX.'zayav_expense');
+		xcache_unset(CACHE_PREFIX.'zayav_expense'.WS_ID);
 		GvaluesCreate();
 
 		history_insert(array(

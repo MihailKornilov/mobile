@@ -83,7 +83,7 @@ function sa_user_spisok() {
 function sa_user_tab_test($tab, $col, $viewer_id) {//проверка количества записей для пользователя в определённой таблице
 	$sql = "SELECT COUNT(*)
 			FROM information_schema.COLUMNS
-			WHERE TABLE_SCHEMA='".DATABASE."'
+			WHERE TABLE_SCHEMA='".MYSQL_DATABASE."'
 			  AND TABLE_NAME='".$tab."'
 			  AND COLUMN_NAME='".$col."'";
 	if(query_value($sql)) {

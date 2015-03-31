@@ -1,11 +1,9 @@
 <?php
 define('DOCUMENT_ROOT', dirname(__FILE__));
-define('NAMES', 'cp1251');
-
 require_once(DOCUMENT_ROOT.'/syncro.php');
-define('DATABASE', $mysql['database']);
 
 require_once(API_PATH.'/vk.php');
+
 define('SA_VIEWER_ID', SA && @$_COOKIE['sa_viewer_id'] ? intval($_COOKIE['sa_viewer_id']) : 0);
 //define('VIEWER_ID', SA_VIEWER_ID ? SA_VIEWER_ID : $_GET['viewer_id']);
 _appAuth();
@@ -16,7 +14,6 @@ require_once(DOCUMENT_ROOT.'/view/ws_report.php');
 require_once(DOCUMENT_ROOT.'/view/ws_setup.php');
 
 
-_dbConnect();
 _getSetupGlobal();
 _getVkUser();
 

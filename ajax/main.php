@@ -1,6 +1,6 @@
 <?php
 require_once('config.php');
-require_once(API_PATH.'/vk_ajax.php');
+require_once(API_PATH.'/ajax/vk.php');
 
 switch(@$_POST['op']) {
 	case 'cache_clear':
@@ -47,7 +47,10 @@ switch(@$_POST['op']) {
 				'".$_POST['devs']."'
 			)";
 		query($sql);
-		query("UPDATE `vk_user` SET `ws_id`=".mysql_insert_id().",`admin`=1 WHERE `viewer_id`=".VIEWER_ID);
+
+		$ws_id = query_value("SELECT `id` FROM `workshop` WHERE `admin_id`=".VIEWER_ID." ORDER BY `id` DESC  LIMIT 1");
+
+		query("UPDATE `vk_user` SET `ws_id`=".$ws_id.",`admin`=1 WHERE `viewer_id`=".VIEWER_ID);
 		_cacheClear();
 		jsonSuccess();
 		break;

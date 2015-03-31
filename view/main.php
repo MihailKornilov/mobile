@@ -76,9 +76,9 @@ function _cacheClear($ws_id=WS_ID) {
 	xcache_unset(CACHE_PREFIX.'zp_name');
 	xcache_unset(CACHE_PREFIX.'color_name');
 	xcache_unset(CACHE_PREFIX.'device_equip');
-	xcache_unset(CACHE_PREFIX.'invoice');
-	xcache_unset(CACHE_PREFIX.'expense');
-	xcache_unset(CACHE_PREFIX.'zayav_expense');
+	xcache_unset(CACHE_PREFIX.'invoice'.$ws_id);
+	xcache_unset(CACHE_PREFIX.'expense'.$ws_id);
+	xcache_unset(CACHE_PREFIX.'zayav_expense'.$ws_id);
 	xcache_unset(CACHE_PREFIX.'remind_active'.$ws_id);
 	xcache_unset(CACHE_PREFIX.'workshop_'.$ws_id);
 	GvaluesCreate();
@@ -93,13 +93,14 @@ function _header() {
 
 		'<head>'.
 		'<meta http-equiv="content-type" content="text/html; charset=windows-1251" />'.
-		'<title>Hi-tech Service - Приложение '.API_ID.'</title>'.
+		'<title>Hi-tech Service - Приложение '.APP_ID.'</title>'.
 
 		_api_scripts().
 
 		(defined('WS_DEVS') ? '<script type="text/javascript">var WS_DEVS=['.WS_DEVS.'];</script>' : '').
 
 		'<script type="text/javascript" src="'.APP_HTML.'/js/G_values.js?'.G_VALUES.'"></script>'.
+		'<script type="text/javascript" src="'.APP_HTML.'/js/G_values_'.WS_ID.'.js?'.G_VALUES.'"></script>'.
 
 		'<link rel="stylesheet" type="text/css" href="'.APP_HTML.'/css/main'.(DEBUG ? '' : '.min').'.css?'.VERSION.'" />'.
 		'<script type="text/javascript" src="'.APP_HTML.'/js/main'.(DEBUG ? '' : '.min').'.js?'.VERSION.'"></script>'.
@@ -146,18 +147,11 @@ function GvaluesCreate() {//Составление файла G_values.js
 	$save = 'function _toAss(s){var a=[];for(var n=0;n<s.length;a[s[n].uid]=s[n].title,n++);return a}'.
 	"\n".'var COLOR_SPISOK='.query_selJson("SELECT `id`,`name` FROM `setup_color_name` ORDER BY `name` ASC").','.
 		"\n".'COLORPRE_SPISOK='.query_selJson("SELECT `id`,`predlog` FROM `setup_color_name` ORDER BY `predlog` ASC").','.
-		"\n".'INVOICE_SPISOK='.query_selJson("SELECT `id`,`name` FROM `invoice` ORDER BY `id`").','.
-		"\n".'EXPENSE_SPISOK='.query_selJson("SELECT `id`,`name` FROM `setup_expense` ORDER BY `sort` ASC").','.
-		"\n".'EXPENSE_WORKER='.query_ptpJson("SELECT `id`,`show_worker` FROM `setup_expense` WHERE `show_worker`").','.
 		"\n".'FAULT_ASS='.query_ptpJson("SELECT `id`,`name` FROM `setup_fault` ORDER BY `sort`").','.
 		"\n".'ZPNAME_SPISOK='.query_selJson("SELECT `id`,`name` FROM `setup_zp_name` ORDER BY `name`").','.
 		"\n".'DEVPLACE_SPISOK='._selJson(_devPlace()).','.
 		"\n".'DEV_SPISOK='.query_selJson("SELECT `id`,`name` FROM `base_device` ORDER BY `sort`").','.
 		"\n".'DEV_ASS=_toAss(DEV_SPISOK),'.
-		"\n".'ZE_SPISOK='.query_selJson("SELECT `id`,`name` FROM `setup_zayav_expense` ORDER BY `sort`").','.
-		"\n".'ZE_TXT='.query_ptpJson("SELECT `id`,1 FROM `setup_zayav_expense` WHERE `dop`=1").','.
-		"\n".'ZE_WORKER='.query_ptpJson("SELECT `id`,1 FROM `setup_zayav_expense` WHERE `dop`=2").','.
-		"\n".'ZE_ZP='.query_ptpJson("SELECT `id`,1 FROM `setup_zayav_expense` WHERE `dop`=3").','.
 		"\n".'ZE_DOP='._selJson(_zayavExpenseDop()).','.
 		"\n".'SALARY_PERIOD='._selJson(salaryPeriod()).','.
 		"\n".'COUNTRY_SPISOK=['.
@@ -236,6 +230,21 @@ function GvaluesCreate() {//Составление файла G_values.js
 	$fp = fopen(APP_PATH.'/js/G_values.js', 'w+');
 	fwrite($fp, $save);
 	fclose($fp);
+
+	//составление файла G_values для конкретной мастерской
+	$save =
+		'var INVOICE_SPISOK='.query_selJson("SELECT `id`,`name` FROM `invoice` WHERE `ws_id`=".WS_ID." ORDER BY `id`").','.
+		"\n".'EXPENSE_SPISOK='.query_selJson("SELECT `id`,`name` FROM `setup_expense` WHERE `ws_id`=".WS_ID." ORDER BY `sort` ASC").','.
+		"\n".'EXPENSE_WORKER='.query_ptpJson("SELECT `id`,`show_worker` FROM `setup_expense` WHERE `ws_id`=".WS_ID." AND `show_worker`").','.
+		"\n".'ZE_SPISOK='.query_selJson("SELECT `id`,`name` FROM `setup_zayav_expense` WHERE `ws_id`=".WS_ID." ORDER BY `sort`").','.
+		"\n".'ZE_TXT='.query_ptpJson("SELECT `id`,1 FROM `setup_zayav_expense` WHERE `ws_id`=".WS_ID." AND `dop`=1").','.
+		"\n".'ZE_WORKER='.query_ptpJson("SELECT `id`,1 FROM `setup_zayav_expense` WHERE `ws_id`=".WS_ID." AND `dop`=2").','.
+		"\n".'ZE_ZP='.query_ptpJson("SELECT `id`,1 FROM `setup_zayav_expense` WHERE `ws_id`=".WS_ID." AND `dop`=3").';';
+
+	$fp = fopen(APP_PATH.'/js/G_values_'.WS_ID.'.js', 'w+');
+	fwrite($fp, $save);
+	fclose($fp);
+
 
 	query("UPDATE `setup_global` SET `g_values`=`g_values`+1");
 	xcache_unset(CACHE_PREFIX.'setup_global');
@@ -475,7 +484,67 @@ function ws_create_step1() {
 
 
 
+function remind_to_global() {//перенос напоминаний в глобал
+//	query("DELETE FROM `remind`", GLOBAL_MYSQL_CONNECT);
+//	query("DELETE FROM `remind_history`", GLOBAL_MYSQL_CONNECT);
+//exit;
 
+	$sql = "SELECT * FROM `reminder` LIMIT 500";
+	$q = query($sql);
+	if(!mysql_num_rows($q))
+		die('end');
+	$ids = array();
+	$arr = array();
+	$hist = array();
+	while($r = mysql_fetch_assoc($q)) {
+		$ids[] = $r['id'];
+		$arr[] = "(
+			".$r['id'].",
+			".APP_ID.",
+			".$r['ws_id'].",
+			".($r['client_id'] ? $r['client_id'] : 0).",
+			".$r['zayav_id'].",
+			'".addslashes($r['txt'])."',
+			'".$r['day']."',
+			".$r['status'].",
+			".$r['viewer_id_add'].",
+			'".$r['dtime_add']."'
+		)";
+		foreach(explode('<BR>', $r['history']) as $h) {
+			$hist[] = "(
+					".$r['id'].",
+					'".addslashes($h)."',
+					'0000-00-00 00:00:00'
+				)";
+		}
+
+	}
+
+	$sql = "INSERT INTO `remind` (
+				`id`,
+				`app_id`,
+				`ws_id`,
+				`client_id`,
+				`zayav_id`,
+				`txt`,
+				`day`,
+				`status`,
+				`viewer_id_add`,
+				`dtime_add`
+			) VALUES ".implode(',', $arr);
+	query($sql, GLOBAL_MYSQL_CONNECT);
+
+	$sql = "INSERT INTO `remind_history` (
+				`remind_id`,
+				`txt_old`,
+				`dtime_add`
+			) VALUES ".implode(',', $hist);
+	query($sql, GLOBAL_MYSQL_CONNECT);
+
+	$sql = "DELETE FROM `reminder` WHERE `id` IN (".implode(',', $ids).")";
+	query($sql);
+	echo 'deleted 500<br />';
+}
 
 
 
