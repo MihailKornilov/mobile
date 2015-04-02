@@ -331,6 +331,14 @@ function history_types($v, $filter) {
 
 		case 53: return 'Сброс суммы на счёте <span class="oplata">'._invoice($v['value']).'</span>.';
 
+		case 54: return
+			($filter['zayav_id'] ?
+				'Заявка на заправку картриджей создана' :
+				'Создана новая заявка '.$v['zayav_link'].' на заправку картриджей'.
+				($filter['client_id'] ? '' : ' для клиента '.$v['client_link'])
+			).
+			'.';
+
 
 		case 1001: return 'В настройках: добавление нового сотрудника <u>'._viewer($v['value'], 'name').'</u>.';
 		case 1002: return 'В настройках: удаление сотрудника <u>'._viewer($v['value'], 'name').'</u>.';
@@ -353,6 +361,10 @@ function history_types($v, $filter) {
 		case 1014: return '<a href="'.URL.'&p=setup&d=zayavexpense">В настройках:</a> внесение новой категории расходов заявки <u>'.$v['value'].'</u>.';
 		case 1015: return '<a href="'.URL.'&p=setup&d=zayavexpense">В настройках:</a> изменение данных категории расходов заявки <u>'.$v['value'].'</u>:<div class="changes">'.$v['value1'].'</div>';
 		case 1016: return '<a href="'.URL.'&p=setup&d=zayavexpense">В настройках:</a> удаление данных категории расходов заявки <u>'.$v['value'].'</u>.';
+
+		case 1017: return '<a href="'.URL.'&p=setup&d=service&d1=cartridge">В настройках:</a> внесение нового картриджа <u>'.$v['value'].'</u>.';
+		case 1018: return '<a href="'.URL.'&p=setup&d=service&d1=cartridge">В настройках:</a> изменение данных картриджа <u>'.$v['value'].'</u>:<div class="changes">'.$v['value1'].'</div>';
+		case 1019: return '<a href="'.URL.'&p=setup&d=service&d1=cartridge">В настройках:</a> удаленён картридж <u>'.$v['value'].'</u>.';
 
 		default: return $v['type'];
 	}

@@ -179,6 +179,125 @@ switch(@$_POST['op']) {
 		jsonSuccess();
 		break;
 
+	case 'cartridge_toggle'://подключение-отключение услуги заправки картриджей
+		if(!WS_ADMIN)
+			jsonError();
+
+		$v = _isbool($_POST['v']);
+
+		$old = query_value("SELECT `service_cartridge` FROM `workshop` WHERE `id`=".WS_ID);
+		if($old == $v)
+			jsonError();
+
+		query("UPDATE `workshop` SET `service_cartridge`=".$v." WHERE `id`=".WS_ID);
+		xcache_unset(CACHE_PREFIX.'workshop_'.WS_ID);
+
+		jsonSuccess();
+		break;
+	case 'cartridge_add':
+		$name = _txt($_POST['name']);
+		$cost_filling = _isnum($_POST['cost_filling']);
+		$cost_restore = _isnum($_POST['cost_restore']);
+		$cost_chip = _isnum($_POST['cost_chip']);
+
+		if(empty($name))
+			jsonError();
+
+		$sql = "INSERT INTO `setup_cartridge` (
+					`ws_id`,
+					`name`,
+					`cost_filling`,
+					`cost_restore`,
+					`cost_chip`
+				) VALUES (
+					".WS_ID.",
+					'".addslashes($name)."',
+					".$cost_filling.",
+					".$cost_restore.",
+					".$cost_chip."
+				)";
+		query($sql);
+
+		xcache_unset(CACHE_PREFIX.'cartridge'.WS_ID);
+		GvaluesCreate();
+
+		history_insert(array(
+			'type' => 1017,
+			'value' => $name
+		));
+
+		$send['html'] = utf8(setup_service_cartridge_spisok());
+		jsonSuccess($send);
+		break;
+	case 'cartridge_edit':
+		if(!$id = _num($_POST['id']))
+			jsonError();
+		$name = _txt($_POST['name']);
+		$cost_filling = _isnum($_POST['cost_filling']);
+		$cost_restore = _isnum($_POST['cost_restore']);
+		$cost_chip = _isnum($_POST['cost_chip']);
+
+		if(empty($name))
+			jsonError();
+
+		$sql = "SELECT * FROM `setup_cartridge` WHERE `id`=".$id;
+		if(!$r = query_assoc($sql))
+			jsonError();
+
+		$sql = "UPDATE `setup_cartridge`
+				SET `name`='".addslashes($name)."',
+					`cost_filling`=".$cost_filling.",
+					`cost_restore`=".$cost_restore.",
+					`cost_chip`=".$cost_chip."
+				WHERE `id`=".$id;
+		query($sql);
+
+		xcache_unset(CACHE_PREFIX.'cartridge'.WS_ID);
+		GvaluesCreate();
+
+		$changes = '';
+		if($r['name'] != $name)
+			$changes .= '<tr><th>Модель:<td>'.$r['name'].'<td>»<td>'.$name;
+		if($r['cost_filling'] != $cost_filling)
+			$changes .= '<tr><th>Заправка:<td>'.$r['cost_filling'].'<td>»<td>'.$cost_filling;
+		if($r['cost_restore'] != $cost_restore)
+			$changes .= '<tr><th>Восстановление:<td>'.$r['cost_restore'].'<td>»<td>'.$cost_restore;
+		if($r['cost_chip'] != $cost_chip)
+			$changes .= '<tr><th>Замена чипа:<td>'.$r['cost_chip'].'<td>»<td>'.$cost_chip;
+		if($changes)
+			history_insert(array(
+				'type' => 1018,
+				'value' => $name,
+				'value1' => '<table>'.$changes.'</table>'
+			));
+
+		$send['html'] = utf8(setup_service_cartridge_spisok());
+		jsonSuccess($send);
+		break;
+	case 'cartridge_del':
+		if(!$id = _num($_POST['id']))
+			jsonError();
+
+		$sql = "SELECT * FROM `setup_cartridge` WHERE `id`=".$id;
+		if(!$r = query_assoc($sql))
+			jsonError();
+
+jsonError();//todo временно удаления нет
+
+		query("DELETE FROM `setup_cartridge` WHERE `id`=".$id);
+
+		xcache_unset(CACHE_PREFIX.'cartridge'.WS_ID);
+		GvaluesCreate();
+
+		history_insert(array(
+			'type' => 1019,
+			'value' => $r['name']
+		));
+
+		$send['html'] = utf8(setup_service_cartridge_spisok());
+		jsonSuccess($send);
+		break;
+
 	case 'invoice_add':
 		$name = win1251(htmlspecialchars(trim($_POST['name'])));
 		$about = win1251(htmlspecialchars(trim($_POST['about'])));
@@ -208,9 +327,8 @@ switch(@$_POST['op']) {
 		jsonSuccess($send);
 		break;
 	case 'invoice_edit':
-		if(!preg_match(REGEXP_NUMERIC, $_POST['id']))
+		if(!$invoice_id = _num($_POST['id']))
 			jsonError();
-		$invoice_id = intval($_POST['id']);
 		$name = win1251(htmlspecialchars(trim($_POST['name'])));
 		$about = win1251(htmlspecialchars(trim($_POST['about'])));
 		if(empty($name))

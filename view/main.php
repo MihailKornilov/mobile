@@ -81,6 +81,7 @@ function _cacheClear($ws_id=WS_ID) {
 	xcache_unset(CACHE_PREFIX.'zayav_expense'.$ws_id);
 	xcache_unset(CACHE_PREFIX.'remind_active'.$ws_id);
 	xcache_unset(CACHE_PREFIX.'workshop_'.$ws_id);
+	xcache_unset(CACHE_PREFIX.'cartridge'.$ws_id);
 	GvaluesCreate();
 	query("UPDATE `setup_global` SET `script_style`=`script_style`+1");
 }//_cacheClear()
@@ -106,9 +107,14 @@ function _header() {
 		'<script type="text/javascript" src="'.APP_HTML.'/js/main'.(DEBUG ? '' : '.min').'.js?'.VERSION.'"></script>'.
 
 		(WS_ID ? '<script type="text/javascript" src="'.APP_HTML.'/js/ws'.(DEBUG ? '' : '.min').'.js?'.VERSION.'"></script>' : '').
-		(@$_GET['p'] == 'setup' ? '<script type="text/javascript" src="'.APP_HTML.'/js/setup'.(DEBUG ? '' : '.min').'.js?'.VERSION.'"></script>' : '').
 
-		//Скрипты и стили для суперадминистратора
+		//Стили и скрипты для настроек
+		(@$_GET['p'] == 'setup' ?
+			'<link rel="stylesheet" type="text/css" href="'.APP_HTML.'/css/setup'.(DEBUG ? '' : '.min').'.css?'.VERSION.'" />'.
+			'<script type="text/javascript" src="'.APP_HTML.'/js/setup'.(DEBUG ? '' : '.min').'.js?'.VERSION.'"></script>'
+		: '').
+
+		//Стили и скрипты для суперадминистратора
 		(@$_GET['p'] == 'sa' ?
 			'<link rel="stylesheet" type="text/css" href="'.APP_HTML.'/css/sa'.(DEBUG ? '' : '.min').'.css?'.VERSION.'" />'.
 			'<script type="text/javascript" src="'.APP_HTML.'/js/sa'.(DEBUG ? '' : '.min').'.js?'.VERSION.'"></script>'
@@ -236,6 +242,7 @@ function GvaluesCreate() {//Составление файла G_values.js
 		'var INVOICE_SPISOK='.query_selJson("SELECT `id`,`name` FROM `invoice` WHERE `ws_id`=".WS_ID." ORDER BY `id`").','.
 		"\n".'EXPENSE_SPISOK='.query_selJson("SELECT `id`,`name` FROM `setup_expense` WHERE `ws_id`=".WS_ID." ORDER BY `sort` ASC").','.
 		"\n".'EXPENSE_WORKER='.query_ptpJson("SELECT `id`,`show_worker` FROM `setup_expense` WHERE `ws_id`=".WS_ID." AND `show_worker`").','.
+		"\n".'CARTRIDGE_SPISOK='.query_selJson("SELECT `id`,`name` FROM `setup_cartridge` WHERE `ws_id`=".WS_ID." ORDER BY `name`").','.
 		"\n".'ZE_SPISOK='.query_selJson("SELECT `id`,`name` FROM `setup_zayav_expense` WHERE `ws_id`=".WS_ID." ORDER BY `sort`").','.
 		"\n".'ZE_TXT='.query_ptpJson("SELECT `id`,1 FROM `setup_zayav_expense` WHERE `ws_id`=".WS_ID." AND `dop`=1").','.
 		"\n".'ZE_WORKER='.query_ptpJson("SELECT `id`,1 FROM `setup_zayav_expense` WHERE `ws_id`=".WS_ID." AND `dop`=2").','.
@@ -483,7 +490,7 @@ function ws_create_step1() {
 
 
 
-
+/*
 function remind_to_global() {//перенос напоминаний в глобал
 //	query("DELETE FROM `remind`", GLOBAL_MYSQL_CONNECT);
 //	query("DELETE FROM `remind_history`", GLOBAL_MYSQL_CONNECT);
@@ -548,7 +555,7 @@ function remind_to_global() {//перенос напоминаний в глобал
 
 
 
-/*
+
 function to_new_images() {//Перенос картинок в новый формат
 	define('IMLINK', 'http://'.DOMAIN.'/files/images/');
 	define('IMPATH', APP_PATH.'files/images/');

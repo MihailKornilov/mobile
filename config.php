@@ -47,7 +47,7 @@ function _getVkUser() {//Получение данных о пользователе
 function _getWorkshop($ws_id) {//Получение данных о мастерской
 	$ws = xcache_get(CACHE_PREFIX.'workshop_'.$ws_id);
 	if(empty($ws)) {
-		$sql = "SELECT * FROM `workshop` WHERE `id`=".$ws_id." AND `status`=1 LIMIT 1";
+		$sql = "SELECT * FROM `workshop` WHERE `id`=".$ws_id." AND `status`";
 		$ws = mysql_fetch_assoc(query($sql));
 		if(empty($ws))
 			return false;
@@ -55,5 +55,6 @@ function _getWorkshop($ws_id) {//Получение данных о мастерской
 	}
 	define('WS_DEVS', $ws['devs']);
 	define('WS_ADMIN', $ws['admin_id']);
+	define('SERVIVE_CARTRIDGE', $ws['service_cartridge']);
 	return true;
 }//_getWorkshop()

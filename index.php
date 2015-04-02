@@ -62,6 +62,11 @@ switch($_GET['p']) {
 					$v['serial'] = strtoupper(htmlspecialchars(trim($_GET['serial'])));
 				$html .= zayav_add($v);
 				break;
+			case 'cartridge':
+				if(!SERVIVE_CARTRIDGE)
+					header('Location:'.URL.'&p=zayav');
+				$html .= zayav_cartridge();
+				break;
 			case 'info':
 				if(!preg_match(REGEXP_NUMERIC, $_GET['id'])) {
 					$html .= 'Страницы не существует';

@@ -338,6 +338,54 @@ var AJAX_WS = APP_HTML + '/ajax/ws.php?' + VALUES,
 		window.open(APP_HTML + '/view/kvit_html.php?' + VALUES + '&id=' + id, 'kvit', params);
 	},
 
+	cartridgeAdd = function() {
+		if(!window.CLIENT)
+			CLIENT = {
+				id:0,
+				fio:''
+			};
+		var html =
+				'<table id="cartridge-add-tab">' +
+					'<tr><td class="label">Клиент:' +
+						'<td><input type="hidden" id="client_id" value="' + CLIENT.id + '" />' +
+							'<b>' + CLIENT.fio + '</b>' +
+					'<tr><td class="label topi">Список картриджей:<td id="crt">' +
+					'<tr><td class="label top">Заметка:<td><textarea id="comm"></textarea>' +
+				'</table>',
+			dialog = _dialog({
+				width:450,
+				top:30,
+				head:'Новая заявка на заправку картриджей',
+				content:html,
+				submit:submit
+			});
+		if(!CLIENT.id)
+			$('#client_id').clientSel({add:1});
+		$('#crt').cartridge();
+		$('#comm').autosize();
+		function submit() {
+			var send = {
+				op:'zayav_cartridge_add',
+				client_id:_num($('#client_id').val()),
+				ids:$('#crt').cartridge('get'),
+				comm:$('#comm').val()
+			};
+			if(!send.client_id) dialog.err('Не указан клиент');
+			else if(!send.ids) dialog.err('Не выбрано ни одного картриджа');
+			else {
+				dialog.process();
+				$.post(AJAX_WS, send, function(res) {
+					if(res.success) {
+						dialog.close();
+						_msg('Заявка внесена');
+						location.href = URL + '&p=zayav&d=info&id=' + res.id + '&from=cartridge';
+					} else
+						dialog.abort();
+				}, 'json');
+			}
+		}
+	},
+
 	zpFilter = function() {
 		var v = {
 				op:'zp_spisok',
@@ -895,11 +943,11 @@ $.fn.zayavExpense = function(o) {
 				var u = units.eq(n),
 					attr = id + u.attr('val'),
 					cat_id = $('#' + attr + 'cat').val(),
-					sum = _cena(u.find('.zesum').val()),
+					sum = u.find('.zesum').val(),
 					dop = '';
 				if(cat_id == 0)
 					continue;
-				if(!sum)
+				if(!_cena(sum) && sum != '0')
 					return 'sum_error';
 				if(ZE_TXT[cat_id])
 					dop = u.find('.zetxt').val();
@@ -1014,7 +1062,49 @@ $.fn.zayavExpense = function(o) {
 	}
 	return t;
 };
+$.fn.cartridge = function(o) {
+	var t = $(this),
+		id = t.attr('id'),
+		num = 1,
+		n;
 
+	if(typeof o == 'string') {
+		if(o == 'get') {
+			var units = t.find('.icar'),
+				send = [],
+				v;
+			for(n = 0; n < units.length; n++) {
+				v = units.eq(n).val();
+				if(v == 0)
+					continue;
+				send.push(v);
+			}
+			return send.join();
+		}
+	}
+
+	add();
+	function add() {
+		t.append('<input type="hidden" class="icar" id="car' + num + '" />');
+		$('#car' + num)._select({
+			width:170,
+			bottom:4,
+			title0:'картридж не выбран',
+			spisok:CARTRIDGE_SPISOK,
+			func:add_test
+		});
+	}
+	function add_test(v) {//проверка, все ли картриджи выбраны, затем добавлять новое поле
+		if(!v)
+			return;
+		var units = t.find('.icar');
+		for(n = 0; n < units.length; n++)
+			if(units.eq(n).val() == 0)
+				return;
+		num++;
+		add();
+	}
+};
 
 $(document)
 	.keydown(function(e) {
@@ -1369,6 +1459,38 @@ $(document)
 		}, 'json');
 	})
 
+	.on('click', '#zayav-add', function() {
+		var t = $(this),
+			back = t.attr('val');
+		if(t.hasClass('cartridge')) {
+			var html =
+				'<div id="zayav-add-tab">' +
+					'<div class="unit" id="go-device">' +
+						'Приём в ремонт<br />оборудования' +
+					'</div>' +
+					'<div class="unit" id="cartridge-add">' +
+						'Заправка, восстановление<br />картриджей' +
+					'</div>' +
+				'</div>',
+				dialog = _dialog({
+					top:30,
+					width:300,
+					head:'Новая заявка',
+					content:html,
+					butSubmit:''
+				});
+			$('#go-device').click(goDevice);
+			$('#cartridge-add').click(function() {
+				dialog.close();
+				cartridgeAdd();
+			});
+		} else
+			goDevice();
+		function goDevice() {
+			location.href = URL + '&p=zayav&d=add&back=' + back;
+		}
+	})
+
 	.on('click', '#zayav ._next', function() {
 		if($(this).hasClass('busy'))
 			return;
@@ -1385,7 +1507,9 @@ $(document)
 	})
 	.on('click', '.zayav_unit', function() {
 		_cookie('zback_scroll', VK_SCROLL);
-		location.href = URL + '&p=zayav&d=info&id=' + $(this).attr('val');
+		var t = $(this),
+			from = t.hasClass('cart') ? '&from=cartridge' : '';
+		location.href = URL + '&p=zayav&d=info&id=' + t.attr('val') + from;
 	})
 	.on('mouseenter', '.zayav_unit', function() {
 		var t = $(this),
@@ -1433,8 +1557,8 @@ $(document)
 			'<tr><td class="label r">IMEI:		  <td><input type="text" id="imei" maxlength="20" value="' + ZAYAV.imei + '">' +
 			'<tr><td class="label r">Серийный номер:<td><input type="text" id="serial" maxlength="30" value="' + ZAYAV.serial + '">' +
 			'<tr><td class="label r">Цвет:' +
-				'<td><INPUT type="hidden" id="color_id" value="' + ZAYAV.color_id + '" />' +
-					'<span class="color_dop dn"><tt>-</tt><INPUT TYPE="hidden" id="color_dop" value="' + ZAYAV.color_dop + '" /></span>' +
+				'<td><input type="hidden" id="color_id" value="' + ZAYAV.color_id + '" />' +
+					'<span class="color_dop dn"><tt>-</tt><input TYPE="hidden" id="color_dop" value="' + ZAYAV.color_dop + '" /></span>' +
 			'<tr class="tr_equip' + (ZAYAV.equip ? '' : ' dn') + '">' +
 				'<td class="label r top">Комплектация:<td class="equip_spisok">' + ZAYAV.equip +
 			'<tr><td class="label">Стоимость ремонта:<td><input type="text" class="money" id="pre_cost" maxlength="11" value="' + (ZAYAV.pre_cost ? ZAYAV.pre_cost : '') + '" /> руб.' +
@@ -2724,7 +2848,7 @@ $(document)
 		var t = $(this),
 			html =
 				'<table class="_dialog-tab">' +
-					'<tr><td class="label">Сумма:<td><INPUT type="text" class="money" id="sum" maxlength="11" /> руб.' +
+					'<tr><td class="label">Сумма:<td><input type="text" class="money" id="sum" maxlength="11" /> руб.' +
 				'</table>';
 		var dialog = _dialog({
 				width:320,
@@ -3039,8 +3163,8 @@ $(document)
 	.on('click', '.salary .up', function() {
 		var html =
 				'<table class="salary-tab">' +
-					'<tr><td class="label">Сумма:<td><INPUT type="text" id="sum" class="money" maxlength="8"> руб.' +
-					'<tr><td class="label">Описание:<td><INPUT type="text" id="about" maxlength="50">' +
+					'<tr><td class="label">Сумма:<td><input type="text" id="sum" class="money" maxlength="8"> руб.' +
+					'<tr><td class="label">Описание:<td><input type="text" id="about" maxlength="50">' +
 					'<tr><td class="label">Месяц:' +
 						'<td><input type="hidden" id="tabmon" value="' + MON + '" /> ' +
 							'<input type="hidden" id="tabyear" value="' + YEAR + '" />' +
@@ -3310,7 +3434,7 @@ $(document)
 	.on('click', '.salary .start-set', function() {
 		var html =
 				'<table class="salary-tab">' +
-					'<tr><td class="label">Сумма:<td><INPUT type="text" id="sum" class="money" maxlength="8"> руб.' +
+					'<tr><td class="label">Сумма:<td><input type="text" id="sum" class="money" maxlength="8"> руб.' +
 				'</table>',
 			dialog = _dialog({
 				head:'Установка баланса по зарплате сотрудника',
@@ -3468,7 +3592,7 @@ $(document)
 			zayavPlace();
 			colorSelDop(0);
 			$(document).on('click', '#fault', function() {
-				var i = $(this).find('INPUT'),
+				var i = $(this).find('input'),
 					arr = [];
 				for(var n = 0; n < i.length; n++)
 					if(i.eq(n).val() == 1) {
@@ -3858,7 +3982,7 @@ $(document)
 							'<td><input type="hidden" id="tabmon" value="' + ((new Date).getMonth() + 1) + '" /> ' +
 								'<input type="hidden" id="tabyear" value="' + (new Date).getFullYear() + '" />' +
 						'<tr><td class="label">Описание:<td><input type="text" id="prim" maxlength="100">' +
-						'<tr><td class="label">Со счёта:<td><input type="hidden" id="invoice_id" value="' + (INVOICE_SPISOK.length == 1 ? INVOICE_SPISOK[0].uid : 1) + '" />' +
+						'<tr><td class="label">Со счёта:<td><input type="hidden" id="invoice_id" value="' + (INVOICE_SPISOK.length ? INVOICE_SPISOK[0].uid : 0) + '" />' +
 						'<tr><td class="label">Сумма:<td><input type="text" id="sum" class="money" maxlength="11" /> руб.' +
 					'</table>',
 					dialog = _dialog({

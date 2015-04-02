@@ -175,6 +175,126 @@ $(document)
 		}
 	})
 
+	.on('click', '#setup-service-cartridge .add', function() {
+		var t = $(this),
+			html = '<table class="setup-tab">' +
+				'<tr><td class="label"><b>Модель картриджа:</b><td><input type="text" id="name" />' +
+				'<tr><td class="label">Заправка:<td><input type="text" id="cost_filling" class="money" maxlength="11" /> руб.' +
+				'<tr><td class="label">Восстановление:<td><input type="text" id="cost_restore" class="money" maxlength="11" /> руб.' +
+				'<tr><td class="label">Замена чипа:<td><input type="text" id="cost_chip" class="money" maxlength="11" /> руб.' +
+				'</table>',
+			dialog = _dialog({
+				top:40,
+				width:400,
+				head:'Добавление нового картриджа',
+				content:html,
+				submit:submit
+			});
+		$('#name').focus();
+		$('#name,#cost_filling,#cost_restore,#cost_chip').keyEnter(submit);
+		function submit() {
+			var send = {
+				op:'cartridge_add',
+				name:$('#name').val(),
+				cost_filling:_num($('#cost_filling').val()),
+				cost_restore:_num($('#cost_restore').val()),
+				cost_chip:_num($('#cost_chip').val())
+			};
+			if(!send.name) {
+				dialog.err('Не указано наименование');
+				$('#name').focus();
+			} else {
+				dialog.process();
+				$.post(AJAX_SETUP, send, function(res) {
+					if(res.success) {
+						$('#spisok').html(res.html);
+						dialog.close();
+						_msg('Внесено!');
+					} else
+						dialog.abort();
+				}, 'json');
+			}
+		}
+	})
+	.on('click', '#setup-service-cartridge .img_edit', function() {
+		var t = $(this);
+		while(t[0].tagName != 'TR')
+			t = t.parent();
+		var id = t.attr('val'),
+			name = t.find('.name').html(),
+			filling = t.find('.filling').html(),
+			restore = t.find('.restore').html(),
+			chip = t.find('.chip').html(),
+			html = '<table class="setup-tab">' +
+				'<tr><td class="label"><b>Модель картриджа:</b><td><input type="text" id="name" value="' + name + '" />' +
+				'<tr><td class="label">Заправка:<td><input type="text" id="cost_filling" class="money" maxlength="11" value="' + filling + '" /> руб.' +
+				'<tr><td class="label">Восстановление:<td><input type="text" id="cost_restore" class="money" maxlength="11" value="' + restore + '" /> руб.' +
+				'<tr><td class="label">Замена чипа:<td><input type="text" id="cost_chip" class="money" maxlength="11" value="' + chip + '" /> руб.' +
+				'</table>',
+			dialog = _dialog({
+				top:40,
+				width:400,
+				head:'Редактирование данных картриджа',
+				content:html,
+				butSubmit:'Сохранить',
+				submit:submit
+			});
+		$('#name').focus();
+		$('#name,#cost_filling,#cost_restore,#cost_chip').keyEnter(submit);
+		function submit() {
+			var send = {
+				op:'cartridge_edit',
+				id:id,
+				name:$('#name').val(),
+				cost_filling:_num($('#cost_filling').val()),
+				cost_restore:_num($('#cost_restore').val()),
+				cost_chip:_num($('#cost_chip').val())
+			};
+			if(!send.name) {
+				dialog.err('Не указано наименование');
+				$('#name').focus();
+			} else {
+				dialog.process();
+				$.post(AJAX_SETUP, send, function(res) {
+					if(res.success) {
+						$('#spisok').html(res.html);
+						dialog.close();
+						_msg('Изменено!');
+					} else
+						dialog.abort();
+				}, 'json');
+			}
+		}
+	})
+	.on('click', '#setup-service-cartridge .img_del', function() {
+		var t = $(this),
+			dialog = _dialog({
+				top:90,
+				width:300,
+				head:'Удаление картриджа',
+				content:'<center><b>Подтвердите удаление картриджа.</b></center>',
+				butSubmit:'Удалить',
+				submit:submit
+			});
+		function submit() {
+			while(t[0].tagName != 'TR')
+				t = t.parent();
+			var send = {
+				op:'cartridge_del',
+				id:t.attr('val')
+			};
+			dialog.process();
+			$.post(AJAX_SETUP, send, function(res) {
+				if(res.success) {
+					$('#spisok').html(res.html);
+					dialog.close();
+					_msg('Удалено!');
+				} else
+					dialog.abort();
+			}, 'json');
+		}
+	})
+
 	.on('click', '#setup_invoice .add', function() {
 		var t = $(this),
 			html = '<table class="setup-tab">' +
@@ -295,7 +415,7 @@ $(document)
 				id:t.attr('val')
 			};
 			dialog.process();
-			$.post(AJAX_MAIN, send, function(res) {
+			$.post(AJAX_SETUP, send, function(res) {
 				if(res.success) {
 					$('.spisok').html(res.html);
 					dialog.close();
@@ -602,6 +722,29 @@ $(document)
 						}, 'json');
 					}
 				});
+			});
+		}
+		if($('#setup-service').length) {
+			$('.s-cartridge-toggle').click(function() {
+				var t = $(this),
+					p = t,
+					send = {
+						op:'cartridge_toggle',
+						v:t.hasClass('off') ? 0 : 1
+					};
+				while(!p.hasClass('unit'))
+					p = p.parent();
+				var h1 = p.find('h1');
+				if(h1.hasClass('_busy'))
+					return;
+				h1.addClass('_busy');
+				$.post(AJAX_SETUP, send, function(res) {
+					h1.removeClass('_busy');
+					if(res.success) {
+						p[(send.v ? 'add' : 'remove') + 'Class']('on');
+						_msg('Выполнено!');
+					}
+				}, 'json');
 			});
 		}
 		if($('#setup_rules').length) {

@@ -1160,6 +1160,70 @@ switch(@$_POST['op']) {
 		jsonSuccess($send);
 		break;
 
+	case 'zayav_cartridge_add':
+		if(!$client_id = _isnum($_POST['client_id']))
+			jsonError();
+
+		if(empty($_POST['ids']))
+			jsonError();
+
+		$ids = explode(',', $_POST['ids']);
+		for($n = 0; $n < count($ids); $n++)
+			if(!preg_match(REGEXP_NUMERIC, $ids[$n]))
+				jsonError();
+
+		$comm = _txt($_POST['comm']);
+
+		$sql = "SELECT IFNULL(MAX(`nomer`),0)+1 FROM `zayav` WHERE `ws_id`=".WS_ID." LIMIT 1";
+		$nomer = query_value($sql);
+
+		$sql = "INSERT INTO `zayav` (
+					`ws_id`,
+					`nomer`,
+					`cartridge`,
+					`client_id`,
+
+					`zayav_status`,
+					`zayav_status_dtime`,
+
+					`barcode`,
+					`viewer_id_add`
+				) VALUES (
+					".WS_ID.",
+					".$nomer.",
+					1,
+					".$client_id.",
+
+					1,
+					current_timestamp,
+
+					'".rand(10, 99).(time() + rand(10000, 99999))."',
+					".VIEWER_ID."
+				)";
+		query($sql);
+		$send['id'] = mysql_insert_id();
+
+		foreach($ids as $id) {
+			$sql = "INSERT INTO `zayav_cartridge` (
+						`zayav_id`,
+						`cartridge_id`
+					) VALUES (
+						".$send['id'].",
+						".$id."
+					)";
+			query($sql);
+		}
+
+		_vkCommentAdd('zayav', $send['id'], $comm);
+
+		history_insert(array(
+			'type' => 54,
+			'client_id' => $client_id,
+			'zayav_id' => $send['id']
+		));
+		jsonSuccess($send);
+		break;
+
 	case 'zp_add':
 		if(!preg_match(REGEXP_NUMERIC, $_POST['name_id']) || $_POST['name_id'] == 0)
 			jsonError();

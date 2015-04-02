@@ -7,6 +7,7 @@ function setup() {
 		'my' => 'Мои настройки',
 		'info' => 'Информация о мастерской',
 		'worker' => 'Сотрудники',
+		'service' => 'Виды услуг',
 		'invoice' => 'Счета',
 		'expense' => 'Категории расходов',
 		'zayavexpense' => 'Расходы по заявке'
@@ -15,6 +16,8 @@ function setup() {
 		unset($pages['info']);
 	if(!RULES_WORKER)
 		unset($pages['worker']);
+	if(!WS_ADMIN)
+		unset($pages['service']);
 	if(!RULES_INVOICE)
 		unset($pages['invoice']);
 
@@ -25,11 +28,18 @@ function setup() {
 		case 'my': $left = 'Мои настройки'; break;
 		case 'info': $left = setup_info(); break;
 		case 'worker':
-			if(!empty($_GET['id']) && preg_match(REGEXP_NUMERIC, $_GET['id'])) {
-				$left = setup_worker_rules(intval($_GET['id']));
+			if($id = _isnum(@$_GET['id'])) {
+				$left = setup_worker_rules($id);
 				break;
 			}
 			$left = setup_worker();
+			break;
+		case 'service':
+			if(@$_GET['d1'] == 'cartridge') {
+				$left = setup_service_cartridge();
+				break;
+			}
+			$left = setup_service();
 			break;
 		case 'invoice': $left = setup_invoice(); break;
 		case 'expense': $left = setup_expense(); break;
@@ -81,6 +91,79 @@ function setup_info() {
 		'<div class="vkButton" id="info_del"><button>Удалить мастерскую</button></div>'.
 	'</div>';
 }//setup_info()
+
+function setup_service() {
+	$r = query_assoc("SELECT * FROM `workshop` WHERE `id`=".WS_ID);
+	return
+	'<div id="setup-service">'.
+		'<div class="headName">Виды оказываемых услуг</div>'.
+
+		'<div class="unit'.($r['service_device'] ? ' on' : '').'">'.
+			'<h1>Ремонт электронного оборудования</h1>'.
+			'<h2>Приём в ремонт и на профилактическое обслуживание оборудования и электронных устройств: '.
+				'<ul><li>компьютеров;'.
+					'<li>ноутбуков;'.
+					'<li>планшетов;'.
+					'<li>мобильных телефонов;'.
+					'<li>принтеров;'.
+					'<li>фотоаппаратов;'.
+					'<li>др.'.
+				'</ul>'.
+			'</h2>'.
+//			'<h4><a>Настроить</a></h4>'.
+		'</div>'.
+
+		'<div class="unit'.($r['service_cartridge'] ? ' on' : '').'">'.
+			'<h1>Заправка картриджей</h1>'.
+			'<h2>Заправка, восстановление картриджей от лазерных принтеров, копиров и МФУ. Замена чипов, фотовалов.</h2>'.
+			'<h3><a class="s-cartridge-toggle">Включить</a></h3>'.
+			'<h4>'.
+				'<a href="'.URL.'&p=setup&d=service&d1=cartridge">Настроить</a> :: '.
+				'<a class="s-cartridge-toggle off">Отключить</a>'.
+			'</h4>'.
+		'</div>'.
+
+	'</div>';
+}//setup_service()
+function setup_service_cartridge() {
+	return
+		'<div id="setup-service-cartridge">'.
+			'<a href="'.URL.'&p=setup&d=service" id="back"><< назад к <b>Видам услуг</b></a>'.
+			'<div class="headName">Управление заправкой картриджей<a class="add">Внести новый картридж</a></div>'.
+			'<div id="spisok">'.setup_service_cartridge_spisok().'</div>'.
+		'</div>';
+}//setup_service_cartridge()
+function setup_service_cartridge_spisok() {
+	$sql = "SELECT * FROM `setup_cartridge` WHERE `ws_id`=".WS_ID." ORDER BY `name`";
+	$q = query($sql);
+	if(!mysql_num_rows($q))
+		return 'Список пуст.';
+
+	$spisok = array();
+	while($r = mysql_fetch_assoc($q))
+		$spisok[$r['id']] = $r;
+
+	$send =
+		'<table class="_spisok">'.
+			'<tr><th class="name">Модель'.
+				'<th class="filling">Заправка'.
+				'<th class="restore">Восст.'.
+				'<th class="chip">Замена<br />чипа'.
+				'<th class="set">';
+	foreach($spisok as $id => $r)
+		$send .=
+			'<tr val="'.$id.'">'.
+				'<td class="name">'.$r['name'].
+				'<td class="filling">'.($r['cost_filling'] ? $r['cost_filling'] : '').
+				'<td class="restore">'.($r['cost_restore'] ? $r['cost_restore'] : '').
+				'<td class="chip">'.($r['cost_chip'] ? $r['cost_chip'] : '').
+				'<td class="set">'.
+					'<div class="img_edit'._tooltip('Изменить', -33).'</div>'.
+					'<div class="img_del'._tooltip('Удалить', -29).'</div>';
+	$send .= '</table>';
+	return $send;
+}//setup_service_cartridge_spisok()
+
 
 function setup_worker() {
 	return

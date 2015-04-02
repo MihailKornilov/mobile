@@ -32,8 +32,14 @@ function _mainLinks() {
 
 	$send = '<div id="mainLinks">';
 	foreach($links as $l)
-		if($l['show'])
-			$send .= '<a href="'.URL.'&p='.$l['page'].'"'.($l['page'] == $_GET['p'] ? 'class="sel"' : '').'>'.$l['name'].'</a>';
+		if($l['show']) {
+			$sel = $l['page'] == $_GET['p'] ? ' class="sel"' : '';
+			$cart = $l['page'] == 'zayav' && @$_GET['from'] == 'cartridge' ? '&d=cartridge' : '';//возврат на страницу с картриджами из заявки
+			$send .=
+				'<a href="'.URL.'&p='.$l['page'].$cart.'"'.$sel.'>'.
+					$l['name'].
+				'</a>';
+		}
 	$send .= pageHelpIcon().'</div>';
 	$html .= $send;
 }//_mainLinks()
@@ -447,7 +453,7 @@ function client_info($client_id) {
 					'<div id="histories">'.$history['spisok'].'</div>'.
 				'<td class="right">'.
 					'<div class="rightLink">'.
-						'<a href="'.URL.'&p=zayav&d=add&back=client&id='.$client_id.'"><b>Новая заявка</b></a>'.
+						'<a id="zayav-add" val="client_'.$client_id.'"'.(SERVIVE_CARTRIDGE ? ' class="cartridge"' : '').'><b>Новая заявка</b></a>'.
 						'<a class="_remind-add">Новое напоминание</a>'.
 						'<a class="cedit">Редактировать</a>'.
 					'</div>'.
@@ -819,11 +825,16 @@ function zayav_add($v=array()) {
 		$fault .= (++$k%2 ? '<tr>' : '').'<td>'._check('f_'.$r['id'], $r['name']);
 	$fault .= '</table>';
 
-	$client_id = empty($_GET['id']) ? 0 : intval($_GET['id']);
+	$client_id = 0;
+	$back = 'zayav';
 
-	switch(@$_GET['back']) {
-		case 'client': $back = 'client'.($client_id > 0 ? '&d=info&id='.$client_id : ''); break;
-		default: $back = 'zayav';
+	if(!empty($_GET['back'])) {
+		$back = explode('_', $_GET['back']);
+		if($back[0] == 'client') {
+			$client_id = _isnum(@$back[1]);
+			$back = 'client'.($client_id ? '&d=info&id='.$client_id : '');
+		} else
+			$back = $back[0];
 	}
 
 	return '<div id="zayavAdd">'.
@@ -897,7 +908,7 @@ function zayav_spisok($v) {
 
 	$page = $filter['page'];
 	$limit = $filter['limit'];
-	$cond = "`ws_id`=".WS_ID." AND !`deleted` AND `zayav_status`";
+	$cond = "`ws_id`=".WS_ID." AND !`deleted` AND !`cartridge` AND `zayav_status`";
 
 	if($filter['find']) {
 		$engRus = _engRusChar($filter['find']);
@@ -1108,11 +1119,21 @@ function zayav_list($v) {
 	$status[1] .= '<div id="srok">Срок: '._zayavFinish($v['finish']).'</div>';
 
 	return '<div id="zayav">'.
+
+	(SERVIVE_CARTRIDGE ?
+		'<div id="dopLinks">'.
+			'<a class="link sel">Оборудование</a>'.
+			'<a class="link" href="'.URL.'&p=zayav&d=cartridge">Картриджи</a>'.
+		'</div>'
+	: '').
+
 		'<div class="result">'.$data['result'].'</div>'.
 		'<table class="tabLR">'.
 			'<tr><td id="spisok">'.$data['spisok'].
 				'<td class="right">'.
-					'<div id="buttonCreate"><a HREF="'.URL.'&p=zayav&d=add&back=zayav">Новая заявка</a></div>'.
+					'<div id="buttonCreate">'.
+						'<a id="zayav-add" val="zayav"'.(SERVIVE_CARTRIDGE ? ' class="cartridge"' : '').'>Новая заявка</a>'.
+					'</div>'.
 					'<div id="find"></div>'.
 					'<div class="findHead">Порядок</div>'.
 					_radio('sort', array(1=>'По дате добавления',2=>'По обновлению статуса'), $v['sort']).
@@ -1192,6 +1213,9 @@ function zayav_info($zayav_id) {
 	if(!$z = mysql_fetch_assoc(query($sql)))
 		return 'Заявки не существует.';
 
+	if($z['cartridge'])
+		return zayav_cartridge_info($z);
+
 	define('MODEL', _vendorName($z['base_vendor_id'])._modelName($z['base_model_id']));
 	define('DOPL', $z['accrual_sum'] - $z['oplata_sum']);
 
@@ -1255,8 +1279,9 @@ function zayav_info($zayav_id) {
 			'<tr class="z-info"><td id="left">'.
 				'<div class="headName">'.
 					'Заявка №'.$z['nomer'].
-					'<a class="img_print'._tooltip('Распечатать квитанцию', -75).'</a>'.
-					//'<a href="'.APP_HTML.'/view/_kvit.php?'.VALUES.'&id='.$zayav_id.'" class="img_word" title="Распечатать квитанцию в Microsoft Word"></a>'.
+	  (WS_ID != 3 ? '<a class="img_print'._tooltip('Распечатать квитанцию', -75).'</a>' :
+					'<a href="'.APP_HTML.'/view/kvit_comtex.php?'.VALUES.'&id='.$zayav_id.'" class="img_word" title="Распечатать квитанцию в xls"></a>'
+	  ).
 				'</div>'.
 				'<table class="tabInfo">'.
 					'<tr><td class="label">Устройство: <td>'._deviceName($z['base_device_id']).'<a><b>'.MODEL.'</b></a>'.
@@ -1351,7 +1376,7 @@ function zayav_expense_test($v) {// Проверка корректности данных расходов заявки
 			$ids[1] = win1251(htmlspecialchars(trim($ids[1])));
 		if(!_zayavExpense($ids[0], 'txt') && !_zayavExpense($ids[0], 'worker') && !_zayavExpense($ids[0], 'zp'))
 			$ids[1] = '';
-		if(!_cena($ids[2]))
+		if(!_cena($ids[2]) && $ids[2] != 0)
 			return false;
 		$send[] = $ids;
 	}
@@ -1571,6 +1596,221 @@ function zayav_msg_to_client($zayav_id) {//сообщение о передачи устройства клиен
 	query($sql);
 	return utf8(_vkComment('zayav', $zayav_id));
 }//zayav_msg_to_client()
+
+
+
+// ---===! zayav cartridge !===--- Картриджи
+
+function zayav_cartridge() {
+	$data = zayav_cartridge_spisok();
+	$v = $data['filter'];
+
+	$status = _zayavStatusName();
+
+	return
+	'<div id="zayav-cartridge">'.
+
+		'<div id="dopLinks">'.
+			'<a class="link" href="'.URL.'&p=zayav">Оборудование</a>'.
+			'<a class="link sel">Картриджи</a>'.
+		'</div>'.
+
+		'<div class="result">'.$data['result'].'</div>'.
+		'<table class="tabLR">'.
+			'<tr><td id="spisok">'.$data['spisok'].
+				'<td class="right">'.
+					'<div id="buttonCreate">'.
+						'<a id="zayav-add" val="zayav"'.(SERVIVE_CARTRIDGE ? ' class="cartridge"' : '').'>Новая заявка</a>'.
+					'</div>'.
+					'<div class="findHead">Порядок</div>'.
+					_radio('sort', array(1=>'По дате добавления',2=>'По обновлению статуса'), $v['sort']).
+					_check('desc', 'Обратный порядок', $v['desc']).
+					'<div class="findHead">Статус заявки</div>'.
+					_rightLink('status', $status, $v['status']).
+		'</table>'.
+	'</div>';
+}//zayav_cartridge()
+function zayavCartridgeFilter($v) {
+	$default = array(
+		'page' => 1,
+		'limit' => 20,
+		'client_id' => 0,
+		'sort' => 1,
+		'desc' => 0,
+		'status' => 0
+	);
+	$filter = array(
+		'page' => _isnum(@$v['page']) ? $v['page'] : 1,
+		'limit' => _isnum(@$v['limit']) ? $v['limit'] : 20,
+		'client_id' => _isnum(@$v['client_id']),
+		'sort' => _isnum(@$v['sort']) ? $v['sort'] : 1,
+		'desc' => _isbool(@$v['desc']),
+		'status' => _isnum(@$v['status']),
+		'clear' => ''
+	);
+	if(!$filter['client_id'])
+		foreach($default as $k => $r)
+			if($r != $filter[$k]) {
+				$filter['clear'] = '<a class="clear">Очистить фильтр</a>';
+				break;
+			}
+	return $filter;
+}//zayavCartridgeFilter()
+function zayav_cartridge_spisok($v=array()) {
+	$filter = zayavCartridgeFilter($v);
+
+	$page = $filter['page'];
+	$limit = $filter['limit'];
+	$cond = "`ws_id`=".WS_ID." AND !`deleted` AND `cartridge`";
+
+	if($filter['client_id'])
+		$cond .= " AND `client_id`=".$filter['client_id'];
+	if($filter['status'])
+		$cond .= " AND `zayav_status`=".$filter['status'];
+
+	$all = query_value("SELECT COUNT(*) FROM `zayav` WHERE ".$cond." LIMIT 1");
+
+	$zayav = array();
+
+	if(!$all)
+		return array(
+			'all' => 0,
+			'result' => 'Заявок не найдено'.$filter['clear'],
+			'spisok' => '<div class="_empty">Заявок не найдено</div>',
+			'filter' => $filter
+		);
+
+	$send = array(
+		'all' => $all,
+		'result' => 'Показан'._end($all, 'а', 'о').' '.$all.' заяв'._end($all, 'ка', 'ки', 'ок').$filter['clear'],
+		'spisok' => '',
+		'filter' => $filter
+	);
+
+	$start = ($page - 1) * $limit;
+	$limit_save = $limit;
+
+	$sql = "SELECT
+	            *,
+				'' AS `note`
+			FROM `zayav`
+			WHERE ".$cond."
+			ORDER BY `".($filter['sort'] == 2 ? 'zayav_status_dtime' : 'dtime_add')."` ".($filter['desc'] ? 'ASC' : 'DESC')."
+			LIMIT ".$start.",".$limit;
+	$q = query($sql);
+	while($r = mysql_fetch_assoc($q)) {
+		$r['cart'] = array();
+		$zayav[$r['id']] = $r;
+	}
+
+	$sql = "SELECT * FROM `zayav_cartridge` WHERE `zayav_id` IN (".implode(',', array_keys($zayav)).")";
+	$q = query($sql);
+	while($r = mysql_fetch_assoc($q))
+		$zayav[$r['zayav_id']]['cart'][] = $r['cartridge_id'];
+
+	$cart = query_ass("SELECT `id`,`name` FROM `setup_cartridge` WHERE `ws_id`=".WS_ID);
+
+	if(!$filter['client_id'])
+		$zayav = _clientLink($zayav, 0, 1);
+
+	foreach($zayav as $id => $r) {
+		$cartgidge = array();
+		foreach(array_unique($r['cart']) as $c)
+			$cartgidge[] = '<b>'.$cart[$c].'</b>';
+		$send['spisok'] .=
+		'<div class="zayav_unit cart" id="u'.$id.'" style="background-color:#'._zayavStatusColor($r['zayav_status']).'" val="'.$id.'">'.
+			'<h2>#'.$r['nomer'].'</h2>'.
+			'<a class="name">Картридж'.(count($r['cart']) > 1 ? 'и' : '').' '.implode(', ', $cartgidge).'</a>'.
+			'<table class="utab">'.
+				'<tr><td valign=top>'.
+				(!$filter['client_id'] ? '<tr><td class="label">Клиент:<td>'.$r['client_link'] : '').
+				'<tr><td class="label">Дата подачи:'.
+					'<td>'.FullData($r['dtime_add'], 1).
+			'</table>'.
+		'</div>';
+	}
+
+	if($start + $limit < $all) {
+		$c = $all - $start - $limit;
+		$c = $c > $limit ? $limit_save : $c;
+		$send['spisok'] .=
+			'<div class="_next" val="'.($page + 1).'">'.
+				'<span>Показать ещё '.$c.' заяв'._end($c, 'ку', 'ки', 'ок').'</span>'.
+			'</div>';
+	}
+	return $send;
+}//zayav_cartridge_spisok()
+
+function zayav_cartridge_info($z) {
+	$zayav_id = $z['id'];
+	$status = _zayavStatusName();
+	unset($status[0]);
+
+	$cartSetup = query_ass("SELECT `id`,`name` FROM `setup_cartridge` WHERE `ws_id`=".WS_ID);
+
+	$sql = "SELECT * FROM `zayav_cartridge` WHERE `zayav_id`=".$zayav_id." ORDER BY `id`";
+	$q = query($sql);
+	$cart = array();
+	while($r = mysql_fetch_assoc($q))
+		$cart[] = $cartSetup[$r['cartridge_id']];
+
+
+	$history = history(array('zayav_id'=>$zayav_id));
+
+	return
+	'<script type="text/javascript">'.
+		'var STATUS='._selJson($status).','.
+			'ZAYAV={'.
+				'id:'.$zayav_id.','.
+				'nomer:'.$z['nomer'].','.
+				'head:"№<b>'.$z['nomer'].'</b>",'.
+				'client_id:'.$z['client_id'].','.
+				'status:'.$z['zayav_status'].
+			'};'.
+	'</script>'.
+
+	'<div id="zayav-info">'.
+		'<div id="dopLinks">'.
+			'<a class="img_del delete'.(!empty($money) ?  ' dn': '').'"></a>'.
+			'<a class="link info sel">Информация</a>'.
+			'<a class="link zedit">Редактирование</a>'.
+			'<a class="link acc_add">Начислить</a>'.
+			'<a class="link income-add">Принять платёж</a>'.
+			'<a class="link hist">История</a>'.
+		'</div>'.
+
+		'<table class="itab">'.
+			'<tr class="z-info"><td id="left">'.
+
+				'<div class="headName">'.
+					'Заявка №'.$z['nomer'].' - заправка картриджей'.
+				'</div>'.
+				'<table class="tabInfo">'.
+					'<tr><td class="label">Клиент:	 <td>'._clientLink($z['client_id'], 0, 1).
+					'<tr><td class="label top">Картридж'.(count($cart) > 1 ? 'и' : '').':<td><b>'.implode('<br />', $cart).'</b>'.
+					'<tr><td class="label">Дата приёма:'.
+						'<td class="dtime_add'._tooltip('Заявку внёс '._viewer($z['viewer_id_add'], 'name'), -70).FullDataTime($z['dtime_add']).
+					'<tr><td class="label">Статус:'.
+						'<td><div id="status" style="background-color:#'._zayavStatusColor($z['zayav_status']).'" class="status_place">'.
+								_zayavStatusName($z['zayav_status']).
+							'</div>'.
+							'<div id="status_dtime">от '.FullDataTime($z['zayav_status_dtime'], 1).'</div>'.
+				'</table>'.
+				_vkComment('zayav', $z['id']).
+				'<div class="headBlue mon">Начисления и платежи'.
+					'<a class="add income-add">Принять платёж</a>'.
+					'<em>::</em>'.
+					'<a class="add acc_add">Начислить</a>'.
+				'</div>'.
+				'<div id="money_spisok">'.zayav_info_money($zayav_id).'</div>'.
+
+			'<tr class="z-hist"><td>'.
+				'<div class="headName">Заявка №'.$z['nomer'].' - история действий</div>'.
+				$history['spisok'].
+		'</table>'.
+	'</div>';
+}//zayav_cartridge_info()
+
 
 
 
