@@ -147,6 +147,11 @@
 #zayav-add-tab .unit:hover{color:#2B587A}
 
 
+
+/* Таблица внесения нового картриджа */
+#cartridge-new-tab{border-spacing:10px}
+#cartridge-new-tab #name{width:170px}
+
 /* Новая заявка на заправку картриджей */
 #cartridge-add-tab{border-spacing:10px}
 #cartridge-add-tab .label{width:110px;text-align:right}

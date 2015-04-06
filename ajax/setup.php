@@ -194,41 +194,6 @@ switch(@$_POST['op']) {
 
 		jsonSuccess();
 		break;
-	case 'cartridge_add':
-		$name = _txt($_POST['name']);
-		$cost_filling = _isnum($_POST['cost_filling']);
-		$cost_restore = _isnum($_POST['cost_restore']);
-		$cost_chip = _isnum($_POST['cost_chip']);
-
-		if(empty($name))
-			jsonError();
-
-		$sql = "INSERT INTO `setup_cartridge` (
-					`ws_id`,
-					`name`,
-					`cost_filling`,
-					`cost_restore`,
-					`cost_chip`
-				) VALUES (
-					".WS_ID.",
-					'".addslashes($name)."',
-					".$cost_filling.",
-					".$cost_restore.",
-					".$cost_chip."
-				)";
-		query($sql);
-
-		xcache_unset(CACHE_PREFIX.'cartridge'.WS_ID);
-		GvaluesCreate();
-
-		history_insert(array(
-			'type' => 1017,
-			'value' => $name
-		));
-
-		$send['html'] = utf8(setup_service_cartridge_spisok());
-		jsonSuccess($send);
-		break;
 	case 'cartridge_edit':
 		if(!$id = _num($_POST['id']))
 			jsonError();

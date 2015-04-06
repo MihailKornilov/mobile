@@ -1160,6 +1160,47 @@ switch(@$_POST['op']) {
 		jsonSuccess($send);
 		break;
 
+	case 'cartridge_new'://внесение новой модели картриджа
+		$name = _txt($_POST['name']);
+		$cost_filling = _isnum($_POST['cost_filling']);
+		$cost_restore = _isnum($_POST['cost_restore']);
+		$cost_chip = _isnum($_POST['cost_chip']);
+
+		if(empty($name))
+			jsonError();
+
+		$sql = "INSERT INTO `setup_cartridge` (
+					`ws_id`,
+					`name`,
+					`cost_filling`,
+					`cost_restore`,
+					`cost_chip`
+				) VALUES (
+					".WS_ID.",
+					'".addslashes($name)."',
+					".$cost_filling.",
+					".$cost_restore.",
+					".$cost_chip."
+				)";
+		query($sql);
+		$send['insert_id'] = mysql_insert_id();
+
+		xcache_unset(CACHE_PREFIX.'cartridge'.WS_ID);
+		GvaluesCreate();
+
+		history_insert(array(
+			'type' => 1017,
+			'value' => $name
+		));
+
+		if($_POST['from'] == 'setup')
+			$send['spisok'] = utf8(setup_service_cartridge_spisok());
+		else {
+			$send['spisok'] = query_selArray("SELECT `id`,`name` FROM `setup_cartridge` WHERE `ws_id`=" . WS_ID . " ORDER BY `name`");
+		}
+
+		jsonSuccess($send);
+		break;
 	case 'zayav_cartridge_add':
 		if(!$client_id = _isnum($_POST['client_id']))
 			jsonError();
@@ -1221,6 +1262,13 @@ switch(@$_POST['op']) {
 			'client_id' => $client_id,
 			'zayav_id' => $send['id']
 		));
+		jsonSuccess($send);
+		break;
+	case 'zayav_cartridge_spisok':
+		$data = zayav_cartridge_spisok($_POST);
+		if($data['filter']['page'] == 1)
+			$send['all'] = utf8($data['result']);
+		$send['html'] = utf8($data['spisok']);
 		jsonSuccess($send);
 		break;
 

@@ -338,7 +338,55 @@ var AJAX_WS = APP_HTML + '/ajax/ws.php?' + VALUES,
 		window.open(APP_HTML + '/view/kvit_html.php?' + VALUES + '&id=' + id, 'kvit', params);
 	},
 
-	cartridgeAdd = function() {
+	cartridgeNew = function(id, callback) {
+		var t = $(this),
+			html = '<table id="cartridge-new-tab">' +
+				'<tr><td class="label"><b>Модель картриджа:</b><td><input type="text" id="name" />' +
+				'<tr><td class="label r">Заправка:<td><input type="text" id="cost_filling" class="money" maxlength="11" /> руб.' +
+				'<tr><td class="label r">Восстановление:<td><input type="text" id="cost_restore" class="money" maxlength="11" /> руб.' +
+				'<tr><td class="label r">Замена чипа:<td><input type="text" id="cost_chip" class="money" maxlength="11" /> руб.' +
+				'</table>',
+			dialog = _dialog({
+				top:20,
+				head:'Добавление нового картриджа',
+				content:html,
+				submit:submit
+			});
+		$('#name').focus();
+		$('#name,#cost_filling,#cost_restore,#cost_chip').keyEnter(submit);
+		function submit() {
+			var send = {
+				op:'cartridge_new',
+				name:$('#name').val(),
+				cost_filling:_num($('#cost_filling').val()),
+				cost_restore:_num($('#cost_restore').val()),
+				cost_chip:_num($('#cost_chip').val()),
+				from:$('#setup-service-cartridge').length ? 'setup' : ''
+			};
+			if(!send.name) {
+				dialog.err('Не указано наименование');
+				$('#name').focus();
+			} else {
+				dialog.process();
+				$.post(AJAX_WS, send, function(res) {
+					if(res.success) {
+						if(send.from == 'setup')
+							$('#spisok').html(res.spisok);
+						else {
+							CARTRIDGE_SPISOK = res.spisok;
+							$('#' + id)._select(res.spisok);
+							$('#' + id)._select(res.insert_id);
+							callback(res.insert_id);
+						}
+						dialog.close();
+						_msg('Внесено!');
+					} else
+						dialog.abort();
+				}, 'json');
+			}
+		}
+	},
+	zayavCartridgeAdd = function() {
 		if(!window.CLIENT)
 			CLIENT = {
 				id:0,
@@ -384,6 +432,26 @@ var AJAX_WS = APP_HTML + '/ajax/ws.php?' + VALUES,
 				}, 'json');
 			}
 		}
+	},
+	cartridgeFilter = function () {
+		var v = {
+				op:'zayav_cartridge_spisok',
+				sort:$('#sort').val(),
+				desc:$('#desc').val(),
+				status:$('#status').val()
+			};
+		return v;
+	},
+	cartridgeSpisok = function() {
+		var send = cartridgeFilter();
+		$('#mainLinks').addClass('busy');
+		$.post(AJAX_WS, send, function (res) {
+			$('#mainLinks').removeClass('busy');
+			if(res.success) {
+				$('.result').html(res.all);
+				$('#spisok').html(res.html);
+			}
+		}, 'json');
 	},
 
 	zpFilter = function() {
@@ -1091,7 +1159,10 @@ $.fn.cartridge = function(o) {
 			bottom:4,
 			title0:'картридж не выбран',
 			spisok:CARTRIDGE_SPISOK,
-			func:add_test
+			func:add_test,
+			funcAdd:function(id) {
+				cartridgeNew(id, add_test);
+			}
 		});
 	}
 	function add_test(v) {//проверка, все ли картриджи выбраны, затем добавлять новое поле
@@ -1482,7 +1553,7 @@ $(document)
 			$('#go-device').click(goDevice);
 			$('#cartridge-add').click(function() {
 				dialog.close();
-				cartridgeAdd();
+				zayavCartridgeAdd();
 			});
 		} else
 			goDevice();
@@ -3822,6 +3893,11 @@ $(document)
 					});
 				}
 			});
+		}
+
+		if($('#zayav-cartridge').length) {
+			$('#desc')._check(cartridgeSpisok);
+			$('#status').rightLink(cartridgeSpisok);
 		}
 
 		if($('#zp').length) {
