@@ -1150,14 +1150,20 @@ $.fn.cartridge = function(o) {
 			return send.join();
 		}
 	}
+	if(typeof o == 'object')
+		for(var i = 0; i < o.length; i++) {
+			add(o[i]);
+			num++;
+		}
 
 	add();
-	function add() {
-		t.append('<input type="hidden" class="icar" id="car' + num + '" />');
+	function add(v) {
+		t.append('<input type="hidden" class="icar" id="car' + num + '" ' + (v ? 'value="' + v + '" ' : '') + '/>');
 		$('#car' + num)._select({
 			width:170,
 			bottom:4,
 			title0:'картридж не выбран',
+			write:1,
 			spisok:CARTRIDGE_SPISOK,
 			func:add_test,
 			funcAdd:function(id) {
@@ -2144,6 +2150,46 @@ $(document)
 	})
 	.on('click', '.zayav_kvit', function() {
 		kvitHtml($(this).attr('val'));
+	})
+
+	.on('click', '#zayav-info .zc-edit', function() {
+		var html =
+				'<table id="cartridge-add-tab">' +
+					'<tr><td class="label">Клиент:' +
+						'<td><input type="hidden" id="client_id" value="' + ZAYAV.client_id + '" />' +
+					'<tr><td class="label topi">Список картриджей:<td id="crt">' +
+				'</table>',
+			dialog = _dialog({
+				width:450,
+				top:30,
+				head:'Редактирование заявки',
+				content:html,
+				butSubmit:'Сохранить',
+				submit:submit
+			});
+		$('#client_id').clientSel({add:1});
+		$('#crt').cartridge(ZAYAV.cart_ids);
+		function submit() {
+			var send = {
+				op:'zayav_cartridge_edit',
+				zayav_id:ZAYAV.id,
+				client_id:_num($('#client_id').val()),
+				ids:$('#crt').cartridge('get')
+			};
+			if(!send.client_id) dialog.err('Не указан клиент');
+			else if(!send.ids) dialog.err('Не выбрано ни одного картриджа');
+			else {
+				dialog.process();
+				$.post(AJAX_WS, send, function(res) {
+					if(res.success) {
+						dialog.close();
+						_msg('Заявка изменена');
+						document.location.reload();
+					} else
+						dialog.abort();
+				}, 'json');
+			}
+		}
 	})
 
 	.on('click', '#zp .clear', function() {

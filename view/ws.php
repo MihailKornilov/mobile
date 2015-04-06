@@ -1717,6 +1717,7 @@ function zayav_cartridge_spisok($v=array()) {
 		$cartgidge = array();
 		foreach(array_unique($r['cart']) as $c)
 			$cartgidge[] = '<b>'.$cart[$c].'</b>';
+		$diff = $r['accrual_sum'] - $r['oplata_sum'];
 		$send['spisok'] .=
 		'<div class="zayav_unit cart" id="u'.$id.'" style="background-color:#'._zayavStatusColor($r['zayav_status']).'" val="'.$id.'">'.
 			'<h2>#'.$r['nomer'].'</h2>'.
@@ -1726,7 +1727,13 @@ function zayav_cartridge_spisok($v=array()) {
 				(!$filter['client_id'] ? '<tr><td class="label">Клиент:<td>'.$r['client_link'] : '').
 				'<tr><td class="label">Дата подачи:'.
 					'<td>'.FullData($r['dtime_add'], 1).
-			'</table>'.
+						($r['accrual_sum'] || $r['oplata_sum'] ?
+							'<div class="balans'.($diff ? ' diff' : '').'">'.
+								'<span class="acc'._tooltip('Начислено', -39).$r['accrual_sum'].'</span>/'.
+								'<span class="opl'._tooltip($diff ? ($diff > 0 ? 'Недо' : 'Пере').'плата '.abs($diff).' руб.' : 'Оплачено', -17, 'l').$r['oplata_sum'].'</span>'.
+							'</div>'
+						: '').
+		'</table>'.
 		'</div>';
 	}
 
@@ -1751,8 +1758,11 @@ function zayav_cartridge_info($z) {
 	$sql = "SELECT * FROM `zayav_cartridge` WHERE `zayav_id`=".$zayav_id." ORDER BY `id`";
 	$q = query($sql);
 	$cart = array();
-	while($r = mysql_fetch_assoc($q))
+	$cart_ids = array();
+	while($r = mysql_fetch_assoc($q)) {
 		$cart[] = $cartSetup[$r['cartridge_id']];
+		$cart_ids[] = $r['cartridge_id'];
+	}
 
 
 	$history = history(array('zayav_id'=>$zayav_id));
@@ -1765,7 +1775,8 @@ function zayav_cartridge_info($z) {
 				'nomer:'.$z['nomer'].','.
 				'head:"№<b>'.$z['nomer'].'</b>",'.
 				'client_id:'.$z['client_id'].','.
-				'status:'.$z['zayav_status'].
+				'status:'.$z['zayav_status'].','.
+				'cart_ids:['.implode(',', $cart_ids).']'.
 			'};'.
 	'</script>'.
 
@@ -1773,7 +1784,7 @@ function zayav_cartridge_info($z) {
 		'<div id="dopLinks">'.
 			'<a class="img_del delete'.(!empty($money) ?  ' dn': '').'"></a>'.
 			'<a class="link info sel">Информация</a>'.
-			'<a class="link zedit">Редактирование</a>'.
+			'<a class="link zc-edit">Редактирование</a>'.
 			'<a class="link acc_add">Начислить</a>'.
 			'<a class="link income-add">Принять платёж</a>'.
 			'<a class="link hist">История</a>'.

@@ -1271,6 +1271,91 @@ switch(@$_POST['op']) {
 		$send['html'] = utf8($data['spisok']);
 		jsonSuccess($send);
 		break;
+	case 'zayav_cartridge_edit':
+		if(!$zayav_id = _isnum($_POST['zayav_id']))
+			jsonError();
+		if(!$client_id = _isnum($_POST['client_id']))
+			jsonError();
+		if(empty($_POST['ids']))
+			jsonError();
+
+		$ids = explode(',', $_POST['ids']);
+		for($n = 0; $n < count($ids); $n++)
+			if(!preg_match(REGEXP_NUMERIC, $ids[$n]))
+				jsonError();
+
+		$sql = "SELECT * FROM `zayav` WHERE `ws_id`=".WS_ID." AND !`deleted` AND `id`=".$zayav_id;
+		if(!$z = mysql_fetch_assoc(query($sql)))
+			jsonError();
+
+		$cartSetup = query_ass("SELECT `id`,`name` FROM `setup_cartridge` WHERE `ws_id`=".WS_ID);
+
+		$sql = "SELECT * FROM `zayav_cartridge` WHERE `zayav_id`=".$zayav_id." ORDER BY `id`";
+		$q = query($sql);
+		$cart_name_old = array();
+		$cart_ids_old = array();
+		while($r = mysql_fetch_assoc($q)) {
+			$cart_name_old[] = $cartSetup[$r['cartridge_id']];
+			$cart_ids_old[] = $r['cartridge_id'];
+		}
+
+		$sql = "UPDATE `zayav`
+				SET `client_id`=".$client_id."
+				WHERE `id`=".$zayav_id;
+		query($sql);
+
+		if($z['client_id'] != $client_id) {
+			$sql = "UPDATE `accrual`
+					SET `client_id`=".$client_id."
+					WHERE `ws_id`=".WS_ID."
+					  AND `zayav_id`=".$zayav_id."
+					  AND `client_id`=".$z['client_id'];
+			query($sql);
+			$sql = "UPDATE `money`
+					SET `client_id`=".$client_id."
+					WHERE `ws_id`=".WS_ID."
+					  AND `zayav_id`=".$zayav_id."
+					  AND `client_id`=".$z['client_id'];
+			query($sql);
+			clientBalansUpdate($z['client_id']);
+			clientBalansUpdate($client_id);
+		}
+
+		$changes = '';
+		if($z['client_id'] != $client_id)
+			$changes .= '<tr><th>Клиент:<td>'._clientLink($z['client_id']).'<td>»<td>'._clientLink($client_id);
+		if($cart_ids_old != $ids) {
+			$sql = "DELETE FROM `zayav_cartridge` WHERE `zayav_id`=".$zayav_id;
+			query($sql);
+
+			$cart_name_new = array();
+			foreach($ids as $id) {
+				$sql = "INSERT INTO `zayav_cartridge` (
+						`zayav_id`,
+						`cartridge_id`
+					) VALUES (
+						".$zayav_id.",
+						".$id."
+					)";
+				query($sql);
+				$cart_name_new[] = $cartSetup[$id];
+			}
+			$changes .=
+				'<tr><th>Картриджи:'.
+					'<td>'.implode('<br />', $cart_name_old).
+					'<td>»'.
+					'<td>'.implode('<br />', $cart_name_new);
+		}
+		if($changes)
+			history_insert(array(
+				'type' => 7,
+				'client_id' => $z['client_id'],
+				'zayav_id' => $zayav_id,
+				'value' => '<table>'.$changes.'</table>'
+			));
+
+		jsonSuccess();
+		break;
 
 	case 'zp_add':
 		if(!preg_match(REGEXP_NUMERIC, $_POST['name_id']) || $_POST['name_id'] == 0)
