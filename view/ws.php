@@ -1753,18 +1753,6 @@ function zayav_cartridge_info($z) {
 	$status = _zayavStatusName();
 	unset($status[0]);
 
-	$cartSetup = query_ass("SELECT `id`,`name` FROM `setup_cartridge` WHERE `ws_id`=".WS_ID);
-
-	$sql = "SELECT * FROM `zayav_cartridge` WHERE `zayav_id`=".$zayav_id." ORDER BY `id`";
-	$q = query($sql);
-	$cart = array();
-	$cart_ids = array();
-	while($r = mysql_fetch_assoc($q)) {
-		$cart[] = $cartSetup[$r['cartridge_id']];
-		$cart_ids[] = $r['cartridge_id'];
-	}
-
-
 	$history = history(array('zayav_id'=>$zayav_id));
 
 	return
@@ -1775,8 +1763,8 @@ function zayav_cartridge_info($z) {
 				'nomer:'.$z['nomer'].','.
 				'head:"№<b>'.$z['nomer'].'</b>",'.
 				'client_id:'.$z['client_id'].','.
-				'status:'.$z['zayav_status'].','.
-				'cart_ids:['.implode(',', $cart_ids).']'.
+				'cartridge_count:'.$z['cartridge_count'].','.
+				'status:'.$z['zayav_status'].
 			'};'.
 	'</script>'.
 
@@ -1797,15 +1785,16 @@ function zayav_cartridge_info($z) {
 					'Заявка №'.$z['nomer'].' - заправка картриджей'.
 				'</div>'.
 				'<table class="tabInfo">'.
-					'<tr><td class="label">Клиент:	 <td>'._clientLink($z['client_id'], 0, 1).
-					'<tr><td class="label top">Картридж'.(count($cart) > 1 ? 'и' : '').':<td><b>'.implode('<br />', $cart).'</b>'.
-					'<tr><td class="label">Дата приёма:'.
+					'<tr><td class="label r">Клиент:	 <td>'._clientLink($z['client_id'], 0, 1).
+					'<tr><td class="label r">Дата приёма:'.
 						'<td class="dtime_add'._tooltip('Заявку внёс '._viewer($z['viewer_id_add'], 'name'), -70).FullDataTime($z['dtime_add']).
-					'<tr><td class="label">Статус:'.
+					'<tr><td class="label r">Статус:'.
 						'<td><div id="status" style="background-color:#'._zayavStatusColor($z['zayav_status']).'" class="status_place">'.
 								_zayavStatusName($z['zayav_status']).
 							'</div>'.
 							'<div id="status_dtime">от '.FullDataTime($z['zayav_status_dtime'], 1).'</div>'.
+					'<tr><td class="label r">Количество:<td><b>'.$z['cartridge_count'].'</b> шт.'.
+					'<tr><td class="label r top">Список:<td id="cart-tab">'.zayav_cartridge_info_tab($zayav_id).
 				'</table>'.
 				_vkComment('zayav', $z['id']).
 				'<div class="headBlue mon">Начисления и платежи'.
@@ -1821,7 +1810,52 @@ function zayav_cartridge_info($z) {
 		'</table>'.
 	'</div>';
 }//zayav_cartridge_info()
+function zayav_cartridge_info_tab($zayav_id) {//список картриджей в инфо по заявке
+	$cartSetup = query_ass("SELECT `id`,`name` FROM `setup_cartridge` WHERE `ws_id`=".WS_ID);
 
+	$sql = "SELECT * FROM `zayav_cartridge` WHERE `zayav_id`=".$zayav_id." ORDER BY `id`";
+	$q = query($sql);
+	$send = '<table class="_spisok _money">'.
+		'<tr>'.
+			'<th>Наименование'.
+			'<th>Стоимость'.
+			'<th>Дата<br />выполнения'.
+			'<th>Примечание'.
+			'<th>';
+
+	while($r = mysql_fetch_assoc($q)) {
+		$prim = array();
+		if($r['filling'])
+			$prim[] = 'заправлен';
+		if($r['restore'])
+			$prim[] = 'восстановлен';
+		if($r['chip'])
+			$prim[] = 'заменён чип';
+		$prim = !empty($prim) ? implode(', ', $prim) : '';
+		$prim .= ($prim && $r['prim'] ? ', ' : '').'<u>'.$r['prim'].'</u>';
+		$send .=
+			//'<tr style="background-color:#'._zayavStatusColor($r['status']).'" val="'.$r['id'].'">'.
+			'<tr val="'.$r['id'].'"'.($r['filling'] || $r['restore'] || $r['chip'] ? ' class="ready"' : '').'>'.
+				'<td class="cart-name"><b>'.$cartSetup[$r['cartridge_id']].'</b>'.
+				'<td class="cost">'.($r['cost'] ? $r['cost'] : '').
+				'<td class="dtime">'.($r['dtime_ready'] != '0000-00-00 00:00:00' ? FullDataTime($r['dtime_ready']) : '').
+				'<td class="cart-prim">'.$prim.
+				'<td class="ed">'.
+					'<div class="img_edit cart-edit'._tooltip('Изменить', -33).'</div>'.
+					'<div class="img_del cart-del'._tooltip('Удалить', -29).'</div>'.
+					'<input type="hidden" class="cart_id" value="'.$r['cartridge_id'].'" />'.
+					'<input type="hidden" class="filling" value="'.$r['filling'].'" />'.
+					'<input type="hidden" class="restore" value="'.$r['restore'].'" />'.
+					'<input type="hidden" class="chip" value="'.$r['chip'].'" />';
+	}
+
+	$send .= '<tr><td colspan="5" class="_next" id="cart-add">'.
+				'<span>Добавить картриджи</span>';
+
+	$send .= '</table>';
+
+	return $send;
+}//zayav_cartridge_info_tab()
 
 
 

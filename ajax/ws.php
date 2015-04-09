@@ -1205,13 +1205,20 @@ switch(@$_POST['op']) {
 		if(!$client_id = _isnum($_POST['client_id']))
 			jsonError();
 
-		if(empty($_POST['ids']))
+		if(!$count = _isnum($_POST['count']))
 			jsonError();
 
-		$ids = explode(',', $_POST['ids']);
-		for($n = 0; $n < count($ids); $n++)
-			if(!preg_match(REGEXP_NUMERIC, $ids[$n]))
-				jsonError();
+		// Если не указан ни один картридж (временно отменено, теперь указывается просто количество)
+//		if(empty($_POST['ids']))
+//			jsonError();
+
+		$ids = $_POST['ids'];
+		if(!empty($ids)) {
+			$ids = explode(',', $_POST['ids']);
+			for($n = 0; $n < count($ids); $n++)
+				if(!preg_match(REGEXP_NUMERIC, $ids[$n]))
+					jsonError();
+		}
 
 		$comm = _txt($_POST['comm']);
 
@@ -1223,6 +1230,7 @@ switch(@$_POST['op']) {
 					`nomer`,
 					`cartridge`,
 					`client_id`,
+					`cartridge_count`,
 
 					`zayav_status`,
 					`zayav_status_dtime`,
@@ -1234,6 +1242,7 @@ switch(@$_POST['op']) {
 					".$nomer.",
 					1,
 					".$client_id.",
+					".$count.",
 
 					1,
 					current_timestamp,
@@ -1244,16 +1253,18 @@ switch(@$_POST['op']) {
 		query($sql);
 		$send['id'] = mysql_insert_id();
 
-		foreach($ids as $id) {
-			$sql = "INSERT INTO `zayav_cartridge` (
-						`zayav_id`,
-						`cartridge_id`
-					) VALUES (
-						".$send['id'].",
-						".$id."
-					)";
-			query($sql);
-		}
+
+		if(!empty($ids))
+			foreach($ids as $id) {
+				$sql = "INSERT INTO `zayav_cartridge` (
+							`zayav_id`,
+							`cartridge_id`
+						) VALUES (
+							".$send['id'].",
+							".$id."
+						)";
+				query($sql);
+			}
 
 		_vkCommentAdd('zayav', $send['id'], $comm);
 
@@ -1262,6 +1273,87 @@ switch(@$_POST['op']) {
 			'client_id' => $client_id,
 			'zayav_id' => $send['id']
 		));
+		jsonSuccess($send);
+		break;
+	case 'zayav_info_cartridge_add'://добавление картриджей к заявке
+		if(!$zayav_id = _isnum($_POST['zayav_id']))
+			jsonError();
+
+		// Если не указан ни один картридж
+		if(empty($_POST['ids']))
+			jsonError();
+
+		$ids = explode(',', $_POST['ids']);
+		for($n = 0; $n < count($ids); $n++)
+			if(!preg_match(REGEXP_NUMERIC, $ids[$n]))
+				jsonError();
+
+		foreach($ids as $id) {
+			$sql = "INSERT INTO `zayav_cartridge` (
+						`zayav_id`,
+						`cartridge_id`
+					) VALUES (
+						" . $zayav_id . ",
+						" . $id . "
+					)";
+			query($sql);
+		}
+
+		$send['html'] = utf8(zayav_cartridge_info_tab($zayav_id));
+
+		/*
+					history_insert(array(
+						'type' => 54,
+						'client_id' => $client_id,
+						'zayav_id' => $send['id']
+					));
+			*/
+		jsonSuccess($send);
+		break;
+	case 'zayav_info_cartridge_edit'://применение действия по картриджу
+		if(!$id = _isnum($_POST['id']))
+			jsonError();
+		if(!$cartridge_id = _isnum($_POST['cart_id']))
+			jsonError();
+
+		$filling = _bool($_POST['filling']);
+		$restore = _bool($_POST['restore']);
+		$chip = _bool($_POST['chip']);
+		$cost = _num($_POST['cost']);
+		$prim = _txt($_POST['prim']);
+
+		$sql = "SELECT * FROM `zayav_cartridge` WHERE `id`=".$id;
+		if(!$r = mysql_fetch_assoc(query($sql)))
+			jsonError();
+
+		$sql = "UPDATE `zayav_cartridge`
+				SET `cartridge_id`=".$cartridge_id.",
+					`filling`=".$filling.",
+					`restore`=".$restore.",
+					`chip`=".$chip.",
+					`cost`=".$cost.",
+					`dtime_ready`=".($filling || $restore || $chip ? "CURRENT_TIMESTAMP" : "'0000-00-00 00:00:00'").",
+					`prim`='".addslashes($prim)."'
+				WHERE `id`=".$id;
+		query($sql);
+
+		$send['html'] = utf8(zayav_cartridge_info_tab($r['zayav_id']));
+
+		jsonSuccess($send);
+		break;
+	case 'zayav_info_cartridge_del'://удаление картриджа из заявки
+		if(!$id = _isnum($_POST['id']))
+			jsonError();
+
+		$sql = "SELECT * FROM `zayav_cartridge` WHERE `id`=".$id;
+		if(!$r = mysql_fetch_assoc(query($sql)))
+			jsonError();
+
+		$sql = "DELETE FROM `zayav_cartridge` WHERE `id`=".$id;
+		query($sql);
+
+		$send['html'] = utf8(zayav_cartridge_info_tab($r['zayav_id']));
+
 		jsonSuccess($send);
 		break;
 	case 'zayav_cartridge_spisok':
@@ -1276,31 +1368,16 @@ switch(@$_POST['op']) {
 			jsonError();
 		if(!$client_id = _isnum($_POST['client_id']))
 			jsonError();
-		if(empty($_POST['ids']))
+		if(!$count = _isnum($_POST['count']))
 			jsonError();
-
-		$ids = explode(',', $_POST['ids']);
-		for($n = 0; $n < count($ids); $n++)
-			if(!preg_match(REGEXP_NUMERIC, $ids[$n]))
-				jsonError();
 
 		$sql = "SELECT * FROM `zayav` WHERE `ws_id`=".WS_ID." AND !`deleted` AND `id`=".$zayav_id;
 		if(!$z = mysql_fetch_assoc(query($sql)))
 			jsonError();
 
-		$cartSetup = query_ass("SELECT `id`,`name` FROM `setup_cartridge` WHERE `ws_id`=".WS_ID);
-
-		$sql = "SELECT * FROM `zayav_cartridge` WHERE `zayav_id`=".$zayav_id." ORDER BY `id`";
-		$q = query($sql);
-		$cart_name_old = array();
-		$cart_ids_old = array();
-		while($r = mysql_fetch_assoc($q)) {
-			$cart_name_old[] = $cartSetup[$r['cartridge_id']];
-			$cart_ids_old[] = $r['cartridge_id'];
-		}
-
 		$sql = "UPDATE `zayav`
-				SET `client_id`=".$client_id."
+				SET `client_id`=".$client_id.",
+					`cartridge_count`=".$count."
 				WHERE `id`=".$zayav_id;
 		query($sql);
 
@@ -1324,28 +1401,8 @@ switch(@$_POST['op']) {
 		$changes = '';
 		if($z['client_id'] != $client_id)
 			$changes .= '<tr><th>Клиент:<td>'._clientLink($z['client_id']).'<td>»<td>'._clientLink($client_id);
-		if($cart_ids_old != $ids) {
-			$sql = "DELETE FROM `zayav_cartridge` WHERE `zayav_id`=".$zayav_id;
-			query($sql);
-
-			$cart_name_new = array();
-			foreach($ids as $id) {
-				$sql = "INSERT INTO `zayav_cartridge` (
-						`zayav_id`,
-						`cartridge_id`
-					) VALUES (
-						".$zayav_id.",
-						".$id."
-					)";
-				query($sql);
-				$cart_name_new[] = $cartSetup[$id];
-			}
-			$changes .=
-				'<tr><th>Картриджи:'.
-					'<td>'.implode('<br />', $cart_name_old).
-					'<td>»'.
-					'<td>'.implode('<br />', $cart_name_new);
-		}
+		if($z['cartridge_count'] != $count)
+			$changes .= '<tr><th>Количество картриджей:<td>'.$z['cartridge_count'].'<td>»<td>'.$count;
 		if($changes)
 			history_insert(array(
 				'type' => 7,

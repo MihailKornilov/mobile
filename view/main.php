@@ -243,6 +243,9 @@ function GvaluesCreate() {//Составление файла G_values.js
 		"\n".'EXPENSE_SPISOK='.query_selJson("SELECT `id`,`name` FROM `setup_expense` WHERE `ws_id`=".WS_ID." ORDER BY `sort` ASC").','.
 		"\n".'EXPENSE_WORKER='.query_ptpJson("SELECT `id`,`show_worker` FROM `setup_expense` WHERE `ws_id`=".WS_ID." AND `show_worker`").','.
 		"\n".'CARTRIDGE_SPISOK='.query_selJson("SELECT `id`,`name` FROM `setup_cartridge` WHERE `ws_id`=".WS_ID." ORDER BY `name`").','.
+		"\n".'CARTRIDGE_FILLING='.query_ptpJson("SELECT `id`,`cost_filling` FROM `setup_cartridge` WHERE `ws_id`=".WS_ID).','.
+		"\n".'CARTRIDGE_RESTORE='.query_ptpJson("SELECT `id`,`cost_restore` FROM `setup_cartridge` WHERE `ws_id`=".WS_ID).','.
+		"\n".'CARTRIDGE_CHIP='.query_ptpJson("SELECT `id`,`cost_chip` FROM `setup_cartridge` WHERE `ws_id`=".WS_ID).','.
 		"\n".'ZE_SPISOK='.query_selJson("SELECT `id`,`name` FROM `setup_zayav_expense` WHERE `ws_id`=".WS_ID." ORDER BY `sort`").','.
 		"\n".'ZE_TXT='.query_ptpJson("SELECT `id`,1 FROM `setup_zayav_expense` WHERE `ws_id`=".WS_ID." AND `dop`=1").','.
 		"\n".'ZE_WORKER='.query_ptpJson("SELECT `id`,1 FROM `setup_zayav_expense` WHERE `ws_id`=".WS_ID." AND `dop`=2").','.

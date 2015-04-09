@@ -397,11 +397,12 @@ var AJAX_WS = APP_HTML + '/ajax/ws.php?' + VALUES,
 					'<tr><td class="label">Клиент:' +
 						'<td><input type="hidden" id="client_id" value="' + CLIENT.id + '" />' +
 							'<b>' + CLIENT.fio + '</b>' +
+					'<tr><td class="label"><b>Количество картриджей:</b><td><input type="text" id="count" /> шт.' +
 					'<tr><td class="label topi">Список картриджей:<td id="crt">' +
 					'<tr><td class="label top">Заметка:<td><textarea id="comm"></textarea>' +
 				'</table>',
 			dialog = _dialog({
-				width:450,
+				width:470,
 				top:30,
 				head:'Новая заявка на заправку картриджей',
 				content:html,
@@ -409,18 +410,23 @@ var AJAX_WS = APP_HTML + '/ajax/ws.php?' + VALUES,
 			});
 		if(!CLIENT.id)
 			$('#client_id').clientSel({add:1});
+		$('#count').focus();
 		$('#crt').cartridge();
 		$('#comm').autosize();
 		function submit() {
 			var send = {
 				op:'zayav_cartridge_add',
 				client_id:_num($('#client_id').val()),
+				count:_num($('#count').val()),
 				ids:$('#crt').cartridge('get'),
 				comm:$('#comm').val()
 			};
 			if(!send.client_id) dialog.err('Не указан клиент');
-			else if(!send.ids) dialog.err('Не выбрано ни одного картриджа');
-			else {
+			else if(!send.count) {
+				dialog.err('Не указано количество картриджей');
+				$('#count').focus();
+//			else if(!send.ids) dialog.err('Не выбрано ни одного картриджа');
+			} else {
 				dialog.process();
 				$.post(AJAX_WS, send, function(res) {
 					if(res.success) {
@@ -452,6 +458,39 @@ var AJAX_WS = APP_HTML + '/ajax/ws.php?' + VALUES,
 				$('#spisok').html(res.html);
 			}
 		}, 'json');
+	},
+	zayavInfoCartridgeAdd = function() {
+		var html =
+				'<table id="cartridge-add-tab">' +
+					'<tr><td class="label topi">Список картриджей:<td id="crt">' +
+				'</table>',
+			dialog = _dialog({
+				width:470,
+				top:30,
+				head:'Добавление картриджей к заявке',
+				content:html,
+				submit:submit
+			});
+		$('#crt').cartridge();
+		function submit() {
+			var send = {
+				op:'zayav_info_cartridge_add',
+				zayav_id:ZAYAV.id,
+				ids:$('#crt').cartridge('get')
+			};
+			if(!send.ids) dialog.err('Не выбрано ни одного картриджа');
+			else {
+				dialog.process();
+				$.post(AJAX_WS, send, function(res) {
+					if(res.success) {
+						dialog.close();
+						$('#cart-tab').html(res.html);
+						_msg('Внесено.');
+					} else
+						dialog.abort();
+				}, 'json');
+			}
+		}
 	},
 
 	zpFilter = function() {
@@ -1626,6 +1665,21 @@ $(document)
 		zayavSpisok();
 	})
 
+	.on('click', '#zayav-cartridge ._next', function() {
+		if($(this).hasClass('busy'))
+			return;
+		var next = $(this),
+			send = cartridgeFilter();
+		send.page = $(this).attr('val');
+		next.addClass('busy');
+		$.post(AJAX_WS, send, function (res) {
+			if(res.success)
+				next.after(res.html).remove();
+			else
+				next.removeClass('busy');
+		}, 'json');
+	})
+
 	.on('click', '#zayav-info .zedit', function() {
 		var html = '<table class="zayav-info-edit">' +
 			'<tr><td class="label r">Клиент:		<td><input type="hidden" id="client_id" value="' + ZAYAV.client_id + '">' +
@@ -2152,16 +2206,15 @@ $(document)
 		kvitHtml($(this).attr('val'));
 	})
 
-	.on('click', '#zayav-info .zc-edit', function() {
+	.on('click', '#zayav-info .zc-edit', function() {//редактирование заявки с картриджами
 		var html =
 				'<table id="cartridge-add-tab">' +
 					'<tr><td class="label">Клиент:' +
 						'<td><input type="hidden" id="client_id" value="' + ZAYAV.client_id + '" />' +
-					'<tr><td class="label topi">Список картриджей:<td id="crt">' +
+					'<tr><td class="label"><b>Количество картриджей:</b><td><input type="text" id="count" value="' + ZAYAV.cartridge_count + '" /> шт.' +
 				'</table>',
 			dialog = _dialog({
-				width:450,
-				top:30,
+				width:470,
 				head:'Редактирование заявки',
 				content:html,
 				butSubmit:'Сохранить',
@@ -2174,10 +2227,10 @@ $(document)
 				op:'zayav_cartridge_edit',
 				zayav_id:ZAYAV.id,
 				client_id:_num($('#client_id').val()),
-				ids:$('#crt').cartridge('get')
+				count:_num($('#count').val())
 			};
 			if(!send.client_id) dialog.err('Не указан клиент');
-			else if(!send.ids) dialog.err('Не выбрано ни одного картриджа');
+			else if(!send.count) dialog.err('Не указано количество картриджей');
 			else {
 				dialog.process();
 				$.post(AJAX_WS, send, function(res) {
@@ -2189,6 +2242,107 @@ $(document)
 						dialog.abort();
 				}, 'json');
 			}
+		}
+	})
+	.on('click', '#zayav-info #cart-add', zayavInfoCartridgeAdd)
+	.on('click', '#zayav-info .cart-edit', function() {
+		var t = $(this);
+		while(t[0].tagName != 'TR')
+			t = t.parent();
+		var id = t.attr('val'),
+			cart_id = t.find('.cart_id').val(),
+			filling = t.find('.filling').val(),
+			restore = t.find('.restore').val(),
+			chip = t.find('.chip').val(),
+			cost = t.find('.cost').html(),
+			prim = t.find('u').html(),
+			html =
+				'<table id="cart-edit-tab">' +
+					'<tr><td class="label">Картридж:<td><input type="hidden" id="cart_id" value="' + cart_id + '" />' +
+					'<tr><td class="label topi">Действие:' +
+						'<td><input type="hidden" id="filling" value="' + filling + '" />' +
+							'<input type="hidden" id="restore" value="' + restore + '" />' +
+							'<input type="hidden" id="chip" value="' + chip + '" />' +
+					'<tr><td class="label">Стоимость работ:<td><input type="text" class="money" id="cost" value="' + cost + '" /> руб.' +
+					'<tr><td class="label">Примечание:<td><input type="text" id="prim" value="' + prim + '" />' +
+				'</table>',
+			dialog = _dialog({
+				width:470,
+				top:30,
+				head:'Действия по картриджу',
+				content:html,
+				butSubmit:'Сохранить',
+				submit:submit
+			});
+		$('#cart_id')._select({
+			write:1,
+			spisok:CARTRIDGE_SPISOK,
+			func:costSet
+		});
+		$('#filling')._check({name:'Заправка',func:costSet});
+		$('#restore')._check({name:'Восстановление',func:costSet});
+		$('#chip')._check({name:'Замена чипа',func:costSet});
+		function costSet() {
+			var c = 0,
+				cart_id = _num($('#cart_id').val());
+			if($('#filling').val() == 1)
+				c = CARTRIDGE_FILLING[cart_id];
+			if($('#restore').val() == 1)
+				c += CARTRIDGE_RESTORE[cart_id];
+			if($('#chip').val() == 1)
+				c += CARTRIDGE_CHIP[cart_id];
+			$('#cost').val(c);
+		}
+		function submit() {
+			var send = {
+				op:'zayav_info_cartridge_edit',
+				id:id,
+				cart_id:_num($('#cart_id').val()),
+				filling:$('#filling').val(),
+				restore:$('#restore').val(),
+				chip:$('#chip').val(),
+				cost:$('#cost').val(),
+				prim:$('#prim').val()
+			};
+			if(!send.cart_id) dialog.err('Не выбран картридж');
+			else {
+				dialog.process();
+				$.post(AJAX_WS, send, function(res) {
+					if(res.success) {
+						dialog.close();
+						$('#cart-tab').html(res.html);
+						_msg('Изменено.');
+					} else
+						dialog.abort();
+				}, 'json');
+			}
+		}
+	})
+	.on('click', '#zayav-info .cart-del', function() {
+		var t = $(this);
+		while(t[0].tagName != 'TR')
+			t = t.parent();
+		var id = t.attr('val'),
+			dialog = _dialog({
+				head:'Удаление картриджа',
+				content:'<center>Подтвердите удаление картриджа.</center>',
+				butSubmit:'Удалить',
+				submit:submit
+			});
+		function submit() {
+			var send = {
+				op:'zayav_info_cartridge_del',
+				id:id
+			};
+			dialog.process();
+			$.post(AJAX_WS, send, function(res) {
+				if(res.success) {
+					dialog.close();
+					$('#cart-tab').html(res.html);
+					_msg('Удалено.');
+				} else
+					dialog.abort();
+				}, 'json');
 		}
 	})
 

@@ -100,6 +100,7 @@
 #zayav-cartridge .right{border:0;width:155px;padding-bottom:300px}
 #zayav-cartridge #desc_check{margin-top:10px}
 #zayav-cartridge ._empty{margin:10px 2px 0 10px;}
+#zayav-cartridge ._next{margin:6px 5px 0 8px}
 
 
 /* Ссылка на заявку с подсказкой */
@@ -154,8 +155,15 @@
 
 /* Новая заявка на заправку картриджей */
 #cartridge-add-tab{border-spacing:10px}
-#cartridge-add-tab .label{width:110px;text-align:right}
+#cartridge-add-tab .label{width:150px;text-align:right}
+#cartridge-add-tab #count{width:50px;font:bold 15px Tahoma}
 #cartridge-add-tab #comm{width:252px}
+
+/* Действие по картриджу в заявке */
+#cart-edit-tab{border-spacing:10px}
+#cart-edit-tab .label{width:100px;text-align:right}
+#cart-edit-tab ._check{display:block;margin-top:4px}
+#cart-edit-tab #prim{width:280px}
 
 
 
@@ -371,6 +379,12 @@
 #zayav-status .c3{background-color:#FDD}
 #zayav-status .about{color:#777;margin-top:3px}
 #zayav-status #zs-tab{border-spacing:8px;display:none}
+
+#zayav-info .cost{text-align:right}/* стоимость заправки картриджа */
+#zayav-info .cart-name{width:130px}
+#zayav-info .cart-prim{font-size:10px;color:#444}
+#zayav-info .cart-prim u{font-size:10px}
+#zayav-info .ready{background-color:#dfd}
 
 
 /* Список запчастей */
