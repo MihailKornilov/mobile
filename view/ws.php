@@ -1280,7 +1280,7 @@ function zayav_info($zayav_id) {
 				'<div class="headName">'.
 					'Заявка №'.$z['nomer'].
 	  (WS_ID != 3 ? '<a class="img_print'._tooltip('Распечатать квитанцию', -75).'</a>' :
-					'<a href="'.APP_HTML.'/view/kvit_comtex.php?'.VALUES.'&id='.$zayav_id.'" class="img_word" title="Распечатать квитанцию в xls"></a>'
+					'<a href="'.APP_HTML.'/view/kvit_comtex.php?'.VALUES.'&id='.$zayav_id.'" class="img_xls'._tooltip('Распечатать квитанцию в xls', -168, 'r').'</a>'
 	  ).
 				'</div>'.
 				'<table class="tabInfo">'.
@@ -1783,6 +1783,7 @@ function zayav_cartridge_info($z) {
 
 				'<div class="headName">'.
 					'Заявка №'.$z['nomer'].' - заправка картриджей'.
+					'<a href="'.APP_HTML.'/view/kvit_cartridge.php?'.VALUES.'&id='.$zayav_id.'" class="img_xls'._tooltip('Распечатать квитанцию в xls', -168, 'r').'</a>'.
 				'</div>'.
 				'<table class="tabInfo">'.
 					'<tr><td class="label r">Клиент:	 <td>'._clientLink($z['client_id'], 0, 1).

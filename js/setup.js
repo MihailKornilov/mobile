@@ -99,6 +99,7 @@ $(document)
 			but.addClass('busy');
 			VK.api('users.get', send, function(data) {
 				but.removeClass('busy');
+				console.log(data);
 				if(data.response) {
 					var u = data.response[0],
 						html =
