@@ -580,7 +580,7 @@ switch(@$_POST['op']) {
 
 		if(!preg_match(REGEXP_NUMERIC, $_POST['place']))
 			jsonError();
-		$dev_place = intval($_POST['place']);
+		$dev_place = _num($_POST['place']);
 		$place_other = $dev_place == 0 ? win1251(htmlspecialchars(trim($_POST['place_other']))) : '';
 		if($dev_place == 0 && !$place_other)
 			jsonError();
@@ -612,6 +612,35 @@ switch(@$_POST['op']) {
 
 		zayav_place_change($zayav_id, $dev_place, $place_other);
 		zayav_day_finish_change($zayav_id, $day_finish);
+
+		jsonSuccess();
+		break;
+	case 'zayav_cartridge_status':
+		if(!$zayav_id = _isnum($_POST['zayav_id']))
+			jsonError();
+		if(!$zayav_status = _isnum($_POST['status']))
+			jsonError();
+
+		$sql = "SELECT * FROM `zayav` WHERE `ws_id`=".WS_ID." AND !`deleted` AND `cartridge` AND `id`=".$zayav_id;
+		if(!$z = mysql_fetch_assoc(query($sql)))
+			jsonError();
+
+		if($z['zayav_status'] == $zayav_status)
+			jsonError();
+
+		$sql = "UPDATE `zayav`
+				SET `zayav_status`=".$zayav_status.",
+					`zayav_status_dtime`=CURRENT_TIMESTAMP
+				WHERE `id`=".$zayav_id;
+		query($sql);
+
+		history_insert(array(
+			'type' => 4,
+			'client_id' => $z['client_id'],
+			'zayav_id' => $zayav_id,
+			'value' => $zayav_status,
+			'value1' => $z['zayav_status']
+		));
 
 		jsonSuccess();
 		break;
@@ -1283,31 +1312,38 @@ switch(@$_POST['op']) {
 		if(empty($_POST['ids']))
 			jsonError();
 
+		$sql = "SELECT * FROM `zayav` WHERE `ws_id`=".WS_ID." AND !`deleted` AND `cartridge` AND `id`=".$zayav_id;
+		if(!$z = mysql_fetch_assoc(query($sql)))
+			jsonError();
+
 		$ids = explode(',', $_POST['ids']);
-		for($n = 0; $n < count($ids); $n++)
+		for($n = 0; $n < count($ids); $n++) {
 			if(!preg_match(REGEXP_NUMERIC, $ids[$n]))
 				jsonError();
+		}
 
+		$cartgidge = array();
 		foreach($ids as $id) {
 			$sql = "INSERT INTO `zayav_cartridge` (
 						`zayav_id`,
 						`cartridge_id`
 					) VALUES (
-						" . $zayav_id . ",
-						" . $id . "
+						".$zayav_id.",
+						".$id."
 					)";
 			query($sql);
+			$cartgidge[] = '<u>'._cartridgeName($id).'</u>';
 		}
 
-		$send['html'] = utf8(zayav_cartridge_info_tab($zayav_id));
 
-		/*
-					history_insert(array(
-						'type' => 54,
-						'client_id' => $client_id,
-						'zayav_id' => $send['id']
-					));
-			*/
+		history_insert(array(
+			'type' => 55,
+			'client_id' => $z['client_id'],
+			'zayav_id' => $zayav_id,
+			'value' => implode(', ', $cartgidge)
+		));
+
+		$send['html'] = utf8(zayav_cartridge_info_tab($zayav_id));
 		jsonSuccess($send);
 		break;
 	case 'zayav_info_cartridge_edit'://применение действия по картриджу
@@ -1326,6 +1362,10 @@ switch(@$_POST['op']) {
 		if(!$r = mysql_fetch_assoc(query($sql)))
 			jsonError();
 
+		$sql = "SELECT * FROM `zayav` WHERE `ws_id`=".WS_ID." AND !`deleted` AND `cartridge` AND `id`=".$r['zayav_id'];
+		if(!$z = mysql_fetch_assoc(query($sql)))
+			jsonError();
+
 		$sql = "UPDATE `zayav_cartridge`
 				SET `cartridge_id`=".$cartridge_id.",
 					`filling`=".$filling.",
@@ -1337,8 +1377,40 @@ switch(@$_POST['op']) {
 				WHERE `id`=".$id;
 		query($sql);
 
-		$send['html'] = utf8(zayav_cartridge_info_tab($r['zayav_id']));
+		$changes = '';
+		if($r['cartridge_id'] != $cartridge_id)
+			$changes .= '<tr><th>Модель:<td>'._cartridgeName($r['cartridge_id']).'<td>»<td>'._cartridgeName($cartridge_id);
+		if($r['filling'] != $filling || $r['restore'] != $restore || $r['chip'] != $chip) {
+			$old = array();
+			if($r['filling'])
+				$old[] = 'заправлен';
+			if($r['restore'])
+				$old[] = 'восстановлен';
+			if($r['chip'])
+				$old[] = 'заменён чип';
+			$new = array();
+			if($filling)
+				$new[] = 'заправлен';
+			if($restore)
+				$new[] = 'восстановлен';
+			if($chip)
+				$new[] = 'заменён чип';
+			$changes .= '<tr><th>Действие:<td>'.implode(', ', $old).'<td>»<td>'.implode(', ', $new);
+		}
+		if($r['cost'] != $cost)
+			$changes .= '<tr><th>Стоимость:<td>'.$r['cost'].'<td>»<td>'.$cost;
+		if($r['prim'] != $prim)
+			$changes .= '<tr><th>Примечание:<td>'.$r['prim'].'<td>»<td>'.$prim;
+		if($changes)
+			history_insert(array(
+				'type' => 57,
+				'client_id' => $z['client_id'],
+				'zayav_id' => $r['zayav_id'],
+				'value' => _cartridgeName($cartridge_id),
+				'value1' => '<table>'.$changes.'</table>'
+			));
 
+		$send['html'] = utf8(zayav_cartridge_info_tab($r['zayav_id']));
 		jsonSuccess($send);
 		break;
 	case 'zayav_info_cartridge_del'://удаление картриджа из заявки
@@ -1349,11 +1421,22 @@ switch(@$_POST['op']) {
 		if(!$r = mysql_fetch_assoc(query($sql)))
 			jsonError();
 
+		$sql = "SELECT * FROM `zayav` WHERE `ws_id`=".WS_ID." AND !`deleted` AND `cartridge` AND `id`=".$r['zayav_id'];
+		if(!$z = mysql_fetch_assoc(query($sql)))
+			jsonError();
+
 		$sql = "DELETE FROM `zayav_cartridge` WHERE `id`=".$id;
 		query($sql);
 
-		$send['html'] = utf8(zayav_cartridge_info_tab($r['zayav_id']));
+		history_insert(array(
+			'type' => 56,
+			'client_id' => $z['client_id'],
+			'zayav_id' => $r['zayav_id'],
+			'value' => _cartridgeName($r['cartridge_id'])
+		));
 
+
+		$send['html'] = utf8(zayav_cartridge_info_tab($r['zayav_id']));
 		jsonSuccess($send);
 		break;
 	case 'zayav_cartridge_spisok':
@@ -1886,6 +1969,7 @@ switch(@$_POST['op']) {
 			jsonError();
 		if(!preg_match(REGEXP_CENA, $_POST['sum']))
 			jsonError();
+
 		if(!preg_match(REGEXP_NUMERIC, $_POST['place']))
 			jsonError();
 

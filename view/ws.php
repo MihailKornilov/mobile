@@ -1250,10 +1250,6 @@ function zayav_info($zayav_id) {
 			'zp_avai:'.zayav_zp_avai($z).','.
 			'worker_zp:'.round(($acc_sum - $expense_sum) * 0.3).
 		'},'.
-		'WORKER_SPISOK='.query_selJson("SELECT `viewer_id`,CONCAT(`first_name`,' ',`last_name`) FROM `vk_user`
-										 WHERE `ws_id`=".WS_ID."
-										 ORDER BY `dtime_add`").','.
-//		'WORKER_ASS=_toAss(WORKER_SPISOK),'.
 		'PRINT={'.
 			'dtime:"'.FullDataTime($z['dtime_add']).'",'.
 			'device:"'._deviceName($z['base_device_id']).'<b>'._vendorName($z['base_vendor_id'])._modelName($z['base_model_id']).'</b>",'.
@@ -1287,7 +1283,7 @@ function zayav_info($zayav_id) {
 					'<tr><td class="label">Устройство: <td>'._deviceName($z['base_device_id']).'<a><b>'.MODEL.'</b></a>'.
 					'<tr><td class="label">Клиент:	 <td>'._clientLink($z['client_id'], 0, 1).
 					'<tr><td class="label">Дата приёма:'.
-						'<td class="dtime_add'._tooltip('Заявку внёс '._viewer($z['viewer_id_add'], 'name'), -70).FullDataTime($z['dtime_add']).
+						'<td class="dtime_add'._tooltip('Заявку вн'.(_viewer($z['viewer_id_add'], 'sex') == 1 ? 'есла' : 'ёс').' '._viewer($z['viewer_id_add'], 'name'), -70).FullDataTime($z['dtime_add']).
   ($z['pre_cost'] ? '<tr><td class="label">Стоимость:<td><b class="'._tooltip('Предварительная стоимость ремонта', -10, 'l').$z['pre_cost'].'</b> руб.' : '').
                     '<tr><td class="label">Срок:<td>'._zayavFinish($z['day_finish']).
 					'<tr><td class="label">Статус:'.
@@ -1706,22 +1702,17 @@ function zayav_cartridge_spisok($v=array()) {
 	$sql = "SELECT * FROM `zayav_cartridge` WHERE `zayav_id` IN (".implode(',', array_keys($zayav)).")";
 	$q = query($sql);
 	while($r = mysql_fetch_assoc($q))
-		$zayav[$r['zayav_id']]['cart'][] = $r['cartridge_id'];
-
-	$cart = query_ass("SELECT `id`,`name` FROM `setup_cartridge` WHERE `ws_id`=".WS_ID);
+		$zayav[$r['zayav_id']]['cart'][$r['cartridge_id']] = '<b>'._cartridgeName($r['cartridge_id']).'</b>';
 
 	if(!$filter['client_id'])
 		$zayav = _clientLink($zayav, 0, 1);
 
 	foreach($zayav as $id => $r) {
-		$cartgidge = array();
-		foreach(array_unique($r['cart']) as $c)
-			$cartgidge[] = '<b>'.$cart[$c].'</b>';
 		$diff = $r['accrual_sum'] - $r['oplata_sum'];
 		$send['spisok'] .=
 		'<div class="zayav_unit cart" id="u'.$id.'" style="background-color:#'._zayavStatusColor($r['zayav_status']).'" val="'.$id.'">'.
 			'<h2>#'.$r['nomer'].'</h2>'.
-			'<a class="name">Картридж'.(count($r['cart']) > 1 ? 'и' : '').' '.implode(', ', $cartgidge).'</a>'.
+			'<a class="name">Картридж'.(count($r['cart']) > 1 ? 'и' : '').' '.implode(', ', $r['cart']).'</a>'.
 			'<table class="utab">'.
 				'<tr><td valign=top>'.
 				(!$filter['client_id'] ? '<tr><td class="label">Клиент:<td>'.$r['client_link'] : '').
@@ -1753,6 +1744,7 @@ function zayav_cartridge_info($z) {
 	$status = _zayavStatusName();
 	unset($status[0]);
 
+	$expense = zayav_expense_spisok($z, 'all');
 	$history = history(array('zayav_id'=>$zayav_id));
 
 	return
@@ -1760,6 +1752,7 @@ function zayav_cartridge_info($z) {
 		'var STATUS='._selJson($status).','.
 			'ZAYAV={'.
 				'id:'.$zayav_id.','.
+				'cartridge:1,'.
 				'nomer:'.$z['nomer'].','.
 				'head:"№<b>'.$z['nomer'].'</b>",'.
 				'client_id:'.$z['client_id'].','.
@@ -1788,15 +1781,20 @@ function zayav_cartridge_info($z) {
 				'<table class="tabInfo">'.
 					'<tr><td class="label r">Клиент:	 <td>'._clientLink($z['client_id'], 0, 1).
 					'<tr><td class="label r">Дата приёма:'.
-						'<td class="dtime_add'._tooltip('Заявку внёс '._viewer($z['viewer_id_add'], 'name'), -70).FullDataTime($z['dtime_add']).
+						'<td class="dtime_add'._tooltip('Заявку вн'.(_viewer($z['viewer_id_add'], 'sex') == 1 ? 'есла' : 'ёс').' '._viewer($z['viewer_id_add'], 'name'), -70).FullDataTime($z['dtime_add']).
 					'<tr><td class="label r">Статус:'.
-						'<td><div id="status" style="background-color:#'._zayavStatusColor($z['zayav_status']).'" class="status_place">'.
+						'<td><div id="status" style="background-color:#'._zayavStatusColor($z['zayav_status']).'" class="cartridge_status">'.
 								_zayavStatusName($z['zayav_status']).
 							'</div>'.
 							'<div id="status_dtime">от '.FullDataTime($z['zayav_status_dtime'], 1).'</div>'.
 					'<tr><td class="label r">Количество:<td><b>'.$z['cartridge_count'].'</b> шт.'.
 					'<tr><td class="label r top">Список:<td id="cart-tab">'.zayav_cartridge_info_tab($zayav_id).
 				'</table>'.
+
+	'<div class="headBlue">Расходы<div id="ze-edit" class="img_edit'._tooltip('Изменить расходы по заявке', -166, 'r').'</div></div>'.
+	'<div id="ze_acc">'.zayav_acc_sum($z).'</div>'.
+	$expense['html'].
+
 				_vkComment('zayav', $z['id']).
 				'<div class="headBlue mon">Начисления и платежи'.
 					'<a class="add income-add">Принять платёж</a>'.
@@ -1812,8 +1810,6 @@ function zayav_cartridge_info($z) {
 	'</div>';
 }//zayav_cartridge_info()
 function zayav_cartridge_info_tab($zayav_id) {//список картриджей в инфо по заявке
-	$cartSetup = query_ass("SELECT `id`,`name` FROM `setup_cartridge` WHERE `ws_id`=".WS_ID);
-
 	$sql = "SELECT * FROM `zayav_cartridge` WHERE `zayav_id`=".$zayav_id." ORDER BY `id`";
 	$q = query($sql);
 	$send = '<table class="_spisok _money">'.
@@ -1837,7 +1833,7 @@ function zayav_cartridge_info_tab($zayav_id) {//список картриджей в инфо по заяв
 		$send .=
 			//'<tr style="background-color:#'._zayavStatusColor($r['status']).'" val="'.$r['id'].'">'.
 			'<tr val="'.$r['id'].'"'.($r['filling'] || $r['restore'] || $r['chip'] ? ' class="ready"' : '').'>'.
-				'<td class="cart-name"><b>'.$cartSetup[$r['cartridge_id']].'</b>'.
+				'<td class="cart-name"><b>'._cartridgeName($r['cartridge_id']).'</b>'.
 				'<td class="cost">'.($r['cost'] ? $r['cost'] : '').
 				'<td class="dtime">'.($r['dtime_ready'] != '0000-00-00 00:00:00' ? FullDataTime($r['dtime_ready']) : '').
 				'<td class="cart-prim">'.$prim.

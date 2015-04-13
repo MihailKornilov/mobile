@@ -246,6 +246,9 @@ function GvaluesCreate() {//Составление файла G_values.js
 		"\n".'CARTRIDGE_FILLING='.query_ptpJson("SELECT `id`,`cost_filling` FROM `setup_cartridge` WHERE `ws_id`=".WS_ID).','.
 		"\n".'CARTRIDGE_RESTORE='.query_ptpJson("SELECT `id`,`cost_restore` FROM `setup_cartridge` WHERE `ws_id`=".WS_ID).','.
 		"\n".'CARTRIDGE_CHIP='.query_ptpJson("SELECT `id`,`cost_chip` FROM `setup_cartridge` WHERE `ws_id`=".WS_ID).','.
+		"\n".'WORKER_SPISOK='.query_selJson("SELECT `viewer_id`,CONCAT(`first_name`,' ',`last_name`) FROM `vk_user`
+											 WHERE `ws_id`=".WS_ID."
+											 ORDER BY `dtime_add`").','.
 		"\n".'ZE_SPISOK='.query_selJson("SELECT `id`,`name` FROM `setup_zayav_expense` WHERE `ws_id`=".WS_ID." ORDER BY `sort`").','.
 		"\n".'ZE_TXT='.query_ptpJson("SELECT `id`,1 FROM `setup_zayav_expense` WHERE `ws_id`=".WS_ID." AND `dop`=1").','.
 		"\n".'ZE_WORKER='.query_ptpJson("SELECT `id`,1 FROM `setup_zayav_expense` WHERE `ws_id`=".WS_ID." AND `dop`=2").','.
@@ -399,6 +402,24 @@ function _devPlace($place_id=false) {
 		return $arr;
 	return isset($arr[$place_id]) ? $arr[$place_id] : '';
 }//_devPlace()
+
+function _cartridgeName($item_id) {
+	if(!defined('CARTRIDGE_NAME_LOADED')) {
+		$key = CACHE_PREFIX.'cartridge'.WS_ID;
+		$arr = xcache_get($key);
+		if(empty($arr)) {
+			$sql = "SELECT `id`,`name` FROM `setup_cartridge` WHERE `ws_id`=".WS_ID;
+			$q = query($sql);
+			while($r = mysql_fetch_assoc($q))
+				$arr[$r['id']] = $r['name'];
+			xcache_set($key, $arr, 86400);
+		}
+		foreach($arr as $id => $name)
+			define('CARTRIDGE_NAME_'.$id, $name);
+		define('CARTRIDGE_NAME_LOADED', true);
+	}
+	return constant('CARTRIDGE_NAME_'.$item_id);
+}//_cartridgeName()
 
 function equipCache() {
 	$key = CACHE_PREFIX.'device_equip';

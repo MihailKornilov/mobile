@@ -338,6 +338,12 @@ function history_types($v, $filter) {
 				($filter['client_id'] ? '' : ' для клиента '.$v['client_link'])
 			).
 			'.';
+		case 55: return ($filter['zayav_id'] ? 'Д' : 'К заявке '.$v['zayav_link'].' д').'обавлены картриджи: '.$v['value'].'.';
+		case 56: return 'Удалён картридж <u>'.$v['value'].'</u> '.($filter['zayav_id'] ? '' : 'у заявки '.$v['zayav_link']).'.';
+		case 57: return
+			'Операции с картриджом <u>'.$v['value'].'</u>'.
+			($filter['zayav_id'] ? '' : ' по заявке '.$v['zayav_link']).
+			':<div class="changes">'.$v['value1'].'</div>';
 
 
 		case 1001: return 'В настройках: добавление нового сотрудника <u>'._viewer($v['value'], 'name').'</u>.';

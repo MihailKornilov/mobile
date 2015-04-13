@@ -2008,12 +2008,12 @@ $(document)
 			if(send.dev_place > 0)
 				send.place_other = '';
 			if(!send.status)
-				err('Выберите статус заявки');
+				dialog.err('Выберите статус заявки');
 			else if(send.place == -1 || send.place == 0 && send.place_other == '') {
-				err('Не указано местонахождение устройства');
+				dialog.err('Не указано местонахождение устройства');
 				$('#place_other').focus();
 			} else if(send.status == 1 && send.day_finish == '0000-00-00')
-				err('Не указан срок выполнения');
+				dialog.err('Не указан срок выполнения');
 			else {
 				dialog.process();
 				$.post(AJAX_WS, send, function(res) {
@@ -2026,15 +2026,66 @@ $(document)
 				}, 'json');
 			}
 		}
-		function err(msg) {
-			dialog.bottom.vkHint({
-				msg:'<SPAN class=red>' + msg + '</SPAN>',
-				top:-47,
-				left:103,
-				indent:50,
-				show:1,
-				remove:1
+	})
+	.on('click', '#zayav-info .cartridge_status', function() {
+		var html =
+				'<div id="zayav-status">' +
+					(ZAYAV.status != 1 ?
+						'<div class="st c1" val="1">' +
+							'Ожидает выполнения' +
+							'<div class="about">Возобновление работы по заявке.</div>' +
+						'</div>'
+					: '') +
+					(ZAYAV.status != 2 ?
+						'<div class="st c2" val="2">' +
+							'Выполнено' +
+							'<div class="about">' +
+								'Заявка выполнена успешно.<br />' +
+								'Не забудьте расписать расходы по заявке, проверьте начисления.<br />' +
+								'Добавьте напоминание, если необходимо.' +
+							'</div>' +
+						'</div>'
+					: '') +
+					(ZAYAV.status != 3 ?
+						'<div class="st c3" val="3">' +
+							'Заявка отменена' +
+							'<div class="about">Отмена заявки по какой-либо причине.</div>' +
+						'</div>'
+					: '') +
+						'<input type="hidden" id="zs-status" />' +
+				'</div>',
+
+			dialog = _dialog({
+				top:30,
+				width:420,
+				head:'Изменение статуса заявки',
+				content:html,
+				butSubmit:'',
+				submit:submit
 			});
+		$('.st').click(function() {
+			var t = $(this),
+				v = t.attr('val');
+				$('#zs-status').val(v);
+				submit();
+		});
+
+
+		function submit() {
+			var send = {
+				op: 'zayav_cartridge_status',
+				zayav_id: ZAYAV.id,
+				status: _num($('#zs-status').val())
+			};
+			dialog.process();
+			$.post(AJAX_WS, send, function (res) {
+				if (res.success) {
+					dialog.close();
+					_msg('Изменения сохранены.');
+					document.location.reload();
+				} else
+					dialog.abort();
+			}, 'json');
 		}
 	})
 	.on('click', '#zayav-info .dev_place', function() {
@@ -2985,7 +3036,9 @@ $(document)
 			'<tr><td class="label">Счёт:<td><input type="hidden" id="invoice_id" value="' + (INVOICE_SPISOK.length ? INVOICE_SPISOK[0].uid : 0) + '" />' +
 			'<tr><td class="label">Сумма:<td><input type="text" id="sum" class="money" maxlength="11" /> руб.' +
 			'<tr><td class="label">Описание:<td><input type="text" id="prim" maxlength="100" />' +
-			(window.ZAYAV ? '<tr><td class="label topi">Местонахождение<br />устройства:<td><input type="hidden" id="place" value="-1" />' : '') +
+		(window.ZAYAV && !ZAYAV.cartridge ?
+			'<tr><td class="label topi">Местонахождение<br />устройства:<td><input type="hidden" id="place" value="-1" />'
+		: '') +
 			'</table>';
 		var dialog = _dialog({
 				width:380,
@@ -3010,16 +3063,17 @@ $(document)
 			var send = {
 				op:'income_add',
 				zayav_id:$('#zayav_id').val(),
+				cartridge:ZAYAV.cartridge ? 1 : 0,
 				invoice_id:$('#invoice_id').val(),
 				sum:$('#sum').val(),
 				prim:$('#prim').val(),
-				place:window.ZAYAV ? $('#place').val() : 0,
-				place_other:window.ZAYAV ? $('#place_other').val() : ''
+				place:window.ZAYAV && !ZAYAV.cartridge ? $('#place').val() : 0,
+				place_other:window.ZAYAV && !ZAYAV.cartridge ? $('#place_other').val() : ''
 			};
-			if(send.invoice_id == 0) err('Не указан счёт');
-			else if(!REGEXP_CENA.test(send.sum)) { err('Некорректно указана сумма'); $('#sum').focus(); }
-			else if(!window.ZAYAV && !send.prim) { err('Не указано описание'); $('#prim').focus(); }
-			else if(window.ZAYAV && send.place == -1) err('Не указано местонахождение устройства');
+			if(send.invoice_id == 0) dialog.err('Не указан счёт');
+			else if(!REGEXP_CENA.test(send.sum)) { dialog.err('Некорректно указана сумма'); $('#sum').focus(); }
+			else if(!window.ZAYAV && !send.prim) { dialog.err('Не указано описание'); $('#prim').focus(); }
+			else if(window.ZAYAV && !send.cartridge && send.place == -1) dialog.err('Не указано местонахождение устройства');
 			else {
 				dialog.process();
 				$.post(AJAX_WS, send, function (res) {
@@ -3036,16 +3090,6 @@ $(document)
 					}
 				}, 'json');
 			}
-		}
-		function err(msg) {
-			dialog.bottom.vkHint({
-				msg:'<SPAN class="red">' + msg + '</SPAN>',
-				remove:1,
-				indent:40,
-				show:1,
-				top:-47,
-				left:103
-			});
 		}
 	})
 	.on('click', '.income-del', function() {
