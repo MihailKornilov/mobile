@@ -1188,6 +1188,42 @@ switch(@$_POST['op']) {
 
 		jsonSuccess($send);
 		break;
+	case 'zayav_executer_change'://изменение исполнителя заявки
+		if(!$zayav_id = _num($_POST['zayav_id']))
+			jsonError();
+
+		$sql = "SELECT * FROM `zayav` WHERE `ws_id`=".WS_ID." AND !`deleted` AND `id`=".$zayav_id;
+		if(!$z = query_assoc($sql))
+			jsonError();
+
+		$executer_id = _num($_POST['executer_id']);
+		if($executer_id) {//если id такого сотрудника нет в мастерской - ошибка
+			$sql = "SELECT COUNT(*) FROM `vk_user` WHERE `ws_id`=".WS_ID." AND `viewer_id`=".$executer_id;
+			if(!query_value($sql))
+				jsonError();
+		}
+
+		if($z['executer_id'] == $executer_id)
+			jsonError();
+
+		$sql = "UPDATE `zayav` SET `executer_id`=".$executer_id." WHERE `id`=".$zayav_id;
+		query($sql);
+
+
+		history_insert(array(
+			'type' => 58,
+			'client_id' => $z['client_id'],
+			'zayav_id' => $zayav_id,
+			'value' =>
+				'<table>'.
+					'<tr><td>'.($z['executer_id'] ? _viewer($z['executer_id'], 'name') : '').
+						'<td>»'.
+						'<td>'.($executer_id ? _viewer($executer_id, 'name') : '').
+					'</table>'
+		));
+
+		jsonSuccess();
+		break;
 
 	case 'cartridge_new'://внесение новой модели картриджа
 		$name = _txt($_POST['name']);
@@ -2158,8 +2194,7 @@ switch(@$_POST['op']) {
 	case 'invoice_set':
 		if(!$invoice_id = _isnum($_POST['invoice_id']))
 			jsonError();
-		if(!$sum = _cena($_POST['sum']))
-			jsonError();
+		$sum = _cena($_POST['sum']);
 
 		$sql = "SELECT * FROM `invoice` WHERE `ws_id`=".WS_ID." AND `id`=".$invoice_id;
 		if(!$r = mysql_fetch_assoc(query($sql)))

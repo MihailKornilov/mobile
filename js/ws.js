@@ -207,6 +207,7 @@ var AJAX_WS = APP_HTML + '/ajax/ws.php?' + VALUES,
 				finish:$('#day_finish').val(),
 				diff:$('#diff').val(),
 				zpzakaz:$('#zpzakaz').val(),
+				executer:$('#executer').val(),
 				device:$('#dev_device').val(),
 				vendor:$('#dev_vendor').val(),
 				model:$('#dev_model').val(),
@@ -223,6 +224,7 @@ var AJAX_WS = APP_HTML + '/ajax/ws.php?' + VALUES,
 			if(v.finish != '0000-00-00') loc += '.finish=' + v.finish;
 			if(v.diff > 0) loc += '.diff=' + v.diff;
 			if(v.zpzakaz > 0) loc += '.zpzakaz=' + v.zpzakaz;
+			if(v.executer > 0) loc += '.executer=' + v.executer;
 			if(v.device > 0) loc += '.device=' + v.device;
 			if(v.vendor > 0) loc += '.vendor=' + v.vendor;
 			if(v.model > 0) loc += '.model=' + v.model;
@@ -237,6 +239,7 @@ var AJAX_WS = APP_HTML + '/ajax/ws.php?' + VALUES,
 		_cookie('zayav_finish', v.finish);
 		_cookie('zayav_diff', v.diff);
 		_cookie('zayav_zpzakaz', v.zpzakaz);
+		_cookie('zayav_executer', v.executer);
 		_cookie('zayav_device', v.device);
 		_cookie('zayav_vendor', v.vendor);
 		_cookie('zayav_model', v.model);
@@ -1653,6 +1656,7 @@ $(document)
 		$('.day-finish-link span').html('не указан');
 		$('#diff')._check(0);
 		$('#zpzakaz')._radio(0);
+		$('#executer')._select(0);
 		$('#dev').device({
 			width:155,
 			type_no:1,
@@ -3063,7 +3067,7 @@ $(document)
 			var send = {
 				op:'income_add',
 				zayav_id:$('#zayav_id').val(),
-				cartridge:ZAYAV.cartridge ? 1 : 0,
+				cartridge:window.ZAYAV && ZAYAV.cartridge ? 1 : 0,
 				invoice_id:$('#invoice_id').val(),
 				sum:$('#sum').val(),
 				prim:$('#prim').val(),
@@ -3866,6 +3870,13 @@ $(document)
 			$('#desc')._check(zayavSpisok);
 			$('#status').rightLink(zayavSpisok);
 			$('#diff')._check(zayavSpisok);
+			WORKER_SPISOK.push({uid:-1,title:'Не назначен',content:'<b>Не назначен</b>'});
+			$('#executer')._select({
+				width:155,
+				title0:'не указан',
+				spisok:WORKER_SPISOK,
+				func:zayavSpisok
+			});
 			$('#dev').device({
 				width:155,
 				type_no:1,
@@ -4090,6 +4101,30 @@ $(document)
 						remove:1
 					});
 				}
+			});
+			$('#executer_id')._dropdown({
+				title0:'не указан',
+				spisok:WORKER_SPISOK,
+				func:function(v) {
+					var td = $('#executer_td'),
+						send = {
+							op:'zayav_executer_change',
+							zayav_id:ZAYAV.id,
+							executer_id:v
+						};
+					td.addClass('_busy');
+					$.post(AJAX_WS, send, function(res) {
+						td.removeClass('_busy');
+						if(res.success)
+							_msg('Исполнитель изменён');
+					}, 'json');
+				}
+			});
+			$('#executer_id_dropdown').vkHint({
+				msg:'Сотрудник, который назначен на выполнение данной заявки.',
+				width:150,
+				top:-79,
+				left:-50
 			});
 			$('#ze-edit').click(function() {
 				var html =

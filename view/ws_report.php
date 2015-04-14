@@ -345,6 +345,10 @@ function history_types($v, $filter) {
 			($filter['zayav_id'] ? '' : ' по заявке '.$v['zayav_link']).
 			':<div class="changes">'.$v['value1'].'</div>';
 
+		case 58: return
+			'Изменение исполнителя'.
+			($filter['zayav_id'] ? '' : ' по заявке '.$v['zayav_link']).
+			':<div class="changes">'.$v['value'].'</div>';
 
 		case 1001: return 'В настройках: добавление нового сотрудника <u>'._viewer($v['value'], 'name').'</u>.';
 		case 1002: return 'В настройках: удаление сотрудника <u>'._viewer($v['value'], 'name').'</u>.';

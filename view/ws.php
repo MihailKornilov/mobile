@@ -871,6 +871,7 @@ function zayavFilter($v) {
 		'status' => 0,
 		'finish' => '0000-00-00',
 		'zpzakaz' => 0,
+		'executer' => 0,
 		'device' => 0,
 		'vendor' => 0,
 		'model' => 0,
@@ -878,19 +879,20 @@ function zayavFilter($v) {
 		'place' => 0,
 	);
 	$filter = array(
-		'page' => _isnum(@$v['page']) ? $v['page'] : 1,
-		'limit' => _isnum(@$v['limit']) ? $v['limit'] : 20,
-		'client_id' => _isnum(@$v['client_id']),
+		'page' => _num(@$v['page']) ? $v['page'] : 1,
+		'limit' => _num(@$v['limit']) ? $v['limit'] : 20,
+		'client_id' => _num(@$v['client_id']),
 		'find' => trim(@$v['find']),
-		'sort' => _isnum(@$v['sort']) ? $v['sort'] : 1,
-		'desc' => _isbool(@$v['desc']),
+		'sort' => _num(@$v['sort']) ? $v['sort'] : 1,
+		'desc' => _bool(@$v['desc']),
 		'status' => _isnum(@$v['status']),
 		'finish' => preg_match(REGEXP_DATE, @$v['finish']) ? $v['finish'] : $default['finish'],
-		'zpzakaz' => _isnum(@$v['zpzakaz']),
-		'device' => _isnum(@$v['device']),
-		'vendor' => _isnum(@$v['vendor']),
-		'model' => _isnum(@$v['model']),
-		'diff' => _isbool(@$v['diff']),
+		'zpzakaz' => _num(@$v['zpzakaz']),
+		'executer' => intval(@$v['executer']),
+		'device' => _num(@$v['device']),
+		'vendor' => _num(@$v['vendor']),
+		'model' => _num(@$v['model']),
+		'diff' => _bool(@$v['diff']),
 		'place' => trim(@$v['place']),
 		//'place' => !empty($v['place']) ? win1251(urldecode(htmlspecialchars(trim($v['place'])))) : '',
 		'clear' => ''
@@ -934,6 +936,8 @@ function zayav_spisok($v) {
 			$ids = query_ids("SELECT `zayav_id` FROM `zp_zakaz` WHERE `ws_id`=".WS_ID);
 			$cond .= " AND `id` ".($filter['zpzakaz'] == 2 ? 'NOT' : '')." IN (".$ids.")";
 		}
+		if($filter['executer'])
+			$cond .= " AND `executer_id`=".($filter['executer'] < 0 ? 0 : $filter['executer']);
 		if($filter['device'])
 			$cond .= " AND `base_device_id`=".$filter['device'];
 		if($filter['vendor'])
@@ -1144,8 +1148,9 @@ function zayav_list($v) {
 						_check('diff', 'Неоплаченные заявки', $v['diff']).
 						'<div class="findHead">Заказаны запчасти</div>'.
 						_radio('zpzakaz', array(0=>'Все заявки',1=>'Да',2=>'Нет'), $v['zpzakaz'], 1).
+						'<div class="findHead">Исполнитель</div><input type="hidden" id="executer" value="'.$v['executer'].'" />'.
 						'<div class="findHead">Устройство</div><div id="dev"></div>'.
-						'<div class="findHead">Нахождение устройства</div><INPUT TYPE="hidden" id="device_place" value="'.$v['place'].'">'.
+						'<div class="findHead">Нахождение устройства</div><input type="hidden" id="device_place" value="'.$v['place'].'" />'.
 					'</div>'.
 		'</table>'.
 		'<script type="text/javascript">'.
@@ -1286,6 +1291,8 @@ function zayav_info($zayav_id) {
 						'<td class="dtime_add'._tooltip('Заявку вн'.(_viewer($z['viewer_id_add'], 'sex') == 1 ? 'есла' : 'ёс').' '._viewer($z['viewer_id_add'], 'name'), -70).FullDataTime($z['dtime_add']).
   ($z['pre_cost'] ? '<tr><td class="label">Стоимость:<td><b class="'._tooltip('Предварительная стоимость ремонта', -10, 'l').$z['pre_cost'].'</b> руб.' : '').
                     '<tr><td class="label">Срок:<td>'._zayavFinish($z['day_finish']).
+                    '<tr><td class="label">Исполнитель:'.
+						'<td id="executer_td"><input type="hidden" id="executer_id" value="'.$z['executer_id'].'" />'.
 					'<tr><td class="label">Статус:'.
 						'<td><div id="status" style="background-color:#'._zayavStatusColor($z['zayav_status']).'" class="status_place">'.
 								_zayavStatusName($z['zayav_status']).
