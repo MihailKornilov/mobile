@@ -353,7 +353,6 @@ function history_types($v, $filter) {
 		case 1001: return 'В настройках: добавление нового сотрудника <u>'._viewer($v['value'], 'name').'</u>.';
 		case 1002: return 'В настройках: удаление сотрудника <u>'._viewer($v['value'], 'name').'</u>.';
 
-		case 1003: return 'В настройках: изменение названия мастерской:<div class="changes">'.$v['value'].'</div>';
 		case 1004: return 'В настройках: мастерская удалена.';
 
 		case 1005: return 'В настройках: внесение новой категории расходов мастерской <u>'.$v['value'].'</u>.';
@@ -375,6 +374,8 @@ function history_types($v, $filter) {
 		case 1017: return '<a href="'.URL.'&p=setup&d=service&d1=cartridge">В настройках:</a> внесение нового картриджа <u>'.$v['value'].'</u>.';
 		case 1018: return '<a href="'.URL.'&p=setup&d=service&d1=cartridge">В настройках:</a> изменение данных картриджа <u>'.$v['value'].'</u>:<div class="changes">'.$v['value1'].'</div>';
 		case 1019: return '<a href="'.URL.'&p=setup&d=service&d1=cartridge">В настройках:</a> удаленён картридж <u>'.$v['value'].'</u>.';
+
+		case 1020: return '<a href="'.URL.'&p=setup&d=rekvisit">В настройках:</a> изменены реквизиты организации:<div class="changes">'.$v['value'].'</div>';
 
 		default: return $v['type'];
 	}

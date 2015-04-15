@@ -641,31 +641,6 @@ $(document)
 
 	.ready(function() {
 		if($('#setup_info').length) {
-			$('#info_save').click(function() {
-				var t = $(this),
-					send = {
-						op:'info_save',
-						org_name: $.trim($('#org_name').val())
-					};
-				if(!send.org_name) {
-					t.vkHint({
-						msg:'<span class="red">Не указано название организации</span>',
-						remove:1,
-						indent:40,
-						show:1,
-						top:-57,
-						left:-5
-					});
-					$('#org_name').focus();
-					return;
-				}
-				t.addClass('busy');
-				$.post(AJAX_SETUP, send, function(res) {
-					t.removeClass('busy');
-					if(res.success)
-						_msg('Сохранено.');
-				}, 'json');
-			});
 			$('#info_del').click(function() {
 				var dialog = _dialog({
 					top:150,
@@ -683,6 +658,28 @@ $(document)
 						}, 'json');
 					}
 				});
+			});
+		}
+		if($('#setup_rekvisit').length) {
+			$('.vkButton').click(function() {
+				var t = $(this),
+					send = {
+						op:'rekvisit',
+						org_name:$('#org_name').val(),
+						ogrn:$('#ogrn').val(),
+						inn:$('#inn').val(),
+						kpp:$('#kpp').val(),
+						adres_yur:$('#adres_yur').val(),
+						telefon:$('#telefon').val(),
+						adres_ofice:$('#adres_ofice').val(),
+						schet:$('#schet').val()
+					};
+				t.addClass('busy');
+				$.post(AJAX_SETUP, send, function(res) {
+					t.removeClass('busy');
+					if(res.success)
+						_msg('Информация сохранена.');
+				}, 'json');
 			});
 		}
 		if($('#setup-service').length) {

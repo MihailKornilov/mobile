@@ -5,9 +5,10 @@
 function setup() {
 	$pages = array(
 		'my' => 'Мои настройки',
-		'info' => 'Информация о мастерской',
-		'worker' => 'Сотрудники',
+		'info' => 'Основная информация',
+		'rekvisit' => 'Реквизиты организации',
 		'service' => 'Виды услуг',
+		'worker' => 'Сотрудники',
 		'invoice' => 'Счета',
 		'expense' => 'Категории расходов',
 		'zayavexpense' => 'Расходы по заявке'
@@ -27,6 +28,7 @@ function setup() {
 		default: $d = 'my';
 		case 'my': $left = 'Мои настройки'; break;
 		case 'info': $left = setup_info(); break;
+		case 'rekvisit': $left = setup_rekvisit(); break;
 		case 'worker':
 			if($id = _isnum(@$_GET['id'])) {
 				$left = setup_worker_rules($id);
@@ -58,7 +60,7 @@ function setup() {
 }//setup()
 
 function setup_info() {
-	$sql = "SELECT * FROM `workshop` WHERE `id`=".WS_ID." LIMIT 1";
+	$sql = "SELECT * FROM `workshop` WHERE `id`=".WS_ID;
 	if(!$ws = mysql_fetch_assoc(query($sql))) {
 		_cacheClear();
 		header('Location:'.URL);
@@ -77,10 +79,9 @@ function setup_info() {
 	'<div id="setup_info">'.
 		'<div class="headName">Основная информация</div>'.
 		'<TABLE class="tab">'.
-			'<TR><TD class="label">Название организации:<TD><INPUT type="text" id="org_name" maxlength="100" value="'.$ws['org_name'].'">'.
+			'<TR><TD class="label">Название организации:<TD><b>'.$ws['org_name'].'</b>'.
 			'<TR><TD class="label">Город:<TD>'.$ws['city_name'].', '.$ws['country_name'].
-			'<TR><TD class="label">Главный администратор:<TD><B>'._viewer($ws['admin_id'], 'name').'</B>'.
-			'<TR><TD><TD><div class="vkButton" id="info_save"><button>Сохранить</button></div>'.
+			'<TR><TD class="label">Главный администратор:<TD>'._viewer($ws['admin_id'], 'name').
 		'</TABLE>'.
 
 		'<div class="headName">Категории ремонтируемых устройств</div>'.
@@ -91,6 +92,26 @@ function setup_info() {
 		'<div class="vkButton" id="info_del"><button>Удалить мастерскую</button></div>'.
 	'</div>';
 }//setup_info()
+
+function setup_rekvisit() {
+	$sql = "SELECT * FROM `workshop` WHERE `id`=".WS_ID;
+	$g = query_assoc($sql);
+	return
+		'<div id="setup_rekvisit">'.
+			'<div class="headName">Реквизиты организации</div>'.
+			'<table class="t">'.
+				'<tr><td class="label">Название организации:<td><input type="text" id="org_name" value="'.$g['org_name'].'" />'.
+				'<tr><td class="label">ОГРН:<td><input type="text" id="ogrn" value="'.$g['ogrn'].'" />'.
+				'<tr><td class="label">ИНН:<td><input type="text" id="inn" value="'.$g['inn'].'" />'.
+				'<tr><td class="label">КПП:<td><input type="text" id="kpp" value="'.$g['kpp'].'" />'.
+				'<tr><td class="label top">Юридический адрес:<td><textarea id="adres_yur">'.$g['adres_yur'].'</textarea>'.
+				'<tr><td class="label">Телефоны:<td><input type="text" id="telefon" value="'.$g['telefon'].'" />'.
+				'<tr><td class="label">Адрес офиса:<td><input type="text" id="adres_ofice" value="'.$g['adres_ofice'].'" />'.
+				'<tr><td class="label">Расчётный счёт:<td><input type="text" id="schet" value="'.$g['schet'].'" />'.
+				'<tr><td><td><div class="vkButton"><button>Сохранить</button></div>'.
+			'</table>'.
+		'</div>';
+}//setup_rekvisit()
 
 function setup_service() {
 	$r = query_assoc("SELECT * FROM `workshop` WHERE `id`=".WS_ID);

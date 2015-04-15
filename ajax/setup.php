@@ -2,27 +2,6 @@
 require_once('config.php');
 
 switch(@$_POST['op']) {
-	case 'info_save':
-		if(!RULES_INFO)
-			jsonError();
-		$name = win1251(htmlspecialchars(trim($_POST['org_name'])));
-
-		$sql = "SELECT * FROM `workshop` WHERE `id`=".WS_ID;
-		if(!$r = mysql_fetch_assoc(query($sql)))
-			jsonError();
-
-		if($name == $r['org_name'])
-			jsonError();
-
-		query("UPDATE `workshop` SET `org_name`='".$name."' WHERE `id`=".WS_ID);
-
-		history_insert(array(
-			'type' => 1003,
-			'value' => '<table><td>'.$r['org_name'].'<td>»<td>'.$name.'</table>'
-		));
-
-		jsonSuccess();
-		break;
 	case 'info_devs_set':
 		if(!RULES_INFO)
 			jsonError();
@@ -44,6 +23,57 @@ switch(@$_POST['op']) {
 		history_insert(array(
 			'type' => 1004
 		));
+
+		jsonSuccess();
+		break;
+
+	case 'rekvisit':
+		$org_name = _txt($_POST['org_name']);
+		$ogrn = _txt($_POST['ogrn']);
+		$inn = _txt($_POST['inn']);
+		$kpp = _txt($_POST['kpp']);
+		$adres_yur = _txt($_POST['adres_yur']);
+		$telefon = _txt($_POST['telefon']);
+		$adres_ofice = _txt($_POST['adres_ofice']);
+		$schet = _txt($_POST['schet']);
+
+		$sql = "SELECT * FROM `workshop` WHERE `id`=".WS_ID;
+		$g = query_assoc($sql);
+
+		$sql = "UPDATE `workshop`
+				SET `org_name`='".addslashes($org_name)."',
+					`ogrn`='".addslashes($ogrn)."',
+					`inn`='".addslashes($inn)."',
+					`kpp`='".addslashes($kpp)."',
+					`adres_yur`='".addslashes($adres_yur)."',
+					`telefon`='".addslashes($telefon)."',
+					`adres_ofice`='".addslashes($adres_ofice)."',
+					`schet`='".addslashes($schet)."'
+				WHERE `id`=".WS_ID;
+		query($sql);
+
+		$changes = '';
+		if($g['org_name'] != $org_name)
+			$changes .= '<tr><th>Название организации:<td>'.$g['org_name'].'<td>»<td>'.$org_name;
+		if($g['ogrn'] != $ogrn)
+			$changes .= '<tr><th>ОГРН:<td>'.$g['ogrn'].'<td>»<td>'.$ogrn;
+		if($g['inn'] != $inn)
+			$changes .= '<tr><th>ИНН:<td>'.$g['inn'].'<td>»<td>'.$inn;
+		if($g['kpp'] != $kpp)
+			$changes .= '<tr><th>КПП:<td>'.$g['kpp'].'<td>»<td>'.$kpp;
+		if($g['adres_yur'] != $adres_yur)
+			$changes .= '<tr><th>Юридический адрес:<td>'.$g['adres_yur'].'<td>»<td>'.$adres_yur;
+		if($g['telefon'] != $telefon)
+			$changes .= '<tr><th>Телефоны:<td>'.$g['telefon'].'<td>»<td>'.$telefon;
+		if($g['adres_ofice'] != $adres_ofice)
+			$changes .= '<tr><th>Адрес офиса:<td>'.$g['adres_ofice'].'<td>»<td>'.$adres_ofice;
+		if($g['schet'] != $schet)
+			$changes .= '<tr><th>Расчётный счёт:<td>'.$g['schet'].'<td>»<td>'.$schet;
+		if($changes)
+			history_insert(array(
+				'type' => 1020,
+				'value' => '<table>'.$changes.'</table>'
+			));
 
 		jsonSuccess();
 		break;
