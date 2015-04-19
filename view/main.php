@@ -153,6 +153,7 @@ function GvaluesCreate() {//Составление файла G_values.js
 	$save = 'function _toAss(s){var a=[];for(var n=0;n<s.length;a[s[n].uid]=s[n].title,n++);return a}'.
 	"\n".'var COLOR_SPISOK='.query_selJson("SELECT `id`,`name` FROM `setup_color_name` ORDER BY `name` ASC").','.
 		"\n".'COLORPRE_SPISOK='.query_selJson("SELECT `id`,`predlog` FROM `setup_color_name` ORDER BY `predlog` ASC").','.
+		"\n".'CLIENT_CATEGORY_ASS='._assJson(_clientCategory(0,1)).','.
 		"\n".'FAULT_ASS='.query_ptpJson("SELECT `id`,`name` FROM `setup_fault` ORDER BY `sort`").','.
 		"\n".'ZPNAME_SPISOK='.query_selJson("SELECT `id`,`name` FROM `setup_zp_name` ORDER BY `name`").','.
 		"\n".'DEVPLACE_SPISOK='._selJson(_devPlace()).','.
@@ -263,6 +264,17 @@ function GvaluesCreate() {//Составление файла G_values.js
 	xcache_unset(CACHE_PREFIX.'setup_global');
 }//GvaluesCreate()
 
+function _clientCategory($i=0, $menu=0) {//Категории клиентов
+	$arr = array(
+		1 => $menu ? 'Частное лицо' : 'Ф.И.О.',
+		2 => 'Организация',
+		3 => 'ИП',
+		4 => 'ООО',
+		5 => 'ОАО',
+		6 => 'ЗАО'
+	);
+	return $i ? $arr[$i] : $arr;
+}//_clientCategory()
 
 function _deviceName($device_id, $rod=false) {
 	if(!defined('DEVICE_LOADED')) {

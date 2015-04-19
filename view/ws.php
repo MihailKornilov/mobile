@@ -126,6 +126,16 @@ function _viewerRules($viewer_id=VIEWER_ID, $rule='') {
 
 // ---===! client !===--- Секция клиентов
 
+function _clientName($r) {//правильное отображение имени клиента
+	return $r['category_id'] == 1 ? $r['fio1'] : $r['org_name'];
+}//_clientName()
+function _clientTelefon($r, $post=0) {//правильное отображение телефона клиента
+	//$post - показывать доверенное лицо
+	$telefon = $r['category_id'] == 1 ? $r['telefon1'] : $r['org_telefon'];
+	if(!$telefon && $r['category_id'] > 1 && $r['telefon1'])
+		$telefon = $r['telefon1'].($r['fio1'] && $post ? '<span class="post">('.$r['fio1'].')</span>' : '');
+	return $telefon;
+}//_clientTelefon()
 function _clientLink($arr, $fio=0, $tel=0) {//Добавление имени и ссылки клиента в массив или возврат по id
 	$clientArr = array(is_array($arr) ? 0 : $arr);
 	if(is_array($arr)) {
@@ -144,22 +154,34 @@ function _clientLink($arr, $fio=0, $tel=0) {//Добавление имени и ссылки клиента 
 				  AND `id` IN (".implode(',', $clientArr).")";
 		$q = query($sql);
 		if(!is_array($arr)) {
-			if($r = mysql_fetch_assoc($q))
+			if($r = mysql_fetch_assoc($q)) {
+				$telefon = _clientTelefon($r);
 				return
-					$fio ? $r['fio']
-					:
-					'<a val="'.$r['id'].'" class="go-client-info'.($r['deleted'] ? ' deleted' : '').($tel && $r['telefon'] ? _tooltip($r['telefon'], -2, 'l') : '">').$r['fio'].'</a>';
+					$fio ? _clientName($r)
+						:
+						'<a val="' . $r['id'] . '" class="go-client-info' .
+							($r['deleted'] ? ' deleted' : '') .
+							($tel && $telefon ? _tooltip($telefon, -2, 'l') : '">') .
+								_clientName($r) .
+						'</a>';
+			}
 			return '';
 		}
 		while($r = mysql_fetch_assoc($q))
 			foreach($ass[$r['id']] as $id) {
-				$arr[$id]['client_link'] = '<a val="'.$r['id'].'" class="go-client-info'.($r['deleted'] ? ' deleted' : '').($tel && $r['telefon'] ? _tooltip($r['telefon'], -2, 'l') : '">').$r['fio'].'</a>';
-				$arr[$id]['client_fio'] = $r['fio'];
+				$telefon = _clientTelefon($r);
+				$arr[$id]['client_link'] =
+					'<a val="'.$r['id'].'" class="go-client-info'.
+						($r['deleted'] ? ' deleted' : '').
+						($tel && $telefon ? _tooltip($telefon, -2, 'l') : '">').
+							_clientName($r).
+					'</a>';
+				$arr[$id]['client_fio'] = _clientName($r);
 			}
 	}
 	return $arr;
 }//_clientLink()
-function _clientValues($arr) {//данные о заявке, подставляемые в список
+function _clientValues($arr) {//данные о клиенте, подставляемые в список
 	$ids = array();
 	$arrIds = array();
 	foreach($arr as $key => $r)
@@ -178,13 +200,28 @@ function _clientValues($arr) {//данные о заявке, подставляемые в список
 	while($r = mysql_fetch_assoc($q))
 		foreach($arrIds[$r['id']] as $id) {
 			$arr[$id] += array(
-				'client_link' => '<a val="'.$r['id'].'" class="go-client-info'.($r['deleted'] ? ' deleted' : '').'">'.$r['fio'].'</a>',
-				'client_telefon' => $r['telefon'],
-				'client_fio' => $r['fio']
+				'client_link' => '<a val="'.$r['id'].'" class="go-client-info'.($r['deleted'] ? ' deleted' : '').'">'._clientName($r).'</a>',
+				'client_telefon' => _clientTelefon($r),
+				'client_fio' => _clientName($r)
 			);
 		}
 	return $arr;
 }//_clientValues()
+function _findMatch($reg, $v, $empty=0) {//выделение при быстром поиске
+	//$empty - возвращать пустое значение, если нет совпадения
+	if(empty($reg))
+		return $empty ? '': $v;
+	$reg = utf8($reg);
+	$v = utf8($v);
+	$v = preg_match($reg, $v) ? preg_replace($reg, '<em>\\1</em>', $v, 1) : ($empty ? '': $v);
+	return win1251($v);
+}//_findMatch()
+function _regFilter($v) {//проверка регулярного выражения на недопустимые символы
+	$reg = '/(\[)/';
+	if(preg_match($reg, $v))
+		return '';
+	return '/('.$v.')/iu';
+}//_regFilter()
 function clientFilter($v) {
 	$default = array(
 		'page' => 1,
@@ -196,7 +233,7 @@ function clientFilter($v) {
 	);
 	$filter = array(
 		'page' => _isnum(@$v['page']) ? $v['page'] : 1,
-		'find' => trim(@$v['find']),
+		'find' => strtolower(trim(@$v['find'])),
 		'dolg' => _isbool(@$v['dolg']),
 		'active' => _isbool(@$v['active']),
 		'comm' => _isbool(@$v['comm']),
@@ -217,18 +254,37 @@ function client_data($v=array()) {
 	$regEngRus = '';
 	$dolg = 0;
 	$plus = 0;
-	if($filter['find']) {
+	define('FIND', !empty($filter['find']));
+	if(FIND) {
 		$engRus = _engRusChar($filter['find']);
-		$cond .= " AND (`fio` LIKE '%".$filter['find']."%'
-					 OR `telefon` LIKE '%".$filter['find']."%'
-					 ".($engRus ?
-						   "OR `fio` LIKE '%".$engRus."%'
-							OR `telefon` LIKE '%".$engRus."%'"
-						: '')."
+		$cond .= " AND (`org_name` LIKE '%".$filter['find']."%'
+					 OR `org_telefon` LIKE '%".$filter['find']."%'
+					 OR `org_adres` LIKE '%".$filter['find']."%'
+					 OR `org_inn` LIKE '%".$filter['find']."%'
+					 OR `org_kpp` LIKE '%".$filter['find']."%'
+					 OR `fio1` LIKE '%".$filter['find']."%'
+					 OR `fio2` LIKE '%".$filter['find']."%'
+					 OR `fio3` LIKE '%".$filter['find']."%'
+					 OR `telefon1` LIKE '%".$filter['find']."%'
+					 OR `telefon2` LIKE '%".$filter['find']."%'
+					 OR `telefon3` LIKE '%".$filter['find']."%'
+				".($engRus ?
+					"OR `org_name` LIKE '%".$engRus."%'
+					 OR `org_telefon` LIKE '%".$engRus."%'
+					 OR `org_adres` LIKE '%".$engRus."%'
+					 OR `org_inn` LIKE '%".$engRus."%'
+					 OR `org_kpp` LIKE '%".$engRus."%'
+					 OR `fio1` LIKE '%".$engRus."%'
+					 OR `fio2` LIKE '%".$engRus."%'
+					 OR `fio3` LIKE '%".$engRus."%'
+					 OR `telefon1` LIKE '%".$engRus."%'
+					 OR `telefon2` LIKE '%".$engRus."%'
+					 OR `telefon3` LIKE '%".$engRus."%'"
+				: '')."
 					 )";
-		$reg = '/('.$filter['find'].')/i';
-		if($engRus)
-			$regEngRus = '/('.$engRus.')/i';
+		$reg = _regFilter($filter['find']);
+		if(!empty($engRus))
+			$regEngRus = _regFilter($engRus);
 	} else {
 		if($filter['dolg']) {
 			$cond .= " AND `balans`<0";
@@ -268,31 +324,53 @@ function client_data($v=array()) {
 					  ($plus ? '<em>(Сумма = '.$plus.' руб.)</em>' : '').
 					  $filter['clear'];
 	$send['filter'] = $filter;
+	$send['spisok'] = '';
 
 	$page = $filter['page'];
 	$limit = 20;
 	$start = ($page - 1) * $limit;
 	$spisok = array();
-	$sql = "SELECT *
+	$sql = "SELECT *,
+				   0 `zayav_count`,
+				   '' `comm`,
+				   0 `zayav_wait`,
+				   0 `zayav_ready`,
+				   0 `zayav_fail`
 			FROM `client`
 			WHERE ".$cond."
 			ORDER BY `id` DESC
 			LIMIT ".$start.",".$limit;
 	$q = query($sql);
 	while($r = mysql_fetch_assoc($q)) {
-		if($filter['find']) {
-			if(preg_match($reg, $r['fio']))
-				$r['fio'] = preg_replace($reg, '<em>\\1</em>', $r['fio'], 1);
-			if(preg_match($reg, $r['telefon']))
-				$r['telefon'] = preg_replace($reg, '<em>\\1</em>', $r['telefon'], 1);
-			if($regEngRus && preg_match($regEngRus, $r['fio']))
-				$r['fio'] = preg_replace($regEngRus, '<em>\\1</em>', $r['fio'], 1);
-			if($regEngRus && preg_match($regEngRus, $r['telefon']))
-				$r['telefon'] = preg_replace($regEngRus, '<em>\\1</em>', $r['telefon'], 1);
+		if(FIND) {
+			$r['org_name'] = _findMatch($reg, $r['org_name']);
+			$r['org_telefon'] = _findMatch($reg, $r['org_telefon']);
+			$r['org_adres'] = _findMatch($reg, $r['org_adres'], 1);
+			$r['org_inn'] = _findMatch($reg, $r['org_inn'], 1);
+			$r['org_kpp'] = _findMatch($reg, $r['org_kpp'], 1);
+			$r['fio1'] = _findMatch($reg, $r['fio1']);
+			$r['fio2'] = _findMatch($reg, $r['fio2']);
+			$r['fio3'] = _findMatch($reg, $r['fio3']);
+			$r['telefon1'] = _findMatch($reg, $r['telefon1']);
+			$r['telefon2'] = _findMatch($reg, $r['telefon2']);
+			$r['telefon3'] = _findMatch($reg, $r['telefon3']);
+
+			$r['org_name'] = _findMatch($regEngRus, $r['org_name']);
+			$r['org_telefon'] = _findMatch($regEngRus, $r['org_telefon']);
+			$r['org_adres'] = _findMatch($regEngRus, $r['org_adres'], 1);
+			$r['org_inn'] = _findMatch($regEngRus, $r['org_inn'], 1);
+			$r['org_kpp'] = _findMatch($regEngRus, $r['org_kpp'], 1);
+			$r['fio1'] = _findMatch($regEngRus, $r['fio1']);
+			$r['fio2'] = _findMatch($regEngRus, $r['fio2']);
+			$r['fio3'] = _findMatch($regEngRus, $r['fio3']);
+			$r['telefon1'] = _findMatch($regEngRus, $r['telefon1']);
+			$r['telefon2'] = _findMatch($regEngRus, $r['telefon2']);
+			$r['telefon3'] = _findMatch($regEngRus, $r['telefon3']);
 		}
 		$spisok[$r['id']] = $r;
 	}
 
+	//общее количество заявок
 	$sql = "SELECT
 				`client_id` AS `id`,
 				COUNT(`id`) AS `count`
@@ -305,8 +383,49 @@ function client_data($v=array()) {
 	while($r = mysql_fetch_assoc($q))
 		$spisok[$r['id']]['zayav_count'] = $r['count'];
 
+	//заявки, ожидающие выполнения
 	$sql = "SELECT
-				`table_id` AS `id`
+				`client_id` AS `id`,
+				COUNT(`id`) AS `count`
+			FROM `zayav`
+			WHERE `ws_id`=".WS_ID."
+			  AND `zayav_status`=1
+			  AND `client_id` IN (".implode(',', array_keys($spisok)).")
+			GROUP BY `client_id`";
+	$q = query($sql);
+	while($r = mysql_fetch_assoc($q))
+		$spisok[$r['id']]['zayav_wait'] = $r['count'];
+
+	//выполненные заявки
+	$sql = "SELECT
+				`client_id` AS `id`,
+				COUNT(`id`) AS `count`
+			FROM `zayav`
+			WHERE `ws_id`=".WS_ID."
+			  AND `zayav_status`=2
+			  AND `client_id` IN (".implode(',', array_keys($spisok)).")
+			GROUP BY `client_id`";
+	$q = query($sql);
+	while($r = mysql_fetch_assoc($q))
+		$spisok[$r['id']]['zayav_ready'] = $r['count'];
+
+	//отменённые заявки
+	$sql = "SELECT
+				`client_id` AS `id`,
+				COUNT(`id`) AS `count`
+			FROM `zayav`
+			WHERE `ws_id`=".WS_ID."
+			  AND `zayav_status`=3
+			  AND `client_id` IN (".implode(',', array_keys($spisok)).")
+			GROUP BY `client_id`";
+	$q = query($sql);
+	while($r = mysql_fetch_assoc($q))
+		$spisok[$r['id']]['zayav_fail'] = $r['count'];
+
+	//комментарии по клиентам
+	$sql = "SELECT
+				`table_id` `id`,
+				`txt`
 			FROM `vk_comment`
 			WHERE `status`
 			  AND `table_name`='client'
@@ -314,18 +433,39 @@ function client_data($v=array()) {
 			GROUP BY `table_id`";
 	$q = query($sql);
 	while($r = mysql_fetch_assoc($q))
-		$spisok[$r['id']]['comm'] = 1;
+		$spisok[$r['id']]['comm'] = $r['txt'];
 
-	$send['spisok'] = '';
-	foreach($spisok as $r)
-		$send['spisok'] .= '<div class="unit'.(isset($r['comm']) ? ' i' : '').'">'.
-			($r['balans'] ? '<div class="balans">Баланс: <b style=color:#'.($r['balans'] < 0 ? 'A00' : '090').'>'.$r['balans'].'</b></div>' : '').
-			'<table>'.
-			   '<tr><td class="label">Имя:<td><a href="'.URL.'&p=client&d=info&id='.$r['id'].'">'.$r['fio'].'</a>'.
-				($r['telefon'] ? '<tr><td class="label">Телефон:<td>'.$r['telefon'] : '').
-				(isset($r['zayav_count']) ? '<tr><td class="label">Заявки:<td>'.$r['zayav_count'] : '').
-			'</table>'.
-		 '</div>';
+	foreach($spisok as $r) {
+		$telefon = _clientTelefon($r, 1);
+		$left =
+			'<table class="l-tab">'.
+				'<tr><td class="label top">'._clientCategory($r['category_id']).':'.
+					'<td><a href="'.URL.'&p=client&d=info&id='.$r['id'].'">'._clientName($r).'</a>'.
+	($telefon ? '<tr><td class="label top">Телефон:<td>'.$telefon : '').
+	(FIND && $r['org_adres'] ? '<tr><td class="label">Адрес:<td>'.$r['org_adres'] : '').
+	(FIND && $r['org_inn'] ? '<tr><td class="label">ИНН:<td>'.$r['org_inn'] : '').
+	(FIND && $r['org_kpp'] ? '<tr><td class="label">КПП:<td>'.$r['org_kpp'] : '').
+			'</table>';
+
+
+		$send['spisok'] .=
+			'<div class="unit">'.
+				'<table class="g-tab">'.
+					'<tr><td>'.$left.
+						'<td class="r-td">'.
+			($r['comm'] ? '<div class="comm" val="'.$r['comm'].'"></div>' : '').
+			($r['zayav_wait'] ? '<div class="z-wait'._tooltip('Ожидающие заявки', -60).$r['zayav_wait'].'</div>' : '').
+			($r['zayav_ready'] ? '<div class="z-ready'._tooltip('Выполненные заявки', -63).$r['zayav_ready'].'</div>' : '').
+			($r['zayav_fail'] ? '<div class="z-fail'._tooltip('Отменённые заявки', -59).$r['zayav_fail'].'</div>' : '').
+					($r['balans'] ?
+						'<div style="color:#'.($r['balans'] < 0 ? 'A00' : '090').'" class="balans'.
+							_tooltip('Баланс', -15).
+							$r['balans'].
+						'</div>'
+					: '').
+				'</table>'.
+			'</div>';
+	}
 	if($start + $limit < $send['all']) {
 		$c = $send['all'] - $start - $limit;
 		$c = $c > $limit ? $limit : $c;
@@ -336,20 +476,21 @@ function client_data($v=array()) {
 function client_list($v) {
 	$data = client_data($v);
 	$v = $data['filter'];
-	return '<div id="client">'.
-		'<div id="find"></div>'.
-		'<div class="result">'.$data['result'].'</div>'.
-		'<table class="tabLR">'.
-			'<tr><td class="left">'.$data['spisok'].
-				'<td class="right">'.
-					'<div id="buttonCreate"><a>Новый клиент</a></div>'.
-					'<div class="filter'.($v['find'] ? ' dn' : '').'">'.
-					   _check('dolg', 'Должники', $v['dolg']).
-					   _check('active', 'С активными заявками', $v['active']).
-					   _check('comm', 'Есть заметки', $v['comm']).
-					   _check('opl', 'Внесена предоплата', $v['opl']).
-					'</div>'.
-		  '</table>'.
+	return
+		'<div id="client">'.
+			'<div id="find"></div>'.
+			'<div class="result">'.$data['result'].'</div>'.
+			'<table class="tabLR">'.
+				'<tr><td class="left">'.$data['spisok'].
+					'<td class="right">'.
+						'<div id="buttonCreate"><a>Новый клиент</a></div>'.
+						'<div class="filter'.($v['find'] ? ' dn' : '').'">'.
+						   _check('dolg', 'Должники', $v['dolg']).
+						   _check('active', 'С активными заявками', $v['active']).
+						   _check('comm', 'Есть заметки', $v['comm']).
+						   _check('opl', 'Внесена предоплата', $v['opl']).
+						'</div>'.
+			  '</table>'.
 		'</div>'.
 		'<script type="text/javascript">'.
 			'var C={'.
@@ -360,11 +501,11 @@ function client_list($v) {
 
 function client_info($client_id) {
 	$sql = "SELECT * FROM `client` WHERE `ws_id`=".WS_ID." AND `id`=".$client_id;
-	if(!$client = mysql_fetch_assoc(query($sql)))
+	if(!$c = query_assoc($sql))
 		return _noauth('Клиента не существует');
-	if($client['deleted'])
-		if($client['join_id'])
-			return _noauth('Клиент <b>'.$client['fio'].'</b> был объединён с клиентом '._clientLink($client['join_id']).'.');
+	if($c['deleted'])
+		if($c['join_id'])
+			return _noauth('Клиент <b>'.$c['fio'].'</b> был объединён с клиентом '._clientLink($c['join_id']).'.');
 		else
 			return _noauth('Клиент был удалён.');
 
@@ -372,10 +513,17 @@ function client_info($client_id) {
 		'client_id' => $client_id,
 		'limit' => 10
 	));
+
+	$zayavCartridge = zayav_cartridge_spisok(array(
+		'client_id' => $client_id,
+		'limit' => 10
+	));
+
+
 	$commCount = query_value("SELECT COUNT(`id`)
 							  FROM `vk_comment`
-							  WHERE `status`=1
-								AND `parent_id`=0
+							  WHERE `status`
+								AND !`parent_id`
 								AND `table_name`='client'
 								AND `table_id`=".$client_id);
 
@@ -393,7 +541,7 @@ function client_info($client_id) {
 		$sql = "SELECT *
 				FROM `money`
 				WHERE `ws_id`=".WS_ID."
-				  AND `deleted`=0
+				  AND !`deleted`
 				  AND `client_id`=".$client_id;
 		$q = query($sql);
 		$moneyArr = array();
@@ -418,11 +566,43 @@ function client_info($client_id) {
 
 	$history = history(array('client_id'=>$client_id,'limit'=>15));
 
+	define('ORG', $c['category_id'] > 1);
+	$catName = $c['category_id'] > 1 ? _clientCategory($c['category_id']).' ' : '';
+	$telefon = _clientTelefon($c, 1);
+
+	$post = '';
+	if(ORG && ($c['fio1'] || $c['fio2'] || $c['fio3'] || $c['telefon1'] || $c['telefon2'] || $c['telefon3'])) {
+		$post = '<tr><td class="label" colspan="2">Доверенные лица:';
+		for($n = 1; $n <= 3; $n++)
+			$post .= ($c['fio'.$n] || $c['telefon'.$n] ?
+						'<tr><td><td>'.
+								$c['fio'.$n].
+								($c['post'.$n] ? '<span class="post">('.$c['post'.$n].')</span>' : '').
+								($c['telefon'.$n] ? ', '.$c['telefon'.$n] : '')
+					 : '');
+	}
+
 	return
 		'<script type="text/javascript">'.
 			'var CLIENT={'.
 					'id:'.$client_id.','.
-					'fio:"'.addslashes($client['fio']).'"'.
+					'fio:"'.addslashes($catName._clientName($c)).'",'.//для remind
+					'category_id:'.$c['category_id'].','.
+					'org_name:"'.addslashes($c['org_name']).'",'.
+					'org_telefon:"'.addslashes($c['org_telefon']).'",'.
+					'org_adres:"'.addslashes($c['org_adres']).'",'.
+					'org_inn:"'.addslashes($c['org_inn']).'",'.
+					'org_kpp:"'.addslashes($c['org_kpp']).'",'.
+					'info_dop:"'.addslashes($c['info_dop']).'",'.
+					'fio1:"'.addslashes($c['fio1']).'",'.
+					'fio2:"'.addslashes($c['fio2']).'",'.
+					'fio3:"'.addslashes($c['fio3']).'",'.
+					'telefon1:"'.addslashes($c['telefon1']).'",'.
+					'telefon2:"'.addslashes($c['telefon2']).'",'.
+					'telefon3:"'.addslashes($c['telefon3']).'",'.
+					'post1:"'.addslashes($c['post1']).'",'.
+					'post2:"'.addslashes($c['post2']).'",'.
+					'post3:"'.addslashes($c['post3']).'"'.
 				'},'.
 				'DEVICE_IDS=['._zayavBaseDeviceIds($client_id).'],'.
 				'VENDOR_IDS=['._zayavBaseVendorIds($client_id).'],'.
@@ -431,32 +611,46 @@ function client_info($client_id) {
 		'<div id="clientInfo">'.
 			'<table class="tabLR">'.
 				'<tr><td class="left">'.
-					'<div class="fio">'.$client['fio'].'</div>'.
-					'<div class="cinf">'.
-						'<table style="border-spacing:2px">'.
-							'<tr><td class="label">Телефон:  <td class="telefon">'.$client['telefon'].'</TD>'.
-							'<tr><td class="label">Баланс:   <td><b style=color:#'.($client['balans'] < 0 ? 'A00' : '090').'>'.$client['balans'].'</b>'.
+					'<div style="color:#'.($c['balans'] < 0 ? 'A00' : '090').'" class="ci-balans'._tooltip('Баланс', -19).$c['balans'].'</div>'.
+					'<div class="fio">'.$catName._clientName($c).'</div>'.
+						'<table id="ci-tab">'.
+				($telefon ? '<tr><td class="label">Телефон:<td>'.$telefon : '').
+  (ORG && $c['org_adres'] ? '<tr><td class="label">Адрес:<td>'.$c['org_adres'] : '').
+	(ORG && $c['org_inn'] ? '<tr><td class="label">ИНН:<td>'.$c['org_inn'] : '').
+	(ORG && $c['org_kpp'] ? '<tr><td class="label">КПП:<td>'.$c['org_kpp'] : '').
+							$post.
+		  ($c['info_dop'] ? '<tr><td class="label">Дополнительно:<td>'.$c['info_dop'] : '').
 						'</table>'.
-						'<div class="dtime">Клиента внёс '._viewer($client['viewer_id_add'], 'name').' '.FullData($client['dtime_add'], 1).'</div>'.
+						'<div class="dtime">Клиента вн'.(_viewer($c['viewer_id_add'], 'sex') == 1 ? 'есла' : 'ёс').' '._viewer($c['viewer_id_add'], 'name').' '.FullData($c['dtime_add'], 1).'</div>'.
+
+					'<td class="right">'.
+						'<div class="rightLink">'.
+							'<a id="zayav-add" val="client_'.$client_id.'"'.(SERVIVE_CARTRIDGE ? ' class="cartridge"' : '').'><b>Новая заявка</b></a>'.
+							'<a class="_remind-add">Новое напоминание</a>'.
+							'<a id="client-edit">Редактировать</a>'.
+						'</div>'.
+			'</table>'.
+
+			'<div id="dopLinks">'.
+				'<a class="link sel" val="zayav">Заявки'.($zayavData['all'] ? ' <b class="count">'.$zayavData['all'].'</b>' : '').'</a>'.
+				'<a class="link" val="money">Платежи'.($moneyCount ? ' <b class="count">'.$moneyCount.'</b>' : '').'</a>'.
+				'<a class="link" val="remind">Напоминания'.($remind['all'] ? ' <b class="count">'.$remind['all'].'</b>' : '').'</a>'.
+				'<a class="link" val="comm">Заметки'.($commCount ? ' <b class="count">'.$commCount.'</b>' : '').'</a>'.
+				'<a class="link" val="hist">История'.($history['all'] ? ' <b class="count">'.$history['all'].'</b>' : '').'</a>'.
+			'</div>'.
+
+			'<table class="tabLR">'.
+				'<tr><td class="left">'.
+					'<div id="zayav_spisok">'.
+						($zayavData['all'] ? $zayavData['spisok'] : '').
+						(!$zayavCartridge['all'] && !$zayavData['all'] ? $zayavData['spisok'] : '').
+						($zayavCartridge['all'] ? $zayavCartridge['spisok'] : '').
 					'</div>'.
-					'<div id="dopLinks">'.
-						'<a class="link sel" val="zayav">Заявки'.($zayavData['all'] ? ' <b class="count">'.$zayavData['all'].'</b>' : '').'</a>'.
-						'<a class="link" val="money">Платежи'.($moneyCount ? ' <b class="count">'.$moneyCount.'</b>' : '').'</a>'.
-						'<a class="link" val="remind">Напоминания'.($remind['all'] ? ' <b class="count">'.$remind['all'].'</b>' : '').'</a>'.
-						'<a class="link" val="comm">Заметки'.($commCount ? ' <b class="count">'.$commCount.'</b>' : '').'</a>'.
-						'<a class="link" val="hist">История'.($history['all'] ? ' <b class="count">'.$history['all'].'</b>' : '').'</a>'.
-					'</div>'.
-					'<div id="zayav_spisok">'.$zayavData['spisok'].'</div>'.
 					'<div id="money_spisok">'.$money.'</div>'.
 					'<div id="remind-spisok">'.$remind['spisok'].'</div>'.
 					'<div id="comments">'._vkComment('client', $client_id).'</div>'.
 					'<div id="histories">'.$history['spisok'].'</div>'.
 				'<td class="right">'.
-					'<div class="rightLink">'.
-						'<a id="zayav-add" val="client_'.$client_id.'"'.(SERVIVE_CARTRIDGE ? ' class="cartridge"' : '').'><b>Новая заявка</b></a>'.
-						'<a class="_remind-add">Новое напоминание</a>'.
-						'<a class="cedit">Редактировать</a>'.
-					'</div>'.
 					'<div id="zayav_filter">'.
 						'<div id="zayav_result">'.$zayavData['result'].'</div>'.
 						'<div class="findHead">Статус заявки</div>'.
@@ -1230,6 +1424,7 @@ function zayav_info($zayav_id) {
 	$history = history(array('zayav_id'=>$zayav_id));
 	$acc_sum = query_value("SELECT SUM(`sum`) FROM `accrual` WHERE !`deleted` AND `zayav_id`=".$zayav_id);
 	$expense_sum = query_value("SELECT SUM(`sum`) FROM `zayav_expense` WHERE `zayav_id`=".$zayav_id." AND `category_id`!=1");
+	$c = query_assoc("SELECT * FROM `client` WHERE id=".$z['client_id']);
 
 	return '<script type="text/javascript">'.
 		'var STATUS='._selJson($status).','.
@@ -1263,7 +1458,7 @@ function zayav_info($zayav_id) {
 			($z['serial'] ? 'serial:"'.$z['serial'].'",' : '').
 			($z['equip'] ? 'equip:"'.zayavEquipSpisok($z['equip']).'",' : '').
 			'client:"'._clientLink($z['client_id'], 1).'",'.
-			'telefon:"'.query_value("SELECT `telefon` FROM `client` WHERE id=".$z['client_id']).'",'.
+			'telefon:"'._clientTelefon($c).'",'.
 			'defect:"'.addslashes(str_replace("\n", ' ', query_value("SELECT `txt` FROM `vk_comment` WHERE `status` AND `table_name`='zayav' AND `table_id`=".$zayav_id." AND !`parent_id` ORDER BY `id` DESC"))).'"'.
 		'};'.
 	'</script>'.

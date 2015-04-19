@@ -137,51 +137,117 @@ switch(@$_POST['op']) {
 		$send['spisok'] = array();
 		if(!empty($_POST['val']) && !preg_match(REGEXP_WORDFIND, win1251($_POST['val'])))
 			jsonSuccess($send);
-		if(!preg_match(REGEXP_NUMERIC, $_POST['client_id']))
-			jsonSuccess($send);
+
 		$val = win1251($_POST['val']);
-		$client_id = intval($_POST['client_id']);
+		$client_id = _num($_POST['client_id']);
+
 		$sql = "SELECT *
 				FROM `client`
 				WHERE `ws_id`=".WS_ID."
-				  AND `deleted`=0".
-					(!empty($val) ? " AND (`fio` LIKE '%".$val."%' OR `telefon` LIKE '%".$val."%')" : '').
+				  AND !`deleted`".
+					(!empty($val) ?
+						" AND (`org_name` LIKE '%".$val."%'
+							OR `org_telefon` LIKE '%".$val."%'
+							OR `org_adres` LIKE '%".$val."%'
+							OR `org_inn` LIKE '%".$val."%'
+							OR `org_kpp` LIKE '%".$val."%'
+							OR `fio1` LIKE '%".$val."%'
+							OR `fio2` LIKE '%".$val."%'
+							OR `fio3` LIKE '%".$val."%'
+							OR `telefon1` LIKE '%".$val."%'
+							OR `telefon2` LIKE '%".$val."%'
+							OR `telefon3` LIKE '%".$val."%'
+							  )"
+					: '').
 					($client_id > 0 ? " AND `id`<=".$client_id : '')."
 				ORDER BY `id` DESC
 				LIMIT 50";
 		$q = query($sql);
 		while($r = mysql_fetch_assoc($q)) {
+			$name = _clientName($r);
+			$telefon = _clientTelefon($r);
 			$unit = array(
 				'uid' => $r['id'],
-				'title' => utf8(htmlspecialchars_decode($r['fio']))
+				'title' => utf8(htmlspecialchars_decode($name))
 			);
-			if($r['telefon'])
-				$unit['content'] = utf8($r['fio'].'<span>'.$r['telefon'].'</span>');
+			if($telefon)
+				$unit['content'] = utf8($name.'<span>'.$telefon.'</span>');
 			$send['spisok'][] = $unit;
 		}
 		jsonSuccess($send);
 		break;
 	case 'client_add':
-		$fio = win1251(htmlspecialchars(trim($_POST['fio'])));
-		$telefon = win1251(htmlspecialchars(trim($_POST['telefon'])));
-		if(empty($fio))
+		if(!$category_id = _num($_POST['category_id']))
 			jsonError();
+
+		$fio1 = _txt($_POST['fio1']);
+		$fio2 = _txt($_POST['fio2']);
+		$fio3 = _txt($_POST['fio3']);
+		$telefon1 = _txt($_POST['telefon1']);
+		$telefon2 = _txt($_POST['telefon2']);
+		$telefon3 = _txt($_POST['telefon3']);
+		$post1 = _txt($_POST['post1']);
+		$post2 = _txt($_POST['post2']);
+		$post3 = _txt($_POST['post3']);
+		$org_name = _txt($_POST['org_name']);
+		$org_telefon = _txt($_POST['org_telefon']);
+		$org_adres = _txt($_POST['org_adres']);
+		$org_inn = _txt($_POST['org_inn']);
+		$org_kpp = _txt($_POST['org_kpp']);
+		$info_dop = _txt($_POST['info_dop']);
+
+		if($category_id == 1 && empty($fio1))//Для частного лица обязательно указывается ФИО
+			jsonError();
+		if($category_id > 1 && empty($org_name))//Для ИП и ООО обязательно указывается Название организации
+			jsonError();
+
 		$sql = "INSERT INTO `client` (
 					`ws_id`,
-					`fio`,
-					`telefon`,
+					`category_id`,
+					`org_name`,
+					`org_telefon`,
+					`org_adres`,
+					`org_inn`,
+					`org_kpp`,
+					`info_dop`,
+					`fio1`,
+					`fio2`,
+					`fio3`,
+					`telefon1`,
+					`telefon2`,
+					`telefon3`,
+					`post1`,
+					`post2`,
+					`post3`,
 					`viewer_id_add`
 				) VALUES (
 					".WS_ID.",
-					'".addslashes($fio)."',
-					'".addslashes($telefon)."',
+					".$category_id.",
+					'".addslashes($org_name)."',
+					'".addslashes($org_telefon)."',
+					'".addslashes($org_adres)."',
+					'".addslashes($org_inn)."',
+					'".addslashes($org_kpp)."',
+					'".addslashes($info_dop)."',
+					'".addslashes($fio1)."',
+					'".addslashes($fio2)."',
+					'".addslashes($fio3)."',
+					'".addslashes($telefon1)."',
+					'".addslashes($telefon2)."',
+					'".addslashes($telefon3)."',
+					'".addslashes($post1)."',
+					'".addslashes($post2)."',
+					'".addslashes($post3)."',
 					".VIEWER_ID."
 				)";
 		query($sql);
+
+		$name = $category_id == 1 ? $fio1 : $org_name;
+		$telefon = $category_id == 1 ? $telefon1 : $org_telefon;
 		$send = array(
 			'uid' => mysql_insert_id(),
-			'title' => utf8($fio),
-			'content' => utf8($fio.'<span>'.$telefon.'</span>')
+			'title' => utf8($name),
+			'content' => utf8($name.'<span>'.$telefon.'</span>')
 		);
 		history_insert(array(
 			'type' => 3,
@@ -198,32 +264,65 @@ switch(@$_POST['op']) {
 		jsonSuccess($send);
 		break;
 	case 'client_edit':
-		if(!preg_match(REGEXP_NUMERIC, $_POST['client_id']) || $_POST['client_id'] == 0)
+		if(!$client_id = _num($_POST['id']))
 			jsonError();
-		if(!preg_match(REGEXP_BOOL, $_POST['join']))
+		if(!$category_id = _num($_POST['category_id']))
 			jsonError();
-		if(!preg_match(REGEXP_NUMERIC, $_POST['client2']))
+
+		define('ORG', $category_id > 1);
+
+		$fio1 = _txt($_POST['fio1']);
+		$fio2 = ORG ? _txt($_POST['fio2']) : '';
+		$fio3 = ORG ? _txt($_POST['fio3']) : '';
+		$telefon1 = _txt($_POST['telefon1']);
+		$telefon2 = ORG ? _txt($_POST['telefon2']) : '';
+		$telefon3 = ORG ? _txt($_POST['telefon3']) : '';
+		$post1 = ORG ? _txt($_POST['post1']) : '';
+		$post2 = ORG ? _txt($_POST['post2']) : '';
+		$post3 = ORG ? _txt($_POST['post3']) : '';
+		$org_name = ORG ? _txt($_POST['org_name']) : '';
+		$org_telefon = ORG ? _txt($_POST['org_telefon']) : '';
+		$org_adres = ORG ? _txt($_POST['org_adres']) : '';
+		$org_inn = ORG ? _txt($_POST['org_inn']) : '';
+		$org_kpp = ORG ? _txt($_POST['org_kpp']) : '';
+		$info_dop = _txt($_POST['info_dop']);
+
+		if(!ORG && empty($fio1))//Для частного лица обязательно указывается ФИО
 			jsonError();
-		$client_id = intval($_POST['client_id']);
-		$fio = win1251(htmlspecialchars(trim($_POST['fio'])));
-		$telefon = win1251(htmlspecialchars(trim($_POST['telefon'])));
-		$join = intval($_POST['join']);
-		$client2 = intval($_POST['client2']);
-		if(empty($fio))
+		if(ORG && empty($org_name))//Для ИП и ООО обязательно указывается Название организации
 			jsonError();
+
 		$sql = "SELECT * FROM `client` WHERE `ws_id`=".WS_ID." AND !`deleted` AND `id`=".$client_id;
-		if(!$client = mysql_fetch_assoc(query($sql)))
+		if(!$client = query_assoc($sql))
 			jsonError();
-		if($join && !$client2)
-			jsonError();
-		if($join && !query_value("SELECT * FROM `client` WHERE `ws_id`=".WS_ID." AND !`deleted` AND `id`=".$client2))
-			jsonError();
-		if($join && $client_id == $client2)
-			jsonError();
-		query("UPDATE `client`
-			   SET `fio`='".addslashes($fio)."',`telefon`='".addslashes($telefon)."'
-			   WHERE `id`=".$client_id);
-		if($join) {
+
+//		if($join && !$client2)
+//			jsonError();
+//		if($join && !query_value("SELECT * FROM `client` WHERE `ws_id`=".WS_ID." AND !`deleted` AND `id`=".$client2))
+//			jsonError();
+//		if($join && $client_id == $client2)
+//			jsonError();
+
+		$sql = "UPDATE `client`
+				SET `category_id`=".$category_id.",
+					`org_name`='".addslashes($org_name)."',
+					`org_telefon`='".addslashes($org_telefon)."',
+					`org_adres`='".addslashes($org_adres)."',
+					`org_inn`='".addslashes($org_inn)."',
+					`org_kpp`='".addslashes($org_kpp)."',
+					`info_dop`='".addslashes($info_dop)."',
+					`fio1`='".addslashes($fio1)."',
+					`fio2`='".addslashes($fio2)."',
+					`fio3`='".addslashes($fio3)."',
+					`telefon1`='".addslashes($telefon1)."',
+					`telefon2`='".addslashes($telefon2)."',
+					`telefon3`='".addslashes($telefon3)."',
+					`post1`='".addslashes($post1)."',
+					`post2`='".addslashes($post2)."',
+					`post3`='".addslashes($post3)."'
+			   WHERE `id`=".$client_id;
+		query($sql);
+/*		if($join) {
 			query("UPDATE `accrual`	SET `client_id`=".$client_id." WHERE `client_id`=".$client2);
 			query("UPDATE `money`	SET `client_id`=".$client_id." WHERE `client_id`=".$client2);
 			query("UPDATE `vk_comment` SET `table_id`=".$client_id."  WHERE `table_name`='client' AND `table_id`=".$client2);
@@ -237,12 +336,12 @@ switch(@$_POST['op']) {
 				'value' => _clientLink($client2, 1)
 			));
 		}
-
+*/
 		$changes = '';
-		if($client['fio'] != $fio)
-			$changes .= '<tr><th>Фио:<td>'.$client['fio'].'<td>»<td>'.$fio;
-		if($client['telefon'] != $telefon)
-			$changes .= '<tr><th>Тел.:<td>'.$client['telefon'].'<td>»<td>'.$telefon;
+		if($client['category_id'] != $category_id)
+			$changes .= '<tr><th>Категория:<td>'._clientCategory($client['category_id']).'<td>»<td>'._clientCategory($category_id);
+		if($client['org_name'] != $org_name)
+			$changes .= '<tr><th>Название организации:<td>'.$client['org_name'].'<td>»<td>'.$org_name;
 		if($changes)
 			history_insert(array(
 				'type' => 10,
@@ -973,13 +1072,13 @@ switch(@$_POST['op']) {
 		jsonSuccess($send);
 		break;
 	case 'zayav_tooltip':
-		if(!preg_match(REGEXP_NUMERIC, $_POST['id']))
+		if(!$id = _num($_POST['id']))
 			jsonError();
-		$id = intval($_POST['id']);
 
 		$z = query_assoc("SELECT * FROM `zayav` WHERE `id`=".$id);
-		$client = query_assoc("SELECT * FROM `client` WHERE !`deleted` AND `id`=".$z['client_id']);
+		$c = query_assoc("SELECT * FROM `client` WHERE !`deleted` AND `id`=".$z['client_id']);
 
+		$telefon = _clientTelefon($c);
 		$html =
 			'<table>'.
 				'<tr><td><div class="image">'._zayavImg($z).'</div>'.
@@ -991,10 +1090,10 @@ switch(@$_POST['op']) {
 						'<div class="tname">'._vendorName($z['base_vendor_id'])._modelName($z['base_model_id']).'</div>'.
 						'<table>'.
 							'<tr><td class="label top">Клиент:'.
-								'<td>'.$client['fio'].
-									   ($client['telefon'] ? '<br />'.$client['telefon'] : '').
+								'<td>'._clientName($c).
+									   ($telefon ? '<br />'.$telefon : '').
 							'<tr><td class="label">Баланс:'.
-								'<td><span class="bl" style=color:#'.($client['balans'] < 0 ? 'A00' : '090').'>'.$client['balans'].'</span>'.
+								'<td><span class="bl" style=color:#'.($c['balans'] < 0 ? 'A00' : '090').'>'.$c['balans'].'</span>'.
 						'</table>'.
 			'</table>';
 

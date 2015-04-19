@@ -92,33 +92,89 @@ var AJAX_WS = APP_HTML + '/ajax/ws.php?' + VALUES,
 	},
 
 	clientAdd = function(callback) {
-		var html = '<table style="border-spacing:10px">' +
-				'<tr><td class="label">Имя:<td><input type="text" id="fio" style="width:220px;">' +
-				'<tr><td class="label">Телефон:<td><input type="text" id="telefon" style=width:220px;>' +
-			'</table>',
+		var html =
+			'<div id="client-add-tab">' +
+				'<div id="dopLinks">';
+		for(var i in CLIENT_CATEGORY_ASS)
+			html += '<a class="link' + (i == 1 ? ' sel' : '') + '" val="' + i + '">' + CLIENT_CATEGORY_ASS[i] + '</a>';
+		html += '</div>' +
+				'<table class="ca-table" id="people">' +
+					'<tr><td class="label">Ф.И.О.:<td><input type="text" id="fio" />' +
+					'<tr><td class="label">Телефон:<td><input type="text" id="telefon" />' +
+					'<tr><td class="label top">Дополнительная<br />информация:<td><textarea id="info_people"></textarea>' +
+				'</table>' +
+				'<table class="ca-table dn" id="org">' +
+					'<tr><td class="label">Название организации:<td><input type="text" id="org_name" />' +
+					'<tr><td class="label">Телефон:<td><input type="text" id="org_telefon" />' +
+					'<tr><td class="label">Адрес:<td><input type="text" id="org_adres" />' +
+					'<tr><td class="label">ИНН:<td><input type="text" id="org_inn" />' +
+					'<tr><td class="label">КПП:<td><input type="text" id="org_kpp" />' +
+					'<tr><td class="label top">Дополнительная<br />информация:<td><textarea id="info_org"></textarea>' +
+				'</table>' +
+				'<a id="post-add">Добавить доверенное лицо</a>' +
+			'</div>';
+		var post = 1,
+			category_id = 1,
 			dialog = _dialog({
-				width:340,
+				width:450,
+				top:30,
+				padding:0,
 				head:'Добавление нoвого клиента',
 				content:html,
 				submit:submit
 			});
+		postAdd();
 		$('#fio').focus();
+		$('#info_people,#info_org').autosize();
+		$('#post-add').hide().click(postAdd);
+		$('#dopLinks .link').click(function() {
+			var t = $(this),
+				p = t.parent();
+			category_id = _num(t.attr('val'));
+			p.find('.sel').removeClass('sel');
+			t.addClass('sel');
+			$('#people')[(category_id != 1 ? 'add' : 'remove') + 'Class']('dn');
+			$('#org')[(category_id == 1 ? 'add' : 'remove') + 'Class']('dn');
+			$('#post-add')[(category_id != 1 ? 'show' : 'hide')]();
+			$(category_id == 1 ? '#fio' : '#org_name').focus();
+		});
+		function postAdd() {
+			$('#org').append(
+				'<tr><td><td><b>Доверенное лицо ' + post + ':</b>' +
+				'<tr><td class="label">Ф.И.О.:<td><input type="text" id="fio' + post + '" />' +
+				'<tr><td class="label">Телефон:<td><input type="text" id="telefon' + post + '" />' +
+				'<tr><td class="label">Должность:<td><input type="text" id="post' + post + '" />'
+			);
+			post++;
+			if(post > 3)
+				$(this).remove();
+		}
 		function submit() {
 			var send = {
 				op:'client_add',
-				fio:$('#fio').val(),
-				telefon:$('#telefon').val()
+				category_id:category_id,
+				org_name:$('#org_name').val(),
+				org_telefon:$('#org_telefon').val(),
+				org_adres:$('#org_adres').val(),
+				org_inn:$('#org_inn').val(),
+				org_kpp:$('#org_kpp').val(),
+				info_dop:$(category_id == 1 ? '#info_people' : '#info_org').val(),
+				fio1:$('#fio' + (category_id == 1 ? '' : 1)).val(),
+				fio2:post > 2 ? $('#fio2').val() : '',
+				fio3:post > 3 ? $('#fio3').val() : '',
+				telefon1:$('#telefon' + (category_id == 1 ? '' : 1)).val(),
+				telefon2:post > 2 ? $('#telefon2').val() : '',
+				telefon3:post > 3 ? $('#telefon3').val() : '',
+				post1:$('#post1').val(),
+				post2:post > 2 ? $('#post2').val() : '',
+				post3:post > 3 ? $('#post3').val() : ''
 			};
-			if(!send.fio) {
-				dialog.bottom.vkHint({
-					msg:'<SPAN class="red">Не указано имя клиента.</SPAN>',
-					top:-47,
-					left:81,
-					indent:40,
-					show:1,
-					remove:1
-				});
+			if(category_id == 1 && !send.fio1) {
+				dialog.err('Не указаны ФИО');
 				$('#fio').focus();
+			} else if(category_id > 1 && !send.org_name) {
+				dialog.err('Не указано название организации');
+				$('#org_name').focus();
 			} else {
 				dialog.process();
 				$.post(AJAX_WS, send, function(res) {
@@ -134,6 +190,114 @@ var AJAX_WS = APP_HTML + '/ajax/ws.php?' + VALUES,
 			}
 		}
 	},
+	clientEdit = function() {
+		var html =
+			'<div id="client-add-tab">' +
+				'<div id="dopLinks">';
+		for(var i in CLIENT_CATEGORY_ASS)
+			html += '<a class="link' + (i == CLIENT.category_id ? ' sel' : '') + '" val="' + i + '">' + CLIENT_CATEGORY_ASS[i] + '</a>';
+		html += '</div>' +
+				'<table class="ca-table" id="people">' +
+					'<tr><td class="label">Ф.И.О.:<td><input type="text" id="fio" value="' + CLIENT.fio1 + '" />' +
+					'<tr><td class="label">Телефон:<td><input type="text" id="telefon" value="' + CLIENT.telefon1 + '" />' +
+					'<tr><td class="label top">Дополнительная<br />информация:<td><textarea id="info_people">' + CLIENT.info_dop + '</textarea>' +
+				'</table>' +
+				'<table class="ca-table" id="org">' +
+					'<tr><td class="label">Название организации:<td><input type="text" id="org_name" value="' + CLIENT.org_name + '" />' +
+					'<tr><td class="label">Телефон:<td><input type="text" id="org_telefon" value="' + CLIENT.org_telefon + '" />' +
+					'<tr><td class="label">Адрес:<td><input type="text" id="org_adres" value="' + CLIENT.org_adres + '" />' +
+					'<tr><td class="label">ИНН:<td><input type="text" id="org_inn" value="' + CLIENT.org_inn + '" />' +
+					'<tr><td class="label">КПП:<td><input type="text" id="org_kpp" value="' + CLIENT.org_kpp + '" />' +
+					'<tr><td class="label top">Дополнительная<br />информация:<td><textarea id="info_org">' + CLIENT.info_dop + '</textarea>' +
+				'</table>' +
+				'<a id="post-add">Добавить доверенное лицо</a>' +
+			'</div>';
+		var post = 1,
+			category_id = CLIENT.category_id,
+			dialog = _dialog({
+				width:450,
+				top:30,
+				padding:0,
+				head:'Редактирование данных клиента',
+				content:html,
+				butSubmit:'Сохранить',
+				submit:submit
+			});
+		categorySet(category_id);
+		postAdd();
+		if(CLIENT.fio2 || CLIENT.telefon2)
+			postAdd();
+		if(CLIENT.fio3 || CLIENT.telefon3)
+			postAdd();
+		$('#fio').focus();
+		$('#info_people,#info_org').autosize();
+		$('#post-add').click(postAdd);
+		$('#dopLinks .link').click(function() {
+			var t = $(this),
+				p = t.parent();
+			category_id = _num(t.attr('val'));
+			p.find('.sel').removeClass('sel');
+			t.addClass('sel');
+			categorySet(category_id);
+		});
+		function categorySet(v) {
+			$('#people')[(v != 1 ? 'add' : 'remove') + 'Class']('dn');
+			$('#org')[(v == 1 ? 'add' : 'remove') + 'Class']('dn');
+			$('#post-add')[(v != 1 ? 'show' : 'hide')]();
+			$(v == 1 ? '#fio' : '#org_name').focus();
+		}
+		function postAdd() {
+			$('#org').append(
+				'<tr><td><td><b>Доверенное лицо ' + post + ':</b>' +
+				'<tr><td class="label">Ф.И.О.:<td><input type="text" id="fio' + post + '" value="' + CLIENT['fio' + post] + '" />' +
+				'<tr><td class="label">Телефон:<td><input type="text" id="telefon' + post + '" value="' + CLIENT['telefon' + post] + '" />' +
+				'<tr><td class="label">Должность:<td><input type="text" id="post' + post + '" value="' + CLIENT['post' + post] + '" />'
+			);
+			post++;
+			if(post > 3)
+				$('#post-add').remove();
+		}
+		function submit() {
+			var send = {
+				op:'client_edit',
+				id:CLIENT.id,
+				category_id:category_id,
+				org_name:$('#org_name').val(),
+				org_telefon:$('#org_telefon').val(),
+				org_adres:$('#org_adres').val(),
+				org_inn:$('#org_inn').val(),
+				org_kpp:$('#org_kpp').val(),
+				info_dop:$(category_id == 1 ? '#info_people' : '#info_org').val(),
+				fio1:$('#fio' + (category_id == 1 ? '' : 1)).val(),
+				fio2:post > 2 ? $('#fio2').val() : '',
+				fio3:post > 3 ? $('#fio3').val() : '',
+				telefon1:$('#telefon' + (category_id == 1 ? '' : 1)).val(),
+				telefon2:post > 2 ? $('#telefon2').val() : '',
+				telefon3:post > 3 ? $('#telefon3').val() : '',
+				post1:$('#post1').val(),
+				post2:post > 2 ? $('#post2').val() : '',
+				post3:post > 3 ? $('#post3').val() : ''
+			};
+			if(category_id == 1 && !send.fio1) {
+				dialog.err('Не указаны ФИО');
+				$('#fio').focus();
+			} else if(category_id > 1 && !send.org_name) {
+				dialog.err('Не указано название организации');
+				$('#org_name').focus();
+			} else {
+				dialog.process();
+				$.post(AJAX_WS, send, function(res) {
+					if(res.success) {
+						dialog.close();
+						_msg('Данные клиента изменены');
+						document.location.reload();
+					} else
+						dialog.abort();
+				}, 'json');
+			}
+		}
+	},
+
 	clientFilter = function() {
 		var v = {
 				op:'client_spisok',
@@ -163,7 +327,6 @@ var AJAX_WS = APP_HTML + '/ajax/ws.php?' + VALUES,
 
 		return v;
 	},
-
 	clientSpisok = function() {
 		var result = $('.result');
 		if(result.hasClass('busy'))
@@ -1352,6 +1515,19 @@ $(document)
 		$('#opl')._check(0);
 		clientSpisok();
 	})
+	.on('mouseenter', '#client .comm', function() {
+		var t = $(this),
+			v = t.attr('val');
+		t.vkHint({
+			msg:v,
+			width:200,
+			ugol:'right',
+			top:-2,
+			left:-227,
+			indent:'top',
+			show:1
+		})
+	})
 
 	.on('click', '#clientInfo .cedit', function() {
 		var html = '<table class="client_edit">' +
@@ -1360,15 +1536,6 @@ $(document)
 			'<tr><td class="label">Объединить:<td><input type="hidden" id="join">' +
 			'<TR class=tr_join><td class="label">с клиентом:<td><input type="hidden" id="client2">' +
 			'</table>';
-		var dialog = _dialog({
-			head:'Редактирование данных клиента',
-			top:60,
-			width:400,
-			content:html,
-			butSubmit:'Сохранить',
-			submit:submit
-		});
-		$('#fio,#telefon').keyEnter(submit);
 		$('#join')._check();
 		$('#join_check')
 			.click(function() {
@@ -3825,6 +3992,7 @@ $(document)
 			});
 		}
 		if($('#clientInfo').length) {
+			$('#client-edit').click(clientEdit);
 			$('#dopLinks .link').click(function() {
 				$('#dopLinks .link').removeClass('sel');
 				$(this).addClass('sel');
