@@ -139,13 +139,13 @@ function xls_cartridge_content($col) {//левая сторона
 
 	$sheet->setCellValue($colLabel.$y[0], 'Заказчик');
 	$sheet->getStyle($colLabel.$y[0])->getFont()->setSize(8);
-	$sheet->setCellValue($colItem.$y[0], utf8(htmlspecialchars_decode($c['fio'])));
+	$sheet->setCellValue($colItem.$y[0], utf8(htmlspecialchars_decode(_clientName($c))));
 	$sheet->getStyle($colItem.$y[0])->getFont()->setSize(8);
 	xls_comtex_item_border($col, $y[0]);
 
 	$sheet->setCellValue($colLabel.$y[1], 'Контактный тел.');
 	$sheet->getStyle($colLabel.$y[1])->getFont()->setSize(8);
-	$sheet->setCellValue($colItem.$y[1], utf8(htmlspecialchars_decode($c['telefon'])));
+	$sheet->setCellValue($colItem.$y[1], utf8(htmlspecialchars_decode(_clientTelefon($c))));
 	$sheet->getStyle($colItem.$y[1])->getFont()->setSize(8);
 	xls_comtex_item_border($col, $y[1]);
 
@@ -188,7 +188,7 @@ require_once '../config.php';
 require_once API_PATH.'/excel/PHPExcel.php';
 set_time_limit(10);
 
-if(!$id = _isnum($_GET['id']))
+if(!$id = _num($_GET['id']))
 	die(win1251('Неверный id заявки.'));
 
 $sql = "SELECT *

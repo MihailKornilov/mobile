@@ -78,19 +78,19 @@ function xls_schet_width() {//установка ширины столбцов
 	$sheet->getColumnDimension('F')->setWidth(14);
 }//xls_schet_width()
 function xls_schet_top() {
-	global $sheet;
+	global $sheet, $ws;
 
-	$sheet->setCellValue('A1', 'Индивидуальный предприниматель Шерстянников Сергей Юрьевич');
+	$sheet->setCellValue('A1', utf8($ws['org_name']));
 	$sheet->getStyle('A1')->getFont()->setBold(true)->setUnderline(true);
 
-	$sheet->setCellValue('A3', 'Адрес: 164200, Архангельская область, Няндома, Вокзальная, д. 11, кв. 92');
+	$sheet->setCellValue('A3', 'Адрес: '.utf8($ws['adres_yur']));
 	$sheet->getStyle('A3')->getFont()->setBold(true);
 
-	$sheet->setCellValue('A4', 'Телефон: 8 (81838) 6-47-09');
+	$sheet->setCellValue('A4', 'Телефон: '.utf8($ws['telefon']));
 	$sheet->getStyle('A4')->getFont()->setBold(true);
 }//xls_schet_top()
 function xls_schet_rekvisit() {
-	global $sheet;
+	global $sheet, $ws;
 
 	$sheet->setCellValue('A6', 'Образец заполнения платежного поручения');
 	$sheet->getStyle('A6')->getFont()->setBold(true);
@@ -108,26 +108,26 @@ function xls_schet_rekvisit() {
 	);
 	$sheet->getStyle('A7:F11')->applyFromArray($ram); //общая рамка
 
-	$sheet->setCellValue('A7', 'ИНН 291802495306');
+	$sheet->setCellValue('A7', 'ИНН '.utf8($ws['inn']));
 	$sheet->getStyle('A7:C7')->applyFromArray($ram);
 
 	$sheet->setCellValue('A8', 'Получатель');
-	$sheet->setCellValue('A9', 'Индивидуальный предприниматель Шерстянников Сергей Юрьевич (ИП) //г. Няндома, ул. Вокзальная, д. 11, кв.82//');
+	$sheet->setCellValue('A9', utf8($ws['org_name']));
 	$sheet->getStyle('A8:C9')->applyFromArray($ram);
 
 	$sheet->setCellValue('A10', 'Банк получателя');
-	$sheet->setCellValue('A11', 'Архангельское ОСБ №8637 СБ РФ  г. Архангельск');
+	$sheet->setCellValue('A11', utf8($ws['bank_name']));
 	$sheet->setCellValue('D9', 'Сч. №');
-	$sheet->setCellValue('E9', '40802810504100100335 ');
+	$sheet->setCellValue('E9', utf8($ws['schet']).' ');
 	$sheet->getStyle('E7:F9')->applyFromArray($ram);
 
 	$sheet->setCellValue('D10', 'БИК');
 	$sheet->getStyle('D10:D10')->applyFromArray($ram);
 
-	$sheet->setCellValue('E10', '041117601 ');
+	$sheet->setCellValue('E10', utf8($ws['bik']).' ');
 	$sheet->setCellValue('D11', 'Сч. №');
 	$sheet->getStyle('D11:D11')->applyFromArray($ram);
-	$sheet->setCellValue('E11', '30101810100000000601 ');
+	$sheet->setCellValue('E11', utf8($ws['kor_schet']).' ');
 
 	$sheet->getStyle('D9:D11')->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
 }//xls_schet_rekvisit()
@@ -139,9 +139,9 @@ function xls_schet_head() {
 	$sheet->getStyle('A13')->getFont()->setBold(true)->setSize(14);
 	$sheet->getStyle('A13')->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
 
-	$fio = utf8(htmlspecialchars_decode($c['fio']));
-	$sheet->setCellValue('A16', 'Плательщик:        '.$fio);
-	$sheet->setCellValue('A17', 'Грузополучатель: '.$fio);
+	$client = utf8(htmlspecialchars_decode(_clientName($c)));
+	$sheet->setCellValue('A16', 'Плательщик:        '.$client);
+	$sheet->setCellValue('A17', 'Грузополучатель: '.$client);
 }//xls_schet_head()
 function xls_schet_tabHead() {//заголовок колонок таблицы
 	global $sheet;
@@ -190,7 +190,7 @@ function xls_tabContent($line) {
 		if($r['restore'])
 			$prim[] = 'восстановление';
 		if($r['chip'])
-			$prim[] = 'заменёна чипа у';
+			$prim[] = 'замена чипа у';
 
 		$txt = implode(', ', $prim).' картриджа '._cartridgeName($r['cartridge_id']).($r['prim'] ? ', '.utf8($r['prim']) : '');
 
@@ -296,12 +296,12 @@ function xls_act_width() {//установка ширины столбцов
 	$sheet->getColumnDimension('F')->setWidth(13);
 }//xls_act_width()
 function xls_act_top() {
-	global $sheet;
+	global $sheet, $ws;
 
-	$sheet->setCellValue('A1', 'Индивидуальный предприниматель Шерстянников Сергей Юрьевич');
+	$sheet->setCellValue('A1', utf8($ws['org_name']));
 	$sheet->getStyle('A1')->getFont()->setBold(true)->setUnderline(true);
 
-	$sheet->setCellValue('A2', 'Адрес: 164200, Архангельская область, Няндома, Вокзальная, д. 11, кв. 92');
+	$sheet->setCellValue('A2', 'Адрес: '.utf8($ws['adres_yur']));
 	$sheet->getStyle('A2')->getFont()->setBold(true);
 }//xls_act_top()
 function xls_act_head() {
@@ -312,8 +312,8 @@ function xls_act_head() {
 	$sheet->getStyle('A4')->getFont()->setBold(true)->setSize(14);
 	$sheet->getStyle('A4')->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
 
-	$fio = utf8(htmlspecialchars_decode($c['fio']));
-	$sheet->setCellValue('A6', 'Заказчик: '.$fio);
+	$client = utf8(htmlspecialchars_decode(_clientName($c)));
+	$sheet->setCellValue('A6', 'Заказчик: '.$client);
 }//xls_act_head()
 function xls_act_tabHead() {//заголовок колонок таблицы
 	global $sheet;
@@ -423,6 +423,7 @@ if(!$z = query_assoc($sql))
 	die(win1251('Заявки не существует.'));
 
 $c = query_assoc("SELECT * FROM `client` WHERE `ws_id`=".WS_ID." AND !`deleted` AND `id`=".$z['client_id']);
+$ws = query_assoc("SELECT * FROM `workshop` WHERE `id`=".WS_ID);
 
 
 

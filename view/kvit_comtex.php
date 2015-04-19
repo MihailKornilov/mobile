@@ -140,9 +140,9 @@ function xls_comtex_content($col, $row) {//левая сторона
 	$sheet->setCellValue($colLabel.$row[4], 'Комплектность');
 	$sheet->setCellValue($colItem.$row[4], utf8(trim(_deviceName($z['base_device_id'])).(zayavEquipSpisok($z['equip']) ? ', '.zayavEquipSpisok($z['equip']) : '')));
 	$sheet->setCellValue($colLabel.$row[5], 'Владелец');
-	$sheet->setCellValue($colItem.$row[5], utf8(htmlspecialchars_decode($c['fio'])));
+	$sheet->setCellValue($colItem.$row[5], utf8(htmlspecialchars_decode(_clientName($c))));
 	$sheet->setCellValue($colLabel.$row[6], 'Телефоны');
-	$sheet->setCellValue($colItem.$row[6], utf8(htmlspecialchars_decode($c['telefon'])));
+	$sheet->setCellValue($colItem.$row[6], utf8(htmlspecialchars_decode(_clientTelefon($c))));
 	$sheet->setCellValue($colLabel.$row[7], 'Внешний вид');
 	$sheet->setCellValue($colItem.$row[7], 'б/у');
 

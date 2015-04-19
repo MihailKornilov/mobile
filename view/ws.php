@@ -1979,7 +1979,7 @@ function zayav_cartridge_info($z) {
 				'<div class="headName">'.
 					'Заявка №'.$z['nomer'].' - заправка картриджей'.
 					'<a href="'.APP_HTML.'/view/kvit_cartridge.php?'.VALUES.'&id='.$zayav_id.'" class="img_xls'._tooltip('Распечатать квитанцию в xls', -168, 'r').'</a>'.
-					'<a href="'.APP_HTML.'/view/kvit_schet.php?'.VALUES.'&id='.$zayav_id.'" class="img_doc"></a>'.
+				//	'<a href="'.APP_HTML.'/view/kvit_schet.php?'.VALUES.'&id='.$zayav_id.'" class="img_doc"></a>'.
 				'</div>'.
 				'<table class="tabInfo">'.
 					'<tr><td class="label r">Клиент:	 <td>'._clientLink($z['client_id'], 0, 1).
