@@ -100,7 +100,7 @@ function setup_rekvisit() {
 		'<div id="setup_rekvisit">'.
 			'<div class="headName">Реквизиты организации</div>'.
 			'<table class="t">'.
-				'<tr><td class="label">Название организации:<td><input type="text" id="org_name" value="'.$g['org_name'].'" />'.
+				'<tr><td class="label top">Название организации:<td><textarea id="org_name">'.$g['org_name'].'</textarea>'.
 				'<tr><td class="label">ОГРН:<td><input type="text" id="ogrn" value="'.$g['ogrn'].'" />'.
 				'<tr><td class="label">ИНН:<td><input type="text" id="inn" value="'.$g['inn'].'" />'.
 				'<tr><td class="label">КПП:<td><input type="text" id="kpp" value="'.$g['kpp'].'" />'.
@@ -108,6 +108,12 @@ function setup_rekvisit() {
 				'<tr><td class="label">Телефоны:<td><input type="text" id="telefon" value="'.$g['telefon'].'" />'.
 				'<tr><td class="label">Адрес офиса:<td><input type="text" id="adres_ofice" value="'.$g['adres_ofice'].'" />'.
 				'<tr><td class="label">Расчётный счёт:<td><input type="text" id="schet" value="'.$g['schet'].'" />'.
+			'</table>'.
+			'<div class="headName">Банк получателя</div>'.
+			'<table class="t">'.
+				'<tr><td class="label">Наименование банка:<td><input type="text" id="bank_name" value="'.$g['bank_name'].'" />'.
+				'<tr><td class="label">БИК:<td><input type="text" id="bik" value="'.$g['bik'].'" />'.
+				'<tr><td class="label">Корреспондентский счёт:<td><input type="text" id="kor_schet" value="'.$g['kor_schet'].'" />'.
 				'<tr><td><td><div class="vkButton"><button>Сохранить</button></div>'.
 			'</table>'.
 		'</div>';

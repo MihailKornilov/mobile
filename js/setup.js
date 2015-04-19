@@ -661,6 +661,7 @@ $(document)
 			});
 		}
 		if($('#setup_rekvisit').length) {
+			$('textarea').autosize();
 			$('.vkButton').click(function() {
 				var t = $(this),
 					send = {
@@ -672,7 +673,10 @@ $(document)
 						adres_yur:$('#adres_yur').val(),
 						telefon:$('#telefon').val(),
 						adres_ofice:$('#adres_ofice').val(),
-						schet:$('#schet').val()
+						schet:$('#schet').val(),
+						bank_name:$('#bank_name').val(),
+						bik:$('#bik').val(),
+						kor_schet:$('#kor_schet').val()
 					};
 				t.addClass('busy');
 				$.post(AJAX_SETUP, send, function(res) {

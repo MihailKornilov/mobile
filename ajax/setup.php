@@ -36,6 +36,9 @@ switch(@$_POST['op']) {
 		$telefon = _txt($_POST['telefon']);
 		$adres_ofice = _txt($_POST['adres_ofice']);
 		$schet = _txt($_POST['schet']);
+		$bank_name = _txt($_POST['bank_name']);
+		$bik = _txt($_POST['bik']);
+		$kor_schet = _txt($_POST['kor_schet']);
 
 		$sql = "SELECT * FROM `workshop` WHERE `id`=".WS_ID;
 		$g = query_assoc($sql);
@@ -48,7 +51,10 @@ switch(@$_POST['op']) {
 					`adres_yur`='".addslashes($adres_yur)."',
 					`telefon`='".addslashes($telefon)."',
 					`adres_ofice`='".addslashes($adres_ofice)."',
-					`schet`='".addslashes($schet)."'
+					`schet`='".addslashes($schet)."',
+					`bank_name`='".addslashes($bank_name)."',
+					`bik`='".addslashes($bik)."',
+					`kor_schet`='".addslashes($kor_schet)."'
 				WHERE `id`=".WS_ID;
 		query($sql);
 
@@ -69,6 +75,12 @@ switch(@$_POST['op']) {
 			$changes .= '<tr><th>Адрес офиса:<td>'.$g['adres_ofice'].'<td>»<td>'.$adres_ofice;
 		if($g['schet'] != $schet)
 			$changes .= '<tr><th>Расчётный счёт:<td>'.$g['schet'].'<td>»<td>'.$schet;
+		if($g['bank_name'] != $bank_name)
+			$changes .= '<tr><th>Наименование банка:<td>'.$g['bank_name'].'<td>»<td>'.$bank_name;
+		if($g['bik'] != $bik)
+			$changes .= '<tr><th>БИК:<td>'.$g['bik'].'<td>»<td>'.$bik;
+		if($g['kor_schet'] != $kor_schet)
+			$changes .= '<tr><th>Корреспондентский счёт:<td>'.$g['kor_schet'].'<td>»<td>'.$kor_schet;
 		if($changes)
 			history_insert(array(
 				'type' => 1020,
