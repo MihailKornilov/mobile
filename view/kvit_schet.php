@@ -108,7 +108,7 @@ function xls_schet_rekvisit() {
 	);
 	$sheet->getStyle('A7:F11')->applyFromArray($ram); //общая рамка
 
-	$sheet->setCellValue('A7', 'ИНН '.utf8($ws['inn']));
+	$sheet->setCellValue('A7', 'ИНН '.utf8($ws['inn']).'                      КПП');
 	$sheet->getStyle('A7:C7')->applyFromArray($ram);
 
 	$sheet->setCellValue('A8', 'Получатель');
@@ -132,10 +132,10 @@ function xls_schet_rekvisit() {
 	$sheet->getStyle('D9:D11')->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
 }//xls_schet_rekvisit()
 function xls_schet_head() {
-	global $sheet, $c;
+	global $sheet, $c, $s;
 
 	$sheet->mergeCells('A13:F13');
-	$sheet->setCellValue('A13', 'СЧЕТ № 196 от 07 Апреля 2015 г.');
+	$sheet->setCellValue('A13', 'СЧЕТ № СЦ'.$s['nomer'].' от '.utf8(FullData($s['date_create'])).' г.');
 	$sheet->getStyle('A13')->getFont()->setBold(true)->setSize(14);
 	$sheet->getStyle('A13')->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
 
@@ -171,13 +171,14 @@ function xls_schet_tabHead() {//заголовок колонок таблицы
 	$sheet->setCellValue('F19', 'Сумма');
 }//xls_schet_tabHead()
 function xls_tabContent($line) {
-	global $sheet, $z;
+	global $sheet, $z, $s;
 
 	$sql = "SELECT *
 			FROM `zayav_cartridge`
 			WHERE `zayav_id`=".$z['id']."
 			  AND (`filling` OR `restore` OR `chip`)
 			  AND `cost`
+			  AND `schet_id`=".$s['id']."
 			ORDER BY `id`";
 	$q = query($sql);
 	$start = $line;
@@ -305,10 +306,10 @@ function xls_act_top() {
 	$sheet->getStyle('A2')->getFont()->setBold(true);
 }//xls_act_top()
 function xls_act_head() {
-	global $sheet, $c;
+	global $sheet, $c, $s;
 
 	$sheet->mergeCells('A4:F4');
-	$sheet->setCellValue('A4', 'Акт № 000196 от 07 Апреля 2015 г.');
+	$sheet->setCellValue('A4', 'Акт № СЦ'.$s['nomer'].' от '.utf8(FullData($s['date_create'])).' г.');
 	$sheet->getStyle('A4')->getFont()->setBold(true)->setSize(14);
 	$sheet->getStyle('A4')->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
 
@@ -405,12 +406,55 @@ function xls_act_podpis($line) {
 	$sheet->getCell('D'.$line)->setValue('      М.П.');
 }//xls_act_podpis()
 
+function xls_act_podpis2($line) {
+	global $sheet;
+
+	$line++;
+	$sheet->getCell('A'.$line)->setValue(
+		'Вышеперечисленные услуги выполнены полностью и в срок. '.
+		'Заказчик претензий по объему, качеству и срокам оказания услуг не имеет.'
+	);
+	$sheet->mergeCells('A'.$line.':F'.$line);
+	$sheet->getRowDimension($line)->setRowHeight(40);
+	$sheet->getStyle('A'.$line)->getAlignment()->setWrapText(true);
+
+	$line += 2;
+	$sheet->getCell('A'.$line)->setValue('Исполнитель:');
+	$sheet->getCell('C'.$line)->setValue('Заказчик:');
+
+	$line++;
+	$sheet->getRowDimension($line)->setRowHeight(9);
+	$sheet->getCell('B'.$line)->setValue('подпись');
+	$sheet->getStyle('B'.$line)->getFont()->setSize(6);
+	$sheet->getStyle('B'.$line)->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
+
+	$sheet->getCell('E'.$line)->setValue('подпись');
+	$sheet->getStyle('E'.$line)->getFont()->setSize(6);
+
+	$line += 2;
+	$sheet->getCell('B'.$line)->setValue('                   М.П.');
+	$sheet->getCell('C'.$line)->setValue('Расшифровка подписи (ФИО): __________________');
+	$line++;
+	$sheet->getCell('C'.$line)->setValue('_____________________________________________');
+	$line += 2;
+	$sheet->getCell('C'.$line)->setValue('Дата и время выдачи: ___/___/______      ____:____');
+	$line += 2;
+	$sheet->getCell('D'.$line)->setValue('      М.П.');
+}//xls_act_podpis2()
+
 require_once '../config.php';
 require_once API_PATH.'/excel/PHPExcel.php';
 set_time_limit(10);
 
-if(!$id = _num($_GET['id']))
-	die(win1251('Неверный id заявки.'));
+if(!$schet_id = _num(@$_GET['schet_id']))
+	die(win1251('Неверный id счёта.'));
+
+$sql = "SELECT *
+		FROM `zayav_schet`
+		WHERE !`deleted`
+		  AND `id`=".$schet_id;
+if(!$s = query_assoc($sql))
+	die(win1251('Счёта не существует.'));
 
 $sql = "SELECT *
 		FROM `zayav`
@@ -418,7 +462,7 @@ $sql = "SELECT *
 		  AND !`deleted`
 		  AND `cartridge`
 		  AND `zayav_status`
-		  AND `id`=".$id;
+		  AND `id`=".$s['zayav_id'];
 if(!$z = query_assoc($sql))
 	die(win1251('Заявки не существует.'));
 
@@ -449,6 +493,17 @@ xls_act_head();
 xls_act_tabHead();
 $line = xls_act_tab();
 xls_act_podpis($line);
+
+$book->createSheet();
+$book->setActiveSheetIndex(2);
+$sheet = $book->getActiveSheet();
+pageSetup('Акт (передаётся в бухгалтерию)');
+xls_act_width();
+xls_act_top();
+xls_act_head();
+xls_act_tabHead();
+$line = xls_act_tab();
+xls_act_podpis2($line);
 
 
 $book->setActiveSheetIndex(0);

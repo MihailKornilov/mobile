@@ -350,6 +350,13 @@ function history_types($v, $filter) {
 			($filter['zayav_id'] ? '' : ' по заявке '.$v['zayav_link']).
 			':<div class="changes">'.$v['value'].'</div>';
 
+		case 59: return
+			'Сформирован счёт № <b>'.$v['value'].'</b> от <u>'.FullData($v['value2']).' г.</u> на сумму '.$v['value1'].' руб.'.
+			($filter['zayav_id'] ? '' : ' по заявке '.$v['zayav_link']).'.';
+		case 60: return
+			'Удалён счёт № <b>'.$v['value'].'</b> от <u>'.FullData($v['value2']).' г.</u> на сумму '.$v['value1'].' руб.'.
+			($filter['zayav_id'] ? '' : ' по заявке '.$v['zayav_link']).'.';
+
 		case 1001: return 'В настройках: добавление нового сотрудника <u>'._viewer($v['value'], 'name').'</u>.';
 		case 1002: return 'В настройках: удаление сотрудника <u>'._viewer($v['value'], 'name').'</u>.';
 

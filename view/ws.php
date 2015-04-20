@@ -1498,21 +1498,22 @@ function zayav_info($zayav_id) {
 						'<span class="dopl'.(DOPL ? '' : ' dn')._tooltip('Необходимая доплата', -60).(DOPL > 0 ? '+' : '').DOPL.'</span>'.
 				'</table>'.
 				'<div id="kvit_spisok">'.zayav_kvit($zayav_id).'</div>'.
+
+				zayav_info_schet($zayav_id).
+
 				'<div class="headBlue">Расходы<div id="ze-edit" class="img_edit'._tooltip('Изменить расходы по заявке', -88).'</div></div>'.
 				'<div id="ze_acc">'.zayav_acc_sum($z).'</div>'.
 				$expense['html'].
+
+				zayav_info_accMon($zayav_id).
+
 				'<div class="headBlue rm">'.
 					'<a href="'.URL.'&p=report&d=remind"><b>Напоминания</b></a>'.
 					'<div class="img_add _remind-add'._tooltip('Новое напоминание', -60).'</div>'.
 				'</div>'.
 				'<div id="remind-spisok">'._remind_spisok(array('zayav_id'=>$z['id']), 'spisok').'</div>'.
+
 				_vkComment('zayav', $z['id']).
-				'<div class="headBlue mon">Начисления и платежи'.
-					'<a class="add income-add">Принять платёж</a>'.
-					'<em>::</em>'.
-					'<a class="add acc_add">Начислить</a>'.
-				'</div>'.
-				'<div id="money_spisok">'.zayav_info_money($zayav_id).'</div>'.
 
 			'<td id="right">'.
 				'<div id="foto">'._zayavImg($z, 'b').'</div>'.
@@ -1637,6 +1638,51 @@ function zayav_expense_spisok($z, $type='html') {//Получение списка расходов зая
 		);
 	}
 }//zayav_expense_spisok()
+function zayav_info_schet($zayav_id) {//Счета
+	return
+		'<div class="headBlue">'.
+			'Счета, накладные, акты'.
+			'<a class="add schet-add">Сформировать счёт</a>'.
+		'</div>'.
+		'<div id="schet-spisok">'.zayav_info_schet_spisok($zayav_id).'</div>';
+}//zayav_info_schet()
+function zayav_info_schet_spisok($zayav_id) {
+	$sql = "SELECT * FROM `zayav_schet` WHERE `zayav_id`=".$zayav_id." ORDER BY `id`";
+	$q = query($sql);
+	if(!mysql_num_rows($q))
+		return '<div id="no-schet">Счетов нет. <a class="schet-add">Сформировать</a></div>';
+
+	$send =
+		'<table class="_spisok _money">';
+	while($r = mysql_fetch_assoc($q))
+		$send .=
+			'<tr class="schet-unit'.($r['paid'] ? ' paid' : '').($r['deleted'] ? ' deleted' : '').'">'.
+				'<td>'.
+					($r['deleted'] ?
+						'Счёт № <b>СЦ'.$r['nomer'].'</b> ' :
+						'<a href="'.APP_HTML.'/view/kvit_schet.php?'.VALUES.'&schet_id='.$r['id'].'" class="">Счёт № <b>СЦ'.$r['nomer'].'</b></a> '
+					).
+					'от '.FullData($r['date_create']).' г. '.
+					'на сумму <b>'.$r['sum'].'</b> руб. '.
+					($r['deleted'] ?
+						'Удалён '.FullDataTime($r['dtime_del']).'.' :
+						'<a>Оплатить.</a>'
+					).
+				'<td class="ed">'.
+					'<div val="'.$r['id'].'" class="img_del schet-del'._tooltip('Удалить счёт', -76, 'r').'</div>';
+	$send .= '</table>';
+	return $send;
+}//zayav_info_schet_spisok()
+function zayav_info_accMon($zayav_id) {//Начисления и платежи
+	return
+		'<div class="headBlue mon">'.
+			'Начисления и платежи'.
+			'<a class="add income-add">Принять платёж</a>'.
+			'<em>::</em>'.
+			'<a class="add acc_add">Начислить</a>'.
+		'</div>'.
+		'<div id="money_spisok">'.zayav_info_money($zayav_id).'</div>';
+}//zayav_info_accMon()
 function zayav_info_money($zayav_id) {
 	$sql = "(
 		SELECT
@@ -1666,13 +1712,13 @@ function zayav_info_money($zayav_id) {
 	)
 	ORDER BY `dtime_add`";
 	$q = query($sql);
-	$send = '';
-	if(mysql_num_rows($q)) {
-		$send = '<table class="_spisok _money">';
-		while($r = mysql_fetch_assoc($q))
-			$send .= $r['type'] == 'acc' ? zayav_accrual_unit($r) : zayav_oplata_unit($r);
-		$send .= '</table>';
-	}
+	if(!mysql_num_rows($q))
+		return '<div id="no-acc-mon">Начислений и платежей нет.</div>';
+
+	$send = '<table class="_spisok _money">';
+	while($r = mysql_fetch_assoc($q))
+		$send .= $r['type'] == 'acc' ? zayav_accrual_unit($r) : zayav_oplata_unit($r);
+	$send .= '</table>';
 
 	return $send;
 }//zayav_money()
@@ -1979,7 +2025,6 @@ function zayav_cartridge_info($z) {
 				'<div class="headName">'.
 					'Заявка №'.$z['nomer'].' - заправка картриджей'.
 					'<a href="'.APP_HTML.'/view/kvit_cartridge.php?'.VALUES.'&id='.$zayav_id.'" class="img_xls'._tooltip('Распечатать квитанцию в xls', -168, 'r').'</a>'.
-				//	'<a href="'.APP_HTML.'/view/kvit_schet.php?'.VALUES.'&id='.$zayav_id.'" class="img_doc"></a>'.
 				'</div>'.
 				'<table class="tabInfo">'.
 					'<tr><td class="label r">Клиент:	 <td>'._clientLink($z['client_id'], 0, 1).
@@ -1994,17 +2039,15 @@ function zayav_cartridge_info($z) {
 					'<tr><td class="label r top">Список:<td id="cart-tab">'.zayav_cartridge_info_tab($zayav_id).
 				'</table>'.
 
-	'<div class="headBlue">Расходы<div id="ze-edit" class="img_edit'._tooltip('Изменить расходы по заявке', -166, 'r').'</div></div>'.
-	'<div id="ze_acc">'.zayav_acc_sum($z).'</div>'.
-	$expense['html'].
+				zayav_info_schet($zayav_id).
+
+				zayav_info_accMon($zayav_id).
+
+				'<div class="headBlue">Расходы<div id="ze-edit" class="img_edit'._tooltip('Изменить расходы по заявке', -166, 'r').'</div></div>'.
+				'<div id="ze_acc">'.zayav_acc_sum($z).'</div>'.
+				$expense['html'].
 
 				_vkComment('zayav', $z['id']).
-				'<div class="headBlue mon">Начисления и платежи'.
-					'<a class="add income-add">Принять платёж</a>'.
-					'<em>::</em>'.
-					'<a class="add acc_add">Начислить</a>'.
-				'</div>'.
-				'<div id="money_spisok">'.zayav_info_money($zayav_id).'</div>'.
 
 			'<tr class="z-hist"><td>'.
 				'<div class="headName">Заявка №'.$z['nomer'].' - история действий</div>'.
@@ -2013,7 +2056,14 @@ function zayav_cartridge_info($z) {
 	'</div>';
 }//zayav_cartridge_info()
 function zayav_cartridge_info_tab($zayav_id) {//список картриджей в инфо по заявке
-	$sql = "SELECT * FROM `zayav_cartridge` WHERE `zayav_id`=".$zayav_id." ORDER BY `id`";
+	$sql = "SELECT
+				`c`.*,
+				`s`.`nomer`
+ 			FROM `zayav_cartridge` `c`
+ 				LEFT JOIN `zayav_schet` `s`
+				ON `c`.`schet_id`=`s`.`id`
+ 			WHERE `c`.`zayav_id`=".$zayav_id."
+ 			ORDER BY `c`.`id`";
 	$q = query($sql);
 	$send = '<table class="_spisok _money">'.
 		'<tr>'.
@@ -2034,19 +2084,22 @@ function zayav_cartridge_info_tab($zayav_id) {//список картриджей в инфо по заяв
 		$prim = !empty($prim) ? implode(', ', $prim) : '';
 		$prim .= ($prim && $r['prim'] ? ', ' : '').'<u>'.$r['prim'].'</u>';
 		$send .=
-			//'<tr style="background-color:#'._zayavStatusColor($r['status']).'" val="'.$r['id'].'">'.
 			'<tr val="'.$r['id'].'"'.($r['filling'] || $r['restore'] || $r['chip'] ? ' class="ready"' : '').'>'.
 				'<td class="cart-name"><b>'._cartridgeName($r['cartridge_id']).'</b>'.
 				'<td class="cost">'.($r['cost'] ? $r['cost'] : '').
 				'<td class="dtime">'.($r['dtime_ready'] != '0000-00-00 00:00:00' ? FullDataTime($r['dtime_ready']) : '').
 				'<td class="cart-prim">'.$prim.
 				'<td class="ed">'.
-					'<div class="img_edit cart-edit'._tooltip('Изменить', -33).'</div>'.
-					'<div class="img_del cart-del'._tooltip('Удалить', -29).'</div>'.
-					'<input type="hidden" class="cart_id" value="'.$r['cartridge_id'].'" />'.
-					'<input type="hidden" class="filling" value="'.$r['filling'].'" />'.
-					'<input type="hidden" class="restore" value="'.$r['restore'].'" />'.
-					'<input type="hidden" class="chip" value="'.$r['chip'].'" />';
+					($r['schet_id'] ?
+						'<div class="nomer">СЦ'.$r['nomer'].'</div>'
+						:
+						'<div class="img_edit cart-edit'._tooltip('Изменить', -33).'</div>'.
+						'<div class="img_del cart-del'._tooltip('Удалить', -29).'</div>'.
+						'<input type="hidden" class="cart_id" value="'.$r['cartridge_id'].'" />'.
+						'<input type="hidden" class="filling" value="'.$r['filling'].'" />'.
+						'<input type="hidden" class="restore" value="'.$r['restore'].'" />'.
+						'<input type="hidden" class="chip" value="'.$r['chip'].'" />'
+					);
 	}
 
 	$send .= '<tr><td colspan="5" class="_next" id="cart-add">'.

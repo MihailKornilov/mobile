@@ -346,6 +346,10 @@
 .zayav_accrual_add.remind{display:none;margin-top:-8px;}
 #zayav-info .deleting{text-align:center;color:#555}
 #zayav-info #kvit_spisok{margin-bottom:8px}
+#zayav-info #money_spisok{margin-bottom:14px}
+#zayav-info #no-acc-mon{margin:4px 8px 12px}
+#zayav-info #no-schet{margin:4px 8px 12px}
+#zayav-info #cart-tab .nomer{margin:0 4px;color:#777}
 #zayav-info #ze_acc{
 	border-left:#e9edf1 solid 1px;
 	border-right:#e9edf1 solid 1px;
@@ -444,6 +448,11 @@
 #zayav-info .cart-prim u{font-size:10px}
 #zayav-info .ready{background-color:#dfd}
 
+/* Таблица формирования счёта */
+#schet-add-tab #sa-tab{border-spacing:10px;margin:10px}
+
+.schet-unit{background-color:#ffb}
+.schet-unit.paid{background-color:#cfc}
 
 /* Список запчастей */
 #zp{min-height:500px}

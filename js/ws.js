@@ -1945,6 +1945,47 @@ $(document)
 				});
 		}
 	})
+	.on('click', '#zayav-info .schet-add', function() {
+		var t = $(this),
+			html =
+				'<div id="schet-add-tab">' +
+					'<div class="_info">' +
+						'Выписка счёта производится только на готовые картриджи.<br />' +
+						'Каждому счёту присваивается уникальный порядковый номер.<br />' +
+						'Счёт содержит в себе также акт выполненных работ в двух экземплярах.<br />' +
+						'<br />' +
+						'<b>Укажите дату</b>, на которую будет выставляться счёт.' +
+					'</div>' +
+					'<table id="sa-tab">' +
+						'<tr><td class="label">Дата:<td><input id="date_create" type="hidden" />' +
+					'</table>' +
+				'</table>',
+			dialog = _dialog({
+				width:400,
+				head:'Формирование счёта',
+				content:html,
+				butSubmit:'Сформировать',
+				submit:submit
+			});
+		$('#date_create')._calendar({lost:1});
+		function submit() {
+			var send = {
+				op:'zayav_cartridge_schet_add',
+				zayav_id:ZAYAV.id,
+				date_create:$('#date_create').val()
+			};
+			dialog.process();
+			$.post(AJAX_WS, send, function(res) {
+				if(res.success) {
+					$('#cart-tab').html(res.cart);
+					$('#schet-spisok').html(res.schet);
+					dialog.close();
+					_msg('Новый счёт сформирован');
+				} else
+					dialog.abort();
+			}, 'json');
+		}
+	})
 	.on('click', '#zayav-info .remind_add', function() {
 		var html = '<table class="remind_add_tab">' +
 			'<tr><td class="label">Заявка:<td>№<b>' + ZAYAV.nomer + '</b>' +
@@ -2562,6 +2603,33 @@ $(document)
 					dialog.close();
 					$('#cart-tab').html(res.html);
 					_msg('Удалено.');
+				} else
+					dialog.abort();
+				}, 'json');
+		}
+	})
+
+	.on('click', '#zayav-info .schet-del', function() {
+		var t = $(this),
+			id = t.attr('val'),
+			dialog = _dialog({
+				head:'Удаление счёта',
+				content:'<center>Подтвердите удаление счёта.</center>',
+				butSubmit:'Удалить',
+				submit:submit
+			});
+		function submit() {
+			var send = {
+				op:'zayav_cartridge_schet_del',
+				id:id
+			};
+			dialog.process();
+			$.post(AJAX_WS, send, function(res) {
+				if(res.success) {
+					dialog.close();
+					$('#cart-tab').html(res.cart);
+					$('#schet-spisok').html(res.schet);
+					_msg('Счёт удалён');
 				} else
 					dialog.abort();
 				}, 'json');
