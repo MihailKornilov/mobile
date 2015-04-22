@@ -286,6 +286,8 @@ switch(@$_POST['op']) {
 		$org_inn = ORG ? _txt($_POST['org_inn']) : '';
 		$org_kpp = ORG ? _txt($_POST['org_kpp']) : '';
 		$info_dop = _txt($_POST['info_dop']);
+		$join = _bool($_POST['join']);
+		$client2 = _num($_POST['client2']);
 
 		if(!ORG && empty($fio1))//Для частного лица обязательно указывается ФИО
 			jsonError();
@@ -296,12 +298,14 @@ switch(@$_POST['op']) {
 		if(!$client = query_assoc($sql))
 			jsonError();
 
-//		if($join && !$client2)
-//			jsonError();
-//		if($join && !query_value("SELECT * FROM `client` WHERE `ws_id`=".WS_ID." AND !`deleted` AND `id`=".$client2))
-//			jsonError();
-//		if($join && $client_id == $client2)
-//			jsonError();
+		if($join) {
+			if(!$client2)
+				jsonError();
+			if(!query_value("SELECT * FROM `client` WHERE `ws_id`=".WS_ID." AND !`deleted` AND `id`=".$client2))
+				jsonError();
+			if($client_id == $client2)
+				jsonError();
+		}
 
 		$sql = "UPDATE `client`
 				SET `category_id`=".$category_id.",
@@ -322,7 +326,8 @@ switch(@$_POST['op']) {
 					`post3`='".addslashes($post3)."'
 			   WHERE `id`=".$client_id;
 		query($sql);
-/*		if($join) {
+
+		if($join) {
 			query("UPDATE `accrual`	SET `client_id`=".$client_id." WHERE `client_id`=".$client2);
 			query("UPDATE `money`	SET `client_id`=".$client_id." WHERE `client_id`=".$client2);
 			query("UPDATE `vk_comment` SET `table_id`=".$client_id."  WHERE `table_name`='client' AND `table_id`=".$client2);
@@ -336,7 +341,7 @@ switch(@$_POST['op']) {
 				'value' => _clientLink($client2, 1)
 			));
 		}
-*/
+
 		$changes = '';
 		if($client['category_id'] != $category_id)
 			$changes .= '<tr><th>Категория:<td>'._clientCategory($client['category_id']).'<td>»<td>'._clientCategory($category_id);

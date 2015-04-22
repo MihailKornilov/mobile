@@ -211,6 +211,10 @@ var AJAX_WS = APP_HTML + '/ajax/ws.php?' + VALUES,
 					'<tr><td class="label top">Дополнительная<br />информация:<td><textarea id="info_org">' + CLIENT.info_dop + '</textarea>' +
 				'</table>' +
 				'<a id="post-add">Добавить доверенное лицо</a>' +
+				'<table class="ca-table" id="org">' +
+					'<tr><td class="label">Объединить:<td><input type="hidden" id="join" />' +
+					'<tr id="tr_join"><td class="label">с клиентом:<td><input type="hidden" id="client2" />' +
+				'</table>' +
 			'</div>';
 		var post = 1,
 			category_id = CLIENT.category_id,
@@ -239,6 +243,24 @@ var AJAX_WS = APP_HTML + '/ajax/ws.php?' + VALUES,
 			p.find('.sel').removeClass('sel');
 			t.addClass('sel');
 			categorySet(category_id);
+		});
+		$('#client2').clientSel({width:258});
+		$('#join')
+			._check()
+			._check(function() {
+				$('#tr_join').toggle();
+			});
+		$('#join_check').vkHint({
+			msg:'<b>Объединение клиентов.</b><br />' +
+				'Необходимо, если один клиент был внесён в базу дважды.<br /><br />' +
+				'Текущий клиент будет получателем.<br />Выберите второго клиента.<br />' +
+				'Все заявки, начисления и платежи станут общими после<br />объединения.<br /><br />' +
+				'Внимание, операция необратима!',
+			width:330,
+			delayShow:1500,
+			top:-162,
+			left:-81,
+			indent:80
 		});
 		function categorySet(v) {
 			$('#people')[(v != 1 ? 'add' : 'remove') + 'Class']('dn');
@@ -276,15 +298,24 @@ var AJAX_WS = APP_HTML + '/ajax/ws.php?' + VALUES,
 				telefon3:post > 3 ? $('#telefon3').val() : '',
 				post1:$('#post1').val(),
 				post2:post > 2 ? $('#post2').val() : '',
-				post3:post > 3 ? $('#post3').val() : ''
+				post3:post > 3 ? $('#post3').val() : '',
+				join:_num($('#join').val()),
+				client2:_num($('#client2').val())
 			};
+			if(!send.join)
+				send.client2 = 0;
+
 			if(category_id == 1 && !send.fio1) {
 				dialog.err('Не указаны ФИО');
 				$('#fio').focus();
 			} else if(category_id > 1 && !send.org_name) {
 				dialog.err('Не указано название организации');
 				$('#org_name').focus();
-			} else {
+			} else if(send.join && !send.client2)
+				dialog.err('Укажите второго клиента');
+			else if(send.join && send.client2 == CLIENT.id)
+				dialog.err('Выберите другого клиента');
+			else {
 				dialog.process();
 				$.post(AJAX_WS, send, function(res) {
 					if(res.success) {
@@ -1529,76 +1560,6 @@ $(document)
 		})
 	})
 
-	.on('click', '#clientInfo .cedit', function() {
-		var html = '<table class="client_edit">' +
-			'<tr><td class="label">Имя:<td><input type="text" id="fio" value="' + $('.fio').html() + '">' +
-			'<tr><td class="label">Телефон:<td><input type="text" id="telefon" value="' + $('.telefon').html() + '">' +
-			'<tr><td class="label">Объединить:<td><input type="hidden" id="join">' +
-			'<TR class=tr_join><td class="label">с клиентом:<td><input type="hidden" id="client2">' +
-			'</table>';
-		$('#join')._check();
-		$('#join_check')
-			.click(function() {
-				$('.tr_join').toggle();
-			})
-			.vkHint({
-				msg:'<B>Объединение клиентов.</B><br />' +
-					'Необходимо, если один клиент был внесён в базу дважды.<br /><br />' +
-					'Текущий клиент будет получателем.<br />Выберите второго клиента.<br />' +
-					'Все заявки, начисления и платежи станут общими после<br />объединения.<br /><br />' +
-					'Внимание, операция необратима!',
-				width:330,
-				delayShow:1500,
-				top:-162,
-				left:-79,
-				indent:80
-			});
-		$('#client2').clientSel({width:240});
-		function submit() {
-			var msg,
-				send = {
-					op:'client_edit',
-					client_id:CLIENT.id,
-					fio:$.trim($('#fio').val()),
-					telefon:$.trim($('#telefon').val()),
-					join:$('#join').val(),
-					client2:$('#client2').val()
-				};
-			if(send.join == 0)
-				send.client2 = 0;
-			if(!send.fio) {
-				msg = 'Не указано имя клиента.';
-				$("#fio").focus();
-			} else if(send.join == 1 && send.client2 == 0)
-				msg = 'Укажите второго клиента.';
-			else if(send.join == 1 && send.client2 == CLIENT.id)
-				msg = 'Выберите другого клиента.';
-			else {
-				dialog.process();
-				$.post(AJAX_WS, send, function(res) {
-					dialog.abort();
-					if(res.success) {
-						$('.fio').html(send.fio);
-						$('.telefon').html(send.telefon);
-						CLIENT.fio = send.fio;
-						if(send.client2 > 0)
-							document.location.reload();
-						dialog.close();
-						_msg('Данные клиента изменены.');
-					}
-				}, 'json');
-			}
-			if(msg)
-				dialog.bottom.vkHint({
-					msg:'<SPAN class=red>' + msg + '</SPAN>',
-					top:-47,
-					left:100,
-					indent:50,
-					show:1,
-					remove:1
-				});
-		}
-	})
 	.on('click', '#clientInfo #zayav_spisok ._next', function() {
 		if($(this).hasClass('busy'))
 			return;

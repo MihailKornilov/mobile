@@ -15,6 +15,7 @@
 	margin:0 20px 20px 20px;
 }
 #client-add-tab #post-add:hover{background-color:#e9edf1}
+#client-add-tab #tr_join{display:none}
 
 
 /* Список клиентов */
