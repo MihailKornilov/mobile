@@ -70,9 +70,8 @@ switch(@$_POST['op']) {
 		jsonSuccess();
 		break;
 	case 'ws_del':
-		if(!preg_match(REGEXP_NUMERIC, $_POST['ws_id']))
+		if(!$ws_id = _num($_POST['ws_id']))
 			jsonError();
-		$ws_id = intval($_POST['ws_id']);
 		foreach(sa_ws_tables() as $tab => $about)
 			query("DELETE FROM `".$tab."` WHERE `ws_id`=".$ws_id);
 		query("DELETE FROM `workshop` WHERE `id`=".$ws_id);

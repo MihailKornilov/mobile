@@ -14,15 +14,13 @@ switch(@$_POST['op']) {
 		$org_name = win1251(htmlspecialchars(trim($_POST['org_name'])));
 		if(empty($org_name))
 			jsonError();
-		if(!preg_match(REGEXP_NUMERIC, $_POST['country_id']))
+		if(!$country_id = _num($_POST['country_id']))
 			jsonError();
-		if(!preg_match(REGEXP_NUMERIC, $_POST['city_id']))
+		if(!$city_id = _num($_POST['city_id']))
 			jsonError();
 
-		$country_id = intval($_POST['country_id']);
-		$city_id = intval($_POST['city_id']);
-		$country_name = win1251(htmlspecialchars(trim($_POST['country_name'])));
-		$city_name = win1251(htmlspecialchars(trim($_POST['city_name'])));
+		$country_name = _txt($_POST['country_name']);
+		$city_name = _txt($_POST['city_name']);
 
 		$ex = explode(',', $_POST['devs']);
 		foreach($ex as $id)
@@ -48,10 +46,10 @@ switch(@$_POST['op']) {
 			)";
 		query($sql);
 
-		$ws_id = query_value("SELECT `id` FROM `workshop` WHERE `admin_id`=".VIEWER_ID." ORDER BY `id` DESC  LIMIT 1");
+		$ws_id = query_value("SELECT `id` FROM `workshop` WHERE `admin_id`=".VIEWER_ID." ORDER BY `id` DESC LIMIT 1");
 
 		query("UPDATE `vk_user` SET `ws_id`=".$ws_id.",`admin`=1 WHERE `viewer_id`=".VIEWER_ID);
-		_cacheClear();
+		_cacheClear($ws_id);
 		jsonSuccess();
 		break;
 }

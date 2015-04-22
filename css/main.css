@@ -151,8 +151,10 @@
 
 
 /* Список заявок с картриджами */
+#zayav-cartridge #c-sum{color:#777;margin-left:10px}
 #zayav-cartridge .clear{float:right}
 #zayav-cartridge #spisok{padding-bottom:10px;background-color:#f7f7f7;vertical-align:top}
+#zayav-cartridge .zayav_unit .label{width:75px}
 #zayav-cartridge .right{border:0;width:155px;padding-bottom:300px}
 #zayav-cartridge #desc_check{margin-top:10px}
 #zayav-cartridge ._empty{margin:10px 2px 0 10px;}

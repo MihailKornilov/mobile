@@ -3,9 +3,6 @@ define('DOCUMENT_ROOT', dirname(__FILE__));
 require_once(DOCUMENT_ROOT.'/syncro.php');
 
 require_once(API_PATH.'/vk.php');
-
-define('SA_VIEWER_ID', SA && @$_COOKIE['sa_viewer_id'] ? intval($_COOKIE['sa_viewer_id']) : 0);
-//define('VIEWER_ID', SA_VIEWER_ID ? SA_VIEWER_ID : $_GET['viewer_id']);
 _appAuth();
 
 require_once(DOCUMENT_ROOT.'/view/main.php');

@@ -120,28 +120,28 @@ function sa_ws() {
 	'</div>';
 }//sa_ws()
 function sa_ws_tables() {//Таблицы, которые задействуются в мастерских
-	return array(
-		'client' => 'Клиенты',
-		'zayav' => 'Заявки',
-		'accrual' => 'Начисления',
-		'money' => 'Оплаты',
-		'zp_avai' => 'Наличие запчастей',
-		'zp_move' => 'Движения запчастей',
-		'zp_zakaz' => 'Заказ запчастей',
-		'history' => 'История действий',
-		'reminder' => 'Задания'
-	);
+	$sql = "SHOW TABLES";
+	$q = query($sql);
+	$send = array();
+	while($r = mysql_fetch_assoc($q)) {
+		$v = $r[key($r)];
+		if(query_value("SHOW COLUMNS FROM `".$v."` WHERE Field='ws_id'"))
+			$send[$v] = $v;
+	}
+
+	unset($send['vk_user']);
+	return $send;
 }//sa_ws_tables()
 function sa_ws_info($id) {
 	$sql = "SELECT * FROM `workshop` WHERE `id`=".$id;
-	if(!$ws = mysql_fetch_assoc(query($sql)))
+	if(!$ws = query_assoc($sql))
 		return sa_ws();
 
 	$counts = '';
-	foreach(sa_ws_tables() as $tab => $about) {
-		$c = query_value("select count(id) from ".$tab." where ws_id=".$ws['id']);
+	foreach(sa_ws_tables() as $tab) {
+		$c = query_value("SELECT COUNT(`id`) FROM `".$tab."` WHERE `ws_id`=".$ws['id']);
 		if($c)
-			$counts .= '<tr><td class="tb">'.$tab.':<td class="c">'.$c.'<td>'.$about;
+			$counts .= '<tr><td class="tb">'.$tab.':<td class="c">'.$c.'<td>';
 	}
 
 	$workers = '';
@@ -173,7 +173,9 @@ function sa_ws_info($id) {
 		'<div class="headName">Действия</div>'.
 		'<div class="vkButton ws_status_change" val="'.$ws['id'].'"><button>'.($ws['status'] ? 'Деактивировать' : 'Восстановить').' мастерскую</button></div>'.
 		'<br />'.
-		($ws['status'] && $ws['id'] != WS_ID ? '<div class="vkButton ws_enter" val="'.$ws['admin_id'].'"><button>Выполнить вход в эту мастерскую</button></div><br />' : '').
+		($ws['status'] && $ws['id'] != WS_ID ?
+			'<div class="vkButton ws_enter" val="'.$ws['admin_id'].'"><button>Выполнить вход в эту мастерскую</button></div><br />'
+		: '').
 		'<div class="vkCancel ws_del" val="'.$ws['id'].'"><button style="color:red">Физическое удаление мастерской</button></div>'.
 		'<div class="headName">Записи в базе</div>'.
 		'<table class="counts">'.$counts.'</table>'.

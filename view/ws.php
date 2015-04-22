@@ -1499,7 +1499,7 @@ function zayav_info($zayav_id) {
 				'</table>'.
 				'<div id="kvit_spisok">'.zayav_kvit($zayav_id).'</div>'.
 
-				zayav_info_schet($zayav_id).
+//				zayav_info_schet($zayav_id).
 
 				'<div class="headBlue">Расходы<div id="ze-edit" class="img_edit'._tooltip('Изменить расходы по заявке', -88).'</div></div>'.
 				'<div id="ze_acc">'.zayav_acc_sum($z).'</div>'.
@@ -1912,9 +1912,8 @@ function zayav_cartridge_spisok($v=array()) {
 	if($filter['status'])
 		$cond .= " AND `zayav_status`=".$filter['status'];
 
-	$all = query_value("SELECT COUNT(*) FROM `zayav` WHERE ".$cond." LIMIT 1");
-
-	$zayav = array();
+	$r = query_assoc("SELECT COUNT(*) `count`,SUM(`cartridge_count`) `sum` FROM `zayav` WHERE ".$cond);
+	$all = $r['count'];
 
 	if(!$all)
 		return array(
@@ -1926,13 +1925,18 @@ function zayav_cartridge_spisok($v=array()) {
 
 	$send = array(
 		'all' => $all,
-		'result' => 'Показан'._end($all, 'а', 'о').' '.$all.' заяв'._end($all, 'ка', 'ки', 'ок').$filter['clear'],
+		'result' =>
+			'Показан'._end($all, 'а', 'о').' '.$all.' заяв'._end($all, 'ка', 'ки', 'ок').
+			'<span id="c-sum">('.$r['sum'].' картридж'._end($r['sum'], '', 'а', 'ей').')</span>'.
+			$filter['clear'],
 		'spisok' => '',
 		'filter' => $filter
 	);
 
 	$start = ($page - 1) * $limit;
 	$limit_save = $limit;
+
+	$zayav = array();
 
 	$sql = "SELECT
 	            *,
@@ -1962,8 +1966,11 @@ function zayav_cartridge_spisok($v=array()) {
 			'<h2>#'.$r['nomer'].'</h2>'.
 			'<a class="name">Картридж'.(count($r['cart']) > 1 ? 'и' : '').' '.implode(', ', $r['cart']).'</a>'.
 			'<table class="utab">'.
-				'<tr><td valign=top>'.
-				(!$filter['client_id'] ? '<tr><td class="label">Клиент:<td>'.$r['client_link'] : '').
+				'<tr><td class="label">Количество:'.
+					'<td><b>'.$r['cartridge_count'].'</b> шт.'.
+			(!$filter['client_id'] ?
+				'<tr><td class="label top">Клиент:<td>'.$r['client_link']
+			: '').
 				'<tr><td class="label">Дата подачи:'.
 					'<td>'.FullData($r['dtime_add'], 1).
 						($r['accrual_sum'] || $r['oplata_sum'] ?
