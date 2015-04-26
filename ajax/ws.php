@@ -1328,6 +1328,82 @@ switch(@$_POST['op']) {
 
 		jsonSuccess();
 		break;
+	case 'zayav_cartridge_schet_load'://получение данных для счёта по катрриджам
+		if(!$zayav_id = _num($_POST['zayav_id']))
+			jsonError();
+
+		$sql = "SELECT * FROM `zayav` WHERE `ws_id`=".WS_ID." AND !`deleted` AND `cartridge` AND `id`=".$zayav_id;
+		if(!$z = query_assoc($sql))
+			jsonError();
+
+		$sql = "SELECT *
+				FROM `zayav_cartridge`
+				WHERE `zayav_id`=".$zayav_id."
+				  AND (`filling` OR `restore` OR `chip`)
+				  AND `cost`
+				  AND !`schet_id`
+				ORDER BY `id`";
+		$q = query($sql);
+		$schet = array();
+		$n = 1;
+		while($r = mysql_fetch_assoc($q)) {
+			$same = 0;//тут будет номер, с которым будет найдено совпадение
+			foreach($schet as $sn => $unit) {
+				$diff = 0; // пока различий не обнаружено
+				foreach($unit as $key => $val) {
+					if($key == 'count')
+						continue;
+					if($r[$key] != $val) {
+						$diff = 1;
+						break;
+					}
+				}
+				if(!$diff) { //если различий нет, то запоминание номера и выход
+					$same = $sn;
+					break;
+				}
+			}
+
+			if($same)
+				$schet[$same]['count']++;
+			else {
+				$schet[$n] = array(
+					'cartridge_id' => $r['cartridge_id'],
+					'filling' => $r['filling'],
+					'restore' => $r['restore'],
+					'chip' => $r['chip'],
+					'cost' => $r['cost'],
+					'prim' => $r['prim'],
+					'count' => 1
+				);
+				$n++;
+			}
+		}
+
+		$spisok = array();
+		foreach($schet as $r) {
+			$prim = array();
+			if($r['filling'])
+				$prim[] = 'заправка';
+			if($r['restore'])
+				$prim[] = 'восстановление';
+			if($r['chip'])
+				$prim[] = 'замена чипа у';
+
+			$txt = implode(', ', $prim).' картриджа '._cartridgeName($r['cartridge_id']).($r['prim'] ? ', '.$r['prim'] : '');
+			$txt = mb_ucfirst($txt);
+
+			$spisok[] = array(
+				'name' => utf8($txt),
+				'count' => $r['count'],
+				'cost' => $r['cost'],
+				'cartridge' => 1
+			);
+		}
+
+		$send['spisok'] = $spisok;
+		jsonSuccess($send);
+		break;
 	case 'zayav_cartridge_schet_add'://формирование счёта
 		if(!$zayav_id = _num($_POST['zayav_id']))
 			jsonError();
@@ -1337,21 +1413,18 @@ switch(@$_POST['op']) {
 
 		$date_create = $_POST['date_create'];
 
-		$sql = "SELECT * FROM `zayav` WHERE `ws_id`=".WS_ID." AND !`deleted` AND `cartridge` AND `id`=".$zayav_id;
-		if(!$z = query_assoc($sql))
+		$spisok = @$_POST['spisok'];
+		if(empty($spisok))
 			jsonError();
 
-		$sql = "SELECT
-					COUNT(`id`) `count`,
-					SUM(`cost`) `sum`
-				FROM `zayav_cartridge`
-				WHERE `zayav_id`=".$zayav_id."
-				  AND (`filling` OR `restore` OR `chip`)
-				  AND `cost`
-				  AND !`schet_id`
-				ORDER BY `id`";
-		$r = query_assoc($sql);
-		if(!$r['count'])
+		$sum = 0;
+		foreach($spisok as $r) {
+			$r['name'] = _txt($r['name']);
+			$sum += $r['count'] * $r['cost'];
+		}
+
+		$sql = "SELECT * FROM `zayav` WHERE `ws_id`=".WS_ID." AND !`deleted` AND `cartridge` AND `id`=".$zayav_id;
+		if(!$z = query_assoc($sql))
 			jsonError();
 
 		$nomer = _maxSql('zayav_schet', 'nomer');
@@ -1366,7 +1439,7 @@ switch(@$_POST['op']) {
 					".$nomer.",
 					".$zayav_id.",
 					'".$date_create."',
-					".$r['sum'].",
+					".$sum.",
 					".VIEWER_ID."
 				)";
 		query($sql);
@@ -1382,57 +1455,36 @@ switch(@$_POST['op']) {
 				  AND !`schet_id`";
 		query($sql);
 
+		//внесение списка наименований для счёта
+		$values = array();
+		foreach($spisok as $r)
+			$values[] = "(".
+				$insert_id.",".
+				"'".addslashes(win1251($r['name']))."',".
+				$r['count'].",".
+				$r['cost'].",".
+				(empty($r['cartridge']) ? 0 : 1).
+			")";
+		$sql = "INSERT INTO `zayav_schet_spisok` (
+					`schet_id`,
+					`name`,
+					`count`,
+					`cost`,
+					`cartridge`
+				) VALUES ".implode(',', $values);
+		query($sql);
+
 		history_insert(array(
 			'type' => 59,
 			'client_id' => $z['client_id'],
 			'zayav_id' => $zayav_id,
 			'value' => 'СЦ'.$nomer,
-			'value1' => $r['sum'],
+			'value1' => $sum,
 			'value2' => $date_create
 		));
 
 		$send['cart'] = utf8(zayav_cartridge_info_tab($zayav_id));
 		$send['schet'] = utf8(zayav_info_schet_spisok($zayav_id));
-
-		jsonSuccess($send);
-		break;
-	case 'zayav_cartridge_schet_del'://удаление счёта
-		if(!$schet_id = _isnum($_POST['id']))
-			jsonError();
-
-		$sql = "SELECT * FROM `zayav_schet` WHERE !`deleted` AND `id`=".$schet_id;
-		if(!$r = mysql_fetch_assoc(query($sql)))
-			jsonError();
-
-		$sql = "SELECT * FROM `zayav` WHERE `ws_id`=".WS_ID." AND !`deleted` AND `cartridge` AND `id`=".$r['zayav_id'];
-		if(!$z = mysql_fetch_assoc(query($sql)))
-			jsonError();
-
-		$sql = "UPDATE `zayav_schet`
-		        SET `deleted`=1,
-		        	`dtime_del`=CURRENT_TIMESTAMP,
-		        	`viewer_id_del`=".VIEWER_ID."
-		        WHERE `id`=".$schet_id;
-		query($sql);
-
-		//открепление картриджей от номера счёта
-		$sql = "UPDATE `zayav_cartridge`
-				SET `schet_id`=0
-				WHERE `zayav_id`=".$r['zayav_id']."
-				  AND `schet_id`=".$schet_id;
-		query($sql);
-
-		history_insert(array(
-			'type' => 60,
-			'client_id' => $z['client_id'],
-			'zayav_id' => $z['id'],
-			'value' => 'СЦ'.$r['nomer'],
-			'value1' => $r['sum'],
-			'value2' => $r['date_create']
-		));
-
-		$send['cart'] = utf8(zayav_cartridge_info_tab($z['id']));
-		$send['schet'] = utf8(zayav_info_schet_spisok($z['id']));
 
 		jsonSuccess($send);
 		break;
@@ -2917,6 +2969,10 @@ function zayav_day_finish_change($zayav_id, $day) {//изменение срока выполнения
 		));
 	}
 }//zayav_day_finish_change()
+mb_internal_encoding('UTF-8');
+function mb_ucfirst($text) {
+	return mb_strtoupper(mb_substr($text, 0, 1)) . mb_substr($text, 1);
+}
 
 
 

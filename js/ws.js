@@ -1574,67 +1574,6 @@ $(document)
 				next.removeClass('busy');
 		}, 'json');
 	})
-	.on('click', '#clientInfo .remind_add', function() {
-		var html = '<table class="remind_add_tab">' +
-			'<tr><td class="label">Клиент:<td><b>' + CLIENT.fio + '</b>' +
-			'<tr><td class="label top">Описание задания:<td><TEXTAREA id="txt"></TEXTAREA>' +
-			'<tr><td class="label">Крайний день выполнения:<td><input type="hidden" id="data">' +
-			'<tr><td class="label">Личное:<td><input type="hidden" id="private">' +
-			'</table>';
-		var dialog = _dialog({
-				top:60,
-				width:480,
-				head:'Добавление нового задания',
-				content:html,
-				submit:submit
-			}),
-			txt = $('.remind_add_tab #txt'),
-			day = $('.remind_add_tab #data'),
-			priv = $('.remind_add_tab #private');
-		txt.autosize().focus();
-		day._calendar();
-		priv._check();
-		$('.remind_add_tab #private_check').vkHint({
-			msg:'Задание сможете<br />видеть только Вы.',
-			top:-71,
-			left:-11,
-			indent:'left',
-			delayShow:1000
-		});
-
-		function submit() {
-			var send = {
-				op:'report_remind_add',
-				from_client:1,
-				client_id:CLIENT.id,
-				zayav_id:0,
-				txt:txt.val(),
-				day:day.val(),
-				private:priv.val()
-			};
-			if(!send.txt) {
-				dialog.bottom.vkHint({
-					msg:'<SPAN class=red>Не указано содержание напоминания.</SPAN>',
-					remove:1,
-					indent:40,
-					show:1,
-					top:-48,
-					left:150
-				});
-				txt.focus();
-			} else {
-				dialog.process();
-				$.post(AJAX_WS, send, function(res) {
-					dialog.abort();
-					if(res.success) {
-						dialog.close();
-						_msg('Новое задание успешно добавлено.');
-						$('#remind_spisok').html(res.html);
-					}
-				}, 'json');
-			}
-		}//submit()
-	})
 	.on('click', '.go-client-info', function(e) {
 		e.stopPropagation();
 		location.href = URL + '&p=client&d=info&id=' + $(this).attr('val');
@@ -1908,32 +1847,131 @@ $(document)
 	})
 	.on('click', '#zayav-info .schet-add', function() {
 		var t = $(this),
-			html =
-				'<div id="schet-add-tab">' +
-					'<div class="_info">' +
-						'Выписка счёта производится только на готовые картриджи.<br />' +
-						'Каждому счёту присваивается уникальный порядковый номер.<br />' +
-						'Счёт содержит в себе также акт выполненных работ в двух экземплярах.<br />' +
-						'<br />' +
-						'<b>Укажите дату</b>, на которую будет выставляться счёт.' +
-					'</div>' +
-					'<table id="sa-tab">' +
-						'<tr><td class="label">Дата:<td><input id="date_create" type="hidden" />' +
-					'</table>' +
-				'</table>',
+			spisok,// содержимое таблицы
+			num,// очередной номер элемента таблицы
 			dialog = _dialog({
-				width:400,
+				top:20,
+				width:580,
 				head:'Формирование счёта',
-				content:html,
+				load:1,
 				butSubmit:'Сформировать',
 				submit:submit
 			});
-		$('#date_create')._calendar({lost:1});
+		var send = {
+			op:'zayav_cartridge_schet_load',
+			zayav_id:ZAYAV.id
+		};
+		$.post(AJAX_WS, send, function(res) {
+			if(res.success) {
+				spisok = res.spisok;
+				var html =
+					'<div id="schet-add-tab">' +
+						'<table id="sa-tab">' +
+							'<tr><td class="label">Дата:<td><input id="date_create" type="hidden" />' +
+						'</table>' +
+						'<table class="_spisok" id="schet-tab"></table>' +
+						'<div id="itog"></div>' +
+					'</div>';
+
+				dialog.content.html(html);
+				spisokPrint();
+				$('#date_create')._calendar({lost:1});
+			} else
+				dialog.loadError();
+		}, 'json');
+		function spisokPrint() {
+			var html =
+					'<tr><th>№' +
+						'<th>Наименование товара' +
+						'<th>Кол-во' +
+						'<th>Цена' +
+						'<th>Сумма' +
+						'<th>',
+				sum = 0;
+			for(var n = 0; n < spisok.length; n++) {
+				var sp = spisok[n],
+				s = sp.cost * sp.count;
+				html +=
+					'<tr><td class="td-n">' + (n + 1) +
+						'<td class="td-name">' + sp.name +
+						'<td class="td-count">' + sp.count +
+						'<td class="td-cost">' + sp.cost +
+						'<td class="td-sum">' + s +
+						'<td>' + (sp.del ? '<div val="' + n + '" class="img_del pole-del' + _tooltip('Удалить', -29) + '</div>' : '');
+				sum += s;
+			}
+			num = n + 1;
+			html += '<tr><td colspan="6" class="_next" id="pole-add">Добавить позицию для счёта';
+			$('#schet-tab').html(html);
+			$('#itog').html('Всего наименований ' + n + ', на сумму ' + sum + ' руб.');
+			$('#pole-add').click(poleAdd);
+			$('.pole-del').click(function() {
+				spisok.splice(_num($(this).attr('val')), 1);
+				spisokPrint();
+			});
+		}
+		function poleAdd() {
+			var t = $(this),
+				html =
+					'<tr id="tr-add">' +
+						'<td class="td-n">' + num +
+						'<td class="td-name"><input type="text" id="name" />' +
+						'<td class="td-count"><input type="text" id="count" value="1" />' +
+						'<td class="td-cost"><input type="text" id="cost" />' +
+						'<td><div class="vkButton"><button>OK</button></div>' +
+						'<td><div class="img_del' + _tooltip('Отменить', -32) + '</div>';
+			t.parent().hide();
+			$('#schet-tab').append(html);
+			$('#name').focus();
+			$('#tr-add .img_del').click(function() {
+				$('#tr-add').remove();
+				t.parent().show();
+			});
+			$('#tr-add .vkButton').click(poleSubmit);
+		}
+		function poleSubmit() {
+			var name = $.trim($('#name').val()),
+				count = _num($('#count').val()),
+				cost = _num($('#cost').val());
+			if(!name) {
+				poleErr('Не указано наименование');
+				$('#name').focus();
+				return;
+			}
+			if(!count) {
+				poleErr('Некорректная сумма');
+				$('#count').focus();
+				return;
+			}
+			if(!cost) {
+				poleErr('Некорректное количество');
+				$('#cost').focus();
+				return;
+			}
+			spisok.push({
+				name:name,
+				count:count,
+				cost:cost,
+				del:1
+			});
+			spisokPrint();
+		}
+		function poleErr(msg) {
+			$('#name').vkHint({
+				msg:'<span class="red">' + msg + '</span>',
+				remove:1,
+				indent:40,
+				show:1,
+				top:-58,
+				left:404
+			});
+		}
 		function submit() {
 			var send = {
 				op:'zayav_cartridge_schet_add',
 				zayav_id:ZAYAV.id,
-				date_create:$('#date_create').val()
+				date_create:$('#date_create').val(),
+				spisok:spisok
 			};
 			dialog.process();
 			$.post(AJAX_WS, send, function(res) {
@@ -1946,68 +1984,6 @@ $(document)
 					dialog.abort();
 			}, 'json');
 		}
-	})
-	.on('click', '#zayav-info .remind_add', function() {
-		var html = '<table class="remind_add_tab">' +
-			'<tr><td class="label">Заявка:<td>№<b>' + ZAYAV.nomer + '</b>' +
-			'<tr><td class="label top">Описание задания:<td><TEXTAREA id="txt"></TEXTAREA>' +
-			'<tr><td class="label">Крайний день выполнения:<td><input type="hidden" id="data">' +
-			'<tr><td class="label">Личное:<td><input type="hidden" id="private">' +
-			'</table>';
-		var dialog = _dialog({
-				top:60,
-				width:480,
-				head:'Добавление нового задания',
-				content:html,
-				submit:submit
-			}),
-			txt = $('.remind_add_tab #txt'),
-			day = $('.remind_add_tab #data'),
-			priv = $('.remind_add_tab #private');
-		txt.autosize().focus();
-		day._calendar();
-		priv._check();
-		$('.remind_add_tab #private_check').vkHint({
-			msg:'Задание сможете<br />видеть только Вы.',
-			top:-71,
-			left:-11,
-			indent:'left',
-			delayShow:1000
-		});
-
-		function submit() {
-			var send = {
-				op:'report_remind_add',
-				from_zayav:1,
-				client_id:0,
-				zayav_id:ZAYAV.id,
-				txt:txt.val(),
-				day:day.val(),
-				private:priv.val()
-			};
-			if(!send.txt) {
-				dialog.bottom.vkHint({
-					msg:'<SPAN class=red>Не указано содержание напоминания.</SPAN>',
-					remove:1,
-					indent:40,
-					show:1,
-					top:-48,
-					left:150
-				});
-				txt.focus();
-			} else {
-				dialog.process();
-				$.post(AJAX_WS, send, function(res) {
-					if(res.success) {
-						dialog.close();
-						_msg('Новое задание успешно добавлено.');
-						$('#remind_spisok').html(res.html);
-					} else {
-						dialog.abort();
-					}
-				}, 'json');
-			}
-		}//submit()
 	})
 	.on('click', '#zayav-info .acc_add', function() {
 		var html = '<table class="zayav_accrual_add">' +
@@ -2301,7 +2277,7 @@ $(document)
 		}
 		function err(msg) {
 			dialog.bottom.vkHint({
-				msg:'<SPAN class=red>' + msg + '</SPAN>',
+				msg:'<span class="red">' + msg + '</SPAN>',
 				top:-47,
 				left:80,
 				indent:50,
@@ -2564,33 +2540,6 @@ $(document)
 					dialog.close();
 					$('#cart-tab').html(res.html);
 					_msg('Удалено.');
-				} else
-					dialog.abort();
-				}, 'json');
-		}
-	})
-
-	.on('click', '#zayav-info .schet-del', function() {
-		var t = $(this),
-			id = t.attr('val'),
-			dialog = _dialog({
-				head:'Удаление счёта',
-				content:'<center>Подтвердите удаление счёта.</center>',
-				butSubmit:'Удалить',
-				submit:submit
-			});
-		function submit() {
-			var send = {
-				op:'zayav_cartridge_schet_del',
-				id:id
-			};
-			dialog.process();
-			$.post(AJAX_WS, send, function(res) {
-				if(res.success) {
-					dialog.close();
-					$('#cart-tab').html(res.cart);
-					$('#schet-spisok').html(res.schet);
-					_msg('Счёт удалён');
 				} else
 					dialog.abort();
 				}, 'json');

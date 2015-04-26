@@ -525,8 +525,51 @@ function ws_create_step1() {
 
 
 
-
 /*
+mb_internal_encoding('UTF-8');
+function mb_ucfirst1($text) {
+	return mb_strtoupper(mb_substr($text, 0, 1)) . mb_substr($text, 1);
+}
+
+function to_schet_spisok() {//внесение списка картриджей к счетам
+	$sql = "SELECT * FROM `zayav_cartridge` WHERE `schet_id` ORDER BY `id`";
+	$q = query($sql);
+	$values = array();
+	while($r = mysql_fetch_assoc($q)) {
+		$prim = array();
+		if($r['filling'])
+			$prim[] = 'заправка';
+		if($r['restore'])
+			$prim[] = 'восстановление';
+		if($r['chip'])
+			$prim[] = 'замена чипа у';
+
+		$txt = implode(', ', $prim).' картриджа '._cartridgeName($r['cartridge_id']).($r['prim'] ? ', '.$r['prim'] : '');
+		$txt = utf8($txt);
+		$txt = mb_ucfirst1($txt);
+		$txt = win1251($txt);
+
+		$values[] = "(".
+			$r['schet_id'].",".
+			"'".addslashes($txt)."',".
+			"1,".
+			$r['cost'].",".
+			"1".
+			")";
+	}
+
+	$sql = "INSERT INTO `zayav_schet_spisok` (
+					`schet_id`,
+					`name`,
+					`count`,
+					`cost`,
+					`cartridge`
+				) VALUES ".implode(',', $values);
+	query($sql);
+}
+
+
+
 function remind_to_global() {//перенос напоминаний в глобал
 //	query("DELETE FROM `remind`", GLOBAL_MYSQL_CONNECT);
 //	query("DELETE FROM `remind_history`", GLOBAL_MYSQL_CONNECT);

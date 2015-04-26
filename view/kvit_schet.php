@@ -171,39 +171,27 @@ function xls_schet_tabHead() {//заголовок колонок таблицы
 	$sheet->setCellValue('F19', 'Сумма');
 }//xls_schet_tabHead()
 function xls_tabContent($line) {
-	global $sheet, $z, $s;
+	global $sheet;
 
 	$sql = "SELECT *
-			FROM `zayav_cartridge`
-			WHERE `zayav_id`=".$z['id']."
-			  AND (`filling` OR `restore` OR `chip`)
-			  AND `cost`
-			  AND `schet_id`=".$s['id']."
+			FROM `zayav_schet_spisok`
+			WHERE `schet_id`=".SCHET_ID."
 			ORDER BY `id`";
 	$q = query($sql);
 	$start = $line;
 	$n = 1;
 	$sum = 0;
 	while($r = mysql_fetch_assoc($q)) {
-		$prim = array();
-		if($r['filling'])
-			$prim[] = 'заправка';
-		if($r['restore'])
-			$prim[] = 'восстановление';
-		if($r['chip'])
-			$prim[] = 'замена чипа у';
-
-		$txt = implode(', ', $prim).' картриджа '._cartridgeName($r['cartridge_id']).($r['prim'] ? ', '.utf8($r['prim']) : '');
-
+		$s = $r['count'] * $r['cost'];
 		$sheet->getCell('A'.$line)->setValue($n);
-		$sheet->getCell('B'.$line)->setValue(mb_ucfirst($txt));
+		$sheet->getCell('B'.$line)->setValue(utf8($r['name']));
 		$sheet->getCell('C'.$line)->setValue('шт');
-		$sheet->getCell('D'.$line)->setValue('1');
+		$sheet->getCell('D'.$line)->setValue($r['count']);
 		$sheet->getCell('E'.$line)->setValue($r['cost'].',00');
-		$sheet->getCell('F'.$line)->setValue($r['cost'].',00');
+		$sheet->getCell('F'.$line)->setValue($s.',00');
 		$line++;
 		$n++;
-		$sum += $r['cost'];
+		$sum += $s;
 	}
 
 	$sheet->getStyle('B'.$start.':B'.($line - 1))->getAlignment()->setWrapText(true);
@@ -446,13 +434,14 @@ require_once '../config.php';
 require_once API_PATH.'/excel/PHPExcel.php';
 set_time_limit(10);
 
-if(!$schet_id = _num(@$_GET['schet_id']))
+define('SCHET_ID', _num(@$_GET['schet_id']));
+if(!SCHET_ID)
 	die(win1251('Неверный id счёта.'));
 
 $sql = "SELECT *
 		FROM `zayav_schet`
 		WHERE !`deleted`
-		  AND `id`=".$schet_id;
+		  AND `id`=".SCHET_ID;
 if(!$s = query_assoc($sql))
 	die(win1251('Счёта не существует.'));
 

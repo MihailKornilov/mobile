@@ -1668,8 +1668,7 @@ function zayav_info_schet_spisok($zayav_id) {
 						'Удалён '.FullDataTime($r['dtime_del']).'.' :
 						'<a>Оплатить.</a>'
 					).
-				'<td class="ed">'.
-					'<div val="'.$r['id'].'" class="img_del schet-del'._tooltip('Удалить счёт', -76, 'r').'</div>';
+				'<td class="ed">';
 	$send .= '</table>';
 	return $send;
 }//zayav_info_schet_spisok()
@@ -2048,11 +2047,11 @@ function zayav_cartridge_info($z) {
 
 				zayav_info_schet($zayav_id).
 
-				zayav_info_accMon($zayav_id).
-
 				'<div class="headBlue">Расходы<div id="ze-edit" class="img_edit'._tooltip('Изменить расходы по заявке', -166, 'r').'</div></div>'.
 				'<div id="ze_acc">'.zayav_acc_sum($z).'</div>'.
 				$expense['html'].
+
+				zayav_info_accMon($zayav_id).
 
 				_vkComment('zayav', $z['id']).
 
