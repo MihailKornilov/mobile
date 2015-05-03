@@ -259,6 +259,7 @@ function client_data($v=array()) {
 		$engRus = _engRusChar($filter['find']);
 		$cond .= " AND (`org_name` LIKE '%".$filter['find']."%'
 					 OR `org_telefon` LIKE '%".$filter['find']."%'
+					 OR `org_fax` LIKE '%".$filter['find']."%'
 					 OR `org_adres` LIKE '%".$filter['find']."%'
 					 OR `org_inn` LIKE '%".$filter['find']."%'
 					 OR `org_kpp` LIKE '%".$filter['find']."%'
@@ -271,6 +272,7 @@ function client_data($v=array()) {
 				".($engRus ?
 					"OR `org_name` LIKE '%".$engRus."%'
 					 OR `org_telefon` LIKE '%".$engRus."%'
+					 OR `org_fax` LIKE '%".$engRus."%'
 					 OR `org_adres` LIKE '%".$engRus."%'
 					 OR `org_inn` LIKE '%".$engRus."%'
 					 OR `org_kpp` LIKE '%".$engRus."%'
@@ -345,6 +347,7 @@ function client_data($v=array()) {
 		if(FIND) {
 			$r['org_name'] = _findMatch($reg, $r['org_name']);
 			$r['org_telefon'] = _findMatch($reg, $r['org_telefon']);
+			$r['org_fax'] = _findMatch($reg, $r['org_fax']);
 			$r['org_adres'] = _findMatch($reg, $r['org_adres'], 1);
 			$r['org_inn'] = _findMatch($reg, $r['org_inn'], 1);
 			$r['org_kpp'] = _findMatch($reg, $r['org_kpp'], 1);
@@ -357,6 +360,7 @@ function client_data($v=array()) {
 
 			$r['org_name'] = _findMatch($regEngRus, $r['org_name']);
 			$r['org_telefon'] = _findMatch($regEngRus, $r['org_telefon']);
+			$r['org_fax'] = _findMatch($regEngRus, $r['org_fax']);
 			$r['org_adres'] = _findMatch($regEngRus, $r['org_adres'], 1);
 			$r['org_inn'] = _findMatch($regEngRus, $r['org_inn'], 1);
 			$r['org_kpp'] = _findMatch($regEngRus, $r['org_kpp'], 1);
@@ -442,7 +446,8 @@ function client_data($v=array()) {
 				'<tr><td class="label top">'._clientCategory($r['category_id']).':'.
 					'<td><a href="'.URL.'&p=client&d=info&id='.$r['id'].'">'._clientName($r).'</a>'.
 	($telefon ? '<tr><td class="label top">Телефон:<td>'.$telefon : '').
-	(FIND && $r['org_adres'] ? '<tr><td class="label">Адрес:<td>'.$r['org_adres'] : '').
+	(FIND && $r['org_fax'] ? '<tr><td class="label">Факс:<td>'.$r['org_fax'] : '').
+  (FIND && $r['org_adres'] ? '<tr><td class="label">Адрес:<td>'.$r['org_adres'] : '').
 	(FIND && $r['org_inn'] ? '<tr><td class="label">ИНН:<td>'.$r['org_inn'] : '').
 	(FIND && $r['org_kpp'] ? '<tr><td class="label">КПП:<td>'.$r['org_kpp'] : '').
 			'</table>';
@@ -590,10 +595,10 @@ function client_info($client_id) {
 					'category_id:'.$c['category_id'].','.
 					'org_name:"'.addslashes($c['org_name']).'",'.
 					'org_telefon:"'.addslashes($c['org_telefon']).'",'.
+					'org_fax:"'.addslashes($c['org_fax']).'",'.
 					'org_adres:"'.addslashes($c['org_adres']).'",'.
 					'org_inn:"'.addslashes($c['org_inn']).'",'.
 					'org_kpp:"'.addslashes($c['org_kpp']).'",'.
-					'info_dop:"'.addslashes($c['info_dop']).'",'.
 					'fio1:"'.addslashes($c['fio1']).'",'.
 					'fio2:"'.addslashes($c['fio2']).'",'.
 					'fio3:"'.addslashes($c['fio3']).'",'.
@@ -608,6 +613,9 @@ function client_info($client_id) {
 				'VENDOR_IDS=['._zayavBaseVendorIds($client_id).'],'.
 				'MODEL_IDS=['._zayavBaseModelIds($client_id).'];'.
 		'</script>'.
+
+		'<input type="hidden" id="info-dop" value="'.addslashes($c['info_dop']).'"/>'.
+
 		'<div id="clientInfo">'.
 			'<table class="tabLR">'.
 				'<tr><td class="left">'.
@@ -615,11 +623,12 @@ function client_info($client_id) {
 					'<div class="fio">'.$catName._clientName($c).'</div>'.
 						'<table id="ci-tab">'.
 				($telefon ? '<tr><td class="label">Телефон:<td>'.$telefon : '').
+	(ORG && $c['org_fax'] ? '<tr><td class="label">Факс:<td>'.$c['org_fax'] : '').
   (ORG && $c['org_adres'] ? '<tr><td class="label">Адрес:<td>'.$c['org_adres'] : '').
 	(ORG && $c['org_inn'] ? '<tr><td class="label">ИНН:<td>'.$c['org_inn'] : '').
 	(ORG && $c['org_kpp'] ? '<tr><td class="label">КПП:<td>'.$c['org_kpp'] : '').
 							$post.
-		  ($c['info_dop'] ? '<tr><td class="label">Дополнительно:<td>'.$c['info_dop'] : '').
+		  ($c['info_dop'] ? '<tr><td class="label top">Дополнительно:<td>'.nl2br($c['info_dop']) : '').
 						'</table>'.
 						'<div class="dtime">Клиента вн'.(_viewer($c['viewer_id_add'], 'sex') == 1 ? 'есла' : 'ёс').' '._viewer($c['viewer_id_add'], 'name').' '.FullData($c['dtime_add'], 1).'</div>'.
 
@@ -1148,12 +1157,12 @@ function zayav_spisok($v) {
 		}
 	}
 
-	$all = query_value("SELECT COUNT(*) FROM `zayav` USE INDEX (`i_zayav_status`) WHERE ".$cond." LIMIT 1");
+	$all = query_value("SELECT COUNT(*) FROM `zayav` USE INDEX (`i_zayav_status`) WHERE ".$cond);
 
 	$zayav = array();
 	$images = array();
 	if(isset($nomer)) {
-		$sql = "SELECT * FROM `zayav` WHERE `ws_id`=".WS_ID." AND `zayav_status` AND `nomer`=".$nomer." LIMIT 1";
+		$sql = "SELECT * FROM `zayav` WHERE ".$cond." AND `nomer`=".$nomer;
 		if($r = mysql_fetch_assoc(query($sql))) {
 			$all++;
 			$limit--;
@@ -1499,7 +1508,7 @@ function zayav_info($zayav_id) {
 				'</table>'.
 				'<div id="kvit_spisok">'.zayav_kvit($zayav_id).'</div>'.
 
-//				zayav_info_schet($zayav_id).
+				zayav_info_schet($zayav_id).
 
 				'<div class="headBlue">Расходы<div id="ze-edit" class="img_edit'._tooltip('Изменить расходы по заявке', -88).'</div></div>'.
 				'<div id="ze_acc">'.zayav_acc_sum($z).'</div>'.
@@ -1641,7 +1650,7 @@ function zayav_expense_spisok($z, $type='html') {//Получение списка расходов зая
 function zayav_info_schet($zayav_id) {//Счета
 	return
 		'<div class="headBlue">'.
-			'Счета, накладные, акты'.
+			'<a href="'.URL.'&p=report&d=money&d1=schet"><b>Счета, накладные, акты</b></a>'.
 			'<a class="add schet-add">Сформировать счёт</a>'.
 		'</div>'.
 		'<div id="schet-spisok">'.zayav_info_schet_spisok($zayav_id).'</div>';
@@ -1652,26 +1661,35 @@ function zayav_info_schet_spisok($zayav_id) {
 	if(!mysql_num_rows($q))
 		return '<div id="no-schet">Счетов нет. <a class="schet-add">Сформировать</a></div>';
 
+	$spisok = array();
+	while($r = mysql_fetch_assoc($q))
+		$spisok[$r['id']] = $r;
+
+	$spisok = _zayavValues($spisok);
+
 	$send =
 		'<table class="_spisok _money">';
-	while($r = mysql_fetch_assoc($q))
-		$send .=
-			'<tr class="schet-unit'.($r['paid'] ? ' paid' : '').($r['deleted'] ? ' deleted' : '').'">'.
-				'<td>'.
-					($r['deleted'] ?
-						'Счёт № <b>СЦ'.$r['nomer'].'</b> ' :
-						'<a href="'.APP_HTML.'/view/kvit_schet.php?'.VALUES.'&schet_id='.$r['id'].'" class="">Счёт № <b>СЦ'.$r['nomer'].'</b></a> '
-					).
-					'от '.FullData($r['date_create']).' г. '.
-					'на сумму <b>'.$r['sum'].'</b> руб. '.
-					($r['deleted'] ?
-						'Удалён '.FullDataTime($r['dtime_del']).'.' :
-						'<a>Оплатить.</a>'
-					).
-				'<td class="ed">';
+	foreach($spisok as $r)
+		$send .= schet_unit($r, 0);
 	$send .= '</table>';
 	return $send;
 }//zayav_info_schet_spisok()
+function schet_unit($r, $zayav=1) {
+	return
+		'<tr class="schet-unit'.($r['paid'] ? ' paid' : '').'">'.
+			'<td class="td-content">'.
+				'<a href="'.APP_HTML.'/view/kvit_schet.php?'.VALUES.'&schet_id='.$r['id'].'">'.
+					'Счёт № <b class="pay-nomer">СЦ'.$r['nomer'].'</b>'.
+				'</a> '.
+				'от '.FullData($r['date_create']).' г. '.
+				'на сумму <b class="pay-sum">'.$r['sum'].'</b> руб. '.
+			($r['paid'] ?
+				'<div class="paid-info">Оплачено '.FullData($r['paid_dtime']).'</div>' :
+				'<a class="to-pay" val="'.$r['id'].'">оплатить</a>'
+			).
+			($zayav ? '<div>Заявка '.$r['zayav_link'].'.</div>' : '').
+			'<td class="ed">';
+}//schet_unit()
 function zayav_info_accMon($zayav_id) {//Начисления и платежи
 	return
 		'<div class="headBlue mon">'.
@@ -2011,7 +2029,9 @@ function zayav_cartridge_info($z) {
 				'head:"№<b>'.$z['nomer'].'</b>",'.
 				'client_id:'.$z['client_id'].','.
 				'cartridge_count:'.$z['cartridge_count'].','.
-				'status:'.$z['zayav_status'].
+				'pay_type:'.$z['pay_type'].','.
+				'status:'.$z['zayav_status'].','.
+				'expense:['.$expense['json'].']'.
 			'};'.
 	'</script>'.
 
@@ -2036,6 +2056,7 @@ function zayav_cartridge_info($z) {
 					'<tr><td class="label r">Клиент:	 <td>'._clientLink($z['client_id'], 0, 1).
 					'<tr><td class="label r">Дата приёма:'.
 						'<td class="dtime_add'._tooltip('Заявку вн'.(_viewer($z['viewer_id_add'], 'sex') == 1 ? 'есла' : 'ёс').' '._viewer($z['viewer_id_add'], 'name'), -70).FullDataTime($z['dtime_add']).
+  ($z['pay_type'] ? '<tr><td class="label r">Расчёт:<td>'._payType($z['pay_type']) : '').
 					'<tr><td class="label r">Статус:'.
 						'<td><div id="status" style="background-color:#'._zayavStatusColor($z['zayav_status']).'" class="cartridge_status">'.
 								_zayavStatusName($z['zayav_status']).
@@ -2073,12 +2094,14 @@ function zayav_cartridge_info_tab($zayav_id) {//список картриджей в инфо по заяв
 	$q = query($sql);
 	$send = '<table class="_spisok _money">'.
 		'<tr>'.
+			'<th>'.
 			'<th>Наименование'.
 			'<th>Стоимость'.
 			'<th>Дата<br />выполнения'.
 			'<th>Примечание'.
 			'<th>';
 
+	$n = 1;
 	while($r = mysql_fetch_assoc($q)) {
 		$prim = array();
 		if($r['filling'])
@@ -2091,6 +2114,7 @@ function zayav_cartridge_info_tab($zayav_id) {//список картриджей в инфо по заяв
 		$prim .= ($prim && $r['prim'] ? ', ' : '').'<u>'.$r['prim'].'</u>';
 		$send .=
 			'<tr val="'.$r['id'].'"'.($r['filling'] || $r['restore'] || $r['chip'] ? ' class="ready"' : '').'>'.
+				'<td class="n">'.($n++).
 				'<td class="cart-name"><b>'._cartridgeName($r['cartridge_id']).'</b>'.
 				'<td class="cost">'.($r['cost'] ? $r['cost'] : '').
 				'<td class="dtime">'.($r['dtime_ready'] != '0000-00-00 00:00:00' ? FullDataTime($r['dtime_ready']) : '').
@@ -2108,7 +2132,7 @@ function zayav_cartridge_info_tab($zayav_id) {//список картриджей в инфо по заяв
 					);
 	}
 
-	$send .= '<tr><td colspan="5" class="_next" id="cart-add">'.
+	$send .= '<tr><td colspan="6" class="_next" id="cart-add">'.
 				'<span>Добавить картриджи</span>';
 
 	$send .= '</table>';

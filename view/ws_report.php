@@ -163,13 +163,18 @@ function report() {
 					$left = expense();
 					$right .= expense_right();
 					break;
+				case 'schet':
+					$left = report_schet();
+					$right .= _check('paid', 'Не оплачено');
+					break;
 				case 'invoice': $left = invoice(); break;
 			}
 			$left =
 				'<div id="dopLinks">'.
 				'<a class="link'.($d1 == 'income' ? ' sel' : '').'" href="'.URL.'&p=report&d=money&d1=income">Платежи</a>'.
 				'<a class="link'.($d1 == 'expense' ? ' sel' : '').'" href="'.URL.'&p=report&d=money&d1=expense">Расходы</a>'.
-				'<a class="link'.($d1 == 'invoice' ? ' sel' : '').'" href="'.URL.'&p=report&d=money&d1=invoice">Счета</a>'.
+				'<a class="link'.($d1 == 'schet' ? ' sel' : '').'" href="'.URL.'&p=report&d=money&d1=schet">Счета на оплату</a>'.
+				'<a class="link'.($d1 == 'invoice' ? ' sel' : '').'" href="'.URL.'&p=report&d=money&d1=invoice">Расчётные счета</a>'.
 				'</div>'.
 				$left;
 			break;
@@ -354,7 +359,7 @@ function history_types($v, $filter) {
 			'Сформирован счёт № <b>'.$v['value'].'</b> от <u>'.FullData($v['value2']).' г.</u> на сумму '.$v['value1'].' руб.'.
 			($filter['zayav_id'] ? '' : ' по заявке '.$v['zayav_link']).'.';
 		case 60: return
-			'Удалён счёт № <b>'.$v['value'].'</b> от <u>'.FullData($v['value2']).' г.</u> на сумму '.$v['value1'].' руб.'.
+			'Оплачен счёт № <b>'.$v['value'].'</b> от <u>'.FullData($v['value2']).' г.</u> на сумму '.$v['value1'].' руб.'.
 			($filter['zayav_id'] ? '' : ' по заявке '.$v['zayav_link']).'.';
 
 		case 1001: return 'В настройках: добавление нового сотрудника <u>'._viewer($v['value'], 'name').'</u>.';
@@ -701,12 +706,13 @@ function income_unit($r) {
 }//income_unit()
 function income_insert($v) {
 	$v = array(
-		'client_id' => empty($v['client_id']) ? 0 : intval($v['client_id']),
-		'zayav_id' => empty($v['zayav_id']) ? 0 : intval($v['zayav_id']),
-		'zp_id' => empty($v['zp_id']) ? 0 : intval($v['zp_id']),
-		'invoice_id' => intval($v['invoice_id']),
-		'sum' => round(str_replace(',', '.', $v['sum']), 2),
-		'prim' => win1251(htmlspecialchars(trim($v['prim'])))
+		'client_id' => _num(@$v['client_id']),
+		'zayav_id' => _num(@$v['zayav_id']),
+		'zp_id' => _num(@$v['zp_id']),
+		'schet_id' => _num(@$v['schet_id']),
+		'invoice_id' => _num($v['invoice_id']),
+		'sum' => _cena($v['sum']),
+		'prim' => _txt(@$v['prim'])
 	);
 
 	if($v['zayav_id']) {
@@ -721,6 +727,7 @@ function income_insert($v) {
 				`client_id`,
 				`zayav_id`,
 				`zp_id`,
+				`schet_id`,
 				`invoice_id`,
 				`sum`,
 				`prim`,
@@ -730,6 +737,7 @@ function income_insert($v) {
 				".$v['client_id'].",
 				".$v['zayav_id'].",
 				".$v['zp_id'].",
+				".$v['schet_id'].",
 				".$v['invoice_id'].",
 				".$v['sum'].",
 				'".addslashes($v['prim'])."',
@@ -910,6 +918,65 @@ function expense_spisok($v=array()) {
 		$send['spisok'] .= '</table>';
 	return $send;
 }//expense_spisok()
+
+function reportSchetFilter($v) {
+	$send = array(
+		'page' => _isnum(@$v['page']) ? $v['page'] : 1,
+		'limit' => _isnum(@$v['limit']) ? $v['limit'] : 100
+	);
+	return $send;
+}//expenseFilter()
+function report_schet() {
+	$data = report_schet_spisok();
+	return
+		'<div class="headName">Список счетов на оплату</div>'.
+		'<div id="spisok">'.$data['spisok'].'</div>';
+}//report_schet()
+function report_schet_spisok($v=array()) {
+	$filter = reportSchetFilter($v);
+	$cond = "`ws_id`=".WS_ID;
+
+	$sql = "SELECT
+				COUNT(`id`) AS `all`,
+				SUM(`sum`) AS `sum`
+			FROM `zayav_schet`
+			WHERE ".$cond;
+	$send = mysql_fetch_assoc(query($sql));
+	$send['filter'] = $filter;
+	if(!$send['all'])
+		return $send + array('spisok' => '<div class="_empty">Счетов нет.</div>');
+
+	$all = $send['all'];
+	$page = $filter['page'];
+	$limit = $filter['limit'];
+	$start = ($page - 1) * $limit;
+
+	$send['spisok'] =
+		'<div id="result">'.
+			'Показан'._end($all, '', 'о').' <b>'.$all.'</b> сч'._end($all, 'ёт', 'ёта', 'етов').
+			' на сумму <b>'.$send['sum'].'</b> руб.'.
+		'</div>'.
+		'<table class="_spisok _money">';
+
+	$sql = "SELECT *
+			FROM `zayav_schet`
+			WHERE ".$cond."
+			ORDER BY `id` DESC
+			LIMIT ".$start.",".$limit;
+	$q = query($sql);
+
+	$spisok = array();
+	while($r = mysql_fetch_assoc($q))
+		$spisok[$r['id']] = $r;
+
+	$spisok = _zayavValues($spisok);
+
+	foreach($spisok as $r)
+		$send['spisok'] .= schet_unit($r);
+
+	$send['spisok'] .= '</table>';
+	return $send;
+}//report_schet_spisok()
 
 function _invoiceBalans($invoice_id, $start=false) {// Получение текущего баланса счёта
 	if($start === false)

@@ -106,12 +106,12 @@ function setup_rekvisit() {
 				'<tr><td class="label">КПП:<td><input type="text" id="kpp" value="'.$g['kpp'].'" />'.
 				'<tr><td class="label top">Юридический адрес:<td><textarea id="adres_yur">'.$g['adres_yur'].'</textarea>'.
 				'<tr><td class="label">Телефоны:<td><input type="text" id="telefon" value="'.$g['telefon'].'" />'.
-				'<tr><td class="label">Адрес офиса:<td><input type="text" id="adres_ofice" value="'.$g['adres_ofice'].'" />'.
+				'<tr><td class="label top">Адрес офиса:<td><textarea id="adres_ofice">'.$g['adres_ofice'].'</textarea>'.
 				'<tr><td class="label">Расчётный счёт:<td><input type="text" id="schet" value="'.$g['schet'].'" />'.
 			'</table>'.
 			'<div class="headName">Банк получателя</div>'.
 			'<table class="t">'.
-				'<tr><td class="label">Наименование банка:<td><input type="text" id="bank_name" value="'.$g['bank_name'].'" />'.
+				'<tr><td class="label top">Наименование банка:<td><textarea id="bank_name">'.$g['bank_name'].'</textarea>'.
 				'<tr><td class="label">БИК:<td><input type="text" id="bik" value="'.$g['bik'].'" />'.
 				'<tr><td class="label">Корреспондентский счёт:<td><input type="text" id="kor_schet" value="'.$g['kor_schet'].'" />'.
 				'<tr><td><td><div class="vkButton"><button>Сохранить</button></div>'.

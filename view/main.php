@@ -161,6 +161,7 @@ function GvaluesCreate() {//Составление файла G_values.js
 		"\n".'DEV_ASS=_toAss(DEV_SPISOK),'.
 		"\n".'ZE_DOP='._selJson(_zayavExpenseDop()).','.
 		"\n".'SALARY_PERIOD='._selJson(salaryPeriod()).','.
+		"\n".'PAY_TYPE='._selJson(_payType()).','.
 		"\n".'COUNTRY_SPISOK=['.
 			'{uid:1,title:"Россия"},'.
 			'{uid:2,title:"Украина"},'.
@@ -241,6 +242,7 @@ function GvaluesCreate() {//Составление файла G_values.js
 	//составление файла G_values для конкретной мастерской
 	$save =
 		'var INVOICE_SPISOK='.query_selJson("SELECT `id`,`name` FROM `invoice` WHERE `ws_id`=".WS_ID." ORDER BY `id`").','.
+		"\n".'INVOICE_ASS=_toAss(INVOICE_SPISOK),'.
 		"\n".'EXPENSE_SPISOK='.query_selJson("SELECT `id`,`name` FROM `setup_expense` WHERE `ws_id`=".WS_ID." ORDER BY `sort` ASC").','.
 		"\n".'EXPENSE_WORKER='.query_ptpJson("SELECT `id`,`show_worker` FROM `setup_expense` WHERE `ws_id`=".WS_ID." AND `show_worker`").','.
 		"\n".'CARTRIDGE_SPISOK='.query_selJson("SELECT `id`,`name` FROM `setup_cartridge` WHERE `ws_id`=".WS_ID." ORDER BY `name`").','.
@@ -410,10 +412,19 @@ function _devPlace($place_id=false) {
 		1 => 'в мастерской',
 		2 => 'у клиента'
 	);
-	if($place_id == false)
+	if($place_id === false)
 		return $arr;
 	return isset($arr[$place_id]) ? $arr[$place_id] : '';
 }//_devPlace()
+function _payType($type_id=false) {//вид расчёта
+	$arr = array(
+		1 => 'Наличный',
+		2 => 'Безналичный'
+	);
+	if($type_id === false)
+		return $arr;
+	return isset($arr[$type_id]) ? $arr[$type_id] : '';
+}//_payType()
 
 function _cartridgeName($item_id) {
 	if(!defined('CARTRIDGE_NAME_LOADED')) {

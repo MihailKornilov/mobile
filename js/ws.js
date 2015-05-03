@@ -106,6 +106,7 @@ var AJAX_WS = APP_HTML + '/ajax/ws.php?' + VALUES,
 				'<table class="ca-table dn" id="org">' +
 					'<tr><td class="label">Название организации:<td><input type="text" id="org_name" />' +
 					'<tr><td class="label">Телефон:<td><input type="text" id="org_telefon" />' +
+					'<tr><td class="label">Факс<td><input type="text" id="org_fax" />' +
 					'<tr><td class="label">Адрес:<td><input type="text" id="org_adres" />' +
 					'<tr><td class="label">ИНН:<td><input type="text" id="org_inn" />' +
 					'<tr><td class="label">КПП:<td><input type="text" id="org_kpp" />' +
@@ -155,6 +156,7 @@ var AJAX_WS = APP_HTML + '/ajax/ws.php?' + VALUES,
 				category_id:category_id,
 				org_name:$('#org_name').val(),
 				org_telefon:$('#org_telefon').val(),
+				org_fax:$('#org_fax').val(),
 				org_adres:$('#org_adres').val(),
 				org_inn:$('#org_inn').val(),
 				org_kpp:$('#org_kpp').val(),
@@ -200,15 +202,16 @@ var AJAX_WS = APP_HTML + '/ajax/ws.php?' + VALUES,
 				'<table class="ca-table" id="people">' +
 					'<tr><td class="label">Ф.И.О.:<td><input type="text" id="fio" value="' + CLIENT.fio1 + '" />' +
 					'<tr><td class="label">Телефон:<td><input type="text" id="telefon" value="' + CLIENT.telefon1 + '" />' +
-					'<tr><td class="label top">Дополнительная<br />информация:<td><textarea id="info_people">' + CLIENT.info_dop + '</textarea>' +
+					'<tr><td class="label top">Дополнительная<br />информация:<td><textarea id="info_people">' + $('#info-dop').val() + '</textarea>' +
 				'</table>' +
 				'<table class="ca-table" id="org">' +
 					'<tr><td class="label">Название организации:<td><input type="text" id="org_name" value="' + CLIENT.org_name + '" />' +
 					'<tr><td class="label">Телефон:<td><input type="text" id="org_telefon" value="' + CLIENT.org_telefon + '" />' +
+					'<tr><td class="label">Факс:<td><input type="text" id="org_fax" value="' + CLIENT.org_fax + '" />' +
 					'<tr><td class="label">Адрес:<td><input type="text" id="org_adres" value="' + CLIENT.org_adres + '" />' +
 					'<tr><td class="label">ИНН:<td><input type="text" id="org_inn" value="' + CLIENT.org_inn + '" />' +
 					'<tr><td class="label">КПП:<td><input type="text" id="org_kpp" value="' + CLIENT.org_kpp + '" />' +
-					'<tr><td class="label top">Дополнительная<br />информация:<td><textarea id="info_org">' + CLIENT.info_dop + '</textarea>' +
+					'<tr><td class="label top">Дополнительная<br />информация:<td><textarea id="info_org">' + $('#info-dop').val() + '</textarea>' +
 				'</table>' +
 				'<a id="post-add">Добавить доверенное лицо</a>' +
 				'<table class="ca-table" id="org">' +
@@ -286,6 +289,7 @@ var AJAX_WS = APP_HTML + '/ajax/ws.php?' + VALUES,
 				category_id:category_id,
 				org_name:$('#org_name').val(),
 				org_telefon:$('#org_telefon').val(),
+				org_fax:$('#org_fax').val(),
 				org_adres:$('#org_adres').val(),
 				org_inn:$('#org_inn').val(),
 				org_kpp:$('#org_kpp').val(),
@@ -595,6 +599,7 @@ var AJAX_WS = APP_HTML + '/ajax/ws.php?' + VALUES,
 						'<td><input type="hidden" id="client_id" value="' + CLIENT.id + '" />' +
 							'<b>' + CLIENT.fio + '</b>' +
 					'<tr><td class="label"><b>Количество картриджей:</b><td><input type="text" id="count" /> шт.' +
+					'<tr><td class="label topi">Расчёт:<td><input type="hidden" id="pay_type" />' +
 					'<tr><td class="label topi">Список картриджей:<td id="crt">' +
 					'<tr><td class="label top">Заметка:<td><textarea id="comm"></textarea>' +
 				'</table>',
@@ -608,6 +613,10 @@ var AJAX_WS = APP_HTML + '/ajax/ws.php?' + VALUES,
 		if(!CLIENT.id)
 			$('#client_id').clientSel({add:1});
 		$('#count').focus();
+		$('#pay_type')._radio({
+			light:1,
+			spisok:PAY_TYPE
+		});
 		$('#crt').cartridge();
 		$('#comm').autosize();
 		function submit() {
@@ -615,6 +624,7 @@ var AJAX_WS = APP_HTML + '/ajax/ws.php?' + VALUES,
 				op:'zayav_cartridge_add',
 				client_id:_num($('#client_id').val()),
 				count:_num($('#count').val()),
+				pay_type:_num($('#pay_type').val()),
 				ids:$('#crt').cartridge('get'),
 				comm:$('#comm').val()
 			};
@@ -622,8 +632,8 @@ var AJAX_WS = APP_HTML + '/ajax/ws.php?' + VALUES,
 			else if(!send.count) {
 				dialog.err('Не указано количество картриджей');
 				$('#count').focus();
-//			else if(!send.ids) dialog.err('Не выбрано ни одного картриджа');
-			} else {
+			} else if(!send.pay_type) dialog.err('Укажите вид расчёта');
+			else {
 				dialog.process();
 				$.post(AJAX_WS, send, function(res) {
 					if(res.success) {
@@ -2412,6 +2422,7 @@ $(document)
 					'<tr><td class="label">Клиент:' +
 						'<td><input type="hidden" id="client_id" value="' + ZAYAV.client_id + '" />' +
 					'<tr><td class="label"><b>Количество картриджей:</b><td><input type="text" id="count" value="' + ZAYAV.cartridge_count + '" /> шт.' +
+					'<tr><td class="label topi">Расчёт:<td><input type="hidden" id="pay_type" value="' + ZAYAV.pay_type + '" />' +
 				'</table>',
 			dialog = _dialog({
 				width:470,
@@ -2421,16 +2432,21 @@ $(document)
 				submit:submit
 			});
 		$('#client_id').clientSel({add:1});
-		$('#crt').cartridge(ZAYAV.cart_ids);
+		$('#pay_type')._radio({
+			light:1,
+			spisok:PAY_TYPE
+		});
 		function submit() {
 			var send = {
 				op:'zayav_cartridge_edit',
 				zayav_id:ZAYAV.id,
 				client_id:_num($('#client_id').val()),
-				count:_num($('#count').val())
+				count:_num($('#count').val()),
+				pay_type:_num($('#pay_type').val())
 			};
 			if(!send.client_id) dialog.err('Не указан клиент');
 			else if(!send.count) dialog.err('Не указано количество картриджей');
+			else if(!send.pay_type) dialog.err('Укажите вид расчёта');
 			else {
 				dialog.process();
 				$.post(AJAX_WS, send, function(res) {
@@ -3306,6 +3322,44 @@ $(document)
 				tr.remove();
 			}
 		}, 'json');
+	})
+
+	.on('click', '.schet-unit .to-pay', function() {
+		var t = $(this),
+			p = t.parent(),
+			nomer = p.find('.pay-nomer').html(),
+			html =
+				'<table class="_dialog-tab">' +
+					'<tr><td class="label">№ счёта:<td><b>' + nomer + '</b>' +
+					'<tr><td class="label">Сумма:<td><input type="text" class="money" disabled id="sum" value="' + p.find('.pay-sum').html() + '" /> руб.' +
+					'<tr><td class="label">День оплаты:<td><input type="hidden" id="pay-day" />' +
+					'<tr><td class="label">Расчётный счёт:<td>' + INVOICE_ASS[4] +
+				'</table>';
+		var dialog = _dialog({
+				width:320,
+				head:'Оплата счёта',
+				content:html,
+				butSubmit:'Оплатить',
+				submit:submit
+			});
+
+		$('#pay-day')._calendar({lost:1});
+		function submit() {
+			var send = {
+				op:'schet_pay',
+				schet_id:t.attr('val'),
+				day:$('#pay-day').val()
+			};
+			dialog.process();
+			$.post(AJAX_WS, send, function(res) {
+				if(res.success) {
+					$('#spisok').html(res.html);
+					dialog.close();
+					_msg('Счёт ' + nomer + ' оплачен');
+				} else
+					dialog.abort();
+			}, 'json');
+		}
 	})
 
 	.on('click', '.invoice_set', function() {
@@ -4268,6 +4322,7 @@ $(document)
 			});
 			$('#executer_id_dropdown').vkHint({
 				msg:'Сотрудник, который назначен на выполнение данной заявки.',
+				delayShow:1000,
 				width:150,
 				top:-79,
 				left:-50

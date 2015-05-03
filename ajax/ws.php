@@ -191,6 +191,7 @@ switch(@$_POST['op']) {
 		$post3 = _txt($_POST['post3']);
 		$org_name = _txt($_POST['org_name']);
 		$org_telefon = _txt($_POST['org_telefon']);
+		$org_fax = _txt($_POST['org_fax']);
 		$org_adres = _txt($_POST['org_adres']);
 		$org_inn = _txt($_POST['org_inn']);
 		$org_kpp = _txt($_POST['org_kpp']);
@@ -206,6 +207,7 @@ switch(@$_POST['op']) {
 					`category_id`,
 					`org_name`,
 					`org_telefon`,
+					`org_fax`,
 					`org_adres`,
 					`org_inn`,
 					`org_kpp`,
@@ -225,6 +227,7 @@ switch(@$_POST['op']) {
 					".$category_id.",
 					'".addslashes($org_name)."',
 					'".addslashes($org_telefon)."',
+					'".addslashes($org_fax)."',
 					'".addslashes($org_adres)."',
 					'".addslashes($org_inn)."',
 					'".addslashes($org_kpp)."',
@@ -282,6 +285,7 @@ switch(@$_POST['op']) {
 		$post3 = ORG ? _txt($_POST['post3']) : '';
 		$org_name = ORG ? _txt($_POST['org_name']) : '';
 		$org_telefon = ORG ? _txt($_POST['org_telefon']) : '';
+		$org_fax = ORG ? _txt($_POST['org_fax']) : '';
 		$org_adres = ORG ? _txt($_POST['org_adres']) : '';
 		$org_inn = ORG ? _txt($_POST['org_inn']) : '';
 		$org_kpp = ORG ? _txt($_POST['org_kpp']) : '';
@@ -311,6 +315,7 @@ switch(@$_POST['op']) {
 				SET `category_id`=".$category_id.",
 					`org_name`='".addslashes($org_name)."',
 					`org_telefon`='".addslashes($org_telefon)."',
+					`org_fax`='".addslashes($org_fax)."',
 					`org_adres`='".addslashes($org_adres)."',
 					`org_inn`='".addslashes($org_inn)."',
 					`org_kpp`='".addslashes($org_kpp)."',
@@ -347,6 +352,18 @@ switch(@$_POST['op']) {
 			$changes .= '<tr><th>Категория:<td>'._clientCategory($client['category_id']).'<td>»<td>'._clientCategory($category_id);
 		if($client['org_name'] != $org_name)
 			$changes .= '<tr><th>Название организации:<td>'.$client['org_name'].'<td>»<td>'.$org_name;
+		if($client['org_telefon'] != $org_telefon)
+			$changes .= '<tr><th>Телефон:<td>'.$client['org_telefon'].'<td>»<td>'.$org_telefon;
+		if($client['org_fax'] != $org_fax)
+			$changes .= '<tr><th>Факс:<td>'.$client['org_fax'].'<td>»<td>'.$org_fax;
+		if($client['org_adres'] != $org_adres)
+			$changes .= '<tr><th>Адрес:<td>'.$client['org_adres'].'<td>»<td>'.$org_adres;
+		if($client['org_inn'] != $org_inn)
+			$changes .= '<tr><th>ИНН:<td>'.$client['org_inn'].'<td>»<td>'.$org_inn;
+		if($client['org_kpp'] != $org_kpp)
+			$changes .= '<tr><th>КПП:<td>'.$client['org_kpp'].'<td>»<td>'.$org_kpp;
+		if($client['info_dop'] != $info_dop)
+			$changes .= '<tr><th>Дополнительнo:<td>'.nl2br($client['info_dop']).'<td>»<td>'.nl2br($info_dop);
 		if($changes)
 			history_insert(array(
 				'type' => 10,
@@ -1091,8 +1108,12 @@ switch(@$_POST['op']) {
 						'<div style="background-color:#'._zayavStatusColor($z['zayav_status']).'" '.
 							 'class="tstat'._tooltip('Статус заявки: '._zayavStatusName($z['zayav_status']), -7, 'l').
 						'</div>'.
+	 ($z['cartridge'] ? '<b>Картриджи</b><br />'.
+		                $z['cartridge_count'].' шт.'
+		                :
 						_deviceName($z['base_device_id']).
-						'<div class="tname">'._vendorName($z['base_vendor_id'])._modelName($z['base_model_id']).'</div>'.
+						'<div class="tname">'._vendorName($z['base_vendor_id'])._modelName($z['base_model_id']).'</div>'
+	 ).
 						'<table>'.
 							'<tr><td class="label top">Клиент:'.
 								'<td>'._clientName($c).
@@ -1332,7 +1353,7 @@ switch(@$_POST['op']) {
 		if(!$zayav_id = _num($_POST['zayav_id']))
 			jsonError();
 
-		$sql = "SELECT * FROM `zayav` WHERE `ws_id`=".WS_ID." AND !`deleted` AND `cartridge` AND `id`=".$zayav_id;
+		$sql = "SELECT * FROM `zayav` WHERE `ws_id`=".WS_ID." AND !`deleted` AND `id`=".$zayav_id;
 		if(!$z = query_assoc($sql))
 			jsonError();
 
@@ -1423,19 +1444,21 @@ switch(@$_POST['op']) {
 			$sum += $r['count'] * $r['cost'];
 		}
 
-		$sql = "SELECT * FROM `zayav` WHERE `ws_id`=".WS_ID." AND !`deleted` AND `cartridge` AND `id`=".$zayav_id;
+		$sql = "SELECT * FROM `zayav` WHERE `ws_id`=".WS_ID." AND !`deleted` AND `id`=".$zayav_id;
 		if(!$z = query_assoc($sql))
 			jsonError();
 
-		$nomer = _maxSql('zayav_schet', 'nomer');
+		$nomer = query_value("SELECT IFNULL(MAX(`nomer`)+1,1) FROM `zayav_schet` WHERE `ws_id`=".WS_ID);
 
 		$sql = "INSERT INTO `zayav_schet` (
+					`ws_id`,
 					`nomer`,
 					`zayav_id`,
 					`date_create`,
 					`sum`,
 					`viewer_id_add`
 				) VALUES (
+					".WS_ID.",
 					".$nomer.",
 					".$zayav_id.",
 					'".$date_create."',
@@ -1537,6 +1560,9 @@ switch(@$_POST['op']) {
 		if(!$count = _isnum($_POST['count']))
 			jsonError();
 
+		if(!$pay_type = _isnum($_POST['pay_type']))
+			jsonError();
+
 		// Если не указан ни один картридж (временно отменено, теперь указывается просто количество)
 //		if(empty($_POST['ids']))
 //			jsonError();
@@ -1560,6 +1586,7 @@ switch(@$_POST['op']) {
 					`cartridge`,
 					`client_id`,
 					`cartridge_count`,
+					`pay_type`,
 
 					`zayav_status`,
 					`zayav_status_dtime`,
@@ -1572,6 +1599,7 @@ switch(@$_POST['op']) {
 					1,
 					".$client_id.",
 					".$count.",
+					".$pay_type.",
 
 					1,
 					current_timestamp,
@@ -1753,6 +1781,8 @@ switch(@$_POST['op']) {
 			jsonError();
 		if(!$count = _isnum($_POST['count']))
 			jsonError();
+		if(!$pay_type = _isnum($_POST['pay_type']))
+			jsonError();
 
 		$sql = "SELECT * FROM `zayav` WHERE `ws_id`=".WS_ID." AND !`deleted` AND `id`=".$zayav_id;
 		if(!$z = mysql_fetch_assoc(query($sql)))
@@ -1760,7 +1790,8 @@ switch(@$_POST['op']) {
 
 		$sql = "UPDATE `zayav`
 				SET `client_id`=".$client_id.",
-					`cartridge_count`=".$count."
+					`cartridge_count`=".$count.",
+					`pay_type`=".$pay_type."
 				WHERE `id`=".$zayav_id;
 		query($sql);
 
@@ -1786,6 +1817,8 @@ switch(@$_POST['op']) {
 			$changes .= '<tr><th>Клиент:<td>'._clientLink($z['client_id']).'<td>»<td>'._clientLink($client_id);
 		if($z['cartridge_count'] != $count)
 			$changes .= '<tr><th>Количество картриджей:<td>'.$z['cartridge_count'].'<td>»<td>'.$count;
+		if($z['pay_type'] != $pay_type)
+			$changes .= '<tr><th>Расчёт:<td>'._payType($z['pay_type']).'<td>»<td>'._payType($pay_type);
 		if($changes)
 			history_insert(array(
 				'type' => 7,
@@ -1795,6 +1828,49 @@ switch(@$_POST['op']) {
 			));
 
 		jsonSuccess();
+		break;
+
+	case 'schet_pay'://оплата счёта
+		if(!$schet_id = _num($_POST['schet_id']))
+			jsonError();
+		if(!preg_match(REGEXP_DATE, $_POST['day']))
+			jsonError();
+
+		$day = $_POST['day'];
+
+		$sql = "SELECT * FROM `zayav_schet` WHERE `ws_id`=".WS_ID." AND !`paid` AND `id`=".$schet_id;
+		if(!$r = query_assoc($sql))
+			jsonError();
+
+		$sql = "SELECT * FROM `zayav` WHERE `ws_id`=".WS_ID." AND `id`=".$r['zayav_id'];
+		if(!$z = query_assoc($sql))
+			jsonError();
+
+		$sql = "UPDATE `zayav_schet`
+				SET `paid`=1,
+					`paid_dtime`='".$day." 00:00:00'
+					WHERE `id`=".$schet_id;
+		query($sql);
+
+		income_insert(array(
+			'zayav_id' => $z['id'],
+			'schet_id' => $schet_id,
+			'invoice_id' => 4,
+			'sum' => $r['sum'],
+		));
+
+		history_insert(array(
+			'type' => 60,
+			'client_id' => $z['client_id'],
+			'zayav_id' => $z['id'],
+			'value' => 'СЦ'.$r['nomer'],
+			'value1' => $r['sum'],
+			'value2' => $r['date_create']
+		));
+
+		$data = report_schet_spisok();
+		$send['html'] = utf8($data['spisok']);
+		jsonSuccess($send);
 		break;
 
 	case 'zp_add':

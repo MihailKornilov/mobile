@@ -445,6 +445,7 @@
 #zayav-status .about{color:#777;margin-top:3px}
 #zayav-status #zs-tab{border-spacing:8px;display:none}
 
+#zayav-info .n{text-align:right;color:#777}
 #zayav-info .cost{text-align:right}/* стоимость заправки картриджа */
 #zayav-info .cart-name{width:130px}
 #zayav-info .cart-prim{font-size:10px;color:#444}
@@ -467,7 +468,10 @@
 #schet-add-tab #itog{margin:10px 0 20px;font-weight:bold;color:#555}
 
 .schet-unit{background-color:#ffb}
+.schet-unit .td-content{padding:8px}
 .schet-unit.paid{background-color:#cfc}
+.schet-unit .to-pay{float:right}
+.schet-unit .paid-info{color:#070}
 
 /* Список запчастей */
 #zp{min-height:500px}
@@ -643,6 +647,13 @@ table.zayavNomerTab td{vertical-align:top}
 #expense-add-tab .label{width:60px;text-align:right}
 #expense-add-tab #prim{width:250px}
 #expense-add-tab .img_edit{position:relative;top:-4px;left:4px}
+
+
+.schet#report .headName{margin:15px 10px}
+.schet#report #spisok{margin:10px}
+.schet#report #result{margin-bottom:10px}
+.schet#report #paid_check{margin-top:20px}
+
 
 .invoice#report .headName{margin:15px 10px}
 .invoice#report .headName span{display:inline-block;float:right;margin:0 6px}

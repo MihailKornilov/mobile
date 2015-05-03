@@ -107,10 +107,10 @@ function xls_cartridge_head($n) {//заголовок с реквизитами
 	$sheet->getStyle($adr)->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
 
 }//xls_cartridge_head()
-function xls_cartridge_border() {//рамки для обоих сторон
+function xls_cartridge_border($y) {//рамки для обоих сторон
 	global $sheet;
 
-	$sheet->getStyle('A1:'.pageNum(16).'20')->applyFromArray(array(
+	$sheet->getStyle('A1:'.pageNum(16).$y)->applyFromArray(array(
 		'borders' => array(
 			'outline' => array(
 				'style' => PHPExcel_Style_Border::BORDER_THIN,
@@ -119,7 +119,7 @@ function xls_cartridge_border() {//рамки для обоих сторон
 		),
 	));
 
-	$sheet->getStyle('A1:'.pageNum(32).'20')->applyFromArray(array(
+	$sheet->getStyle('A1:'.pageNum(32).$y)->applyFromArray(array(
 		'borders' => array(
 			'outline' => array(
 				'style' => PHPExcel_Style_Border::BORDER_THIN,
@@ -135,34 +135,48 @@ function xls_cartridge_content($col) {//левая сторона
 	$colLabel = pageNum($col);
 	$colItem = pageNum($col + 5);
 
-	$y = array(11, 12, 13, 14, 16, 19, 18);
+	$y = 11;
 
-	$sheet->setCellValue($colLabel.$y[0], 'Заказчик');
-	$sheet->getStyle($colLabel.$y[0])->getFont()->setSize(8);
-	$sheet->setCellValue($colItem.$y[0], utf8(htmlspecialchars_decode(_clientName($c))));
-	$sheet->getStyle($colItem.$y[0])->getFont()->setSize(8);
-	xls_comtex_item_border($col, $y[0]);
+	$sheet->setCellValue($colLabel.$y, 'Клиент');
+	$sheet->getStyle($colLabel.$y)->getFont()->setSize(8);
+	$sheet->setCellValue($colItem.$y, utf8(htmlspecialchars_decode(_clientName($c))));
+	$sheet->getStyle($colItem.$y)->getFont()->setSize(8);
+	xls_comtex_item_border($col, $y);
 
-	$sheet->setCellValue($colLabel.$y[1], 'Контактный тел.');
-	$sheet->getStyle($colLabel.$y[1])->getFont()->setSize(8);
-	$sheet->setCellValue($colItem.$y[1], utf8(htmlspecialchars_decode(_clientTelefon($c))));
-	$sheet->getStyle($colItem.$y[1])->getFont()->setSize(8);
-	xls_comtex_item_border($col, $y[1]);
+	$y++;
+	$sheet->setCellValue($colLabel.$y, 'Контактный тел.');
+	$sheet->getStyle($colLabel.$y)->getFont()->setSize(8);
+	$sheet->setCellValue($colItem.$y, utf8(htmlspecialchars_decode(_clientTelefon($c))));
+	$sheet->getStyle($colItem.$y)->getFont()->setSize(8);
+	xls_comtex_item_border($col, $y);
 
-	$sheet->setCellValue($colLabel.$y[2], 'Кол-во картриджей');
-	$sheet->setCellValue($colItem.$y[2], $z['cartridge_count']);
-	$sheet->getStyle($colLabel.$y[2])->getFont()->setSize(8);
-	xls_comtex_item_border($col, $y[2]);
+	$y++;
+	$sheet->setCellValue($colLabel.$y, 'Кол-во картриджей');
+	$sheet->setCellValue($colItem.$y, $z['cartridge_count']);
+	$sheet->getStyle($colLabel.$y)->getFont()->setSize(8);
+	xls_comtex_item_border($col, $y);
 
-	$sheet->setCellValue($colLabel.$y[3], 'Дата приёма');
-	$sheet->setCellValue($colItem.$y[3], utf8(FullData($z['dtime_add'])));
-	$sheet->getStyle($colLabel.$y[3])->getFont()->setSize(8);
-	xls_comtex_item_border($col, $y[3]);
+	$y++;
+	$sheet->setCellValue($colLabel.$y, 'Дата приёма');
+	$sheet->setCellValue($colItem.$y, utf8(FullData($z['dtime_add'])));
+	$sheet->getStyle($colLabel.$y)->getFont()->setSize(8);
+	xls_comtex_item_border($col, $y);
 
-	$sheet->setCellValue(pageNum($col).$y[4], '____________________ (подпись приёмщика)');
-	$sheet->setCellValue(pageNum($col).$y[5], '____________________ (подпись клиента)');
-	$sheet->setCellValue(pageNum($col + 12).$y[6], 'М.П.');
+	if($z['pay_type']) {
+		$y++;
+		$sheet->setCellValue($colLabel.$y, 'Расчёт');
+		$sheet->setCellValue($colItem.$y, utf8(_payType($z['pay_type'])));
+		$sheet->getStyle($colLabel.$y)->getFont()->setSize(8);
+		xls_comtex_item_border($col, $y);
+	}
 
+	$y++;
+	$y++;
+	$sheet->setCellValue(pageNum($col).$y , '____________________ (подпись приёмщика)');
+	$sheet->setCellValue(pageNum($col).($y + 3), '____________________ (подпись клиента)');
+	$sheet->setCellValue(pageNum($col + 12).($y + 2), 'М.П.');
+
+	return ($y + 4);
 }//xls_cartridge_content();
 function xls_comtex_item_border($col, $row) {//бордюры для элементов-значений
 	global $sheet;
@@ -208,11 +222,12 @@ $book->setActiveSheetIndex(0);
 $sheet = $book->getActiveSheet();
 
 pageSetup('Квитанция');
-xls_cartridge_border();
 xls_cartridge_head(2);
 xls_cartridge_head(18);
 xls_cartridge_content(2);
-xls_cartridge_content(18);
+$y = xls_cartridge_content(18);
+xls_cartridge_border($y);
+
 
 header('Content-Type:application/vnd.ms-excel');
 header('Content-Disposition:attachment;filename="cartridge'.$z['nomer'].'_'.strftime('%Y-%m-%d').'.xls"');

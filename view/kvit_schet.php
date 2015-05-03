@@ -440,7 +440,7 @@ if(!SCHET_ID)
 
 $sql = "SELECT *
 		FROM `zayav_schet`
-		WHERE !`deleted`
+		WHERE `ws_id`=".WS_ID."
 		  AND `id`=".SCHET_ID;
 if(!$s = query_assoc($sql))
 	die(win1251('Счёта не существует.'));
@@ -449,7 +449,6 @@ $sql = "SELECT *
 		FROM `zayav`
 		WHERE `ws_id`=".WS_ID."
 		  AND !`deleted`
-		  AND `cartridge`
 		  AND `zayav_status`
 		  AND `id`=".$s['zayav_id'];
 if(!$z = query_assoc($sql))
