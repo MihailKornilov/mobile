@@ -1162,7 +1162,7 @@ function zayav_spisok($v) {
 	$zayav = array();
 	$images = array();
 	if(isset($nomer)) {
-		$sql = "SELECT * FROM `zayav` WHERE ".$cond." AND `nomer`=".$nomer;
+		$sql = "SELECT * FROM `zayav` WHERE `ws_id`=".WS_ID." AND `zayav_status` AND `nomer`=".$nomer;
 		if($r = mysql_fetch_assoc(query($sql))) {
 			$all++;
 			$limit--;
@@ -1295,7 +1295,7 @@ function zayav_spisok($v) {
 						'</table>'.
 					'<td class="image">'.$img.
 				'</table>'.
-				'<div class="note">'.$r['note'].'</div>'.
+				'<div class="note">'.@$r['note'].'</div>'.
 			'</div>';
 	}
 
@@ -1681,7 +1681,9 @@ function schet_unit($r, $zayav=1) {
 				'<a href="'.APP_HTML.'/view/kvit_schet.php?'.VALUES.'&schet_id='.$r['id'].'">'.
 					'Счёт № <b class="pay-nomer">СЦ'.$r['nomer'].'</b>'.
 				'</a> '.
-				'от '.FullData($r['date_create']).' г. '.
+//				' + накладная '.
+				'от <u>'.FullData($r['date_create']).'</u> г. '.
+//				'<br />'.
 				'на сумму <b class="pay-sum">'.$r['sum'].'</b> руб. '.
 			($r['paid'] ?
 				'<div class="paid-info">Оплачено '.FullData($r['paid_dtime']).'</div>' :
@@ -1862,8 +1864,8 @@ function zayav_msg_to_client($zayav_id) {//сообщение о передачи устройства клиен
 
 // ---===! zayav cartridge !===--- Картриджи
 
-function zayav_cartridge() {
-	$data = zayav_cartridge_spisok();
+function zayav_cartridge($v) {
+	$data = zayav_cartridge_spisok($v);
 	$v = $data['filter'];
 
 	$status = _zayavStatusName();
@@ -1888,6 +1890,9 @@ function zayav_cartridge() {
 					_check('desc', 'Обратный порядок', $v['desc']).
 					'<div class="findHead">Статус заявки</div>'.
 					_rightLink('status', $status, $v['status']).
+					'<div class="findHead">Расчёт</div>'.
+					_radio('paytype', array(0=>'Все заявки',1=>'Наличный',2=>'Безналиный'), $v['paytype'], 1).
+					_check('noschet', 'Счета не выписаны', $v['noschet']).
 		'</table>'.
 	'</div>';
 }//zayav_cartridge()
@@ -1898,15 +1903,19 @@ function zayavCartridgeFilter($v) {
 		'client_id' => 0,
 		'sort' => 1,
 		'desc' => 0,
-		'status' => 0
+		'status' => 0,
+		'paytype' => 0,
+		'noschet' => 0
 	);
 	$filter = array(
-		'page' => _isnum(@$v['page']) ? $v['page'] : 1,
-		'limit' => _isnum(@$v['limit']) ? $v['limit'] : 20,
-		'client_id' => _isnum(@$v['client_id']),
-		'sort' => _isnum(@$v['sort']) ? $v['sort'] : 1,
-		'desc' => _isbool(@$v['desc']),
-		'status' => _isnum(@$v['status']),
+		'page' => _num(@$v['page']) ? $v['page'] : 1,
+		'limit' => _num(@$v['limit']) ? $v['limit'] : 20,
+		'client_id' => _num(@$v['client_id']),
+		'sort' => _num(@$v['sort']) ? $v['sort'] : 1,
+		'desc' => _bool(@$v['desc']),
+		'status' => _num(@$v['status']),
+		'paytype' => _num(@$v['paytype']),
+		'noschet' => _bool(@$v['noschet']),
 		'clear' => ''
 	);
 	if(!$filter['client_id'])
@@ -1928,6 +1937,10 @@ function zayav_cartridge_spisok($v=array()) {
 		$cond .= " AND `client_id`=".$filter['client_id'];
 	if($filter['status'])
 		$cond .= " AND `zayav_status`=".$filter['status'];
+	if($filter['paytype'])
+		$cond .= " AND `pay_type`=".$filter['paytype'];
+	if($filter['noschet'])
+		$cond .= " AND !`schet`";
 
 	$r = query_assoc("SELECT COUNT(*) `count`,SUM(`cartridge_count`) `sum` FROM `zayav` WHERE ".$cond);
 	$all = $r['count'];
@@ -1957,7 +1970,8 @@ function zayav_cartridge_spisok($v=array()) {
 
 	$sql = "SELECT
 	            *,
-				'' AS `note`
+				'' AS `note`,
+				'' AS `schet`
 			FROM `zayav`
 			WHERE ".$cond."
 			ORDER BY `".($filter['sort'] == 2 ? 'zayav_status_dtime' : 'dtime_add')."` ".($filter['desc'] ? 'ASC' : 'DESC')."
@@ -1975,6 +1989,12 @@ function zayav_cartridge_spisok($v=array()) {
 
 	if(!$filter['client_id'])
 		$zayav = _clientLink($zayav, 0, 1);
+
+	$sql = "SELECT * FROM `zayav_schet` WHERE `zayav_id` IN (".implode(',', array_keys($zayav)).")";
+	$q = query($sql);
+	while($r = mysql_fetch_assoc($q))
+		$zayav[$r['zayav_id']]['schet'] .= '<b class="schet-nomer'.($r['paid'] ? ' paid' : '').'">СЦ'.$r['nomer'].'</b>';
+
 
 	foreach($zayav as $id => $r) {
 		$diff = $r['accrual_sum'] - $r['oplata_sum'];
@@ -1996,7 +2016,8 @@ function zayav_cartridge_spisok($v=array()) {
 								'<span class="opl'._tooltip($diff ? ($diff > 0 ? 'Недо' : 'Пере').'плата '.abs($diff).' руб.' : 'Оплачено', -17, 'l').$r['oplata_sum'].'</span>'.
 							'</div>'
 						: '').
-		'</table>'.
+ ($r['schet'] ? '<tr><td class="label">Счета:<td>'.$r['schet'] : '').
+			'</table>'.
 		'</div>';
 	}
 

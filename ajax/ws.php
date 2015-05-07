@@ -1428,8 +1428,9 @@ switch(@$_POST['op']) {
 	case 'zayav_cartridge_schet_add'://формирование счёта
 		if(!$zayav_id = _num($_POST['zayav_id']))
 			jsonError();
-
 		if(!preg_match(REGEXP_DATE, $_POST['date_create']))
+			jsonError();
+		if(!$dop = _num($_POST['dop']))
 			jsonError();
 
 		$date_create = $_POST['date_create'];
@@ -1456,6 +1457,8 @@ switch(@$_POST['op']) {
 					`zayav_id`,
 					`date_create`,
 					`sum`,
+					`nakl`,
+					`act`,
 					`viewer_id_add`
 				) VALUES (
 					".WS_ID.",
@@ -1463,11 +1466,17 @@ switch(@$_POST['op']) {
 					".$zayav_id.",
 					'".$date_create."',
 					".$sum.",
+					".($dop == 1 ? 1 : 0).",
+					".($dop == 2 ? 1 : 0).",
 					".VIEWER_ID."
 				)";
 		query($sql);
 
 		$insert_id = mysql_insert_id();
+
+		//пометка, что к заявке был выписан счёт
+		$sql = "UPDATE `zayav` SET `schet`=1 WHERE `id`=".$zayav_id;
+		query($sql);
 
 		//присвоение картриджам номера счёта
 		$sql = "UPDATE `zayav_cartridge`

@@ -65,14 +65,22 @@ switch($_GET['p']) {
 			case 'cartridge':
 				if(!SERVIVE_CARTRIDGE)
 					header('Location:'.URL.'&p=zayav');
-				$html .= zayav_cartridge();
+
+				$v = array();
+				foreach($_COOKIE as $k => $val) {
+					$arr = explode(VIEWER_ID.'_cart_', $k);
+					if(isset($arr[1]))
+						$v[$arr[1]] = $val;
+				}
+
+				$html .= zayav_cartridge($v);
 				break;
 			case 'info':
-				if(!preg_match(REGEXP_NUMERIC, $_GET['id'])) {
+				if(!$id = _num(@$_GET['id'])) {
 					$html .= 'Страницы не существует';
 					break;
 				}
-				$html .= zayav_info(intval($_GET['id']));
+				$html .= zayav_info($id);
 				break;
 			default:
 				setcookie('zback_spisok', 1, time() + 3600, '/');

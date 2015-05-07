@@ -144,6 +144,15 @@
 	background-color:#FFF;
 }
 .zayav_unit .note{display:none}
+.zayav_unit .schet-nomer{
+	display:inline-block;
+	border:#ccc solid 1px;
+	background-color:#ffb;
+	padding:1px 5px;
+	margin-right:7px;
+	color:#555;
+}
+.zayav_unit .schet-nomer.paid{background-color:#cfc}
 #zayav ._next{margin:6px 5px 0 8px}
 #zayav #find{margin-top:15px}
 #zayav #desc_check{margin-top:10px}
@@ -158,6 +167,7 @@
 #zayav-cartridge .zayav_unit .label{width:75px}
 #zayav-cartridge .right{border:0;width:155px;padding-bottom:300px}
 #zayav-cartridge #desc_check{margin-top:10px}
+#zayav-cartridge #noschet_check{margin-top:20px}
 #zayav-cartridge ._empty{margin:10px 2px 0 10px;}
 #zayav-cartridge ._next{margin:6px 5px 0 8px}
 

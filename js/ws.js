@@ -648,17 +648,26 @@ var AJAX_WS = APP_HTML + '/ajax/ws.php?' + VALUES,
 	},
 	cartridgeFilter = function () {
 		var v = {
-				op:'zayav_cartridge_spisok',
-				sort:$('#sort').val(),
-				desc:$('#desc').val(),
-				status:$('#status').val()
-			};
+			op:'zayav_cartridge_spisok',
+			sort:$('#sort').val(),
+			desc:$('#desc').val(),
+			status:$('#status').val(),
+			paytype:$('#paytype').val(),
+			noschet:$('#noschet').val()
+		};
+
+		_cookie(VIEWER_ID + '_cart_sort', v.sort);
+		_cookie(VIEWER_ID + '_cart_desc', v.desc);
+		_cookie(VIEWER_ID + '_cart_status', v.status);
+		_cookie(VIEWER_ID + '_cart_paytype', v.paytype);
+		_cookie(VIEWER_ID + '_cart_noschet', v.noschet);
+
 		return v;
 	},
 	cartridgeSpisok = function() {
 		var send = cartridgeFilter();
 		$('#mainLinks').addClass('busy');
-		$.post(AJAX_WS, send, function (res) {
+		$.post(AJAX_WS, send, function(res) {
 			$('#mainLinks').removeClass('busy');
 			if(res.success) {
 				$('.result').html(res.all);
@@ -1760,6 +1769,14 @@ $(document)
 				next.removeClass('busy');
 		}, 'json');
 	})
+	.on('click', '#zayav-cartridge .clear', function() {
+		$('#sort')._radio(1);
+		$('#desc')._check(0);
+		$('#status').rightLink(0);
+		$('#paytype')._radio(0);
+		$('#noschet')._check(0);
+		cartridgeSpisok();
+	})
 
 	.on('click', '#zayav-info .zedit', function() {
 		var html = '<table class="zayav-info-edit">' +
@@ -1876,16 +1893,24 @@ $(document)
 				spisok = res.spisok;
 				var html =
 					'<div id="schet-add-tab">' +
-						'<table id="sa-tab">' +
-							'<tr><td class="label">Дата:<td><input id="date_create" type="hidden" />' +
-						'</table>' +
 						'<table class="_spisok" id="schet-tab"></table>' +
 						'<div id="itog"></div>' +
+						'<table id="sa-tab">' +
+							'<tr><td class="label r">Дата:<td><input id="date_create" type="hidden" />' +
+							'<tr><td class="label r topi">Дополнительно:<td><input id="dop" type="hidden" />' +
+						'</table>' +
 					'</div>';
 
 				dialog.content.html(html);
 				spisokPrint();
 				$('#date_create')._calendar({lost:1});
+				$('#dop')._radio({
+					light:1,
+					spisok:[
+						{uid:1,title:'Накладная'},
+						{uid:2,title:'Акт выполненных работ'}
+					]
+				});
 			} else
 				dialog.loadError();
 		}, 'json');
@@ -1980,19 +2005,24 @@ $(document)
 			var send = {
 				op:'zayav_cartridge_schet_add',
 				zayav_id:ZAYAV.id,
+				spisok:spisok,
 				date_create:$('#date_create').val(),
-				spisok:spisok
+				dop:_num($('#dop').val())
 			};
-			dialog.process();
-			$.post(AJAX_WS, send, function(res) {
-				if(res.success) {
-					$('#cart-tab').html(res.cart);
-					$('#schet-spisok').html(res.schet);
-					dialog.close();
-					_msg('Новый счёт сформирован');
-				} else
-					dialog.abort();
-			}, 'json');
+			if(!send.spisok.length) dialog.err('Не добавлено ни одной позиции');
+			else if(!send.dop) dialog.err('Выберите дополнительный документ');
+			else {
+				dialog.process();
+				$.post(AJAX_WS, send, function (res) {
+					if (res.success) {
+						$('#cart-tab').html(res.cart);
+						$('#schet-spisok').html(res.schet);
+						dialog.close();
+						_msg('Новый счёт сформирован');
+					} else
+						dialog.abort();
+				}, 'json');
+			}
 		}
 	})
 	.on('click', '#zayav-info .acc_add', function() {
@@ -4089,7 +4119,7 @@ $(document)
 				func:zayavSpisok
 			});
 			// Нахождение устройства
-			for(n = 0; n < Z.place_other.length; n++) {
+			for(var n = 0; n < Z.place_other.length; n++) {
 				var sp = Z.place_other[n];
 				DEVPLACE_SPISOK.push({uid:encodeURI(sp), title:sp});
 			}
@@ -4376,8 +4406,11 @@ $(document)
 		}
 
 		if($('#zayav-cartridge').length) {
+			$('#sort')._radio(cartridgeSpisok);
 			$('#desc')._check(cartridgeSpisok);
 			$('#status').rightLink(cartridgeSpisok);
+			$('#paytype')._radio(cartridgeSpisok);
+			$('#noschet')._check(cartridgeSpisok);
 		}
 
 		if($('#zp').length) {
