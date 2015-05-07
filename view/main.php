@@ -106,7 +106,12 @@ function _header() {
 		'<link rel="stylesheet" type="text/css" href="'.APP_HTML.'/css/main'.(DEBUG ? '' : '.min').'.css?'.VERSION.'" />'.
 		'<script type="text/javascript" src="'.APP_HTML.'/js/main'.(DEBUG ? '' : '.min').'.js?'.VERSION.'"></script>'.
 
-		(WS_ID ? '<script type="text/javascript" src="'.APP_HTML.'/js/ws'.(DEBUG ? '' : '.min').'.js?'.VERSION.'"></script>' : '').
+		(WS_ID ?
+			'<script type="text/javascript" src="'.APP_HTML.'/js/ws'.(DEBUG ? '' : '.min').'.js?'.VERSION.'"></script>'.
+			'<script type="text/javascript" src="'.APP_HTML.'/js/ws_client'.(DEBUG ? '' : '.min').'.js?'.VERSION.'"></script>'.
+			'<script type="text/javascript" src="'.APP_HTML.'/js/ws_zp'.(DEBUG ? '' : '.min').'.js?'.VERSION.'"></script>'.
+			'<script type="text/javascript" src="'.APP_HTML.'/js/ws_report'.(DEBUG ? '' : '.min').'.js?'.VERSION.'"></script>'
+		: '').
 
 		//Стили и скрипты для настроек
 		(@$_GET['p'] == 'setup' ?

@@ -7,6 +7,8 @@ _appAuth();
 
 require_once(DOCUMENT_ROOT.'/view/main.php');
 require_once(DOCUMENT_ROOT.'/view/ws.php');
+require_once(DOCUMENT_ROOT.'/view/ws_client.php');
+require_once(DOCUMENT_ROOT.'/view/ws_zp.php');
 require_once(DOCUMENT_ROOT.'/view/ws_report.php');
 require_once(DOCUMENT_ROOT.'/view/ws_setup.php');
 

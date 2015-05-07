@@ -346,7 +346,7 @@ function history_types($v, $filter) {
 		case 55: return ($filter['zayav_id'] ? 'Д' : 'К заявке '.$v['zayav_link'].' д').'обавлены картриджи: '.$v['value'].'.';
 		case 56: return 'Удалён картридж <u>'.$v['value'].'</u> '.($filter['zayav_id'] ? '' : 'у заявки '.$v['zayav_link']).'.';
 		case 57: return
-			'Операции с картриджом <u>'.$v['value'].'</u>'.
+			'Операции с картриджем <u>'.$v['value'].'</u>'.
 			($filter['zayav_id'] ? '' : ' по заявке '.$v['zayav_link']).
 			':<div class="changes">'.$v['value1'].'</div>';
 
@@ -360,6 +360,9 @@ function history_types($v, $filter) {
 			($filter['zayav_id'] ? '' : ' по заявке '.$v['zayav_link']).'.';
 		case 60: return
 			'Оплачен счёт № <b>'.$v['value'].'</b> от <u>'.FullData($v['value2']).' г.</u> на сумму '.$v['value1'].' руб.'.
+			($filter['zayav_id'] ? '' : ' по заявке '.$v['zayav_link']).'.';
+		case 61: return
+			'Отредактирован счёт № <b>'.$v['value'].'</b>'.
 			($filter['zayav_id'] ? '' : ' по заявке '.$v['zayav_link']).'.';
 
 		case 1001: return 'В настройках: добавление нового сотрудника <u>'._viewer($v['value'], 'name').'</u>.';

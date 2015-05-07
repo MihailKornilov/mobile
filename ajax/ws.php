@@ -1434,6 +1434,7 @@ switch(@$_POST['op']) {
 			jsonError();
 
 		$date_create = $_POST['date_create'];
+		$acc = _bool($_POST['acc']);
 
 		$spisok = @$_POST['spisok'];
 		if(empty($spisok))
@@ -1506,6 +1507,31 @@ switch(@$_POST['op']) {
 				) VALUES ".implode(',', $values);
 		query($sql);
 
+		//автоматическое начисление
+		if($acc) {
+			$sql = "INSERT INTO `accrual` (
+					`ws_id`,
+					`zayav_id`,
+					`client_id`,
+					`schet_id`,
+					`sum`,
+					`prim`,
+					`viewer_id_add`
+				) VALUES (
+					".WS_ID.",
+					".$zayav_id.",
+					".$z['client_id'].",
+					".$insert_id.",
+					".$sum.",
+					'Счёт № СЦ".$nomer."',
+					".VIEWER_ID."
+				)";
+			query($sql);
+			clientBalansUpdate($z['client_id']);
+			zayavBalansUpdate($zayav_id);
+		}
+
+
 		history_insert(array(
 			'type' => 59,
 			'client_id' => $z['client_id'],
@@ -1517,6 +1543,7 @@ switch(@$_POST['op']) {
 
 		$send['cart'] = utf8(zayav_cartridge_info_tab($zayav_id));
 		$send['schet'] = utf8(zayav_info_schet_spisok($zayav_id));
+		$send['acc'] = utf8(zayav_info_money($zayav_id));
 
 		jsonSuccess($send);
 		break;
@@ -1557,7 +1584,7 @@ switch(@$_POST['op']) {
 		if($_POST['from'] == 'setup')
 			$send['spisok'] = utf8(setup_service_cartridge_spisok());
 		else {
-			$send['spisok'] = query_selArray("SELECT `id`,`name` FROM `setup_cartridge` WHERE `ws_id`=" . WS_ID . " ORDER BY `name`");
+			$send['spisok'] = query_selArray("SELECT `id`,`name` FROM `setup_cartridge` WHERE `ws_id`=".WS_ID." ORDER BY `name`");
 		}
 
 		jsonSuccess($send);
@@ -1879,6 +1906,115 @@ switch(@$_POST['op']) {
 
 		$data = report_schet_spisok();
 		$send['html'] = utf8($data['spisok']);
+		jsonSuccess($send);
+		break;
+	case 'schet_edit_load'://получение данных для редактирования счёта
+		if(!$schet_id = _num($_POST['schet_id']))
+			jsonError();
+
+		$sql = "SELECT * FROM `zayav_schet` WHERE `ws_id`=".WS_ID." AND `id`=".$schet_id;
+		if(!$s = query_assoc($sql))
+			jsonError();
+
+		$sql = "SELECT * FROM `zayav_schet_spisok` WHERE `schet_id`=".$schet_id." ORDER BY `id`";
+		$q = query($sql);
+		$spisok = array();
+		while($r = mysql_fetch_assoc($q)) {
+			$unit = array(
+				'name' => utf8($r['name']),
+				'count' => $r['count'],
+				'cost' => $r['cost']
+			);
+			if(!$r['cartridge'])
+				$unit['del'] = 1;
+			if($r['cartridge'])
+				$unit['cartridge'] = 1;
+			$spisok[] = $unit;
+		}
+
+		$send['spisok'] = $spisok;
+		$send['date_create'] = $s['date_create'];
+		$send['dop'] = $s['nakl'] ? 1 : 2;
+		jsonSuccess($send);
+		break;
+	case 'schet_edit'://редактирование счёта
+		if(!$schet_id = _num($_POST['schet_id']))
+			jsonError();
+		if(!preg_match(REGEXP_DATE, $_POST['date_create']))
+			jsonError();
+		if(!$dop = _num($_POST['dop']))
+			jsonError();
+
+		$date_create = $_POST['date_create'];
+
+		$spisok = @$_POST['spisok'];
+		if(empty($spisok))
+			jsonError();
+
+		$sql = "SELECT * FROM `zayav_schet` WHERE `ws_id`=".WS_ID." AND `id`=".$schet_id;
+		if(!$s = query_assoc($sql))
+			jsonError();
+
+		$sql = "SELECT * FROM `zayav` WHERE `ws_id`=".WS_ID." AND !`deleted` AND `id`=".$s['zayav_id'];
+		if(!$z = mysql_fetch_assoc(query($sql)))
+			jsonError();
+
+		$sum = 0;
+		foreach($spisok as $r) {
+			$r['name'] = _txt($r['name']);
+			$sum += $r['count'] * $r['cost'];
+		}
+
+		$sql = "UPDATE `zayav_schet`
+				SET `date_create`='".$date_create."',
+					`sum`=".$sum.",
+					`nakl`=".($dop == 1 ? 1 : 0).",
+					`act`=".($dop == 2 ? 1 : 0)."
+				WHERE `id`=".$schet_id;
+		query($sql);
+
+		query("DELETE FROM `zayav_schet_spisok` WHERE `schet_id`=".$schet_id);
+
+		//внесение списка наименований для счёта
+		$values = array();
+		foreach($spisok as $r)
+			$values[] = "(".
+				$schet_id.",".
+				"'".addslashes(win1251($r['name']))."',".
+				$r['count'].",".
+				$r['cost'].",".
+				(empty($r['cartridge']) ? 0 : 1).
+				")";
+		$sql = "INSERT INTO `zayav_schet_spisok` (
+					`schet_id`,
+					`name`,
+					`count`,
+					`cost`,
+					`cartridge`
+				) VALUES ".implode(',', $values);
+		query($sql);
+
+		//изменение начисления
+		$sql = "SELECT * FROM `accrual` WHERE !`deleted` AND `schet_id`=".$schet_id;
+		if($r = mysql_fetch_assoc(query($sql))) {
+			$sql = "UPDATE `accrual` SET `sum`=".$sum." WHERE `id`=".$r['id'];
+			query($sql);
+			clientBalansUpdate($z['client_id']);
+			zayavBalansUpdate($z['id']);
+		}
+
+		history_insert(array(
+			'type' => 61,
+			'client_id' => $z['client_id'],
+			'zayav_id' => $z['id'],
+			'value' => 'СЦ'.$s['nomer']
+		));
+
+		$send['schet_zayav'] = utf8(zayav_info_schet_spisok($z['id']));
+		$data = report_schet_spisok();
+		$send['schet_all'] = utf8($data['spisok']);
+		$send['acc'] = utf8(zayav_info_money($z['id']));
+
 		jsonSuccess($send);
 		break;
 
@@ -2962,8 +3098,8 @@ switch(@$_POST['op']) {
 		query($sql);
 		$insert_id = mysql_insert_id();
 
-		$first_day = date('Y-m-d', ($week - 1) * 7 * 86400 + strtotime('1/1/' . $year) - date('w', strtotime('1/1/' . $year)) * 86400 + 86400);
-		$last_day = date('Y-m-d', $week * 7 * 86400 + strtotime('1/1/' . $year) - date('w', strtotime('1/1/' . $year)) * 86400);
+		$first_day = date('Y-m-d', ($week - 1) * 7 * 86400 + strtotime('1/1/'.$year) - date('w', strtotime('1/1/'.$year)) * 86400 + 86400);
+		$last_day = date('Y-m-d', $week * 7 * 86400 + strtotime('1/1/'.$year) - date('w', strtotime('1/1/'.$year)) * 86400);
 		$about = 'Бонус по платежам, '._viewerRules($worker_id, 'RULES_MONEY_PROCENT').'%:'.
 				 '<br />'.
 				 '<a class="bonus-show" val="'.$insert_id.'">'.
@@ -3056,7 +3192,7 @@ function zayav_day_finish_change($zayav_id, $day) {//изменение срока выполнения
 }//zayav_day_finish_change()
 mb_internal_encoding('UTF-8');
 function mb_ucfirst($text) {
-	return mb_strtoupper(mb_substr($text, 0, 1)) . mb_substr($text, 1);
+	return mb_strtoupper(mb_substr($text, 0, 1)).mb_substr($text, 1);
 }
 
 
