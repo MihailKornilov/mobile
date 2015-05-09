@@ -261,11 +261,11 @@ var clientAdd = function(callback) {
 		}
 		VK.callMethod('setLocation', hashLoc + loc);
 
-		_cookie('client_find', escape(v.find));
-		_cookie('client_dolg', v.dolg);
-		_cookie('client_active', v.active);
-		_cookie('client_comm', v.comm);
-		_cookie('client_opl', v.opl);
+		_cookie(VIEWER_ID + '_client_find', escape(v.find));
+		_cookie(VIEWER_ID + '_client_dolg', v.dolg);
+		_cookie(VIEWER_ID + '_client_active', v.active);
+		_cookie(VIEWER_ID + '_client_comm', v.comm);
+		_cookie(VIEWER_ID + '_client_opl', v.opl);
 
 		return v;
 	},

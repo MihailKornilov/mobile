@@ -1223,8 +1223,8 @@ switch(@$_POST['op']) {
 					'".addslashes($z['serial'])."',
 					'".addslashes($z['equip'])."',
 
-					'".addslashes($c['fio'])."',
-					'".addslashes($c['telefon'])."',
+					'".addslashes($c['fio1'])."',
+					'".addslashes($c['telefon1'])."',
 
 					'".addslashes($image)."',
 					'".addslashes($defect)."',

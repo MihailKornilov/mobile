@@ -60,7 +60,7 @@ function setup() {
 }//setup()
 
 function setup_info() {
-	$sql = "SELECT * FROM `workshop` WHERE `id`=".WS_ID;
+	$sql = "SELECT * FROM `workshop` WHERE `status` AND `id`=".WS_ID;
 	if(!$ws = mysql_fetch_assoc(query($sql))) {
 		_cacheClear();
 		header('Location:'.URL);
@@ -76,20 +76,25 @@ function setup_info() {
 	while($r = mysql_fetch_assoc($q))
 		$checkDevs .= _check($r['id'], $r['name_mn'], isset($devs[$r['id']]) ? 1 : 0);
 	return
+	'<script type="text/javascript">'.
+		'var WS_TYPE='._selJson(_wsType()).';'.
+	'</script>'.
 	'<div id="setup_info">'.
 		'<div class="headName">Основная информация</div>'.
-		'<TABLE class="tab">'.
-			'<TR><TD class="label">Название организации:<TD><b>'.$ws['org_name'].'</b>'.
-			'<TR><TD class="label">Город:<TD>'.$ws['city_name'].', '.$ws['country_name'].
-			'<TR><TD class="label">Главный администратор:<TD>'._viewer($ws['admin_id'], 'name').
-		'</TABLE>'.
+		'<table class="tab">'.
+			'<tr><td class="label">Название организации:<td><b>'.$ws['org_name'].'</b>'.
+			'<tr><td class="label">Город:<td>'.$ws['city_name'].', '.$ws['country_name'].
+			'<tr><td class="label">Главный администратор:<td>'._viewer($ws['admin_id'], 'name').
+			'<tr><td class="label">Вид организации:<td><input type="hidden" id="type" value="'.$ws['type'].'" />'.
+			'<tr><td><td>'._button('info_save', 'Сохранить').
+		'</table>'.
 
 		'<div class="headName">Категории ремонтируемых устройств</div>'.
 		'<div id="devs">'.$checkDevs.'</div>'.
 
-		'<div class="headName">Удаление мастерской</div>'.
-		'<div class="del_inf">Мастерская, а также все данные удаляются без возможности восстановления.</div>'.
-		'<div class="vkButton" id="info_del"><button>Удалить мастерскую</button></div>'.
+		'<div class="headName">Удаление '._wsType($ws['type'], 2).'</div>'.
+		'<div class="del_inf">'._wsType($ws['type']).', а также все данные удаляются без возможности восстановления.</div>'.
+		_button('info_del', 'Удалить '._wsType($ws['type'], 4)).
 	'</div>';
 }//setup_info()
 
@@ -107,12 +112,13 @@ function setup_rekvisit() {
 				'<tr><td class="label top">Юридический адрес:<td><textarea id="adres_yur">'.$g['adres_yur'].'</textarea>'.
 				'<tr><td class="label">Телефоны:<td><input type="text" id="telefon" value="'.$g['telefon'].'" />'.
 				'<tr><td class="label top">Адрес офиса:<td><textarea id="adres_ofice">'.$g['adres_ofice'].'</textarea>'.
-				'<tr><td class="label">Расчётный счёт:<td><input type="text" id="schet" value="'.$g['schet'].'" />'.
+				'<tr><td class="label">Режим работы:<td><input type="text" id="time_work" value="'.$g['time_work'].'" />'.
 			'</table>'.
 			'<div class="headName">Банк получателя</div>'.
 			'<table class="t">'.
 				'<tr><td class="label top">Наименование банка:<td><textarea id="bank_name">'.$g['bank_name'].'</textarea>'.
 				'<tr><td class="label">БИК:<td><input type="text" id="bik" value="'.$g['bik'].'" />'.
+				'<tr><td class="label">Расчётный счёт:<td><input type="text" id="schet" value="'.$g['schet'].'" />'.
 				'<tr><td class="label">Корреспондентский счёт:<td><input type="text" id="kor_schet" value="'.$g['kor_schet'].'" />'.
 				'<tr><td><td><div class="vkButton"><button>Сохранить</button></div>'.
 			'</table>'.
@@ -305,7 +311,7 @@ function setup_worker_rules($viewer_id) {
 			'<table class="rtab">'.
 				'<tr><td class="lab top">Управление установками:'.
 					'<td class="setup-div">'.
-						_check('rules_rekvisit', 'Информация о мастерской', $rule['RULES_INFO']).
+						_check('rules_rekvisit', 'Информация об организации', $rule['RULES_INFO']).
 						_check('rules_worker', 'Сотрудники', $rule['RULES_WORKER']).
 						_check('rules_rules', 'Настройка прав сотрудников', $rule['RULES_RULES']).
 						_check('rules_invoice', 'Счета', $rule['RULES_INVOICE']).
@@ -385,7 +391,7 @@ function setup_invoice_spisok() {
 function setup_expense() {
 	return
 	'<div id="setup_expense">'.
-		'<div class="headName">Категории расходов мастерской<a class="add">Новая категория</a></div>'.
+		'<div class="headName">Категории расходов организации<a class="add">Новая категория</a></div>'.
 		'<div id="spisok">'.setup_expense_spisok().'</div>'.
 	'</div>';
 }//setup_expense()

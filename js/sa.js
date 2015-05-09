@@ -49,8 +49,8 @@ $(document)
 		var dialog = _dialog({
 			top:110,
 			width:250,
-			head:'Удаление мастерской',
-			content:'<center>Подтвердите удаление мастерской.</center>',
+			head:'Удаление организации',
+			content:'<center>Подтвердите удаление организации.</center>',
 			butSubmit:'Удалить',
 			submit:submit
 		});

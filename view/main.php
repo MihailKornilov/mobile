@@ -271,6 +271,52 @@ function GvaluesCreate() {//Составление файла G_values.js
 	xcache_unset(CACHE_PREFIX.'setup_global');
 }//GvaluesCreate()
 
+function _button($id, $name) {
+	return
+	'<div class="vkButton" id="'.$id.'">'.
+		'<button>'.$name.'</button>'.
+	'</div>';
+}//_button()
+
+function _wsType($i=false, $p=1) {
+	/*  $p - падеж
+			1 - именительный Кто? Что?
+			2 - родительный (нет) Что? Кого?
+			3 - дательный (дать) Кому? Чему?
+			4 - винительный (вижу) Кого? Что?
+			5 - творительный (горжусь) Кем? Чем?
+			6 - предложный (думаю) О ком? О чём?
+
+			7 - нахождение Где?
+	*/
+	$arr[1] = array(
+		1 => 'Сервисный центр',
+		2 => 'Мастерская',
+		3 => 'Магазин'
+	);
+
+	$arr[2] = array(
+		1 => 'Сервисного центра',
+		2 => 'Мастерской',
+		3 => 'Магазина'
+	);
+
+	$arr[4] = array(
+		1 => 'Сервисный центр',
+		2 => 'Мастерскую',
+		3 => 'Магазин'
+	);
+
+	$arr[7] = array(
+		1 => 'в сервисном центре',
+		2 => 'в мастерской',
+		3 => 'в магазине'
+	);
+
+	if($i === false)
+		return $arr[$p];
+	return $arr[$p][$i];
+}//_wsType()
 function _clientCategory($i=0, $menu=0) {//Категории клиентов
 	$arr = array(
 		1 => $menu ? 'Частное лицо' : 'Ф.И.О.',
@@ -414,7 +460,7 @@ function _color($color_id, $color_dop=0) {
 }//_color()
 function _devPlace($place_id=false) {
 	$arr = array(
-		1 => 'в мастерской',
+		1 => _wsType(WS_TYPE, 7),
 		2 => 'у клиента'
 	);
 	if($place_id === false)
@@ -505,9 +551,9 @@ function ws_create_info() {
 			'- принимать платежи и вести учёт денежных средств;<br />'.
 			'- получать, изменять информацию о запчастях.<br />'.
 			'<br />'.
-			'Для того, чтобы начать пользоваться приложением, необходимо создать свою мастерскую.'.
+			'Для того, чтобы начать пользоваться приложением, необходимо создать свою организацию.'.
 		'</div>'.
-		'<div class="vkButton"><button onclick="location.href=\''.URL.'&p=wscreate&d=step1\'">Приступить к созданию мастерской</button></div>'.
+		'<div class="vkButton"><button onclick="location.href=\''.URL.'&p=wscreate&d=step1\'">Приступить к созданию</button></div>'.
 	'</div>';
 }//ws_create_info()
 function ws_create_step1() {
@@ -521,10 +567,10 @@ function ws_create_step1() {
 	'<script type="text/javascript">var COUNTRY_ID='.VIEWER_COUNTRY_ID.';</script>'.
 	'<div class="ws-create-step1">'.
 		'<div class="txt">'.
-			'Для начала необходимо указать название Вашей мастерской и город, в котором Вы находитесь.<br />'.
+			'Для начала необходимо указать название Вашей организации и город, в котором Вы находитесь.<br />'.
 			'Сотрудников и категории устройств можно будет добавить или изменить позднее.'.
 		'</div>'.
-		'<div class="headName">Создание мастерской</div>'.
+		'<div class="headName">Создание</div>'.
 		'<TABLE class="tab">'.
 			'<TR><TD class="label">Название организации:<TD><INPUT type="text" id="org_name" maxlength="100">'.
 			'<TR><TD class="label">Страна:<TD><INPUT type="hidden" id="countries" value="'.VIEWER_COUNTRY_ID.'">'.

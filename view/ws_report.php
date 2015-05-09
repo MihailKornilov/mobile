@@ -368,11 +368,11 @@ function history_types($v, $filter) {
 		case 1001: return 'В настройках: добавление нового сотрудника <u>'._viewer($v['value'], 'name').'</u>.';
 		case 1002: return 'В настройках: удаление сотрудника <u>'._viewer($v['value'], 'name').'</u>.';
 
-		case 1004: return 'В настройках: мастерская удалена.';
+		case 1004: return 'В настройках: организация удалена.';
 
-		case 1005: return 'В настройках: внесение новой категории расходов мастерской <u>'.$v['value'].'</u>.';
-		case 1006: return 'В настройках: изменение данных категории расходов мастерской <u>'.$v['value'].'</u>:<div class="changes">'.$v['value1'].'</div>';
-		case 1007: return 'В настройках: удаление категории расходов мастерской <u>'.$v['value'].'</u>.';
+		case 1005: return 'В настройках: внесение новой категории расходов организации <u>'.$v['value'].'</u>.';
+		case 1006: return 'В настройках: изменение данных категории расходов организации <u>'.$v['value'].'</u>:<div class="changes">'.$v['value1'].'</div>';
+		case 1007: return 'В настройках: удаление категории расходов организации <u>'.$v['value'].'</u>.';
 
 		case 1008: return 'В настройках: внесение нового счёта <u>'.$v['value'].'</u>.';
 		case 1009: return 'В настройках: изменение данных счёта <u>'.$v['value'].'</u>:<div class="changes">'.$v['value1'].'</div>';
@@ -391,6 +391,8 @@ function history_types($v, $filter) {
 		case 1019: return '<a href="'.URL.'&p=setup&d=service&d1=cartridge">В настройках:</a> удаленён картридж <u>'.$v['value'].'</u>.';
 
 		case 1020: return '<a href="'.URL.'&p=setup&d=rekvisit">В настройках:</a> изменены реквизиты организации:<div class="changes">'.$v['value'].'</div>';
+
+		case 1021: return '<a href="'.URL.'&p=setup&d=info">В настройках:</a> изменён вид организации:<div class="changes">'.$v['value'].'</div>';
 
 		default: return $v['type'];
 	}
@@ -850,7 +852,7 @@ function expense() {
 			'MON_SPISOK='._selJson(_monthDef(0, 1)).','.
 			'YEAR_SPISOK='._selJson($year).';'.
 	'</script>'.
-	'<div class="headName">Список расходов мастерской<a class="add">Внести новый расход</a></div>'.
+	'<div class="headName">Список расходов организации<a class="add">Внести новый расход</a></div>'.
 	'<div id="spisok">'.$data['spisok'].'</div>';
 }//expense()
 function expense_spisok($v=array()) {

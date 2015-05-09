@@ -91,7 +91,7 @@ var AJAX_WS = APP_HTML + '/ajax/ws.php?' + VALUES,
 		}
 	},
 
-	zayavFilter = function () {
+	zayavFilter = function() {
 		var v = {
 				op:'zayav_spisok',
 				find:$('#find')._search('val'),
@@ -126,18 +126,18 @@ var AJAX_WS = APP_HTML + '/ajax/ws.php?' + VALUES,
 		}
 		VK.callMethod('setLocation', hashLoc + loc);
 
-		_cookie('zayav_find', escape(v.find));
-		_cookie('zayav_sort', v.sort);
-		_cookie('zayav_desc', v.desc);
-		_cookie('zayav_status', v.status);
-		_cookie('zayav_finish', v.finish);
-		_cookie('zayav_diff', v.diff);
-		_cookie('zayav_zpzakaz', v.zpzakaz);
-		_cookie('zayav_executer', v.executer);
-		_cookie('zayav_device', v.device);
-		_cookie('zayav_vendor', v.vendor);
-		_cookie('zayav_model', v.model);
-		_cookie('zayav_place', escape(v.place));
+		_cookie(VIEWER_ID + '_zayav_find', escape(v.find));
+		_cookie(VIEWER_ID + '_zayav_sort', v.sort);
+		_cookie(VIEWER_ID + '_zayav_desc', v.desc);
+		_cookie(VIEWER_ID + '_zayav_status', v.status);
+		_cookie(VIEWER_ID + '_zayav_finish', v.finish);
+		_cookie(VIEWER_ID + '_zayav_diff', v.diff);
+		_cookie(VIEWER_ID + '_zayav_zpzakaz', v.zpzakaz);
+		_cookie(VIEWER_ID + '_zayav_executer', v.executer);
+		_cookie(VIEWER_ID + '_zayav_device', v.device);
+		_cookie(VIEWER_ID + '_zayav_vendor', v.vendor);
+		_cookie(VIEWER_ID + '_zayav_model', v.model);
+		_cookie(VIEWER_ID + '_zayav_place', escape(v.place));
 
 		return v;
 	},
@@ -342,7 +342,7 @@ var AJAX_WS = APP_HTML + '/ajax/ws.php?' + VALUES,
 			}
 		}
 	},
-	cartridgeFilter = function () {
+	cartridgeFilter = function() {
 		var v = {
 			op:'zayav_cartridge_spisok',
 			sort:$('#sort').val(),

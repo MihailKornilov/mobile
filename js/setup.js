@@ -395,7 +395,7 @@ $(document)
 				'</table>',
 			dialog = _dialog({
 				width:400,
-				head:'Добавление новой категории расхода мастерской',
+				head:'Добавление новой категории расхода организации',
 				content:html,
 				submit:submit
 			});
@@ -444,7 +444,7 @@ $(document)
 				'</table>',
 			dialog = _dialog({
 				width:400,
-				head:'Редактирование категории расхода мастерской',
+				head:'Редактирование категории расхода организации',
 				content:html,
 				butSubmit:'Сохранить',
 				submit:submit
@@ -486,7 +486,7 @@ $(document)
 		var t = $(this),
 			dialog = _dialog({
 				top:90,
-				head:'Удаление категории расхода мастерской',
+				head:'Удаление категории расхода организации',
 				content:'<center><b>Подтвердите удаление.</b></center>',
 				butSubmit:'Удалить',
 				submit:submit
@@ -641,12 +641,31 @@ $(document)
 
 	.ready(function() {
 		if($('#setup_info').length) {
+			$('#type')._select({
+				width:200,
+				spisok:WS_TYPE
+			});
+			$('#info_save').click(function() {
+				var t = $(this),
+					send = {
+						op:'info_save',
+						type:$('#type').val()
+					};
+				t.addClass('_busy');
+				$.post(AJAX_SETUP, send, function(res) {
+					if(res.success) {
+						_msg('Данные изменены');
+						document.location.reload();
+					} else
+						t.removeClass('_busy');
+				}, 'json');
+			});
 			$('#info_del').click(function() {
 				var dialog = _dialog({
 					top:150,
 					width:300,
-					head:'Удаление мастерской',
-					content:'<center>Вы действительно хотите<BR>удалить мастерскую и все данные?</center>',
+					head:'Удаление организации',
+					content:'<center>Вы действительно хотите<BR>удалить организацию и все данные?</center>',
 					butSubmit:'&nbsp;&nbsp;&nbsp;&nbsp;Да&nbsp;&nbsp;&nbsp;&nbsp;',
 					submit:function() {
 						dialog.process();
@@ -673,6 +692,7 @@ $(document)
 						adres_yur:$('#adres_yur').val(),
 						telefon:$('#telefon').val(),
 						adres_ofice:$('#adres_ofice').val(),
+						time_work:$('#time_work').val(),
 						schet:$('#schet').val(),
 						bank_name:$('#bank_name').val(),
 						bik:$('#bik').val(),

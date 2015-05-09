@@ -54,6 +54,7 @@ function _getWorkshop($ws_id) {//Получение данных о мастерской
 	}
 	define('WS_DEVS', $ws['devs']);
 	define('WS_ADMIN', $ws['admin_id']);
+	define('WS_TYPE', $ws['type']);
 	define('SERVIVE_CARTRIDGE', $ws['service_cartridge']);
 	return true;
 }//_getWorkshop()

@@ -21,9 +21,9 @@ function sa_index() {
 	$wsCount = query_value("SELECT COUNT(`id`) FROM `workshop`");
 	return '<div class="path">'.sa_cookie_back().'Администрирование</div>'.
 	'<div class="sa-index">'.
-		'<div><B>Мастерские и сотрудники:</B></div>'.
+		'<div><B>Организации и сотрудники:</B></div>'.
 		'<A href="'.URL.'&p=sa&d=user">Пользователи ('.$userCount.')</A><br />'.
-		'<A href="'.URL.'&p=sa&d=ws">Мастерские ('.$wsCount.')</A><br />'.
+		'<A href="'.URL.'&p=sa&d=ws">Организации ('.$wsCount.')</A><br />'.
 		'<br />'.
 		'<div><B>Устройства и запчасти:</B></div>'.
 		'<A href="'.URL.'&p=sa&d=device">Устройства / Производители / Модели</A><br />'.
@@ -113,9 +113,9 @@ function sa_ws() {
 				'<td>'._viewer($r['admin_id'], 'link').
 				'<td class="dtime">'.FullDataTime($r['dtime_add']);
 
-	return '<div class="path">'.sa_cookie_back().'<a href="'.URL.'&p=sa">Администрирование</a> » Мастерские</div>'.
+	return '<div class="path">'.sa_cookie_back().'<a href="'.URL.'&p=sa">Администрирование</a> » Организации</div>'.
 	'<div class="sa-ws">'.
-		'<div class="count">Всего <b>'.$count.'</b> мастерск'._end($count, 'ая', 'их').'.</div>'.
+		'<div class="count">Всего <b>'.$count.'</b> организац'._end($count, 'ая', 'ии', 'ий').'.</div>'.
 		'<table class="_spisok">'.$wsSpisok.'</table>'.
 	'</div>';
 }//sa_ws()
@@ -156,11 +156,11 @@ function sa_ws_info($id) {
 	'<div class="path">'.
 		sa_cookie_back().
 		'<a href="'.URL.'&p=sa">Администрирование</a> » '.
-		'<a href="'.URL.'&p=sa&d=ws">Мастерские</a> » '.
+		'<a href="'.URL.'&p=sa&d=ws">Организации</a> » '.
 		$ws['org_name'].
 	'</div>'.
 	'<div class="sa-ws-info">'.
-		'<div class="headName">Информация о мастерской</div>'.
+		'<div class="headName">Информация об организации</div>'.
 		'<table class="tab">'.
 			'<tr><td class="label">Наименование:<td><b>'.$ws['org_name'].'</b>'.
 			'<tr><td class="label">Город:<td>'.$ws['city_name'].', '.$ws['country_name'].
@@ -171,12 +171,12 @@ function sa_ws_info($id) {
 			($ws['status'] && $workers ? '<tr><td class="label top">Сотрудники:<td>'.$workers : '').
 		'</table>'.
 		'<div class="headName">Действия</div>'.
-		'<div class="vkButton ws_status_change" val="'.$ws['id'].'"><button>'.($ws['status'] ? 'Деактивировать' : 'Восстановить').' мастерскую</button></div>'.
+		'<div class="vkButton ws_status_change" val="'.$ws['id'].'"><button>'.($ws['status'] ? 'Деактивировать' : 'Восстановить').' организацию</button></div>'.
 		'<br />'.
 		($ws['status'] && $ws['id'] != WS_ID ?
-			'<div class="vkButton ws_enter" val="'.$ws['admin_id'].'"><button>Выполнить вход в эту мастерскую</button></div><br />'
+			'<div class="vkButton ws_enter" val="'.$ws['admin_id'].'"><button>Выполнить вход в эту организацию</button></div><br />'
 		: '').
-		'<div class="vkCancel ws_del" val="'.$ws['id'].'"><button style="color:red">Физическое удаление мастерской</button></div>'.
+		'<div class="vkCancel ws_del" val="'.$ws['id'].'"><button style="color:red">Физическое удаление организации</button></div>'.
 		'<div class="headName">Записи в базе</div>'.
 		'<table class="counts">'.$counts.'</table>'.
 		'<div class="headName">Счётчики</div>'.

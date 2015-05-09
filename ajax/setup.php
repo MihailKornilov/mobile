@@ -2,6 +2,32 @@
 require_once('config.php');
 
 switch(@$_POST['op']) {
+	case 'info_save':
+		if(!VIEWER_ADMIN)
+			jsonError();
+		if(!$type = _num($_POST['type']))
+			jsonError();
+
+		$sql = "SELECT * FROM `workshop` WHERE `status` AND `id`=".WS_ID;
+		if(!$r = mysql_fetch_assoc(query($sql)))
+			jsonError();
+
+		if($r['type'] == $type)
+			jsonError();
+
+		query("UPDATE `workshop` SET `type`=".$type." WHERE `id`=".WS_ID);
+
+		history_insert(array(
+			'type' => 1021,
+			'value' =>
+				'<table>'.
+					'<tr><td>'._wsType($r['type']).'<td>»<td>'._wsType($type).
+				'</table>'
+		));
+
+		_cacheClear();
+		jsonSuccess();
+		break;
 	case 'info_devs_set':
 		if(!RULES_INFO)
 			jsonError();
@@ -35,6 +61,7 @@ switch(@$_POST['op']) {
 		$adres_yur = _txt($_POST['adres_yur']);
 		$telefon = _txt($_POST['telefon']);
 		$adres_ofice = _txt($_POST['adres_ofice']);
+		$time_work = _txt($_POST['time_work']);
 		$schet = _txt($_POST['schet']);
 		$bank_name = _txt($_POST['bank_name']);
 		$bik = _txt($_POST['bik']);
@@ -51,6 +78,7 @@ switch(@$_POST['op']) {
 					`adres_yur`='".addslashes($adres_yur)."',
 					`telefon`='".addslashes($telefon)."',
 					`adres_ofice`='".addslashes($adres_ofice)."',
+					`time_work`='".addslashes($time_work)."',
 					`schet`='".addslashes($schet)."',
 					`bank_name`='".addslashes($bank_name)."',
 					`bik`='".addslashes($bik)."',
@@ -73,6 +101,8 @@ switch(@$_POST['op']) {
 			$changes .= '<tr><th>Телефоны:<td>'.$g['telefon'].'<td>»<td>'.$telefon;
 		if($g['adres_ofice'] != $adres_ofice)
 			$changes .= '<tr><th>Адрес офиса:<td>'.$g['adres_ofice'].'<td>»<td>'.$adres_ofice;
+		if($g['time_work'] != $time_work)
+			$changes .= '<tr><th>Режим работы:<td>'.$g['time_work'].'<td>»<td>'.$time_work;
 		if($g['schet'] != $schet)
 			$changes .= '<tr><th>Расчётный счёт:<td>'.$g['schet'].'<td>»<td>'.$schet;
 		if($g['bank_name'] != $bank_name)
@@ -98,9 +128,9 @@ switch(@$_POST['op']) {
 			$sql = "SELECT * FROM `vk_user` WHERE `viewer_id`=".$viewer_id." LIMIT 1";
 			if($r = mysql_fetch_assoc(query($sql))) {
 				if($r['ws_id'] == WS_ID)
-					jsonError('Этот пользователь уже является</br >сотрудником этой мастерской.');
+					jsonError('Этот пользователь уже является</br >сотрудником этой организации.');
 				if($r['ws_id'])
-					jsonError('Этот пользователь уже является</br >сотрудником другой мастерской.');
+					jsonError('Этот пользователь уже является</br >сотрудником другой организации.');
 			}
 			_viewer($viewer_id);
 			query("UPDATE `vk_user` SET `ws_id`=".WS_ID." WHERE `viewer_id`=".$viewer_id);

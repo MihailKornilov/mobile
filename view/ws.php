@@ -714,13 +714,14 @@ function zayav_spisok($v) {
    (!$filter['client_id'] ? '<tr><td class="label">Клиент:<td>'.$r['client_link'] : '').
 							'<tr><td class="label">Дата подачи:'.
 								'<td>'.FullData($r['dtime_add'], 1).
+			($r['zayav_status'] == 2 ? '<b class="date-ready'._tooltip('Дата выполнения', -47).FullData($r['zayav_status_dtime'], 1, 1).'</b>' : '').
 									($r['accrual_sum'] || $r['oplata_sum'] ?
 										'<div class="balans'.($diff ? ' diff' : '').'">'.
 											'<span class="acc'._tooltip('Начислено', -39).$r['accrual_sum'].'</span>/'.
 											'<span class="opl'._tooltip($diff ? ($diff > 0 ? 'Недо' : 'Пере').'плата '.abs($diff).' руб.' : 'Оплачено', -17, 'l').$r['oplata_sum'].'</span>'.
 										'</div>'
 									: '').
-			  ($r['imei'] ? '<tr><td class="label">IMEI:<td>'.$r['imei'] : '').
+ 			  ($r['imei'] ? '<tr><td class="label">IMEI:<td>'.$r['imei'] : '').
 		    ($r['serial'] ? '<tr><td class="label">Серийный номер:<td>'.$r['serial'] : '').
 	(isset($zpZakaz[$id]) ? '<tr><td class="label">Заказаны з/п:<td class="zz">'.implode(', ', $zpZakaz[$id]) : '').
 						'</table>'.

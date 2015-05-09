@@ -55,13 +55,13 @@ switch(@$_POST['op']) {
 			jsonError('Неверный id');
 		$sql = "SELECT * FROM `workshop` WHERE `id`=".$ws_id;
 		if(!$ws = mysql_fetch_assoc(query($sql)))
-			jsonError('Мастерской не существует');
+			jsonError('Организация не существует');
 		if($ws['status']) {
 			query("UPDATE `workshop` SET `status`=0,`dtime_del`=CURRENT_TIMESTAMP WHERE `id`=".$ws_id);
 			query("UPDATE `vk_user` SET `ws_id`=0,`admin`=0 WHERE `ws_id`=".$ws_id);
 		} else {
 			if(query_value("SELECT `ws_id` FROM `vk_user` WHERE `viewer_id`=".$ws['admin_id']))
-				jsonError('За администратором закреплена другая мастерская');
+				jsonError('За администратором закреплена другая организация');
 			query("UPDATE `workshop` SET `status`=1,`dtime_del`='0000-00-00 00:00:00' WHERE `id`=".$ws_id);
 			query("UPDATE `vk_user` SET `ws_id`=".$ws_id.",`admin`=1 WHERE `viewer_id`=".$ws['admin_id']);
 			xcache_unset(CACHE_PREFIX.'viewer_'.$ws['admin_id']);

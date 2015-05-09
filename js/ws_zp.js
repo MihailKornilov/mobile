@@ -21,14 +21,14 @@ var zpFilter = function() {
 		if(v.sort > 0) loc += '.sort=' + v.sort;
 		VK.callMethod('setLocation', hashLoc + loc);
 
-		_cookie('zp_find', escape(v.find));
-		_cookie('zp_menu', v.menu);
-		_cookie('zp_name', v.name);
-		_cookie('zp_device', v.device);
-		_cookie('zp_vendor', v.vendor);
-		_cookie('zp_model', v.model);
-		_cookie('zp_bu', v.bu);
-		_cookie('zp_sort', v.sort);
+		_cookie(VIEWER_ID + '_zp_find', escape(v.find));
+		_cookie(VIEWER_ID + '_zp_menu', v.menu);
+		_cookie(VIEWER_ID + '_zp_name', v.name);
+		_cookie(VIEWER_ID + '_zp_device', v.device);
+		_cookie(VIEWER_ID + '_zp_vendor', v.vendor);
+		_cookie(VIEWER_ID + '_zp_model', v.model);
+		_cookie(VIEWER_ID + '_zp_bu', v.bu);
+		_cookie(VIEWER_ID + '_zp_sort', v.sort);
 
 		$('#zp-filter')[(v.menu == 4 ? 'add' : 'remove') + 'Class']('dn');
 		$('#sort')[(v.menu == 4 ? 'add' : 'remove') + 'Class']('dn');

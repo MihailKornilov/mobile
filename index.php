@@ -40,7 +40,7 @@ switch($_GET['p']) {
 					}
 				} else {
 					foreach($_COOKIE as $k => $val) {
-						$arr = explode('client_', $k);
+						$arr = explode(VIEWER_ID.'_client_', $k);
 						if(isset($arr[1]))
 							$v[$arr[1]] = $val;
 					}
@@ -93,7 +93,7 @@ switch($_GET['p']) {
 					}
 				} else {
 					foreach($_COOKIE as $k => $val) {
-						$arr = explode('zayav_', $k);
+						$arr = explode(VIEWER_ID.'_zayav_', $k);
 						if(isset($arr[1]))
 							$v[$arr[1]] = $val;
 					}
@@ -124,7 +124,7 @@ switch($_GET['p']) {
 					}
 				} else
 					foreach($_COOKIE as $k => $val) {
-						$arr = explode('zp_', $k);
+						$arr = explode(VIEWER_ID.'_zp_', $k);
 						if(isset($arr[1]))
 							$v[$arr[1]] = $val;
 					}
