@@ -2490,7 +2490,8 @@ switch(@$_POST['op']) {
 			jsonError();
 		if(!preg_match(REGEXP_CENA, $_POST['sum']))
 			jsonError();
-
+		if(!preg_match(REGEXP_BOOL, $_POST['prepay']))
+			jsonError();
 		if(!preg_match(REGEXP_NUMERIC, $_POST['place']))
 			jsonError();
 

@@ -82,7 +82,9 @@ $(document)
 			(window.ZAYAV ? '<tr><td class="label">Заявка:<td><b>№' + ZAYAV.nomer + '</b>' : '') +
 			'<tr><td class="label">Счёт:<td><input type="hidden" id="invoice_id" value="' + (INVOICE_SPISOK.length ? INVOICE_SPISOK[0].uid : 0) + '" />' +
 			'<tr><td class="label">Сумма:<td><input type="text" id="sum" class="money" maxlength="11" /> руб.' +
-			'<tr><td class="label">Описание:<td><input type="text" id="prim" maxlength="100" />' +
+			'<tr><td class="label">Описание:' +
+				'<td><input type="hidden" id="prepay" />' +
+					'<input type="text" id="prim" />' +
 		(window.ZAYAV && !ZAYAV.cartridge ?
 			'<tr><td class="label topi">Местонахождение<br />устройства:<td><input type="hidden" id="place" value="-1" />'
 		: '') +
@@ -103,21 +105,29 @@ $(document)
 		});
 		$('#sum').focus();
 		$('#sum,#prim').keyEnter(submit);
-		if(window.ZAYAV)
+		if(window.ZAYAV) {
+			$('#prepay')._check({
+				func:function(v) {
+					$('#prim').val(v ? 'предоплата' : '');
+				}
+			});
+			$('#prepay_check')._tooltip('Предоплата', -39);
 			zayavPlace();
+		}
 
 		function submit() {
 			var send = {
 				op:'income_add',
 				zayav_id:$('#zayav_id').val(),
 				cartridge:window.ZAYAV && ZAYAV.cartridge ? 1 : 0,
-				invoice_id:$('#invoice_id').val(),
+				invoice_id:_num($('#invoice_id').val()),
 				sum:$('#sum').val(),
+				prepay:_num($('#prepay').val()),
 				prim:$('#prim').val(),
 				place:window.ZAYAV && !ZAYAV.cartridge ? $('#place').val() : 0,
 				place_other:window.ZAYAV && !ZAYAV.cartridge ? $('#place_other').val() : ''
 			};
-			if(send.invoice_id == 0) dialog.err('Не указан счёт');
+			if(!send.invoice_id) dialog.err('Не указан счёт');
 			else if(!REGEXP_CENA.test(send.sum)) { dialog.err('Некорректно указана сумма'); $('#sum').focus(); }
 			else if(!window.ZAYAV && !send.prim) { dialog.err('Не указано описание'); $('#prim').focus(); }
 			else if(window.ZAYAV && !send.cartridge && send.place == -1) dialog.err('Не указано местонахождение устройства');

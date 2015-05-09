@@ -717,6 +717,7 @@ function income_insert($v) {
 		'schet_id' => _num(@$v['schet_id']),
 		'invoice_id' => _num($v['invoice_id']),
 		'sum' => _cena($v['sum']),
+		'prepay' => _bool($v['prepay']),
 		'prim' => _txt(@$v['prim'])
 	);
 
@@ -735,6 +736,7 @@ function income_insert($v) {
 				`schet_id`,
 				`invoice_id`,
 				`sum`,
+				`prepay`,
 				`prim`,
 				`viewer_id_add`
 			) VALUES (
@@ -745,6 +747,7 @@ function income_insert($v) {
 				".$v['schet_id'].",
 				".$v['invoice_id'].",
 				".$v['sum'].",
+				".$v['prepay'].",
 				'".addslashes($v['prim'])."',
 				".VIEWER_ID."
 			)";

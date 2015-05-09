@@ -646,7 +646,8 @@ table.zayavNomerTab td{vertical-align:top}
 .income  #del_check{margin-top:20px}
 #income-add-tab{border-spacing:10px}
 #income-add-tab .label{width:80px;text-align:right}
-#income-add-tab #prim{width:210px}
+#income-add-tab #prepay_check{margin:0 6px -3px 0}
+#income-add-tab #prim{width:190px}
 
 .expense .headName{margin:15px 10px}
 .expense #spisok{margin:10px}
