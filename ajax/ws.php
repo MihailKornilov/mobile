@@ -2497,6 +2497,7 @@ switch(@$_POST['op']) {
 
 		$place = intval($_POST['place']);
 		$place_other = !$place ? win1251(htmlspecialchars(trim($_POST['place_other']))) : '';
+		$remind_active = _bool($_POST['remind_active']);
 
 		if(!$_POST['zayav_id'] && empty($_POST['prim']))
 			jsonError();
@@ -2505,8 +2506,13 @@ switch(@$_POST['op']) {
 			jsonError();
 
 		$send = array();
-		if($v['zayav_id'])
+		if($v['zayav_id']) {
 			$send = zayav_place_change($v['zayav_id'], $place, $place_other);
+			if($remind_active) {
+				_remind_active_to_ready_in_zayav($v['zayav_id']);
+				$send['remind'] = utf8(_remind_spisok(array('zayav_id'=>$v['zayav_id']), 'spisok'));
+			}
+		}
 
 		jsonSuccess($send);
 		break;

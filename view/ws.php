@@ -948,13 +948,9 @@ function zayav_info($zayav_id) {
 
 				zayav_info_accMon($zayav_id).
 
-				'<div class="headBlue rm">'.
-					'<a href="'.URL.'&p=report&d=remind"><b>Напоминания</b></a>'.
-					'<div class="img_add _remind-add'._tooltip('Новое напоминание', -60).'</div>'.
-				'</div>'.
-				'<div id="remind-spisok">'._remind_spisok(array('zayav_id'=>$z['id']), 'spisok').'</div>'.
+				_remind_zayav($zayav_id, '&p=report&d=remind').
 
-				_vkComment('zayav', $z['id']).
+				_vkComment('zayav', $zayav_id).
 
 			'<td id="right">'.
 				'<div id="foto">'._zayavImg($z, 'b').'</div>'.

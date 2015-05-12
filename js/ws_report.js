@@ -85,9 +85,18 @@ $(document)
 			'<tr><td class="label">Описание:' +
 				'<td><input type="hidden" id="prepay" />' +
 					'<input type="text" id="prim" />' +
-		(window.ZAYAV && !ZAYAV.cartridge ?
-			'<tr><td class="label topi">Местонахождение<br />устройства:<td><input type="hidden" id="place" value="-1" />'
-		: '') +
+	(window.ZAYAV && !ZAYAV.cartridge ?
+			'<tr><td class="label topi">Местонахождение<br />устройства:<td><input type="hidden" id="place" value="-1" />' +
+		(REMIND.active ?
+			'<tr><td><td>' +
+					'<div class="_info">' +
+						'<b>Есть ' + REMIND.active + ' активн' + _end(REMIND.active, ['ое', 'ых']) + ' напоминани' + _end(REMIND.active, ['е', 'я', 'й']) + '!</b>' +
+						'<br />' +
+						'<br />' +
+						'<input type="hidden" id="remind_active" value="0" />' +
+					'</div>'
+		: '')
+	: '') +
 			'</table>';
 		var dialog = _dialog({
 				width:380,
@@ -105,7 +114,7 @@ $(document)
 		});
 		$('#sum').focus();
 		$('#sum,#prim').keyEnter(submit);
-		if(window.ZAYAV) {
+		if(window.ZAYAV && !ZAYAV.cartridge) {
 			$('#prepay')._check({
 				func:function(v) {
 					$('#prim').val(v ? 'предоплата' : '');
@@ -113,6 +122,15 @@ $(document)
 			});
 			$('#prepay_check')._tooltip('Предоплата', -39);
 			zayavPlace();
+			$('#prepay')._check({
+				func:function(v) {
+					$('#prim').val(v ? 'предоплата' : '');
+				}
+			});
+			$('#remind_active')._check({
+				name:'отметить выполненным' + _end(REMIND.active, ['', 'и'])
+			});
+
 		}
 
 		function submit() {
@@ -125,7 +143,8 @@ $(document)
 				prepay:_num($('#prepay').val()),
 				prim:$('#prim').val(),
 				place:window.ZAYAV && !ZAYAV.cartridge ? $('#place').val() : 0,
-				place_other:window.ZAYAV && !ZAYAV.cartridge ? $('#place_other').val() : ''
+				place_other:window.ZAYAV && !ZAYAV.cartridge ? $('#place_other').val() : '',
+				remind_active:window.REMIND ? _num($('#remind_active').val()) : 0
 			};
 			if(!send.invoice_id) dialog.err('Не указан счёт');
 			else if(!REGEXP_CENA.test(send.sum)) { dialog.err('Некорректно указана сумма'); $('#sum').focus(); }
@@ -142,6 +161,8 @@ $(document)
 							if(res.comment)
 								$('.vkComment').after(res.comment).remove();
 							zayavMoneyUpdate();
+							if(res.remind)
+								$('#remind-spisok').html(res.remind);
 						} else
 							incomeSpisok();
 					}
