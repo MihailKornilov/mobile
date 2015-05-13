@@ -390,8 +390,8 @@ switch(@$_POST['op']) {
 		if(!preg_match(REGEXP_DATE, $_POST['day_finish']))
 			jsonError();
 
-		$vendor = _isnum($_POST['vendor']);
-		$model = _isnum($_POST['model']);
+		$vendor = _num($_POST['vendor']);
+		$model = _num($_POST['model']);
 		if(!empty($_POST['equip'])) {
 			$ids = explode(',', $_POST['equip']);
 			for($n = 0; $n < count($ids); $n++)
@@ -404,6 +404,7 @@ switch(@$_POST['op']) {
 		$serial = win1251(htmlspecialchars(trim($_POST['serial'])));
 		$color = intval($_POST['color']);
 		$color_dop = $color ? intval($_POST['color_dop']) : 0;
+		$diagnost = _bool($_POST['diagnost']);
 		$comm = win1251(htmlspecialchars(trim($_POST['comm'])));
 		$pre_cost = _isnum($_POST['pre_cost']);
 		$day_finish = $_POST['day_finish'];
@@ -439,6 +440,7 @@ switch(@$_POST['op']) {
 					`device_place`,
 					`device_place_other`,
 
+					`diagnost`,
 					`barcode`,
 					`pre_cost`,
 					`day_finish`,
@@ -465,6 +467,7 @@ switch(@$_POST['op']) {
 					".addslashes($place).",
 					'".$place_other."',
 
+					".$diagnost.",
 					'".rand(10, 99).(time() + rand(10000, 99999))."',
 					".$pre_cost.",
 					'".$day_finish."',
@@ -587,7 +590,8 @@ switch(@$_POST['op']) {
 					jsonError();
 		}
 		$equip = $_POST['equip'];
-		$pre_cost = _isnum($_POST['pre_cost']);
+		$diagnost = _bool($_POST['diagnost']);
+		$pre_cost = _num($_POST['pre_cost']);
 
 		$sql = "SELECT * FROM `zayav` WHERE `ws_id`=".WS_ID." AND !`deleted` AND `id`=".$zayav_id;
 		if(!$z = mysql_fetch_assoc(query($sql)))
@@ -604,6 +608,7 @@ switch(@$_POST['op']) {
 					`color_dop`=".$color_dop.",
 					`equip`='".$equip."',
 					`pre_cost`=".$pre_cost.",
+					`diagnost`=".$diagnost.",
 					`find`='".addslashes(_modelName($model).' '.$imei.' '.$serial)."'
 				WHERE `id`=".$zayav_id;
 		query($sql);
@@ -645,6 +650,8 @@ switch(@$_POST['op']) {
 			$changes .= '<tr><th>Комплект:<td>'.zayavEquipSpisok($z['equip']).'<td>»<td>'.zayavEquipSpisok($equip);
 		if($z['pre_cost'] != $pre_cost)
 			$changes .= '<tr><th>Стоимость ремонта:<td>'.($z['pre_cost'] ? $z['pre_cost'] : '').'<td>»<td>'.($pre_cost ? $pre_cost : '');
+		if($z['diagnost'] != $diagnost)
+			$changes .= '<tr><th>Диагностика:<td>'.($z['diagnost'] ? 'да' : 'нет').'<td>»<td>'.($diagnost ? 'да' : 'нет');
 		if($changes)
 			history_insert(array(
 				'type' => 7,
@@ -1546,6 +1553,47 @@ switch(@$_POST['op']) {
 		$send['acc'] = utf8(zayav_info_money($zayav_id));
 
 		jsonSuccess($send);
+		break;
+	case 'zayav_diagnost':
+		if(!$zayav_id = _isnum($_POST['zayav_id']))
+			jsonError();
+
+		$comm = _txt($_POST['comm']);
+		$remind = _bool($_POST['remind']);
+		$remind_txt = _txt($_POST['remind_txt']);
+		$remind_day = _txt($_POST['remind_day']);
+		if($remind) {
+			if(!$remind_txt)
+				jsonError();
+			if(!preg_match(REGEXP_DATE, $remind_day))
+				jsonError();
+		}
+
+		$sql = "SELECT * FROM `zayav` WHERE `ws_id`=".WS_ID." AND !`deleted` AND `id`=".$zayav_id;
+		if(!$z = query_assoc($sql))
+			jsonError();
+
+		$sql = "UPDATE `zayav` SET `diagnost`=0 WHERE `id`=".$zayav_id;
+		query($sql);
+
+		_vkCommentAdd('zayav', $zayav_id, $comm);
+
+		//Внесение напоминания, если есть
+		if($remind)
+			_remind_add(array(
+				'zayav_id' => $zayav_id,
+				'txt' => $remind_txt,
+				'day' => $remind_day
+			));
+
+
+		history_insert(array(
+			'type' => 62,
+			'client_id' => $z['client_id'],
+			'zayav_id' => $zayav_id
+		));
+
+		jsonSuccess();
 		break;
 
 	case 'cartridge_new'://внесение новой модели картриджа

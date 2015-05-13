@@ -46,7 +46,7 @@ function _getVkUser() {//Получение данных о пользователе
 function _getWorkshop($ws_id) {//Получение данных о мастерской
 	$ws = xcache_get(CACHE_PREFIX.'workshop_'.$ws_id);
 	if(empty($ws)) {
-		$sql = "SELECT * FROM `workshop` WHERE `id`=".$ws_id." AND `status`";
+		$sql = "SELECT * FROM `workshop` WHERE `status` AND `id`=".$ws_id;
 		$ws = mysql_fetch_assoc(query($sql));
 		if(empty($ws))
 			return false;

@@ -451,14 +451,14 @@ function _zayavFinishCalendar($selDay='0000-00-00', $mon='', $zayav_spisok=0) {
 
 
 function zayav_add($v=array()) {
-	$sql = "SELECT `id`,`name` FROM `setup_fault` ORDER BY SORT";
+/*	$sql = "SELECT `id`,`name` FROM `setup_fault` ORDER BY SORT";
 	$q = query($sql);
 	$fault = '<table>';
 	$k = 0;
 	while($r = mysql_fetch_assoc($q))
 		$fault .= (++$k%2 ? '<tr>' : '').'<td>'._check('f_'.$r['id'], $r['name']);
 	$fault .= '</table>';
-
+*/
 	$client_id = 0;
 	$back = 'zayav';
 
@@ -471,20 +471,25 @@ function zayav_add($v=array()) {
 			$back = $back[0];
 	}
 
-	return '<div id="zayavAdd">'.
+	return
+//	'<script type="text/javascript">'.
+//		'var FAULT='.query_selJson("SELECT `id`,`name` FROM `setup_fault` ORDER BY SORT").
+//	'</script>'.
+	'<div id="zayavAdd">'.
 		'<div class="headName">Внесение новой заявки</div>'.
 		'<table style="border-spacing:8px">'.
-			'<tr><td class="label">Клиент:		    <td><INPUT TYPE="hidden" id="client_id" value="'.$client_id.'" />'.
+			'<tr><td class="label">Клиент:		    <td><input type="hidden" id="client_id" value="'.$client_id.'" />'.
 			'<tr><td class="label topi">Устройство: <td><table><td id="dev"><td id="device_image"></table>'.
-				'<tr><td class="label">IMEI:		<td><INPUT type="text" id="imei" maxlength="20"'.(isset($v['imei']) ? ' value="'.$v['imei'].'"' : '').' />'.
-			'<tr><td class="label">Серийный номер:  <td><INPUT type="text" id="serial" maxlength="30"'.(isset($v['serial']) ? ' value="'.$v['serial'].'"' : '').' />'.
+				'<tr><td class="label">IMEI:		<td><input type="text" id="imei" maxlength="20"'.(isset($v['imei']) ? ' value="'.$v['imei'].'"' : '').' />'.
+			'<tr><td class="label">Серийный номер:  <td><input type="text" id="serial" maxlength="30"'.(isset($v['serial']) ? ' value="'.$v['serial'].'"' : '').' />'.
 			'<tr><td class="label">Цвет:'.
-				'<td><INPUT TYPE="hidden" id="color_id" />'.
-					'<span class="color_dop dn"><tt>-</tt><INPUT TYPE="hidden" id="color_dop" /></span>'.
+				'<td><input type="hidden" id="color_id" />'.
+					'<span class="color_dop dn"><tt>-</tt><input type="hidden" id="color_dop" /></span>'.
 			'<tr class="tr_equip dn"><td class="label">Комплектация:<td class="equip_spisok">'.
 			'<tr><td class="label topi">Местонахождение устройства<br />после внесения заявки:<td><input type="hidden" id="place" value="-1" />'.
-			'<tr><td class="label top">Неисправности:<td id="fault">'.$fault.
-			'<tr><td class="label topi">Заметка:	 <td><textarea id="comm"></textarea>'.
+			'<tr><td class="label">Диагностика:<td>'._check('diagnost').
+//			'<tr><td class="label top">Неисправности:<td id="fault">'.$fault.
+			'<tr><td class="label topi">Описание неисправности:<td><textarea id="comm"></textarea>'.
 			'<tr><td class="label">Предварительная стоимость:<td><input type="text" class="money" id="pre_cost" maxlength="11" /> руб.'.
 			'<tr><td class="label">Срок:<td>'._zayavFinish().
 		'</table>'.
@@ -509,6 +514,7 @@ function zayavFilter($v) {
 		'device' => 0,
 		'vendor' => 0,
 		'model' => 0,
+		'diagnost' => 0,
 		'diff' => 0,
 		'place' => 0,
 	);
@@ -526,6 +532,7 @@ function zayavFilter($v) {
 		'device' => _num(@$v['device']),
 		'vendor' => _num(@$v['vendor']),
 		'model' => _num(@$v['model']),
+		'diagnost' => _bool(@$v['diagnost']),
 		'diff' => _bool(@$v['diff']),
 		'place' => trim(@$v['place']),
 		//'place' => !empty($v['place']) ? win1251(urldecode(htmlspecialchars(trim($v['place'])))) : '',
@@ -578,6 +585,8 @@ function zayav_spisok($v) {
 			$cond .= " AND `base_vendor_id`=".$filter['vendor'];
 		if($filter['model'])
 			$cond .= " AND `base_model_id`=".$filter['model'];
+		if($filter['diagnost'])
+			$cond .= " AND `zayav_status`=1 AND `diagnost`";
 		if($filter['place']) {
 			if(_isnum($filter['place']))
 				$cond .= " AND `device_place`=".$filter['place'];
@@ -780,6 +789,7 @@ function zayav_list($v) {
 					'<div class="condLost'.(!empty($v['find']) ? ' hide' : '').'">'.
 						'<div class="findHead">Статус заявки</div>'.
 						_rightLink('status', $status, $v['status']).
+						_check('diagnost', 'Диагностика', $v['diagnost']).
 						_check('diff', 'Неоплаченные заявки', $v['diff']).
 						'<div class="findHead">Заказаны запчасти</div>'.
 						_radio('zpzakaz', array(0=>'Все заявки',1=>'Да',2=>'Нет'), $v['zpzakaz'], 1).
@@ -885,6 +895,7 @@ function zayav_info($zayav_id) {
 			'color_id:'.$z['color_id'].','.
 			'color_dop:'.$z['color_dop'].','.
 			'equip:"'.addslashes(devEquipCheck($z['base_device_id'], $z['equip'])).'",'.
+			'diagnost:'.$z['diagnost'].','.
 			'pre_cost:'.$z['pre_cost'].','.
 			'images:"'.addslashes(_imageAdd(array('owner'=>'zayav'.$zayav_id))).'",'.
 			'expense:['.$expense['json'].'],'.
@@ -929,6 +940,9 @@ function zayav_info($zayav_id) {
                     '<tr><td class="label">Срок:<td>'._zayavFinish($z['day_finish']).
                     '<tr><td class="label">Исполнитель:'.
 						'<td id="executer_td"><input type="hidden" id="executer_id" value="'.$z['executer_id'].'" />'.
+  ($z['zayav_status'] == 1 && $z['diagnost'] ?
+					'<tr><td colspan="2">'._button('diagnost-ready', 'Внести результаты диагностики', 300)
+  : '').
 					'<tr><td class="label">Статус:'.
 						'<td><div id="status" style="background-color:#'._zayavStatusColor($z['zayav_status']).'" class="status_place">'.
 								_zayavStatusName($z['zayav_status']).

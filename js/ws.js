@@ -105,6 +105,7 @@ var AJAX_WS = APP_HTML + '/ajax/ws.php?' + VALUES,
 				device:$('#dev_device').val(),
 				vendor:$('#dev_vendor').val(),
 				model:$('#dev_model').val(),
+				diagnost:$('#diagnost').val(),
 				place:$('#device_place').val()
 			},
 			loc = '';
@@ -116,12 +117,13 @@ var AJAX_WS = APP_HTML + '/ajax/ws.php?' + VALUES,
 		else {
 			if(v.status > 0) loc += '.status=' + v.status;
 			if(v.finish != '0000-00-00') loc += '.finish=' + v.finish;
-			if(v.diff > 0) loc += '.diff=' + v.diff;
+			if(v.diff > 0) loc += '.diff=1';
 			if(v.zpzakaz > 0) loc += '.zpzakaz=' + v.zpzakaz;
 			if(v.executer > 0) loc += '.executer=' + v.executer;
 			if(v.device > 0) loc += '.device=' + v.device;
 			if(v.vendor > 0) loc += '.vendor=' + v.vendor;
 			if(v.model > 0) loc += '.model=' + v.model;
+			if(v.diagnost > 0) loc += '.diagnost=1';
 			if(v.place != 0) loc += '.place=' + v.place;
 		}
 		VK.callMethod('setLocation', hashLoc + loc);
@@ -137,6 +139,7 @@ var AJAX_WS = APP_HTML + '/ajax/ws.php?' + VALUES,
 		_cookie(VIEWER_ID + '_zayav_device', v.device);
 		_cookie(VIEWER_ID + '_zayav_vendor', v.vendor);
 		_cookie(VIEWER_ID + '_zayav_model', v.model);
+		_cookie(VIEWER_ID + '_zayav_diagnost', v.diagnost);
 		_cookie(VIEWER_ID + '_zayav_place', escape(v.place));
 
 		return v;
@@ -1190,6 +1193,7 @@ $(document)
 					'<span class="color_dop dn"><tt>-</tt><input TYPE="hidden" id="color_dop" value="' + ZAYAV.color_dop + '" /></span>' +
 			'<tr class="tr_equip' + (ZAYAV.equip ? '' : ' dn') + '">' +
 				'<td class="label r top">Комплектация:<td class="equip_spisok">' + ZAYAV.equip +
+			'<tr><td class="label r">Диагностика:<td><input TYPE="hidden" id="diagnost" value="' + ZAYAV.diagnost + '" />' +
 			'<tr><td class="label">Стоимость ремонта:<td><input type="text" class="money" id="pre_cost" maxlength="11" value="' + (ZAYAV.pre_cost ? ZAYAV.pre_cost : '') + '" /> руб.' +
 		'</table>',
 			dialog = _dialog({
@@ -1219,6 +1223,7 @@ $(document)
 		modelImageGet();
 		imageSortable();
 		colorSelDop(ZAYAV.color_id);
+		$('#diagnost')._check();
 
 		function submit() {
 			var msg,
@@ -1234,6 +1239,7 @@ $(document)
 					color_id:$('#color_id').val(),
 					color_dop:$('#color_dop').val(),
 					equip:'',
+					diagnost:$('#diagnost').val(),
 					pre_cost:$('#pre_cost').val()
 				};
 			if(!$('.tr_equip').hasClass('dn')) {
@@ -2018,6 +2024,7 @@ $(document)
 				.inp(Z.find);
 			$('#desc')._check(zayavSpisok);
 			$('#status').rightLink(zayavSpisok);
+			$('#diagnost')._check(zayavSpisok);
 			$('#diff')._check(zayavSpisok);
 			WORKER_SPISOK.push({uid:-1,title:'Не назначен',content:'<b>Не назначен</b>'});
 			$('#executer')._select({
@@ -2066,16 +2073,6 @@ $(document)
 			});
 			zayavPlace();
 			colorSelDop(0);
-			$(document).on('click', '#fault', function() {
-				var i = $(this).find('input'),
-					arr = [];
-				for(var n = 0; n < i.length; n++)
-					if(i.eq(n).val() == 1) {
-						var uid = i.eq(n).attr('id').split('_')[1];
-						arr.push(FAULT_ASS[uid]);
-					}
-				$('#comm').val(arr.join(', '));
-			});
 			$('#comm').autosize();
 			$('.vkCancel').click(function() {
 				location.href = URL + '&p=' + $(this).attr('val');
@@ -2096,6 +2093,7 @@ $(document)
 					serial:$('#serial').val(),
 					color:$('#color_id').val(),
 					color_dop:$('#color_dop').val(),
+					diagnost:$('#diagnost').val(),
 					comm:$('#comm').val(),
 					pre_cost:$('#pre_cost').val(),
 					day_finish:$('#day_finish').val()
@@ -2320,6 +2318,56 @@ $(document)
 						show:1,
 						remove:1
 					});
+				}
+			});
+			$('#diagnost-ready').click(function() {
+				var html =
+						'<div class="_info">' +
+							'После внесения результатов диагностики к заявке будет добавлен комментарий. ' +
+							'При необходимости можно добавить напоминание.' +
+						'</div>' +
+						'<table class="_dialog-tab" id="zayav-diagnost-tab">' +
+							'<tr><td class="label">Заявка:<td><b>№' + ZAYAV.nomer + '</b>' +
+							'<tr><td class="label topi">Результаты:<td><textarea id="comm"></textarea>' +
+							'<tr><td class="label">Добавить напоминание:<td><input type="hidden" id="diagnost-remind" />' +
+							'<tr class="remind-tr"><td class="label">Содержание:<td><input type="text" id="remind-txt" value="Сообщить результаты диагностики">' +
+							'<tr class="remind-tr"><td class="label">Дата:<td><input type="hidden" id="remind-day">' +
+						'</table>',
+				dialog = _dialog({
+						width:450,
+						head:'Внесение результатов диагностики',
+						content:html,
+						submit:submit
+					});
+				$('#comm').autosize().focus();
+				$('#diagnost-remind')._check();
+				$('#diagnost-remind_check').click(function(id) {
+					$('.remind-tr').toggle();
+				});
+				$('#remind-day')._calendar();
+
+				function submit() {
+					var send = {
+						op:'zayav_diagnost',
+						zayav_id:ZAYAV.id,
+						comm:$('#comm').val(),
+						remind:_num($('#diagnost-remind').val()),
+						remind_txt:$('#remind-txt').val(),
+						remind_day:$('#remind-day').val()
+					};
+					if(!send.comm) { dialog.err('Не указан текст результата'); $('#comm').focus(); }
+					else if(send.remind && !send.remind_txt) { dialog.err('Не указано содержание напоминания'); $('#remind-txt').focus(); }
+					else {
+						dialog.process();
+						$.post(AJAX_WS, send, function(res) {
+							if(res.success) {
+								dialog.close();
+								_msg('Результаты диагностики внесены');
+								document.location.reload();
+							} else
+								dialog.abort();
+						}, 'json');
+					}
 				}
 			});
 		}

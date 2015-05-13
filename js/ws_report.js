@@ -122,11 +122,6 @@ $(document)
 			});
 			$('#prepay_check')._tooltip('Предоплата', -39);
 			zayavPlace();
-			$('#prepay')._check({
-				func:function(v) {
-					$('#prim').val(v ? 'предоплата' : '');
-				}
-			});
 			$('#remind_active')._check({
 				name:'отметить выполненным' + _end(REMIND.active, ['', 'и'])
 			});

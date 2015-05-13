@@ -161,7 +161,6 @@ function GvaluesCreate() {//Составление файла G_values.js
 		"\n".'CLIENT_CATEGORY_ASS='._assJson(_clientCategory(0,1)).','.
 		"\n".'FAULT_ASS='.query_ptpJson("SELECT `id`,`name` FROM `setup_fault` ORDER BY `sort`").','.
 		"\n".'ZPNAME_SPISOK='.query_selJson("SELECT `id`,`name` FROM `setup_zp_name` ORDER BY `name`").','.
-		"\n".'DEVPLACE_SPISOK='._selJson(_devPlace()).','.
 		"\n".'DEV_SPISOK='.query_selJson("SELECT `id`,`name` FROM `base_device` ORDER BY `sort`").','.
 		"\n".'DEV_ASS=_toAss(DEV_SPISOK),'.
 		"\n".'ZE_DOP='._selJson(_zayavExpenseDop()).','.
@@ -257,6 +256,7 @@ function GvaluesCreate() {//Составление файла G_values.js
 		"\n".'WORKER_SPISOK='.query_selJson("SELECT `viewer_id`,CONCAT(`first_name`,' ',`last_name`) FROM `vk_user`
 											 WHERE `ws_id`=".WS_ID."
 											 ORDER BY `dtime_add`").','.
+		"\n".'DEVPLACE_SPISOK='._selJson(_devPlace(false, query_value("SELECT `type` FROM `workshop` WHERE `id`=".WS_ID))).','.
 		"\n".'ZE_SPISOK='.query_selJson("SELECT `id`,`name` FROM `setup_zayav_expense` WHERE `ws_id`=".WS_ID." ORDER BY `sort`").','.
 		"\n".'ZE_TXT='.query_ptpJson("SELECT `id`,1 FROM `setup_zayav_expense` WHERE `ws_id`=".WS_ID." AND `dop`=1").','.
 		"\n".'ZE_WORKER='.query_ptpJson("SELECT `id`,1 FROM `setup_zayav_expense` WHERE `ws_id`=".WS_ID." AND `dop`=2").','.
@@ -271,10 +271,10 @@ function GvaluesCreate() {//Составление файла G_values.js
 	xcache_unset(CACHE_PREFIX.'setup_global');
 }//GvaluesCreate()
 
-function _button($id, $name) {
+function _button($id, $name, $width=0) {
 	return
 	'<div class="vkButton" id="'.$id.'">'.
-		'<button>'.$name.'</button>'.
+		'<button'.($width ? ' style="width:'.$width.'px"' : '').'>'.$name.'</button>'.
 	'</div>';
 }//_button()
 
@@ -458,9 +458,9 @@ function _color($color_id, $color_dop=0) {
 		return constant('COLORPRE_'.$color_id).' - '.strtolower(constant('COLOR_'.$color_dop));;
 	return constant('COLOR_'.$color_id);
 }//_color()
-function _devPlace($place_id=false) {
+function _devPlace($place_id=false, $ws_type=WS_TYPE) {
 	$arr = array(
-		1 => _wsType(WS_TYPE, 7),
+		1 => _wsType($ws_type, 7),
 		2 => 'у клиента'
 	);
 	if($place_id === false)

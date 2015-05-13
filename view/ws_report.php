@@ -365,6 +365,8 @@ function history_types($v, $filter) {
 			'Отредактирован счёт № <b>'.$v['value'].'</b>'.
 			($filter['zayav_id'] ? '' : ' по заявке '.$v['zayav_link']).'.';
 
+		case 62: return 'Внесены результаты диагностики '.($filter['zayav_id'] ? '' : 'по заявке '.$v['zayav_link']).'.';
+
 		case 1001: return 'В настройках: добавление нового сотрудника <u>'._viewer($v['value'], 'name').'</u>.';
 		case 1002: return 'В настройках: удаление сотрудника <u>'._viewer($v['value'], 'name').'</u>.';
 

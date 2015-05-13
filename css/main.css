@@ -157,7 +157,8 @@
 #zayav ._next{margin:6px 5px 0 8px}
 #zayav #find{margin-top:15px}
 #zayav #desc_check{margin-top:10px}
-#zayav #diff_check{margin-top:15px}
+#zayav #diagnost_check{margin-top:15px}
+#zayav #diff_check{margin-top:10px}
 #zayav ._empty{margin:10px 2px 0 10px;}
 
 
@@ -339,6 +340,7 @@
 #zayav-info #status:hover{border-color:#bbd; color:#444}
 #zayav-info #status_dtime{display:inline-block;color:#aaa;font-size:10px;margin-left:10px}
 #zayav-info .dopl{margin-left:10px;color:#888;cursor:default}
+#zayav-info #diagnost-ready{margin-left:40px}
 #zayav-info ._remind-add{
 	float:right;
 	background-color:#fff;
@@ -461,6 +463,11 @@
 #zayav-info .cart-prim{font-size:10px;color:#444}
 #zayav-info .cart-prim u{font-size:10px}
 #zayav-info .ready{background-color:#dfd}
+
+/* Таблица с результатами диагностики */
+#zayav-diagnost-tab #comm{width:250px}
+#zayav-diagnost-tab #remind-txt{width:250px}
+#zayav-diagnost-tab .remind-tr{display:none}
 
 /* Таблица формирования счёта */
 #schet-add-tab #sa-tab{border-spacing:10px;margin:10px}
