@@ -367,6 +367,10 @@ function history_types($v, $filter) {
 
 		case 62: return 'Внесены результаты диагностики '.($filter['zayav_id'] ? '' : 'по заявке '.$v['zayav_link']).'.';
 
+		case 63: return
+			'Счёт № <b>'.$v['value'].'</b> передан клиенту '.FullData($v['value1'], 1).'.'.
+			($filter['zayav_id'] ? '' : ' Заявка '.$v['zayav_link'].'.');
+
 		case 1001: return 'В настройках: добавление нового сотрудника <u>'._viewer($v['value'], 'name').'</u>.';
 		case 1002: return 'В настройках: удаление сотрудника <u>'._viewer($v['value'], 'name').'</u>.';
 
@@ -719,7 +723,7 @@ function income_insert($v) {
 		'schet_id' => _num(@$v['schet_id']),
 		'invoice_id' => _num($v['invoice_id']),
 		'sum' => _cena($v['sum']),
-		'prepay' => _bool($v['prepay']),
+		'prepay' => _bool(@$v['prepay']),
 		'prim' => _txt(@$v['prim'])
 	);
 

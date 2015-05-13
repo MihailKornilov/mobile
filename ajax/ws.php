@@ -1914,6 +1914,43 @@ switch(@$_POST['op']) {
 		jsonSuccess();
 		break;
 
+	case 'schet_pass'://передача счёта клиенту
+		if(!$schet_id = _num($_POST['schet_id']))
+			jsonError();
+		if(!preg_match(REGEXP_DATE, $_POST['day']))
+			jsonError();
+
+		$day = $_POST['day'];
+		$zayav_id = _num($_POST['zayav_id']);
+
+		$sql = "SELECT * FROM `zayav_schet` WHERE `ws_id`=".WS_ID." AND !`pass` AND !`paid` AND `id`=".$schet_id;
+		if(!$r = query_assoc($sql))
+			jsonError();
+
+		$sql = "SELECT * FROM `zayav` WHERE `ws_id`=".WS_ID." AND `id`=".$r['zayav_id'];
+		if(!$z = query_assoc($sql))
+			jsonError();
+
+		$sql = "UPDATE `zayav_schet`
+				SET `pass`=1,
+					`pass_day`='".$day."'
+					WHERE `id`=".$schet_id;
+		query($sql);
+
+		history_insert(array(
+			'type' => 63,
+			'client_id' => $z['client_id'],
+			'zayav_id' => $z['id'],
+			'value' => 'СЦ'.$r['nomer'],
+			'value1' => $day
+		));
+
+		$data = report_schet_spisok();
+		$send['html'] = utf8($data['spisok']);
+		if($zayav_id)
+			$send['zayav_schet'] = utf8(zayav_info_schet_spisok($zayav_id));
+		jsonSuccess($send);
+		break;
 	case 'schet_pay'://оплата счёта
 		if(!$schet_id = _num($_POST['schet_id']))
 			jsonError();
@@ -1921,6 +1958,7 @@ switch(@$_POST['op']) {
 			jsonError();
 
 		$day = $_POST['day'];
+		$zayav_id = _num($_POST['zayav_id']);
 
 		$sql = "SELECT * FROM `zayav_schet` WHERE `ws_id`=".WS_ID." AND !`paid` AND `id`=".$schet_id;
 		if(!$r = query_assoc($sql))
@@ -1932,7 +1970,7 @@ switch(@$_POST['op']) {
 
 		$sql = "UPDATE `zayav_schet`
 				SET `paid`=1,
-					`paid_dtime`='".$day." 00:00:00'
+					`paid_day`='".$day."'
 					WHERE `id`=".$schet_id;
 		query($sql);
 
@@ -1954,6 +1992,8 @@ switch(@$_POST['op']) {
 
 		$data = report_schet_spisok();
 		$send['html'] = utf8($data['spisok']);
+		if($zayav_id)
+			$send['zayav_schet'] = utf8(zayav_info_schet_spisok($zayav_id));
 		jsonSuccess($send);
 		break;
 	case 'schet_edit_load'://получение данных для редактирования счёта

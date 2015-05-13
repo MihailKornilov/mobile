@@ -232,6 +232,44 @@ $(document)
 		}, 'json');
 	})
 
+	.on('click', '.schet-unit .to-pass', function() {//передача счёта клиенту
+		var t = $(this),
+			p = t.parent(),
+			nomer = p.find('.pay-nomer').html(),
+			html =
+				'<table class="_dialog-tab">' +
+					'<tr><td class="label">№ счёта:<td><b>' + nomer + '</b>' +
+					'<tr><td class="label">Когда передан:<td><input type="hidden" id="pass-day" />' +
+				'</table>';
+		var dialog = _dialog({
+				width:320,
+				head:'Передача счёта клиенту',
+				content:html,
+				butSubmit:'Применить',
+				submit:submit
+			});
+
+		$('#pass-day')._calendar({lost:1});
+		function submit() {
+			var send = {
+				op:'schet_pass',
+				zayav_id:window.ZAYAV ? ZAYAV.id : 0,
+				schet_id:t.attr('val'),
+				day:$('#pass-day').val()
+			};
+			dialog.process();
+			$.post(AJAX_WS, send, function(res) {
+				if(res.success) {
+					if(window.ZAYAV)
+						$('#schet-spisok').html(res.zayav_schet);
+					else $('#spisok').html(res.html);
+					dialog.close();
+					_msg('Счёт ' + nomer + ' передан клиенту');
+				} else
+					dialog.abort();
+			}, 'json');
+		}
+	})
 	.on('click', '.schet-unit .to-pay', function() {
 		var t = $(this),
 			p = t.parent(),
@@ -255,13 +293,16 @@ $(document)
 		function submit() {
 			var send = {
 				op:'schet_pay',
+				zayav_id:window.ZAYAV ? ZAYAV.id : 0,
 				schet_id:t.attr('val'),
 				day:$('#pay-day').val()
 			};
 			dialog.process();
 			$.post(AJAX_WS, send, function(res) {
 				if(res.success) {
-					$('#spisok').html(res.html);
+					if(window.ZAYAV)
+						$('#schet-spisok').html(res.zayav_schet);
+					else $('#spisok').html(res.html);
 					dialog.close();
 					_msg('Счёт ' + nomer + ' оплачен');
 				} else

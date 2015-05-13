@@ -488,7 +488,9 @@
 .schet-unit .td-content{padding:8px}
 .schet-unit.paid{background-color:#cfc}
 .schet-unit .to-pay{float:right}
-.schet-unit .paid-info{color:#070}
+.schet-unit .to-pass{float:right;font-weight:bold}
+.schet-unit .pass-info{color:#770;margin:3px 0}
+.schet-unit .paid-info{color:#070;margin:3px 0}
 
 /* Список запчастей */
 #zp{min-height:500px}

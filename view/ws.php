@@ -1117,6 +1117,10 @@ function zayav_info_schet_spisok($zayav_id) {
 	return $send;
 }//zayav_info_schet_spisok()
 function schet_unit($r, $zayav=1) {
+	$to_pass = $r['pass'] || $r['paid'] ? '' : '<a class="to-pass" val="'.$r['id'].'">передать клиенту</a>';
+	$to_paid = $r['pass'] && !$r['paid'] ? '<a class="to-pay" val="'.$r['id'].'">оплатить</a>' : '';
+	$pass_info = $r['pass'] && !$r['paid'] ? '<div class="pass-info">Передано клиенту '.FullData($r['pass_day'], 1).'</div>' : '';
+	$paid_info = $r['paid'] ? '<div class="paid-info">Оплачено '.FullData($r['paid_day'], 1).'</div>' : '';
 	return
 		'<tr class="schet-unit'.($r['paid'] ? ' paid' : '').'">'.
 			'<td class="td-content">'.
@@ -1127,10 +1131,10 @@ function schet_unit($r, $zayav=1) {
 				'от <u>'.FullData($r['date_create']).'</u> г. '.
 //				'<br />'.
 				'на сумму <b class="pay-sum">'.$r['sum'].'</b> руб. '.
-			($r['paid'] ?
-				'<div class="paid-info">Оплачено '.FullData($r['paid_dtime']).'</div>' :
-				'<a class="to-pay" val="'.$r['id'].'">оплатить</a>'
-			).
+				$to_pass.
+				$to_paid.
+				$pass_info.
+				$paid_info.
 			($zayav ? '<div>Заявка '.$r['zayav_link'].'.</div>' : '').
 			'<td class="ed">'.
 				(!$r['paid'] ? '<div val="'.$r['id'].'" class="img_edit'._tooltip('Редактировать счёт', -118, 'r').'</div>' : '');

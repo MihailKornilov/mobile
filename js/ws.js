@@ -1143,6 +1143,7 @@ $(document)
 		$('#status').rightLink(0);
 		$('#day_finish').val('0000-00-00');
 		$('.day-finish-link span').html('не указан');
+		$('#diagnost')._check(0);
 		$('#diff')._check(0);
 		$('#zpzakaz')._radio(0);
 		$('#executer')._select(0);
