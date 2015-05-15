@@ -2889,21 +2889,22 @@ switch(@$_POST['op']) {
 	case 'salary_rate_set':
 		if(!$worker_id = _isnum($_POST['worker_id']))
 			jsonError();
-		if(!$sum = _cena($_POST['sum']))
-			jsonError();
 		if(!$period = _isnum($_POST['period']))
 			jsonError();
+
+
+		$sum = _cena($_POST['sum']);
 
 		$day = 0;
 		switch($period) {
 			case 1:
-				if(!$day = _isnum($_POST['day']))
+				if(!$day = _num($_POST['day']))
 					jsonError();
 				if($day > 28)
 					jsonError();
 				break;
 			case 2:
-				if(!$day = _isnum($_POST['day']))
+				if(!$day = _num($_POST['day']))
 					jsonError();
 				if($day > 7)
 					jsonError();

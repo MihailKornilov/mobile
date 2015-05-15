@@ -368,7 +368,7 @@ function history_types($v, $filter) {
 		case 62: return 'Внесены результаты диагностики '.($filter['zayav_id'] ? '' : 'по заявке '.$v['zayav_link']).'.';
 
 		case 63: return
-			'Счёт № <b>'.$v['value'].'</b> передан клиенту '.FullData($v['value1'], 1).'.'.
+			'Счёт № <b>'.$v['value'].'</b> передан клиенту. День: '.FullData($v['value1'], 1).'.'.
 			($filter['zayav_id'] ? '' : ' Заявка '.$v['zayav_link'].'.');
 
 		case 1001: return 'В настройках: добавление нового сотрудника <u>'._viewer($v['value'], 'name').'</u>.';

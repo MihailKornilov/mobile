@@ -632,14 +632,15 @@ $(document)
 				op:'salary_rate_set',
 				worker_id:WORKER_ID,
 				sum:_cena($('#sum').val()),
-				period:$('#period').val() * 1,
-				day:$('#day').val() * 1
+				period:_num($('#period').val()),
+				day:_num($('#day').val())
 			};
 			if(send.period == 2)
-				send.day = $('#day_week').val() * 1;
-			if(!send.sum) { err('Некорректно указана сумма.'); $('#sum').focus(); }
-			else if(send.period == 1 && (!REGEXP_NUMERIC.test(send.day) || !send.day || send.day > 28)) { err('Некорректно указан день.'); $('#day').focus(); }
-			else {
+				send.day = _num($('#day_week').val());
+			if(send.period == 1 && (!send.day || send.day > 28)) {
+				dialog.err('Некорректно указан день');
+				$('#day').focus();
+			} else {
 				dialog.process();
 				$.post(AJAX_WS, send, function(res) {
 					if(res.success) {
