@@ -529,7 +529,7 @@ function zayavFilter($v) {
 		'finish' => preg_match(REGEXP_DATE, @$v['finish']) ? $v['finish'] : $default['finish'],
 		'zpzakaz' => _num(@$v['zpzakaz']),
 		'executer' => intval(@$v['executer']),
-		'device' => _num(@$v['device']),
+		'device' => empty($v['device']) ? 0 : $v['device'],
 		'vendor' => _num(@$v['vendor']),
 		'model' => _num(@$v['model']),
 		'diagnost' => _bool(@$v['diagnost']),
@@ -580,7 +580,7 @@ function zayav_spisok($v) {
 		if($filter['executer'])
 			$cond .= " AND `executer_id`=".($filter['executer'] < 0 ? 0 : $filter['executer']);
 		if($filter['device'])
-			$cond .= " AND `base_device_id`=".$filter['device'];
+			$cond .= " AND `base_device_id` IN (".$filter['device'].")";
 		if($filter['vendor'])
 			$cond .= " AND `base_vendor_id`=".$filter['vendor'];
 		if($filter['model'])
@@ -805,7 +805,7 @@ function zayav_list($v) {
 				'model_ids:['._zayavBaseModelIds().'],'.
 				'place_other:['.implode(',', $place_other).'],'.
 				'find:"'.$v['find'].'",'.
-				'device_id:'.$v['device'].','.
+				'device_id:"'.$v['device'].'",'.
 				'vendor_id:'.$v['vendor'].','.
 				'model_id:'.$v['model'].','.
 				'cookie_id:'.(!empty($_COOKIE['zback_info']) ? $_COOKIE['zback_info'] : 0).

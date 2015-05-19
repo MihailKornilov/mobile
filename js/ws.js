@@ -416,6 +416,7 @@ $.fn.device = function(o) {
 		device_id:0,
 		vendor_id:0,
 		model_id:0,
+		device_multiselect:0,
 		device_ids:null, // список id, которые нужно выводить в списке для устройств
 		vendor_ids:null, // для производителей
 		model_ids:null,  // для моделей
@@ -629,12 +630,14 @@ $.fn.device = function(o) {
 	devSel._select({
 		width:o.width,
 		block:1,
+		multiselect:o.device_multiselect,
 		title0:device_no[o.type_no],
 		spisok:DEV_SPISOK,
-		func:function(id) {
+		func:function() {
 			venSel.val(0);
 			modSel.val(0)._select('remove'); //Удаляется селект модели и устанавливается в 0, если был ранее
-			if(!id)
+			var id = devSel.val();
+			if(id == '0' || id.split(',').length > 1)
 				venSel._select('remove');
 			else
 				getVendor(0);
@@ -643,7 +646,7 @@ $.fn.device = function(o) {
 		funcAdd:o.device_funcAdd,
 		bottom:3
 	});
-	if(o.device_id)
+	if(o.device_id != '0' && o.device_id.split(',').length == 1)
 		getVendor();
 
 	// вывод списка производителей
@@ -1153,6 +1156,7 @@ $(document)
 			device_ids:Z.device_ids,
 			vendor_ids:Z.vendor_ids,
 			model_ids:Z.model_ids,
+			device_multiselect:1,
 			func:zayavSpisok
 		});
 		$('#device_place')._select(0);
@@ -2040,6 +2044,7 @@ $(document)
 				device_id:Z.device_id,
 				vendor_id:Z.vendor_id,
 				model_id:Z.model_id,
+				device_multiselect:1,
 				device_ids:Z.device_ids,
 				vendor_ids:Z.vendor_ids,
 				model_ids:Z.model_ids,
