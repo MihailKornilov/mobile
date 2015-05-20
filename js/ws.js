@@ -1,4 +1,5 @@
 var AJAX_WS = APP_HTML + '/ajax/ws.php?' + VALUES,
+	AJAX_SA = APP_HTML + '/ajax/sa.php?' + VALUES,
 	scannerWord = '',
 	scannerTime = 0,
 	scannerTimer,
@@ -406,12 +407,71 @@ var AJAX_WS = APP_HTML + '/ajax/ws.php?' + VALUES,
 				}, 'json');
 			}
 		}
+	},
+
+
+	zpNameSelect = function(id, name_id) {
+		if(!window.ZPNAME)
+			window.ZPNAME = {};
+		ZPNAME.device_id = id;
+		$('#name_id')._select({
+			width:230,
+			funcAdd:id ? zpNameAdd : null,
+			title0:id ? 'Наименование запчасти не выбрано' : 'Сначала выберите устройство',
+			spisok:ZPNAME_SPISOK[id]
+		})._select(name_id || 0);
+	},
+	zpNameAdd = function() {//внесение новой запчасти
+		var html =
+				'<table id="zpname-add-tab">' +
+					'<tr><td class="label">Устройство:<td><b>' + DEV_ASS[ZPNAME.device_id] + '</b>' +
+					'<tr><td class="label">Запчасть:<td><input id="name" type="text" maxlength="100" />' +
+				'</table>',
+			dialog = _dialog({
+				width:390,
+				head:'Добавление нового наименования запчасти',
+				content:html,
+				submit:submit
+			});
+		$('#name').focus().keyEnter(submit);
+		function submit() {
+			var send = {
+				op:'zpname_add',
+				device_id:ZPNAME.device_id,
+				name:$('#name').val()
+			};
+			if(!send.name) {
+				dialog.err('Не указана запчасть');
+				$('#name').focus();
+			} else {
+				dialog.process();
+				$.post(AJAX_SA, send, function(res) {
+					if(res.success) {
+						if($('.sa-equip').length)
+							$('#zp-spisok').html(res.zp);
+						else {
+							ZPNAME_SPISOK[ZPNAME.device_id].push({
+								uid:res.id,
+								title:send.name
+							});
+							$('#name_id')
+								._select(ZPNAME_SPISOK[ZPNAME.device_id])
+								._select(res.id);
+						}
+						dialog.close();
+						_msg('Внесено!');
+					} else
+						dialog.abort();
+				}, 'json');
+			}
+		}
 	};
 
 $.fn.device = function(o) {
 	o = $.extend({
 		width:150,
 		func:function() {},
+		func_device:function() {},
 		type_no:0,
 		device_id:0,
 		vendor_id:0,
@@ -633,7 +693,7 @@ $.fn.device = function(o) {
 		multiselect:o.device_multiselect,
 		title0:device_no[o.type_no],
 		spisok:DEV_SPISOK,
-		func:function() {
+		func:function(device_id) {
 			venSel.val(0);
 			modSel.val(0)._select('remove'); //Удаляется селект модели и устанавливается в 0, если был ранее
 			var id = devSel.val();
@@ -642,11 +702,13 @@ $.fn.device = function(o) {
 			else
 				getVendor(0);
 			o.func(getIds());
+			o.func_device(device_id);
 		},
 		funcAdd:o.device_funcAdd,
 		bottom:3
 	});
-	if(o.device_id != '0' && o.device_id.split(',').length == 1)
+
+	if(typeof o.device_id == 'number' && o.device_id || o.device_id != '0' && o.device_id.split(',').length == 1)
 		getVendor();
 
 	// вывод списка производителей
@@ -1771,54 +1833,43 @@ $(document)
 				'</center>' +
 				'<table style="border-spacing:6px">' +
 					'<tr><td class="label r">Наименование запчасти:<td><input type="hidden" id="name_id" />' +
-					'<tr><td class="label r">Версия:<td><input type="text" id="version" maxlength="30" />' +
+					'<tr><td class="label r">Версия:<td><input type="text" id="version" />' +
 					'<tr><td class="label r">Цвет:<td><input type="hidden" id="color_id" />' +
-					'<tr><td class="label r">Б/у:<td><input type="hidden" id="bu" />' +
 				'</table>' +
 			'</div>',
 			dialog = _dialog({
 				top:40,
-				width:380,
+				width:400,
 				head:'Внесение новой запчасти',
 				content:html,
 				submit:submit
 			});
 
-		$('#name_id')._select({
-			width:200,
-			title0:'Наименование не выбрано',
-			spisok:ZPNAME_SPISOK
-		});
+		zpNameSelect(ZAYAV.device);
 		$('#color_id')._select({
 			width:130,
 			title0:'Цвет не указан',
 			spisok:COLOR_SPISOK
 		});
-		$('#bu')._check();
 		function submit() {
 			var send = {
 				op:'zayav_zp_add',
 				zayav_id: ZAYAV.id,
-				name_id:$('#name_id').val(),
+				name_id:_num($('#name_id').val()),
 				version:$('#version').val(),
-				color_id:$('#color_id').val(),
-				bu:$('#bu').val()
+				color_id:$('#color_id').val()
 			};
-			if(send.name_id == 0)
-				dialog.bottom.vkHint({msg:'<SPAN class="red">Не указано наименование запчасти.</SPAN>',
-					top:-47,
-					left:56,
-					show:1,
-					remove:1
-				});
+			if(!send.name_id)
+				dialog.err('Не выбрано наименование запчасти');
 			else {
 				dialog.process();
 				$.post(AJAX_WS, send, function(res) {
 					if(res.success) {
-						_msg('Внесение запчасти произведено.');
+						_msg('Внесение запчасти произведено');
 						dialog.close();
 						$('#zpSpisok').html(res.html);
-					}
+					} else
+						dialog.abort();
 				}, 'json');
 			}
 		}

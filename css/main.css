@@ -412,7 +412,6 @@
 #zayav-info #zpSpisok *{font-size:10px}
 #zayav-info #zpSpisok .unit{border-bottom:#DEE3EF solid 1px;padding-bottom:4px;margin-bottom:7px}
 #zayav-info #zpSpisok .unit:not(:hover) .zakaz,#zayav-info #zpSpisok .unit:not(:hover) .set{visibility:hidden}
-#zayav-info #zpSpisok .bu{font-weight:bold;margin-right:4px;color:#800}
 #zayav-info #zpSpisok .zakaz{color:#567f9e}
 #zayav-info #zpSpisok .set{color:#567f9e;float:right}
 #zayav-info #zpSpisok .version{color:#333}
@@ -492,6 +491,11 @@
 .schet-unit .pass-info{color:#770;margin:3px 0}
 .schet-unit .paid-info{color:#070;margin:3px 0}
 
+/* Внесение нового наименования запчасти */
+#zpname-add-tab{border-spacing:10px}
+#zpname-add-tab .label{text-align:right}
+#zpname-add-tab #name{width:250px}
+
 /* Список запчастей */
 #zp{min-height:500px}
 #zp #zp-head{padding:7px 0 0 5px;background-color:#f7f7f7}
@@ -499,10 +503,9 @@
 #zp #td-find{width:270px}
 #zp #zp_menu_dropdown{position:absolute;top:7px}
 #zp .vkButton{position:absolute;right:10px;top:0}
-#zp #zp-filter{width:100%;padding-bottom:7px}
-#zp #td-name{width:180px;vertical-align:top}
+#zp #zp-filter{padding-bottom:7px}
 #zp #td-dev{width:230px}
-#zp #td-bu{vertical-align:top}
+#zp #td-name{width:388px;vertical-align:top}
 #zp #bu_check{position:absolute;margin-top:4px}
 #zp .clear{float:right;margin:4px 10px 0 0}
 #zp #sort{float:right;width:176px;margin-top:13px}
@@ -557,10 +560,10 @@
 .zpzakaz tt{display:inline-block;padding:0 4px;color:#aaa}
 .zpzakaz tt:hover{color:#004}
 
-.zp_add_dialog{border-spacing:10px}
-.zp_add_dialog .label{text-align:right}
-.zp_add_dialog #version{width:192px}
-.zp_add_dialog ._image-spisok{width:260px}
+.zp-add-tab{border-spacing:10px}
+.zp-add-tab .label{text-align:right;width:90px}
+.zp-add-tab #version{width:292px}
+.zp-add-tab ._image-spisok{width:260px}
 
 .avaiAddTab{width:100%}
 .avaiAddTab .left{width:250px;vertical-align:top}
@@ -580,7 +583,6 @@
 #zpInfo .ztab{width:100%;border-spacing:10px;min-height:800px}
 #zpInfo .left{vertical-align:top}
 #zpInfo .name{color:#45688E;font-weight:bold;font-size:12px;margin-top:5px}
-#zpInfo .name span,.compatAddTab .bu{font:bold 12px Verdana;margin-right:8px;color:#800}
 #zpInfo .name em{font-weight:bold;font-size:12px;margin-left:12px;color:#777}
 #zpInfo .for{font-size:12px;margin-top:4px}
 #zpInfo .for a{font-size:12px}

@@ -4,20 +4,18 @@ var zpFilter = function() {
 				find:$.trim($('#find')._search('val')),
 				menu:$('#zp_menu').val(),
 				name:$('#zp_name').val(),
-				device:$('#dev_device').val(),
+				device:_num($('#dev_device').val()),
 				vendor:$('#dev_vendor').val(),
 				model:$('#dev_model').val(),
-				bu:$('#bu').val(),
 				sort:$('#zp_sort').val()
 			},
 			loc = '';
 		if(v.find) loc += '.find=' + escape(v.find);
 		if(v.menu > 0) loc += '.menu=' + v.menu;
 		if(v.name > 0) loc += '.name=' + v.name;
-		if(v.device > 0) loc += '.device=' + v.device;
+		if(v.device) loc += '.device=' + v.device;
 		if(v.vendor > 0) loc += '.vendor=' + v.vendor;
 		if(v.model > 0) loc += '.model=' + v.model;
-		if(v.bu > 0) loc += '.bu=' + v.bu;
 		if(v.sort > 0) loc += '.sort=' + v.sort;
 		VK.callMethod('setLocation', hashLoc + loc);
 
@@ -27,11 +25,17 @@ var zpFilter = function() {
 		_cookie(VIEWER_ID + '_zp_device', v.device);
 		_cookie(VIEWER_ID + '_zp_vendor', v.vendor);
 		_cookie(VIEWER_ID + '_zp_model', v.model);
-		_cookie(VIEWER_ID + '_zp_bu', v.bu);
 		_cookie(VIEWER_ID + '_zp_sort', v.sort);
 
 		$('#zp-filter')[(v.menu == 4 ? 'add' : 'remove') + 'Class']('dn');
 		$('#sort')[(v.menu == 4 ? 'add' : 'remove') + 'Class']('dn');
+
+		$('#zp_name')._select(!v.device ? 'remove' : {
+			width:170,
+			title0:'Наименование запчасти',
+			spisok:ZPNAME_SPISOK[v.device],
+			func:zpSpisok
+		});
 
 		return v;
 	},
@@ -140,7 +144,6 @@ $(document)
 			device_ids:WS_DEVS,
 			func:zpSpisok
 		});
-		$('#bu')._check(0);
 		zpSpisok();
 	})
 	.on('click', '#zp ._next', function() {
@@ -286,12 +289,11 @@ $(document)
 	})
 	.on('click', '#zpInfo .edit', function() {
 		var html =
-			'<table class="zp_add_dialog">' +
-				'<tr><td class="label">Наименование запчасти:<td><input type="hidden" id="name_id" value="' + ZP.name_id + '">' +
+			'<table class="zp-add-tab">' +
+				'<tr><td class="label">Наименование:<td><input type="hidden" id="name_id" value="' + ZP.name_id + '">' +
 				'<tr><td class="label topi">Устройство:<td id="add_dev">' +
 				'<tr><td><td>' + ZP.images +
 				'<tr><td class="label">Версия:<td><input type="text" id="version" value="' + ZP.version + '">' +
-				'<tr><td class="label">Б/у:<td><input type="hidden" id="add_bu" value="' + ZP.bu + '">' +
 				'<tr><td class="label">Цвет:<td><input type="hidden" id="color_id" value="' + ZP.color_id + '">' +
 				'<tr><td class="label">Радиомастер:<td><input type="hidden" id="price_id" value="' + ZP.price_id + '">' +
 			'</table>',
@@ -303,17 +305,14 @@ $(document)
 				butSubmit:'Сохранить',
 				submit:submit
 			});
-		$('#name_id')._select({
-			width:200,
-			title0:'Наименование не выбрано',
-			spisok:ZPNAME_SPISOK
-		});
+		zpNameSelect(ZP.device, ZP.name_id);
 		$('#add_dev').device({
-			width:200,
+			width:250,
 			add:1,
 			device_id:ZP.device,
 			vendor_id:ZP.vendor,
-			model_id:ZP.model
+			model_id:ZP.model,
+			func_device:zpNameSelect
 		});
 		imageSortable();
 		$('#color_id')._select({
@@ -321,7 +320,6 @@ $(document)
 			title0:'Цвет не указан',
 			spisok:COLOR_SPISOK
 		});
-		$('#add_bu')._check();
 		$('#price_id')._select({
 			width:300,
 			title0:'Начните вводить данные...',
@@ -348,40 +346,28 @@ $(document)
 				send = {
 					op:'zp_edit',
 					zp_id:ZP.id,
-					name_id:$('#name_id').val(),
-					device_id:$('#add_dev_device').val(),
+					name_id:_num($('#name_id').val()),
+					device_id:_num($('#add_dev_device').val()),
 					vendor_id:$('#add_dev_vendor').val(),
 					model_id:$('#add_dev_model').val(),
 					version:$('#version').val(),
-					bu:$('#add_bu').val(),
 					color_id:$('#color_id').val(),
 					price_id:$('#price_id').val()
 				};
-			if(send.name_id == 0) msg = 'Не указано наименование запчасти.';
-			else if(send.device_id == 0) msg = 'Не выбрано устройство';
-			else if(send.vendor_id == 0) msg = 'Не выбран производитель';
-			else if(send.model_id == 0) msg = 'Не выбрана модель';
+			if(!send.name_id) dialog.err('Не выбрано наименование запчасти.');
+			else if(!send.device_id) dialog.err('Не выбрано устройство');
 			else {
 				dialog.process();
 				$.post(AJAX_WS, send, function(res) {
 					dialog.abort();
 					if(res.success) {
 						dialog.close();
-						_msg('Редактирование данных произведено.');
+						_msg('Редактирование данных произведено');
 						window.location.reload();
-					}
+					} else
+						dialog.abort();
 				},'json');
 			}
-
-			if(msg)
-				dialog.bottom.vkHint({
-					msg:'<SPAN class="red">' + msg + '</SPAN>',
-					left:110,
-					top:-47,
-					indent:50,
-					show:1,
-					remove:1
-				});
 		}
 	})
 	.on('click', '#zpInfo .set', function() {
@@ -606,7 +592,6 @@ $(document)
 		var sp = ZP,
 			html = '<div class="compatAddTab">' +
 				'<div class="name">' +
-					(sp.bu == 1 ? '<span class="bu">Б/y</span>' : '') +
 					sp.name + '<br />' +
 					sp.for +
 				'</div>' +
@@ -650,7 +635,6 @@ $(document)
 				var send = {
 					op:'zp_compat_find',
 					zp_id:sp.id,
-					bu:sp.bu,
 					name_id:sp.name_id,
 					device_id:obj.device_id,
 					vendor_id:obj.vendor_id,
@@ -748,78 +732,56 @@ $(document)
 		if($('#zp').length) {
 			$('.vkButton').click(function() {
 				var html =
-						'<table class="zp_add_dialog">' +
-							'<tr><td class="label">Наименование запчасти:<td><input type="hidden" id="name_id">' +
-							'<tr><td class="label top">Устройство:<td id="add_dev">' +
-							'<tr><td class="label">Версия:<td><input type="text" id="version">' +
-							'<tr><td class="label">Б/у:<td><input type="hidden" id="add_bu">' +
-							'<tr><td class="label">Цвет:<td><input type="hidden" id="color_id">' +
+						'<table class="zp-add-tab">' +
+							'<tr><td class="label">Наименование:<td><input type="hidden" id="name_id" />' +
+							'<tr><td class="label topi">Устройство:<td id="add_dev">' +
+							'<tr><td class="label">Версия:<td><input type="text" id="version" />' +
+							'<tr><td class="label">Цвет:<td><input type="hidden" id="color_id" />' +
 						'</table>',
 					dialog = _dialog({
-						top:70,
-						width:380,
+						top:50,
+						width:460,
 						head:'Внесение новой запчасти в каталог',
 						content:html,
 						submit:submit
 					});
-				$('#name_id')._select({
+				zpNameSelect(_num($('#dev_device').val()), $('#zp_name').val());
+				$('#add_dev').device({
 					width:200,
-					title0:'Наименование не выбрано',
-					spisok:ZPNAME_SPISOK
+					add:1,
+					device_id:$('#dev_device').val(),
+					vendor_id:$('#dev_vendor').val(),
+					model_id:$('#dev_model').val(),
+					func_device:zpNameSelect
 				});
 				$('#color_id')._select({
 					width:130,
 					title0:'Цвет не указан',
 					spisok:COLOR_SPISOK
 				});
-				$('#add_bu')._check();
-				$('#add_dev').device({width:200,add:1});
 
 				function submit() {
 					var send = {
 						op:'zp_add',
-						name_id:$('#name_id').val(),
-						device_id:$('#add_dev_device').val(),
+						name_id:_num($('#name_id').val()),
+						device_id:_num($('#add_dev_device').val()),
 						vendor_id:$('#add_dev_vendor').val(),
 						model_id:$('#add_dev_model').val(),
 						version:$('#version').val(),
-						bu:$('#add_bu').val(),
 						color_id:$('#color_id').val()
 					};
-					if(send.name_id == 0) err('Не указано наименование запчасти');
-					else if(send.device_id == 0) err('Не выбрано устройство');
-					else if(send.vendor_id == 0) err('Не выбран производитель');
-					else if(send.model_id == 0) err('Не выбрана модель');
+					if(!send.name_id) dialog.err('Не указано наименование запчасти');
+					else if(!send.device_id) dialog.err('Не выбрано устройство');
 					else {
 						dialog.process();
 						$.post(AJAX_WS, send, function(res) {
 							dialog.abort();
 							if(res.success) {
 								dialog.close();
-								$('#zp_name')._select(send.name_id);
-								$('#dev').device({
-									width:220,
-									type_no:1,
-									device_ids:WS_DEVS,
-									device_id:send.device_id,
-									vendor_id:send.vendor_id,
-									model_id:send.model_id,
-									func:zpSpisok
-								});
-								zpSpisok();
+								location.href = URL + '&p=zp&d=info&id=' + res.id;
 							}
 						},'json');
 					}
-				}
-				function err(msg) {
-					dialog.bottom.vkHint({
-						msg:'<SPAN class="red">' + msg + '</SPAN>',
-						left:110,
-						top:-47,
-						indent:50,
-						show:1,
-						remove:1
-					});
 				}
 			});
 			$('#find')
@@ -842,12 +804,6 @@ $(document)
 				],
 				func:zpSpisok
 			});
-			$('#zp_name')._select({
-				width:170,
-				title0:'Наименование запчасти',
-				spisok:ZPNAME_SPISOK,
-				func:zpSpisok
-			});
 			$('#dev').device({
 				width:220,
 				type_no:1,
@@ -855,9 +811,11 @@ $(document)
 				device_id:ZP.device,
 				vendor_id:ZP.vendor,
 				model_id:ZP.model,
+				func_device:function() {
+					$('#zp_name')._select(0);
+				},
 				func:zpSpisok
 			});
-			$('#bu')._check(zpSpisok);
 			$('#zp_sort')._dropdown({
 				head:'по алфавиту',
 				spisok:[

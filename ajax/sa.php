@@ -439,24 +439,18 @@ switch(@$_POST['op']) {
 		break;
 
 	case 'equip_add':
-		if(!preg_match(REGEXP_NUMERIC, $_POST['device_id']))
+		if(!$device_id = _num($_POST['device_id']))
 			jsonError();
-		$device_id = intval($_POST['device_id']);
-		$name = win1251(htmlspecialchars(trim($_POST['name'])));
-		$title = win1251(htmlspecialchars(trim($_POST['title'])));
+		$name = _txt($_POST['name']);
 		if(empty($name))
 			jsonError();
 		$sort = query_value("SELECT IFNULL(MAX(`sort`)+1,0) FROM `setup_device_equip`");
 		$sql = "INSERT INTO `setup_device_equip` (
 					`name`,
-					`title`,
-					`sort`,
-					`viewer_id_add`
+					`sort`
 				) VALUES (
 					'".addslashes($name)."',
-					'".addslashes($title)."',
-					".$sort.",
-					".VIEWER_ID."
+					".$sort."
 				)";
 		query($sql);
 		xcache_unset(CACHE_PREFIX.'device_equip');
@@ -464,9 +458,8 @@ switch(@$_POST['op']) {
 		jsonSuccess($send);
 		break;
 	case 'equip_set'://Установка ids комплектаций для конктерного вида устройтсва
-		if(!preg_match(REGEXP_NUMERIC, $_POST['device_id']))
+		if(!$device_id = _num($_POST['device_id']))
 			jsonError();
-		$device_id = intval($_POST['device_id']);
 
 		if(!empty($_POST['ids'])) {
 			$ids = explode(',', $_POST['ids']);
@@ -480,42 +473,29 @@ switch(@$_POST['op']) {
 		jsonSuccess();
 		break;
 	case 'equip_show':
-		if(!preg_match(REGEXP_NUMERIC, $_POST['device_id']))
+		if(!$device_id = _num($_POST['device_id']))
 			jsonError();
-		$device_id = intval($_POST['device_id']);
-		$send['html'] = utf8(sa_equip_spisok($device_id));
-		jsonSuccess($send);
-		break;
-	case 'equip_get'://Получение данных для редактирования комплектации
-		if(!preg_match(REGEXP_NUMERIC, $_POST['id']))
-			jsonError();
-		$id = intval($_POST['id']);
-		$sql = "SELECT * FROM `setup_device_equip` WHERE `id`=".$id." LIMIT 1";
-		if(!$r = mysql_fetch_assoc(query($sql)))
-			jsonError();
-		$send['name'] = utf8($r['name']);
-		$send['title'] = utf8($r['title']);
+		$send['equip'] = utf8(sa_equip_spisok($device_id));
+		$send['zp'] = utf8(sa_zpname_spisok($device_id));
 		jsonSuccess($send);
 		break;
 	case 'equip_edit':
-		if(!preg_match(REGEXP_NUMERIC, $_POST['device_id']))
+		if(!$id = _num($_POST['id']))
 			jsonError();
-		if(!preg_match(REGEXP_NUMERIC, $_POST['id']))
-			jsonError();
-		$device_id = intval($_POST['device_id']);
-		$id = intval($_POST['id']);
-		$name = win1251(htmlspecialchars(trim($_POST['name'])));
-		$title = win1251(htmlspecialchars(trim($_POST['title'])));
+
+		$name = _txt($_POST['name']);
+
 		if(empty($name))
 			jsonError();
+
 		$sql = "UPDATE `setup_device_equip`
-				SET `name`='".addslashes($name)."',
-					`title`='".addslashes($title)."'
+				SET `name`='".addslashes($name)."'
 				WHERE `id`=".$id;
 		query($sql);
+
 		xcache_unset(CACHE_PREFIX.'device_equip');
-		$send['html'] = utf8(sa_equip_spisok($device_id));
-		jsonSuccess($send);
+
+		jsonSuccess();
 		break;
 	case 'equip_del':
 		if(!preg_match(REGEXP_NUMERIC, $_POST['device_id']))
@@ -528,6 +508,77 @@ switch(@$_POST['op']) {
 		query($sql);
 		xcache_unset(CACHE_PREFIX.'device_equip');
 		$send['html'] = utf8(sa_equip_spisok($device_id));
+		jsonSuccess($send);
+		break;
+
+	case 'zpname_add':
+		if(!$device_id = _num($_POST['device_id']))
+			jsonError();
+
+		$name = _txt($_POST['name']);
+
+		if(empty($name))
+			jsonError();
+
+		$sql = "INSERT INTO `setup_zp_name` (
+					`device_id`,
+					`name`
+				) VALUES (
+					".$device_id.",
+					'".addslashes($name)."'
+				)";
+		query($sql);
+
+		$send['id'] = mysql_insert_id();
+
+		GvaluesCreate();
+		xcache_unset(CACHE_PREFIX.'zp_name');
+
+		$send['zp'] = utf8(sa_zpname_spisok($device_id));
+
+		jsonSuccess($send);
+		break;
+	case 'zpname_edit':
+		if(!$id = _num($_POST['id']))
+			jsonError();
+
+		$name = _txt($_POST['name']);
+		if(empty($name))
+			jsonError();
+
+		$sql = "SELECT * FROM `setup_zp_name` WHERE `id`=".$id;
+		if(!$r = query_assoc($sql))
+			jsonError();
+
+		$sql = "UPDATE `setup_zp_name`
+				SET `name`='".addslashes($name)."'
+				WHERE `id`=".$id;
+		query($sql);
+
+		GvaluesCreate();
+		xcache_unset(CACHE_PREFIX.'zp_name');
+
+		jsonSuccess();
+		break;
+	case 'zpname_del':
+		if(!$id = _num($_POST['id']))
+			jsonError();
+
+		$sql = "SELECT * FROM `setup_zp_name` WHERE `id`=".$id;
+		if(!$r = query_assoc($sql))
+			jsonError();
+
+		$sql = "SELECT COUNT(`id`) FROM `zp_catalog` WHERE `name_id`=".$id;
+		if(query_value($sql))
+			jsonError();
+
+		$sql = "DELETE FROM `setup_zp_name` WHERE `id`=".$id;
+		query($sql);
+
+		GvaluesCreate();
+		xcache_unset(CACHE_PREFIX.'zp_name');
+
+		$send['html'] = utf8(sa_zpname_spisok($r['device_id']));
 		jsonSuccess($send);
 		break;
 
@@ -648,65 +699,6 @@ switch(@$_POST['op']) {
 		GvaluesCreate();
 
 		$send['html'] = utf8(sa_color_spisok());
-		jsonSuccess($send);
-		break;
-
-	case 'zpname_add':
-		$name = win1251(htmlspecialchars(trim($_POST['name'])));
-		if(empty($name))
-			jsonError();
-		$sql = "INSERT INTO `setup_zp_name` (
-					`name`
-				) VALUES (
-					'".addslashes($name)."'
-				)";
-		query($sql);
-
-		GvaluesCreate();
-		xcache_unset(CACHE_PREFIX.'zp_name');
-
-		$send['html'] = utf8(sa_zpname_spisok());
-		jsonSuccess($send);
-		break;
-	case 'zpname_edit':
-		if(!preg_match(REGEXP_NUMERIC, $_POST['id']) || !$_POST['id'])
-			jsonError();
-		$id = intval($_POST['id']);
-		$name = win1251(htmlspecialchars(trim($_POST['name'])));
-		if(empty($name))
-			jsonError();
-
-		$sql = "UPDATE `setup_zp_name`
-				SET `name`='".addslashes($name)."'
-				WHERE `id`=".$id;
-		query($sql);
-
-		GvaluesCreate();
-		xcache_unset(CACHE_PREFIX.'zp_name');
-
-		$send['html'] = utf8(sa_zpname_spisok());
-		jsonSuccess($send);
-		break;
-	case 'zpname_del':
-		if(!preg_match(REGEXP_NUMERIC, $_POST['id']) || !$_POST['id'])
-			jsonError();
-		$id = intval($_POST['id']);
-
-		$sql = "SELECT * FROM `setup_zp_name` WHERE `id`=".$id;
-		if(!$r = mysql_fetch_assoc(query($sql)))
-			jsonError();
-
-		$sql = "SELECT COUNT(`id`) FROM `zp_catalog` WHERE `name_id`=".$id;
-		if(query_value($sql))
-			jsonError();
-
-		$sql = "DELETE FROM `setup_zp_name` WHERE `id`=".$id;
-		query($sql);
-
-		GvaluesCreate();
-		xcache_unset(CACHE_PREFIX.'zp_name');
-
-		$send['html'] = utf8(sa_zpname_spisok());
 		jsonSuccess($send);
 		break;
 }

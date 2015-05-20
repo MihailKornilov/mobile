@@ -951,8 +951,6 @@ switch(@$_POST['op']) {
 			jsonError();
 		if(!preg_match(REGEXP_NUMERIC, $_POST['color_id']))
 			jsonError();
-		if(!preg_match(REGEXP_BOOL, $_POST['bu']))
-			jsonError();
 		$sql = "SELECT
 					`id`,
 					`base_device_id`,
@@ -966,7 +964,6 @@ switch(@$_POST['op']) {
 		define('MODEL', _vendorName($zp['base_vendor_id'])._modelName($zp['base_model_id']));
 		$zp['name_id'] = intval($_POST['name_id']);
 		$zp['version'] = win1251(htmlspecialchars(trim($_POST['version'])));
-		$zp['bu'] = intval($_POST['bu']);
 		$zp['color_id'] = intval($_POST['color_id']);
 		zpAddQuery($zp);
 		$send['html'] = utf8(zayav_zp($zp));
@@ -2107,31 +2104,21 @@ switch(@$_POST['op']) {
 		break;
 
 	case 'zp_add':
-		if(!preg_match(REGEXP_NUMERIC, $_POST['name_id']) || $_POST['name_id'] == 0)
+		$zp = array();
+		if(!$zp['name_id'] = _num($_POST['name_id']))
 			jsonError();
-		if(!preg_match(REGEXP_NUMERIC, $_POST['device_id']) || $_POST['device_id'] == 0)
-			jsonError();
-		if(!preg_match(REGEXP_NUMERIC, $_POST['vendor_id']) || $_POST['vendor_id'] == 0)
-			jsonError();
-		if(!preg_match(REGEXP_NUMERIC, $_POST['model_id']) || $_POST['model_id'] == 0)
-			jsonError();
-		if(!preg_match(REGEXP_BOOL, $_POST['bu']))
-			jsonError();
-		if(!preg_match(REGEXP_NUMERIC, $_POST['color_id']))
+		if(!$zp['base_device_id'] = _num($_POST['device_id']))
 			jsonError();
 
-		$zp = array(
-			'name_id' => intval($_POST['name_id']),
-			'base_device_id' => intval($_POST['device_id']),
-			'base_vendor_id' => intval($_POST['vendor_id']),
-			'base_model_id' => intval($_POST['model_id']),
-			'version' => win1251(htmlspecialchars(trim($_POST['version']))),
-			'bu' => intval($_POST['bu']),
-			'color_id' => intval($_POST['color_id']),
+		$zp += array(
+			'base_vendor_id' => _num($_POST['vendor_id']),
+			'base_model_id' => _num($_POST['model_id']),
+			'version' => _txt($_POST['version']),
+			'color_id' => _num($_POST['color_id']),
 		);
-		zpAddQuery($zp);
+		$send['id'] = zpAddQuery($zp);
 
-		jsonSuccess();
+		jsonSuccess($send);
 		break;
 	case 'zp_spisok':
 		$_POST['find'] = win1251($_POST['find']);
@@ -2217,21 +2204,19 @@ switch(@$_POST['op']) {
 		jsonSuccess();
 		break;
 	case 'zp_edit':
-		if(!$zp_id = _isnum($_POST['zp_id']))
+		if(!$zp_id = _num($_POST['zp_id']))
 			jsonError();
-		if(!$name_id = _isnum($_POST['name_id']))
+		if(!$name_id = _num($_POST['name_id']))
 			jsonError();
-		if(!$device_id = _isnum($_POST['device_id']))
+		if(!$device_id = _num($_POST['device_id']))
 			jsonError();
-		if(!$vendor_id = _isnum($_POST['vendor_id']))
-			jsonError();
-		if(!$model_id = _isnum($_POST['model_id']))
-			jsonError();
+		$vendor_id = _num($_POST['vendor_id']);
+		$model_id = _num($_POST['model_id']);
+		$version = _txt($_POST['version']);
+		$color_id = _num($_POST['color_id']);
+		$price_id = _num($_POST['price_id']);
 
-		$version = win1251(htmlspecialchars(trim($_POST['version'])));
-		$bu = _isbool($_POST['bu']);
-		$color_id = _isnum($_POST['color_id']);
-		$price_id = _isnum($_POST['price_id']);
+		$find = ($model_id ? _modelName($model_id).' ' : '').$version;
 
 		$sql = "UPDATE `zp_catalog`
 				SET `name_id`=".$name_id.",
@@ -2239,10 +2224,9 @@ switch(@$_POST['op']) {
 					`base_vendor_id`=".$vendor_id.",
 					`base_model_id`=".$model_id.",
 					`version`='".$version."',
-					`bu`=".$bu.",
 					`color_id`=".$color_id.",
 					`price_id`=".$price_id.",
-					`find`='".addslashes(_modelName($model_id).' '.$version)."'
+					`find`='".addslashes($find)."'
 				WHERE `id`=".$zp_id;
 		query($sql);
 
@@ -2251,7 +2235,6 @@ switch(@$_POST['op']) {
 			$sql = "UPDATE `zp_catalog`
 					SET `name_id`=".$name_id.",
 						`version`='".$version."',
-						`bu`=".$bu.",
 						`price_id`=".$price_id."
 					WHERE `id`=".$compat_id;
 			query($sql);
@@ -2392,8 +2375,6 @@ switch(@$_POST['op']) {
 	case 'zp_compat_find':
 		if(!preg_match(REGEXP_NUMERIC, $_POST['zp_id']) || $_POST['zp_id'] == 0)
 			jsonError();
-		if(!preg_match(REGEXP_BOOL, $_POST['bu']))
-			jsonError();
 		if(!preg_match(REGEXP_NUMERIC, $_POST['name_id']) || $_POST['name_id'] == 0)
 			jsonError();
 		if(!preg_match(REGEXP_NUMERIC, $_POST['device_id']) || $_POST['device_id'] == 0)
@@ -2406,7 +2387,6 @@ switch(@$_POST['op']) {
 			jsonError();
 
 		$zp_id = intval($_POST['zp_id']);
-		$bu = intval($_POST['bu']);
 		$name_id = intval($_POST['name_id']);
 		$device_id = intval($_POST['device_id']);
 		$vendor_id = intval($_POST['vendor_id']);
@@ -2416,7 +2396,6 @@ switch(@$_POST['op']) {
 		$sql = "SELECT `id`,`compat_id`
 				FROM `zp_catalog`
 				WHERE `id`!=".$zp_id."
-				  AND `bu`=".$bu."
 				  AND `name_id`=".$name_id."
 				  AND `base_device_id`=".$device_id."
 				  AND `base_vendor_id`=".$vendor_id."
@@ -2448,7 +2427,6 @@ switch(@$_POST['op']) {
 		$sql = "SELECT `id`,`compat_id`
 				FROM `zp_catalog`
 				WHERE `id`!=".$zp_id."
-				  AND `bu`=".$zp['bu']."
 				  AND `name_id`=".$zp['name_id']."
 				  AND `base_device_id`=".$device_id."
 				  AND `base_vendor_id`=".$vendor_id."

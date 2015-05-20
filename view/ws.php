@@ -1247,7 +1247,6 @@ function zayav_zp($z) {
 		$send .=
 			'<div class="unit" val="'.$r['id'].'">'.
 				'<div class="image"><div>'.$img['zp'.$id]['img'].'</div></div>'.
-				($r['bu'] ? '<span class="bu">ֱ/ף</span>' : '').
 				'<a href="'.URL.'&p=zp&d=info&id='.$r['id'].'"><b>'._zpName($r['name_id']).'</b> '.MODEL.'</a>'.
 				($r['version'] ? '<div class="version">'.$r['version'].'</div>' : '').
 				($r['color_id'] ? '<div class="color">ײגוע: '._color($r['color_id']).'</div>' : '').

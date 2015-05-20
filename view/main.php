@@ -160,9 +160,19 @@ function GvaluesCreate() {//Составление файла G_values.js
 		"\n".'COLORPRE_SPISOK='.query_selJson("SELECT `id`,`predlog` FROM `setup_color_name` ORDER BY `predlog` ASC").','.
 		"\n".'CLIENT_CATEGORY_ASS='._assJson(_clientCategory(0,1)).','.
 		"\n".'FAULT_ASS='.query_ptpJson("SELECT `id`,`name` FROM `setup_fault` ORDER BY `sort`").','.
-		"\n".'ZPNAME_SPISOK='.query_selJson("SELECT `id`,`name` FROM `setup_zp_name` ORDER BY `name`").','.
+		"\n".'ZPNAME_SPISOK='.Gvalues_obj('setup_zp_name', '`name`', 'device_id').','.
+
 		"\n".'DEV_SPISOK='.query_selJson("SELECT `id`,`name` FROM `base_device` ORDER BY `sort`").','.
 		"\n".'DEV_ASS=_toAss(DEV_SPISOK),'.
+
+		"\n".'VENDOR_SPISOK='.Gvalues_obj('base_vendor', '`device_id`,`sort`', 'device_id').','.
+		"\n".'VENDOR_ASS={0:""};'.
+		"\n".'for(k in VENDOR_SPISOK){for(n=0;n<VENDOR_SPISOK[k].length;n++){var sp=VENDOR_SPISOK[k][n];VENDOR_ASS[sp.uid]=sp.title;}}'.
+
+		"\n".'MODEL_SPISOK='.Gvalues_obj('base_model', '`vendor_id`,`name`', 'vendor_id').','.
+		"\n".'MODEL_ASS={0:""};'.
+		"\n".'for(k in MODEL_SPISOK){for(n=0;n<MODEL_SPISOK[k].length;n++){var sp=MODEL_SPISOK[k][n];MODEL_ASS[sp.uid]=sp.title;}}'.
+
 		"\n".'ZE_DOP='._selJson(_zayavExpenseDop()).','.
 		"\n".'SALARY_PERIOD='._selJson(salaryPeriod()).','.
 		"\n".'PAY_TYPE='._selJson(_payType()).','.
@@ -204,40 +214,6 @@ function GvaluesCreate() {//Составление файла G_values.js
 			'{uid:125,title:"Саратов"},'.
 			'{uid:151,title:"Уфа"},'.
 			'{uid:158,title:"Челябинск"}];';
-
-	$sql = "SELECT * FROM `base_vendor` ORDER BY `device_id`,`sort`";
-	$q = query($sql);
-	$vendor = array();
-	while($r = mysql_fetch_assoc($q)) {
-		if(!isset($vendor[$r['device_id']]))
-			$vendor[$r['device_id']] = array();
-		$vendor[$r['device_id']][] = '{'.
-			'uid:'.$r['id'].','.
-			'title:"'.$r['name'].'"'.($r['bold'] ? ','.
-			'content:"<B>'.$r['name'].'</B>"' : '').
-		'}';
-	}
-	$v = array();
-	foreach($vendor as $n => $sp)
-		$v[] = $n.':['.implode(',', $vendor[$n]).']';
-	$save .= "\n".'VENDOR_SPISOK={'.implode(',', $v).'};'.
-		"\n".'VENDOR_ASS={0:""};'.
-		"\n".'for(k in VENDOR_SPISOK){for(n=0;n<VENDOR_SPISOK[k].length;n++){var sp=VENDOR_SPISOK[k][n];VENDOR_ASS[sp.uid]=sp.title;}}';
-
-	$sql = "SELECT * FROM `base_model` ORDER BY `vendor_id`,`name`";
-	$q = query($sql);
-	$model = array();
-	while($r = mysql_fetch_assoc($q)) {
-		if(!isset($model[$r['vendor_id']]))
-			$model[$r['vendor_id']] = array();
-		$model[$r['vendor_id']][] = '{uid:'.$r['id'].',title:"'.$r['name'].'"}';
-	}
-	$m = array();
-	foreach($model as $n => $sp)
-		$m[] = $n.':['.implode(',',$model[$n]).']';
-	$save .= "\n".'MODEL_SPISOK={'.implode(',',$m).'};'.
-		"\n".'MODEL_ASS={0:""};'.
-		"\n".'for(k in MODEL_SPISOK){for(n=0;n<MODEL_SPISOK[k].length;n++){var sp=MODEL_SPISOK[k][n];MODEL_ASS[sp.uid]=sp.title;}}';
 
 	$fp = fopen(APP_PATH.'/js/G_values.js', 'w+');
 	fwrite($fp, $save);
@@ -504,8 +480,7 @@ function equipCache() {
 		$spisok = array();
 		while($r = mysql_fetch_assoc($q))
 			$spisok[$r['id']] = array(
-				'name' => $r['name'],
-				'title' => $r['title']
+				'name' => $r['name']
 			);
 		xcache_set($key, $spisok, 86400);
 	}

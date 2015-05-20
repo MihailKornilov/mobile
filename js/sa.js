@@ -1,5 +1,3 @@
-var AJAX_SA = APP_HTML + '/ajax/sa.php?' + VALUES;
-
 $(document)
 	.on('click', '.sa-user .action', function() {
 		var t = $(this),
@@ -535,22 +533,23 @@ $(document)
 	.on('click', '.sa-equip .rightLink a', function() {
 		$('.sa-equip .rightLink a.sel').removeClass('sel');
 		$(this).addClass('sel');
+		ZPNAME.device_id = $('.sa-equip .rightLink .sel').attr('val');
 		var send = {
 			op:'equip_show',
-			device_id:$('.sa-equip .rightLink .sel').attr('val')
+			device_id:ZPNAME.device_id
 		};
-		$('.path').addClass('busy');
+		$('#eq-spisok').addClass('dis');
+		$('#zp-spisok').addClass('dis');
 		$.post(AJAX_SA, send, function(res) {
-			$('.path').removeClass('busy');
-			$('#eq-spisok').html(res.html);
+			$('#eq-spisok').removeClass('dis').html(res.equip);
+			$('#zp-spisok').removeClass('dis').html(res.zp);
 			sortable();
 		}, 'json');
 	})
-	.on('click', '.sa-equip .add', function() {
+	.on('click', '.sa-equip #equip-add', function() {
 		var t = $(this),
 			html = '<table class="sa-equip-add">' +
 				'<tr><td class="label">Наименование:<td><input id="name" type="text" maxlength="100" />' +
-				'<tr><td class="label">Описание:<td><input id="title" type="text" maxlength="200" />' +
 			'</table>',
 			dialog = _dialog({
 				top:90,
@@ -559,24 +558,15 @@ $(document)
 				content:html,
 				submit:submit
 			});
-		$('#name,#title').keyEnter(submit);
-		$('#name').focus();
+		$('#name').keyEnter(submit).focus();
 		function submit() {
 			var send = {
 				op:'equip_add',
 				name:$('#name').val(),
-				title:$('#title').val(),
 				device_id:$('.sa-equip .rightLink .sel').attr('val')
 			};
 			if(!send.name) {
-				dialog.bottom.vkHint({
-					msg:'<SPAN class=red>Не указано наименование</SPAN>',
-					top:-47,
-					left:77,
-					indent:50,
-					show:1,
-					remove:1
-				});
+				dialog.err('Не указано наименование');
 				$('#name').focus();
 			} else {
 				dialog.process();
@@ -584,7 +574,7 @@ $(document)
 					if(res.success) {
 						$('#eq-spisok').html(res.html);
 						dialog.close();
-						_msg('Внесено!');
+						_msg('Внесено');
 						sortable();
 					} else
 						dialog.abort();
@@ -592,70 +582,48 @@ $(document)
 			}
 		}
 	})
-	.on('click', '.sa-equip .img_edit', function() {
-		var t = $(this),
-			id = t,
+	.on('click', '.sa-equip .equip-edit', function() {
+		var t = $(this);
+		while(t[0].tagName != 'DD')
+			t = t.parent();
+		var id = t.attr('val'),
+			name = t.find('.name').html(),
+			html =
+				'<table class="sa-equip-add">' +
+					'<tr><td class="label">Наименование:<td><input id="name" type="text" maxlength="100" value="' + name + '" />' +
+				'</table>',
 			dialog = _dialog({
 				top:90,
 				width:350,
 				head:'Редактирование комплектации',
-				load:1,
+				content:html,
 				butSubmit:'Сохранить',
 				submit:submit
 			});
-		while(id[0].tagName != 'DD')
-			id = id.parent();
-		id = id.attr('val');
-		var send = {
-			op:'equip_get',
-			id:id
-		};
-		$.post(AJAX_SA, send, function(res) {
-			if(res.success) {
-				var html = '<table class="sa-equip-add">' +
-					'<tr><td class="label">Наименование:<td><input id="name" type="text" maxlength="100" value="' + res.name + '" />' +
-					'<tr><td class="label">Описание:<td><input id="title" type="text" maxlength="200" value="' + res.title + '" />' +
-					'</table>';
-				dialog.content.html(html);
-				$('#name,#title').keyEnter(submit);
-				$('#name').focus();
-			} else
-				dialog.loadError();
-		}, 'json');
-
+		$('#name').keyEnter(submit).focus();
 		function submit() {
 			var send = {
 				op:'equip_edit',
 				id:id,
-				name:$('#name').val(),
-				title:$('#title').val(),
-				device_id:$('.sa-equip .rightLink .sel').attr('val')
+				name:$('#name').val()
 			};
 			if(!send.name) {
-				dialog.bottom.vkHint({
-					msg:'<SPAN class=red>Не указано наименование</SPAN>',
-					top:-47,
-					left:77,
-					indent:50,
-					show:1,
-					remove:1
-				});
+				dialog.err('Не указано наименование');
 				$('#name').focus();
 			} else {
 				dialog.process();
 				$.post(AJAX_SA, send, function(res) {
 					if(res.success) {
-						$('#eq-spisok').html(res.html);
+						t.find('.name').html(send.name)
 						dialog.close();
 						_msg('Сохранено!');
-						sortable();
 					} else
 						dialog.abort();
 				}, 'json');
 			}
 		}
 	})
-	.on('click', '.sa-equip .img_del', function() {
+	.on('click', '.sa-equip .equip-del', function() {
 		var t = $(this),
 			dialog = _dialog({
 				top:90,
@@ -702,6 +670,74 @@ $(document)
 		$.post(AJAX_SA, send, function(res) {
 			$('.path').removeClass('busy');
 		}, 'json');
+	})
+
+	.on('click', '#zpname-add', zpNameAdd)
+	.on('click', '.zpname-edit', function() {
+		var t = $(this);
+		while(t[0].tagName != 'TR')
+			t = t.parent();
+		var name = t.find('.name').html(),
+			html = '<table class="sa-tab">' +
+				'<tr><td class="label">Наименование:<td><input id="name" type="text" maxlength="100" value="' + name + '" />' +
+				'</table>',
+			dialog = _dialog({
+				width:390,
+				head:'Редактирование',
+				content:html,
+				butSubmit:'Сохранить',
+				submit:submit
+			});
+		$('#name').keyEnter(submit).focus();
+		function submit() {
+			var send = {
+				op:'zpname_edit',
+				id:t.attr('val'),
+				name:$('#name').val()
+			};
+			if(!send.name) {
+				dialog.err('Не указано наименование');
+				$('#name').focus();
+			} else {
+				dialog.process();
+				$.post(AJAX_SA, send, function(res) {
+					if(res.success) {
+						t.find('.name').html(send.name);
+						dialog.close();
+						_msg('Изменено.');
+					} else
+						dialog.abort();
+				}, 'json');
+			}
+		}
+	})
+	.on('click', '.zpname-del', function() {
+		var t = $(this),
+			dialog = _dialog({
+				top:90,
+				width:300,
+				head:'Удаление',
+				content:'<center><b>Подтвердите удаление наименования запчасти.</b></center>',
+				butSubmit:'Удалить',
+				submit:submit
+			});
+		function submit() {
+			while(t[0].tagName != 'TR')
+				t = t.parent();
+			var send = {
+				op:'zpname_del',
+				id:t.attr('val')
+			};
+			dialog.process();
+			$.post(AJAX_SA, send, function(res) {
+				if(res.success) {
+					$('#zp-spisok').html(res.html);
+					dialog.close();
+					_msg('Удалено!');
+				} else
+					dialog.abort();
+			}, 'json');
+		}
 	})
 
 	.on('click', '.sa-fault .add', function() {
@@ -946,125 +982,6 @@ $(document)
 				t = t.parent();
 			var send = {
 				op:'color_del',
-				id:t.attr('val')
-			};
-			dialog.process();
-			$.post(AJAX_SA, send, function(res) {
-				if(res.success) {
-					$('.spisok').html(res.html);
-					dialog.close();
-					_msg('Удалено!');
-				} else
-					dialog.abort();
-			}, 'json');
-		}
-	})
-
-	.on('click', '.sa-zpname .add', function() {
-		var html = '<table class="sa-tab">' +
-				'<tr><td class="label">Наименование:<td><input id="name" type="text" maxlength="100" />' +
-				'</table>',
-			dialog = _dialog({
-				width:390,
-				head:'Добавление нового наименования запчасти',
-				content:html,
-				submit:submit
-			});
-		$('#name').focus().keyEnter(submit);
-		function submit() {
-			var send = {
-				op:'zpname_add',
-				name:$('#name').val()
-			};
-			if(!send.name) {
-				err('Не указано наименование');
-				$('#name').focus();
-			} else {
-				dialog.process();
-				$.post(AJAX_SA, send, function(res) {
-					if(res.success) {
-						$('.spisok').html(res.html);
-						dialog.close();
-						_msg('Внесено!');
-					} else
-						dialog.abort();
-				}, 'json');
-			}
-		}
-		function err(msg) {
-			dialog.bottom.vkHint({
-				msg:'<SPAN class=red>' + msg + '</SPAN>',
-				top:-47,
-				left:99,
-				indent:50,
-				show:1,
-				remove:1
-			});
-		}
-	})
-	.on('click', '.sa-zpname .img_edit', function() {
-		var t = $(this);
-		while(t[0].tagName != 'TR')
-			t = t.parent();
-		var name = t.find('.name').html(),
-			html = '<table class="sa-tab">' +
-				'<tr><td class="label">Наименование:<td><input id="name" type="text" maxlength="100" value="' + name + '" />' +
-				'</table>',
-			dialog = _dialog({
-				width:390,
-				head:'Редактирование',
-				content:html,
-				butSubmit:'Сохранить',
-				submit:submit
-			});
-		$('#name').keyEnter(submit).focus();
-		function submit() {
-			var send = {
-				op:'zpname_edit',
-				id:t.attr('val'),
-				name:$('#name').val()
-			};
-			if(!send.name) {
-				err('Не указано наименование');
-				$('#name').focus();
-			} else {
-				dialog.process();
-				$.post(AJAX_SA, send, function(res) {
-					if(res.success) {
-						$('.spisok').html(res.html);
-						dialog.close();
-						_msg('Изменено.');
-					} else
-						dialog.abort();
-				}, 'json');
-			}
-		}
-		function err(msg) {
-			dialog.bottom.vkHint({
-				msg:'<SPAN class=red>' + msg + '</SPAN>',
-				top:-47,
-				left:57,
-				indent:50,
-				show:1,
-				remove:1
-			});
-		}
-	})
-	.on('click', '.sa-zpname .img_del', function() {
-		var t = $(this),
-			dialog = _dialog({
-				top:90,
-				width:300,
-				head:'Удаление',
-				content:'<center><b>Подтвердите удаление наименования запчасти.</b></center>',
-				butSubmit:'Удалить',
-				submit:submit
-			});
-		function submit() {
-			while(t[0].tagName != 'TR')
-				t = t.parent();
-			var send = {
-				op:'zpname_del',
 				id:t.attr('val')
 			};
 			dialog.process();

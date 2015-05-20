@@ -38,12 +38,12 @@ function _zpLink($arr) {
 function zpAddQuery($zp) {//Внесение новой запчасти из заявки и из списка запчастей
 	if(!isset($zp['compat_id']))
 		$zp['compat_id'] = 0;
+	$find = ($zp['base_model_id'] ? _modelName($zp['base_model_id']).' ' : '').$zp['version'];
 	$sql = "INSERT INTO `zp_catalog` (
 				`name_id`,
 				`base_device_id`,
 				`base_vendor_id`,
 				`base_model_id`,
-				`bu`,
 				`version`,
 				`color_id`,
 				`compat_id`,
@@ -54,12 +54,11 @@ function zpAddQuery($zp) {//Внесение новой запчасти из заявки и из списка запчас
 				".$zp['base_device_id'].",
 				".$zp['base_vendor_id'].",
 				".$zp['base_model_id'].",
-				".$zp['bu'].",
 				'".addslashes($zp['version'])."',
 				".$zp['color_id'].",
 				".$zp['compat_id'].",
 				".VIEWER_ID.",
-				'".addslashes(_modelName($zp['base_model_id']).' '.$zp['version'])."'
+				'".addslashes($find)."'
 			)";
 	query($sql);
 	return mysql_insert_id();
@@ -75,8 +74,7 @@ function zpFilter($v) {
 		'name' => !empty($v['name']) && preg_match(REGEXP_NUMERIC, $v['name']) ? intval($v['name']) : 0,
 		'device' => !empty($v['device']) && preg_match(REGEXP_NUMERIC, $v['device']) ? intval($v['device']) : 0,
 		'vendor' => !empty($v['vendor']) && preg_match(REGEXP_NUMERIC, $v['vendor']) ? intval($v['vendor']) : 0,
-		'model' => !empty($v['model']) && preg_match(REGEXP_NUMERIC, $v['model']) ? intval($v['model']) : 0,
-		'bu' => !empty($v['bu']) && preg_match(REGEXP_BOOL, $v['bu']) ? intval($v['bu']) : 0,
+		'model' => !empty($v['model']) && preg_match(REGEXP_NUMERIC, $v['model']) ? intval($v['model']) : 0
 	);
 }//zpFilter()
 function zp_spisok($v) {
@@ -119,8 +117,6 @@ function zp_spisok($v) {
 		$cond .= " AND `base_vendor_id`=".$filter['vendor'];
 	if($filter['model'])
 		$cond .= " AND `base_model_id`=".$filter['model'];
-	if($filter['bu'])
-		$cond .= " AND `bu`";
 	$sort = "`s`.`name`,`d`.`sort`,`v`.`sort`,`c`.`find`";
 	if($filter['sort'])
 		$sort = "`c`.`id` DESC";
@@ -346,9 +342,8 @@ function zp_list($v) {
 					'<td><div class="vkButton"><button>Внести новую запчасть</button></div>'.
 				'</table>'.
 				'<table  id="zp-filter"><tr>'.
-					'<td id="td-name"><input type="hidden" id="zp_name" value="'.$filter['name'].'" />'.
 					'<td id="td-dev"><div id="dev"></div>'.
-					'<td id="td-bu">'._check('bu', 'Б/у', $filter['bu']).
+					'<td id="td-name"><input type="hidden" id="zp_name" value="'.$filter['name'].'" />'.
 						'<a class="clear">Очистить фильтр</a>'.
 				'</table>'.
 			'</div>'.
@@ -377,7 +372,6 @@ function zp_info($zp_id) {
 		$sql = "SELECT * FROM `zp_catalog` WHERE `id`=".$compat_id;
 		$compat = mysql_fetch_assoc(query($sql));
 		$zp['color_id'] = $compat['color_id'];
-		$zp['bu'] = $compat['bu'];
 	}
 
 	$avai = query_value("SELECT `count` FROM `zp_avai` WHERE `ws_id`=".WS_ID." AND `zp_id`=".$compat_id);
@@ -402,7 +396,6 @@ function zp_info($zp_id) {
 			'version:"'.$zp['version'].'",'.
 			'color_id:'.$zp['color_id'].','.
 			($zp['color_id'] ? 'color_name:"'._color($zp['color_id']).'",' : '').
-			'bu:'.$zp['bu'].','.
 			'name:"'._zpName($zp['name_id']).' <b>'._vendorName($zp['base_vendor_id'])._modelName($zp['base_model_id']).'</b>",'.
 			'for:"для '._deviceName($zp['base_device_id'], 1).'",'.
 			'count:'.($avai ? $avai : 0).','.
@@ -414,7 +407,6 @@ function zp_info($zp_id) {
 		'<table class="ztab">'.
 			'<tr><td class="left">'.
 					'<div class="name">'.
-						($zp['bu'] ? '<span>Б/у</span>' : '').
 						_zpName($zp['name_id']).
 						'<em>'.$zp['version'].'</em>'.
 					'</div>'.

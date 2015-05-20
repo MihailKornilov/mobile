@@ -27,13 +27,11 @@ function sa_index() {
 		'<br />'.
 		'<div><B>Устройства и запчасти:</B></div>'.
 		'<A href="'.URL.'&p=sa&d=device">Устройства / Производители / Модели</A><br />'.
-		'<A href="'.URL.'&p=sa&d=equip">Комплектация устройств</A><br />'.
+		'<A href="'.URL.'&p=sa&d=equip">Комплектация и наименования запчастей для устройств</A><br />'.
 		'<A href="'.URL.'&p=sa&d=fault">Виды неисправностей</A><br />'.
 		//'<A href="'.URL.'&p=sa&d=dev-spec">Характеристики устройств для информации</A><br />'.
 		'<br />'.
 		'<A href="'.URL.'&p=sa&d=color">Цвета для устройств и запчастей</A><br />'.
-		'<br />'.
-		'<A href="'.URL.'&p=sa&d=zpname">Наименования запчастей</A><br />'.
 	'</div>';
 }//sa_index()
 
@@ -455,12 +453,17 @@ function sa_equip() {
 	$dev = '';
 	while($r = mysql_fetch_assoc($q))
 		$dev .= '<a'.($r['id'] == $default_id ? ' class="sel"' : '').' val="'.$r['id'].'">'.$r['name'].'</a>';
-	return '<div class="path">'.sa_cookie_back().'<a href="'.URL.'&p=sa">Администрирование</a> » Комплектация устройств</div>'.
+	return
+	'<script type="text/javascript">'.
+		'var ZPNAME={device_id:'.$default_id.'};'.
+	'</script>'.
+	'<div class="path">'.sa_cookie_back().'<a href="'.URL.'&p=sa">Администрирование</a> » Комплектация устройств и наименования запчастей</div>'.
 	'<div class="sa-equip">'.
-		'<div class="headName">Комплектация устройств<a class="add">Добавить новое наименование</a></div>'.
-		'<table class="etab">'.
-			'<tr><td><div class="rightLink">'.$dev.'</dev>'.
-				'<td id="eq-spisok">'.sa_equip_spisok($default_id).
+		'<table>'.
+			'<tr><td valign="top"><div class="rightLink">'.$dev.'</dev>'.
+				'<td valign="top">'.
+					'<div id="eq-spisok">'.sa_equip_spisok($default_id).'</div>'.
+					'<div id="zp-spisok">'.sa_zpname_spisok($default_id).'</div>'.
 		'</table>'.
 	'</div>';
 }//sa_equip()
@@ -477,20 +480,54 @@ function sa_equip_spisok($device_id) {
 			'<table class="_spisok">'.
 				'<tr><th class="use">'.
 					'<th class="name">Наименование'.
-					'<th class="set">Настройки'.
+					'<th class="ed">'.
 			'</table>'.
 			'<dl class="_sort" val="setup_device_equip">';
 		foreach(equipCache() as $id => $r)
 			$spisok .= '<dd val="'.$id.'">'.
 				'<table class="_spisok">'.
 					'<tr><td class="use">'._check('c_'.$id, '', isset($equip[$id]) ? 1 : 0).
-					'<td class="name">'.($r['title'] ? '<span title="'.$r['title'].'">'.$r['name'].'</span>' : $r['name']).
-						'<td class="set"><div class="img_edit"></div><div class="img_del"></div>'.
+						'<td class="name">'.$r['name'].
+						'<td class="ed">'.
+							'<div class="img_edit equip-edit"></div>'.
+							'<div class="img_del equip-del"></div>'.
 				'</table>';
 		$spisok .= '</dl>';
 	}
-	return '<div class="eq-head">Используемые комплектации для <b>'._deviceName($device_id).'</b>:</div>'.
+	return
+		'<div class="headName">Комплектация<a class="add" id="equip-add">Добавить</a></div>'.
 		($spisok ? $spisok : 'Вариантов комплектаций нет');
+}//sa_equip_spisok()
+function sa_zpname_spisok($device_id) {
+	$sql = "SELECT
+	            `s`.*,
+				COUNT(`c`.`id`) AS `zp`
+	        FROM `setup_zp_name` AS `s`
+	        	LEFT JOIN `zp_catalog` AS `c`
+	        	ON `s`.`id`=`c`.`name_id`
+	        WHERE `s`.`device_id`=".$device_id."
+	        GROUP BY `s`.`id`
+	        ORDER BY `s`.`name`";
+	$q = query($sql);
+	$send = '<div class="headName">Запчасти<a class="add" id="zpname-add">Добавить</a></div>';
+	if(!mysql_num_rows($q))
+		return $send.'Список пуст.';
+
+	$send .=
+		'<table class="_spisok">'.
+			'<tr><th class="name">Наименование'.
+				'<th>Кол-во<br />запчастей<br />в каталоге'.
+				'<th>';
+	while($r = mysql_fetch_assoc($q))
+		$send .=
+			'<tr val="'.$r['id'].'">'.
+				'<td class="name">'.$r['name'].
+				'<td class="zp">'.($r['zp'] ? $r['zp'] : '').
+				'<td class="ed">'.
+					'<div class="img_edit zpname-edit"></div>'.
+   ($r['zp'] ? '' : '<div class="img_del zpname-del"></div>');
+	$send .= '</table>';
+	return $send;
 }//sa_equip_spisok()
 
 function sa_fault() {
@@ -579,39 +616,3 @@ function sa_color_spisok() {
 	$send .= '</table>';
 	return $send;
 }//sa_color_spisok()
-
-function sa_zpname() {
-	return '<div class="path">'.sa_cookie_back().'<a href="'.URL.'&p=sa">Администрирование</a> » Наименования запчастей</div>'.
-	'<div class="sa-zpname">'.
-	'<div class="headName">Наименования запчастей<a class="add">Добавить</a></div>'.
-	'<div class="spisok">'.sa_zpname_spisok().'</div>'.
-	'</div>';
-
-}//sa_zpname()
-function sa_zpname_spisok() {
-	$sql = "SELECT
-	            `s`.*,
-				COUNT(`c`.`id`) AS `zp`
-	        FROM `setup_zp_name` AS `s`
-	        LEFT JOIN `zp_catalog` AS `c`
-	        ON `s`.`id`=`c`.`name_id`
-	        GROUP BY `s`.`id`
-	        ORDER BY `s`.`name`";
-	$q = query($sql);
-	if(!mysql_num_rows($q))
-		return 'Список пуст.';
-
-	$send =
-		'<table class="_spisok">'.
-			'<tr><th class="name">Наименование'.
-				'<th>Кол-во<br />запчастей<br />в каталоге'.
-				'<th>';
-	while($r = mysql_fetch_assoc($q))
-		$send .= '<tr val="'.$r['id'].'">'.
-			'<td class="name">'.$r['name'].
-			'<td class="zp">'.($r['zp'] ? $r['zp'] : '').
-			'<td><div class="img_edit"></div>'.
-				($r['zp'] ? '' : '<div class="img_del"></div>');
-	$send .= '</table>';
-	return $send;
-}//sa_zpname_spisok()
