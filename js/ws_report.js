@@ -11,6 +11,22 @@ var incomeSpisok = function() {
 			}
 		}, 'json');
 	},
+
+	schetFilter = function() {
+		return {
+			op:'schet_spisok',
+			passpaid:$('#passpaid').val()
+		};
+	},
+	schetSpisok = function() {
+		$('#mainLinks').addClass('busy');
+		$.post(AJAX_WS, schetFilter(), function(res) {
+			$('#mainLinks').removeClass('busy');
+			if(res.success)
+				$('#spisok').html(res.html);
+		}, 'json');
+	},
+
 	expenseFilter = function() {
 		var arr = [],
 			inp = $('#monthList input');
@@ -465,6 +481,20 @@ $(document)
 				}, 'json');
 			}
 		}
+	})
+	.on('click', '#schet_next', function() {
+		if($(this).hasClass('busy'))
+			return;
+		var next = $(this),
+			send = schetFilter();
+		send.page = $(this).attr('val');
+		next.addClass('busy');
+		$.post(AJAX_WS, send, function (res) {
+			if(res.success)
+				next.after(res.html).remove();
+			else
+				next.removeClass('busy');
+		}, 'json');
 	})
 
 	.on('click', '.invoice_set', function() {
@@ -1235,6 +1265,9 @@ $(document)
 					expenseSpisok();
 				}
 			});		}
+		if($('#report.schet').length) {
+			$('#passpaid')._radio(schetSpisok);
+		}
 		if($('#report.invoice').length) {
 			$('.transfer').click(function() {
 				var t = $(this),

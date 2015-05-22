@@ -165,7 +165,7 @@ function report() {
 					break;
 				case 'schet':
 					$left = report_schet();
-					$right .= _check('paid', 'Не оплачено');
+					$right .= report_schet_right();
 					break;
 				case 'invoice': $left = invoice(); break;
 			}
@@ -936,10 +936,22 @@ function expense_spisok($v=array()) {
 function reportSchetFilter($v) {
 	$send = array(
 		'page' => _isnum(@$v['page']) ? $v['page'] : 1,
-		'limit' => _isnum(@$v['limit']) ? $v['limit'] : 100
+		'limit' => _isnum(@$v['limit']) ? $v['limit'] : 50,
+		'passpaid' => _isnum(@$v['passpaid'])
 	);
 	return $send;
 }//expenseFilter()
+function report_schet_right() {
+	return
+		'<div class="findHead">Счета:</div>'.
+		_radio('passpaid',
+			array(
+				0 => 'ВСЕ',
+				1 => 'Не переданы',
+				2 => 'Переданы, не опл.',
+				3 => 'Оплачены'
+			), 0, 1);
+}//report_schet_right()
 function report_schet() {
 	$data = report_schet_spisok();
 	return
@@ -949,6 +961,12 @@ function report_schet() {
 function report_schet_spisok($v=array()) {
 	$filter = reportSchetFilter($v);
 	$cond = "`ws_id`=".WS_ID;
+
+	switch($filter['passpaid']) {
+		case 1: $cond .= " AND !`pass`"; break;
+		case 2: $cond .= " AND `pass` AND !`paid`"; break;
+		case 3: $cond .= " AND `paid`"; break;
+	}
 
 	$sql = "SELECT
 				COUNT(`id`) AS `all`,
@@ -961,22 +979,22 @@ function report_schet_spisok($v=array()) {
 		return $send + array('spisok' => '<div class="_empty">Счетов нет.</div>');
 
 	$all = $send['all'];
-	$page = $filter['page'];
-	$limit = $filter['limit'];
-	$start = ($page - 1) * $limit;
+	$filter['all'] = $all;
 
 	$send['spisok'] =
-		'<div id="result">'.
-			'Показан'._end($all, '', 'о').' <b>'.$all.'</b> сч'._end($all, 'ёт', 'ёта', 'етов').
-			' на сумму <b>'.$send['sum'].'</b> руб.'.
-		'</div>'.
-		'<table class="_spisok _money">';
+		($filter['page'] == 1 ?
+			'<div id="result">'.
+				'Показан'._end($all, '', 'о').' <b>'.$all.'</b> сч'._end($all, 'ёт', 'ёта', 'етов').
+				' на сумму <b>'.$send['sum'].'</b> руб.'.
+			'</div>'.
+			'<table class="_spisok _money">'
+		: '');
 
 	$sql = "SELECT *
 			FROM `zayav_schet`
 			WHERE ".$cond."
 			ORDER BY `id` DESC
-			LIMIT ".$start.",".$limit;
+			LIMIT "._start($filter).",".$filter['limit'];
 	$q = query($sql);
 
 	$spisok = array();
@@ -988,9 +1006,45 @@ function report_schet_spisok($v=array()) {
 	foreach($spisok as $r)
 		$send['spisok'] .= schet_unit($r);
 
-	$send['spisok'] .= '</table>';
+
+	$send['spisok'] .=
+		_next(array(
+			'tr' => 1,
+			'type' => 4,
+			'id' => 'schet_next'
+		) + $filter).
+		($filter['page'] == 1 ? '</table>' : '');
+
 	return $send;
 }//report_schet_spisok()
+
+function _start($v) {//вычисление первой позиции в базе данных
+	return ($v['page'] - 1) * $v['limit'];
+}//_start()
+function _next($v) {//вывод ссылки на догрузку списка
+	$start = _start($v);
+	if($start + $v['limit'] < $v['all']) {
+		$c = $v['all'] - $start - $v['limit'];
+		$c = $c > $v['limit'] ? $v['limit'] : $c;
+
+		switch(@$v['type']) {
+			case 1: break; //клиенты
+			case 2: break; //заявки
+			case 3: break; //платежи
+			case 4: $type = ' сч'._end($c, 'ёт', 'ёта', 'етов'); break;
+			default: $type = ' запис'._end($c, 'ь', 'и', 'ей');
+		}
+
+		$show = '<span>Показать ещё '.$c.$type.'</span>';
+		$id = empty($v['id']) ? '' : ' id="'.$v['id'].'"';
+		return
+			empty($v['tr']) ?
+				'<div class="_next" val="'.($v['page'] + 1).'"'.$id.'>'.$show.'</div>'
+				:
+				'<tr class="_next" val="'.($v['page'] + 1).'"'.$id.'>'.
+					'<td colspan="10">'.$show;
+	}
+}//_next()
 
 function _invoiceBalans($invoice_id, $start=false) {// Получение текущего баланса счёта
 	if($start === false)

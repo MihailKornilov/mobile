@@ -511,33 +511,6 @@ switch(@$_POST['op']) {
 		jsonSuccess($send);
 		break;
 
-	case 'zpname_add':
-		if(!$device_id = _num($_POST['device_id']))
-			jsonError();
-
-		$name = _txt($_POST['name']);
-
-		if(empty($name))
-			jsonError();
-
-		$sql = "INSERT INTO `setup_zp_name` (
-					`device_id`,
-					`name`
-				) VALUES (
-					".$device_id.",
-					'".addslashes($name)."'
-				)";
-		query($sql);
-
-		$send['id'] = mysql_insert_id();
-
-		GvaluesCreate();
-		xcache_unset(CACHE_PREFIX.'zp_name');
-
-		$send['zp'] = utf8(sa_zpname_spisok($device_id));
-
-		jsonSuccess($send);
-		break;
 	case 'zpname_edit':
 		if(!$id = _num($_POST['id']))
 			jsonError();

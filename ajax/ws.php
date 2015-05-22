@@ -2749,6 +2749,12 @@ switch(@$_POST['op']) {
 		jsonSuccess();
 		break;
 
+	case 'schet_spisok':
+		$data = report_schet_spisok($_POST);
+		$send['html'] = utf8($data['spisok']);
+		jsonSuccess($send);
+		break;
+
 	case 'invoice_set':
 		if(!$invoice_id = _isnum($_POST['invoice_id']))
 			jsonError();

@@ -445,7 +445,7 @@ var AJAX_WS = APP_HTML + '/ajax/ws.php?' + VALUES,
 				$('#name').focus();
 			} else {
 				dialog.process();
-				$.post(AJAX_SA, send, function(res) {
+				$.post(AJAX_MAIN, send, function(res) {
 					if(res.success) {
 						if($('.sa-equip').length)
 							$('#zp-spisok').html(res.zp);
