@@ -269,6 +269,8 @@ switch(@$_POST['op']) {
 	case 'cartridge_edit':
 		if(!$id = _num($_POST['id']))
 			jsonError();
+		if(!$type_id = _num($_POST['type_id']))
+			jsonError();
 		$name = _txt($_POST['name']);
 		$cost_filling = _num($_POST['cost_filling']);
 		$cost_restore = _num($_POST['cost_restore']);
@@ -302,7 +304,8 @@ switch(@$_POST['op']) {
 		}
 
 		$sql = "UPDATE `setup_cartridge`
-				SET `name`='".addslashes($name)."',
+				SET `type_id`=".$type_id.",
+					`name`='".addslashes($name)."',
 					`cost_filling`=".$cost_filling.",
 					`cost_restore`=".$cost_restore.",
 					`cost_chip`=".$cost_chip."
@@ -313,6 +316,8 @@ switch(@$_POST['op']) {
 		GvaluesCreate();
 
 		$changes = '';
+		if($r['type_id'] != $type_id)
+			$changes .= '<tr><th>Вид:<td>'._cartridgeType($r['type_id']).'<td>»<td>'._cartridgeType($type_id);
 		if($r['name'] != $name)
 			$changes .= '<tr><th>Модель:<td>'.$r['name'].'<td>»<td>'.$name;
 		if($r['cost_filling'] != $cost_filling)

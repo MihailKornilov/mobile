@@ -1594,22 +1594,27 @@ switch(@$_POST['op']) {
 		break;
 
 	case 'cartridge_new'://внесение новой модели картриджа
+		if(!$type_id = _num($_POST['type_id']))
+			jsonError();
+
 		$name = _txt($_POST['name']);
-		$cost_filling = _isnum($_POST['cost_filling']);
-		$cost_restore = _isnum($_POST['cost_restore']);
-		$cost_chip = _isnum($_POST['cost_chip']);
+		$cost_filling = _num($_POST['cost_filling']);
+		$cost_restore = _num($_POST['cost_restore']);
+		$cost_chip = _num($_POST['cost_chip']);
 
 		if(empty($name))
 			jsonError();
 
 		$sql = "INSERT INTO `setup_cartridge` (
 					`ws_id`,
+					`type_id`,
 					`name`,
 					`cost_filling`,
 					`cost_restore`,
 					`cost_chip`
 				) VALUES (
 					".WS_ID.",
+					".$type_id.",
 					'".addslashes($name)."',
 					".$cost_filling.",
 					".$cost_restore.",

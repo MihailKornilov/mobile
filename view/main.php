@@ -173,6 +173,8 @@ function GvaluesCreate() {//Составление файла G_values.js
 		"\n".'MODEL_ASS={0:""};'.
 		"\n".'for(k in MODEL_SPISOK){for(n=0;n<MODEL_SPISOK[k].length;n++){var sp=MODEL_SPISOK[k][n];MODEL_ASS[sp.uid]=sp.title;}}'.
 
+		"\n".'CARTRIDGE_TYPE='._selJson(_cartridgeType()).','.
+
 		"\n".'ZE_DOP='._selJson(_zayavExpenseDop()).','.
 		"\n".'SALARY_PERIOD='._selJson(salaryPeriod()).','.
 		"\n".'PAY_TYPE='._selJson(_payType()).','.
@@ -470,6 +472,13 @@ function _cartridgeName($item_id) {
 	}
 	return constant('CARTRIDGE_NAME_'.$item_id);
 }//_cartridgeName()
+function _cartridgeType($type_id=0) {
+	$arr = array(
+		1 => 'Лазерные',
+		2 => 'Струйные'
+	);
+	return $type_id ? $arr[$type_id] : $arr;
+}//_cartridgeType()
 
 function equipCache() {
 	$key = CACHE_PREFIX.'device_equip';

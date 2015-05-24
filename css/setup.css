@@ -30,6 +30,8 @@
 #setup-service .unit h1._busy{background-position:right center}
 
 #setup-service-cartridge #back{color:#777;margin-bottom:10px;display:inline-block}
+#setup-service-cartridge .type{font-weight:bold;margin-bottom:5px}
+#setup-service-cartridge ._spisok{margin-bottom:20px}
 #setup-service-cartridge .edited{background-color:#ffa}
 #setup-service-cartridge .n{width:16px;text-align:right}
 #setup-service-cartridge .name{width:185px}
