@@ -394,7 +394,7 @@ function history_types($v, $filter) {
 
 		case 1017: return '<a href="'.URL.'&p=setup&d=service&d1=cartridge">В настройках:</a> внесение нового картриджа <u>'.$v['value'].'</u>.';
 		case 1018: return '<a href="'.URL.'&p=setup&d=service&d1=cartridge">В настройках:</a> изменение данных картриджа <u>'.$v['value'].'</u>:<div class="changes">'.$v['value1'].'</div>';
-		case 1019: return '<a href="'.URL.'&p=setup&d=service&d1=cartridge">В настройках:</a> удаленён картридж <u>'.$v['value'].'</u>.';
+		case 1019: return '<a href="'.URL.'&p=setup&d=service&d1=cartridge">В настройках:</a> объединены картриджи <u>'.$v['value'].'</u> и <u>'.$v['value1'].'</u>.';
 
 		case 1020: return '<a href="'.URL.'&p=setup&d=rekvisit">В настройках:</a> изменены реквизиты организации:<div class="changes">'.$v['value'].'</div>';
 

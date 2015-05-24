@@ -178,19 +178,22 @@ $(document)
 
 	.on('click', '#setup-service-cartridge .add', cartridgeNew)
 	.on('click', '#setup-service-cartridge .img_edit', function() {
-		var t = $(this);
+		var t = $(this),
+			id = t.attr('val');
 		while(t[0].tagName != 'TR')
 			t = t.parent();
-		var id = t.attr('val'),
-			name = t.find('.name').html(),
-			filling = t.find('.filling').html(),
-			restore = t.find('.restore').html(),
-			chip = t.find('.chip').html(),
+		var name = t.find('.name').html(),
+			filling = t.find('.filling').val(),
+			restore = t.find('.restore').val(),
+			chip = t.find('.chip').val(),
 			html = '<table class="setup-tab">' +
 				'<tr><td class="label"><b>Модель картриджа:</b><td><input type="text" id="name" value="' + name + '" />' +
 				'<tr><td class="label">Заправка:<td><input type="text" id="cost_filling" class="money" maxlength="11" value="' + filling + '" /> руб.' +
 				'<tr><td class="label">Восстановление:<td><input type="text" id="cost_restore" class="money" maxlength="11" value="' + restore + '" /> руб.' +
 				'<tr><td class="label">Замена чипа:<td><input type="text" id="cost_chip" class="money" maxlength="11" value="' + chip + '" /> руб.' +
+				'<tr><td><td>' +
+				'<tr><td class="label">Объединить:<td><input type="hidden" id="join" />' +
+				'<tr class="tr-join dn"><td class="label">С картриджем:<td><input type="hidden" id="join_id" />' +
 				'</table>',
 			dialog = _dialog({
 				top:40,
@@ -202,23 +205,46 @@ $(document)
 			});
 		$('#name').focus();
 		$('#name,#cost_filling,#cost_restore,#cost_chip').keyEnter(submit);
+		$('#join')._check({
+			func:function(v) {
+				$('.tr-join')[(v ? 'remove' : 'add') + 'Class']('dn');
+			}
+		});
+		var spisok = [];
+		for(var n = 0; n < CARTRIDGE_SPISOK.length; n++) {
+			var sp = CARTRIDGE_SPISOK[n];
+			if(sp.uid == id)
+				continue;
+			spisok.push(sp);
+		}
+		$('#join_id')._select({
+			width:218,
+			write:1,
+			title0:'Не выбрано',
+			spisok:spisok
+		});
 		function submit() {
-			var send = {
-				op:'cartridge_edit',
-				id:id,
-				name:$('#name').val(),
-				cost_filling:_num($('#cost_filling').val()),
-				cost_restore:_num($('#cost_restore').val()),
-				cost_chip:_num($('#cost_chip').val())
-			};
+			var join = _num($('#join').val()),
+				send = {
+					op:'cartridge_edit',
+					id:id,
+					name:$('#name').val(),
+					cost_filling:_num($('#cost_filling').val()),
+					cost_restore:_num($('#cost_restore').val()),
+					cost_chip:_num($('#cost_chip').val()),
+					join_id:join ? _num($('#join_id').val()) : 0
+				};
 			if(!send.name) {
 				dialog.err('Не указано наименование');
 				$('#name').focus();
-			} else {
+			} else if(join && !send.join_id)
+				dialog.err('Не выбран картридж для объединения');
+			else {
 				dialog.process();
 				$.post(AJAX_SETUP, send, function(res) {
 					if(res.success) {
 						$('#spisok').html(res.html);
+						CARTRIDGE_SPISOK = res.cart;
 						dialog.close();
 						_msg('Изменено!');
 					} else
@@ -227,33 +253,8 @@ $(document)
 			}
 		}
 	})
-	.on('click', '#setup-service-cartridge .img_del', function() {
-		var t = $(this),
-			dialog = _dialog({
-				top:90,
-				width:300,
-				head:'Удаление картриджа',
-				content:'<center><b>Подтвердите удаление картриджа.</b></center>',
-				butSubmit:'Удалить',
-				submit:submit
-			});
-		function submit() {
-			while(t[0].tagName != 'TR')
-				t = t.parent();
-			var send = {
-				op:'cartridge_del',
-				id:t.attr('val')
-			};
-			dialog.process();
-			$.post(AJAX_SETUP, send, function(res) {
-				if(res.success) {
-					$('#spisok').html(res.html);
-					dialog.close();
-					_msg('Удалено!');
-				} else
-					dialog.abort();
-			}, 'json');
-		}
+	.on('mouseleave', '#setup-service-cartridge .edited', function() {//удаление подсветки отредактированного картриджа
+		$(this).css('background-color', '#fff');
 	})
 
 	.on('click', '#setup_invoice .add', function() {

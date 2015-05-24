@@ -270,16 +270,36 @@ switch(@$_POST['op']) {
 		if(!$id = _num($_POST['id']))
 			jsonError();
 		$name = _txt($_POST['name']);
-		$cost_filling = _isnum($_POST['cost_filling']);
-		$cost_restore = _isnum($_POST['cost_restore']);
-		$cost_chip = _isnum($_POST['cost_chip']);
+		$cost_filling = _num($_POST['cost_filling']);
+		$cost_restore = _num($_POST['cost_restore']);
+		$cost_chip = _num($_POST['cost_chip']);
+		$join_id = _num($_POST['join_id']);
 
 		if(empty($name))
+			jsonError();
+		if($join_id == $id)
 			jsonError();
 
 		$sql = "SELECT * FROM `setup_cartridge` WHERE `id`=".$id;
 		if(!$r = query_assoc($sql))
 			jsonError();
+
+		if($join_id) {
+			$sql = "SELECT * FROM `setup_cartridge` WHERE `id`=".$join_id;
+			if(!$j = query_assoc($sql))
+				jsonError();
+			$sql = "UPDATE `zayav_cartridge`
+					SET `cartridge_id`=".$id."
+					WHERE `cartridge_id`=".$join_id;
+			query($sql);
+			$sql = "DELETE FROM `setup_cartridge` WHERE `id`=".$join_id;
+			query($sql);
+			history_insert(array(
+				'type' => 1019,
+				'value' => $name,
+				'value1' => $j['name']
+			));
+		}
 
 		$sql = "UPDATE `setup_cartridge`
 				SET `name`='".addslashes($name)."',
@@ -308,30 +328,8 @@ switch(@$_POST['op']) {
 				'value1' => '<table>'.$changes.'</table>'
 			));
 
-		$send['html'] = utf8(setup_service_cartridge_spisok());
-		jsonSuccess($send);
-		break;
-	case 'cartridge_del':
-		if(!$id = _num($_POST['id']))
-			jsonError();
-
-		$sql = "SELECT * FROM `setup_cartridge` WHERE `id`=".$id;
-		if(!$r = query_assoc($sql))
-			jsonError();
-
-jsonError();//todo временно удаления нет
-
-		query("DELETE FROM `setup_cartridge` WHERE `id`=".$id);
-
-		xcache_unset(CACHE_PREFIX.'cartridge'.WS_ID);
-		GvaluesCreate();
-
-		history_insert(array(
-			'type' => 1019,
-			'value' => $r['name']
-		));
-
-		$send['html'] = utf8(setup_service_cartridge_spisok());
+		$send['html'] = utf8(setup_service_cartridge_spisok($id));
+		$send['cart'] = query_selArray("SELECT `id`,`name` FROM `setup_cartridge` WHERE `ws_id`=".WS_ID." ORDER BY `name`");
 		jsonSuccess($send);
 		break;
 

@@ -166,8 +166,15 @@ function setup_service_cartridge() {
 			'<div id="spisok">'.setup_service_cartridge_spisok().'</div>'.
 		'</div>';
 }//setup_service_cartridge()
-function setup_service_cartridge_spisok() {
-	$sql = "SELECT * FROM `setup_cartridge` WHERE `ws_id`=".WS_ID." ORDER BY `name`";
+function setup_service_cartridge_spisok($edit_id=0) {
+	$sql = "SELECT `s`.*,
+				   COUNT(`z`.`id`) `count`
+			FROM `setup_cartridge` `s`
+			  LEFT JOIN `zayav_cartridge` AS `z`
+			  ON `s`.`id`=`z`.`cartridge_id`
+			WHERE `ws_id`=".WS_ID."
+			GROUP BY `s`.`id`
+			ORDER BY `name`";
 	$q = query($sql);
 	if(!mysql_num_rows($q))
 		return 'Список пуст.';
@@ -178,21 +185,32 @@ function setup_service_cartridge_spisok() {
 
 	$send =
 		'<table class="_spisok">'.
-			'<tr><th class="name">Модель'.
-				'<th class="filling">Заправка'.
-				'<th class="restore">Восст.'.
-				'<th class="chip">Замена<br />чипа'.
+			'<tr><th class="n">№'.
+				'<th class="name">Модель'.
+				'<th class="cost">Вид услуги:<br />Запр./восст./чип'.
+				'<th class="count">Кол-во'.
 				'<th class="set">';
-	foreach($spisok as $id => $r)
+	$n = 1;
+	foreach($spisok as $id => $r) {
+		$cost = array();
+		if($r['cost_filling'])
+			$cost[] = '<span class="'._tooltip('Заправка', -30).$r['cost_filling'].'</span>';
+		if($r['cost_restore'])
+			$cost[] = '<span class="'._tooltip('Восстановление', -48).$r['cost_restore'].'</span>';
+		if($r['cost_chip'])
+			$cost[] = '<span class="'._tooltip('Замена чипа', -40).$r['cost_chip'].'</span>';
 		$send .=
-			'<tr val="'.$id.'">'.
+			'<tr'.($edit_id == $r['id'] ? ' class="edited"' : '').'>'.
+				'<td class="n">'.($n++).
 				'<td class="name">'.$r['name'].
-				'<td class="filling">'.($r['cost_filling'] ? $r['cost_filling'] : '').
-				'<td class="restore">'.($r['cost_restore'] ? $r['cost_restore'] : '').
-				'<td class="chip">'.($r['cost_chip'] ? $r['cost_chip'] : '').
+				'<td class="cost">'.implode(' / ', $cost).
+					'<input type="hidden" class="filling" value="'.$r['cost_filling'].'" />'.
+					'<input type="hidden" class="restore" value="'.$r['cost_restore'].'" />'.
+					'<input type="hidden" class="chip" value="'.$r['cost_chip'].'" />'.
+				'<td class="count">'.($r['count'] ? $r['count'] : '').
 				'<td class="set">'.
-					'<div class="img_edit'._tooltip('Изменить', -33).'</div>'.
-					'<div class="img_del'._tooltip('Удалить', -29).'</div>';
+					'<div val="'.$id.'" class="img_edit'._tooltip('Изменить', -33).'</div>';
+	}
 	$send .= '</table>';
 	return $send;
 }//setup_service_cartridge_spisok()
