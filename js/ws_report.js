@@ -15,6 +15,7 @@ var incomeSpisok = function() {
 	schetFilter = function() {
 		return {
 			op:'schet_spisok',
+			find:$('#find')._search('val'),
 			passpaid:$('#passpaid').val()
 		};
 	},
@@ -293,12 +294,12 @@ $(document)
 			html =
 				'<table class="_dialog-tab">' +
 					'<tr><td class="label">№ счёта:<td><b>' + nomer + '</b>' +
-					'<tr><td class="label">Сумма:<td><input type="text" class="money" disabled id="sum" value="' + p.find('.pay-sum').html() + '" /> руб.' +
+					'<tr><td class="label">Сумма:<td><input type="text" class="money" id="sum" value="' + p.find('.pay-sum').html() + '" /> руб.' +
 					'<tr><td class="label">День оплаты:<td><input type="hidden" id="pay-day" />' +
 					'<tr><td class="label">Расчётный счёт:<td>' + INVOICE_ASS[4] +
 				'</table>';
 		var dialog = _dialog({
-				width:320,
+				width:420,
 				head:'Оплата счёта',
 				content:html,
 				butSubmit:'Оплатить',
@@ -306,24 +307,31 @@ $(document)
 			});
 
 		$('#pay-day')._calendar({lost:1});
+		$('#sum').focus();
 		function submit() {
 			var send = {
 				op:'schet_pay',
 				zayav_id:window.ZAYAV ? ZAYAV.id : 0,
 				schet_id:t.attr('val'),
+				sum:_cena($('#sum').val()),
 				day:$('#pay-day').val()
 			};
-			dialog.process();
-			$.post(AJAX_WS, send, function(res) {
-				if(res.success) {
-					if(window.ZAYAV)
-						$('#schet-spisok').html(res.zayav_schet);
-					else $('#spisok').html(res.html);
-					dialog.close();
-					_msg('Счёт ' + nomer + ' оплачен');
-				} else
-					dialog.abort();
-			}, 'json');
+			if(!send.sum) {
+				dialog.err('Некорректно указана сумма');
+				$('#sum').focus();
+			} else {
+				dialog.process();
+				$.post(AJAX_WS, send, function (res) {
+					if (res.success) {
+						if (window.ZAYAV)
+							$('#schet-spisok').html(res.zayav_schet);
+						else $('#spisok').html(res.html);
+						dialog.close();
+						_msg('Счёт ' + nomer + ' оплачен');
+					} else
+						dialog.abort();
+				}, 'json');
+			}
 		}
 	})
 	.on('click', '.schet-unit .img_edit', function() {
@@ -1266,6 +1274,13 @@ $(document)
 				}
 			});		}
 		if($('#report.schet').length) {
+			$('#find')._search({
+				width: 137,
+				focus: 1,
+				txt: 'номер счёта',
+				enter: 1,
+				func: schetSpisok
+			});
 			$('#passpaid')._radio(schetSpisok);
 		}
 		if($('#report.invoice').length) {

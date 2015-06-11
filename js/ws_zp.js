@@ -137,7 +137,7 @@ $(document)
 	.on('click', '#zp .clear', function() {
 		$('#find')._search('clear');
 		$('#zp_menu')._dropdown(0);
-		$('#zp_name')._select(0);
+		$('#zp_name').val(0)._select('remove');
 		$('#dev').device({
 			width:220,
 			type_no:1,
@@ -727,6 +727,7 @@ $(document)
 		});
 		return false;
 	})
+
 
 	.ready(function() {
 		if($('#zp').length) {

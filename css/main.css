@@ -95,6 +95,8 @@
 #clientInfo #zayav_spisok ._empty{margin:10px}
 #clientInfo #zayav_spisok ._next{margin:5px 10px 0 10px}
 #clientInfo .zayav_unit{margin-right:10px}
+#clientInfo #schet_spisok{margin:10px;display:none}
+#clientInfo #schet_spisok #result{margin-bottom:10px}
 #clientInfo #money_spisok{margin:10px}
 #clientInfo #money_spisok,#clientInfo #histories{display:none}
 #clientInfo #money_spisok ._empty{margin:0;padding:60px 10px}
@@ -674,6 +676,7 @@ table.zayavNomerTab td{vertical-align:top}
 .schet#report .headName{margin:15px 10px}
 .schet#report #spisok{margin:10px}
 .schet#report #result{margin-bottom:10px}
+.schet#report #find{margin-top:20px}
 .schet#report #paid_check{margin-top:20px}
 
 

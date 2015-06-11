@@ -639,7 +639,8 @@ function zayav_spisok($v) {
 	}
 	$sql = "SELECT
 	            *,
-				'' AS `note`
+				'' AS `note`,
+				'' AS `schet`
 			FROM `zayav`
 			WHERE ".$cond."
 			ORDER BY `".($filter['sort'] == 2 ? 'zayav_status_dtime' : 'dtime_add')."` ".($filter['desc'] ? 'ASC' : 'DESC')."
@@ -695,6 +696,12 @@ function zayav_spisok($v) {
 	while($r = mysql_fetch_assoc($q))
 		$zayav[$r['table_id']]['note'] = $r['txt'];
 
+	//счета
+	$sql = "SELECT * FROM `zayav_schet` WHERE `zayav_id` IN (".implode(',', array_keys($zayav)).")";
+	$q = query($sql);
+	while($r = mysql_fetch_assoc($q))
+		$zayav[$r['zayav_id']]['schet'] .= '<b class="schet-nomer'.($r['paid_sum'] > $r['sum'] ? ' paid' : '').'">СЦ'.$r['nomer'].'</b>';
+
 	foreach($zayav as $id => $r) {
 		$r['model'] = _modelName($r['base_model_id']);
 		$img = $images['zayav'.$id]['id'] ? $images['zayav'.$id]['img'] : $images['dev'.$r['base_model_id']]['img'];
@@ -733,6 +740,7 @@ function zayav_spisok($v) {
  			  ($r['imei'] ? '<tr><td class="label">IMEI:<td>'.$r['imei'] : '').
 		    ($r['serial'] ? '<tr><td class="label">Серийный номер:<td>'.$r['serial'] : '').
 	(isset($zpZakaz[$id]) ? '<tr><td class="label">Заказаны з/п:<td class="zz">'.implode(', ', $zpZakaz[$id]) : '').
+			 ($r['schet'] ? '<tr><td class="label">Счета:<td>'.$r['schet'] : '').
 						'</table>'.
 					'<td class="image">'.$img.
 				'</table>'.
@@ -1117,12 +1125,13 @@ function zayav_info_schet_spisok($zayav_id) {
 	return $send;
 }//zayav_info_schet_spisok()
 function schet_unit($r, $zayav=1) {
-	$to_pass = $r['pass'] || $r['paid'] ? '' : '<a class="to-pass" val="'.$r['id'].'">передать клиенту</a>';
-	$to_paid = $r['pass'] && !$r['paid'] ? '<a class="to-pay" val="'.$r['id'].'">оплатить</a>' : '';
-	$pass_info = $r['pass'] && !$r['paid'] ? '<div class="pass-info">Передано клиенту '.FullData($r['pass_day'], 1).'</div>' : '';
-	$paid_info = $r['paid'] ? '<div class="paid-info">Оплачено '.FullData($r['paid_day'], 1).'</div>' : '';
+	$paid = $r['paid_sum'] >= $r['sum'];
+	$to_pass = $r['pass'] || $paid ? '' : '<a class="to-pass" val="'.$r['id'].'">передать клиенту</a>';
+	$to_paid = $r['pass'] && !$paid ? '<a class="to-pay" val="'.$r['id'].'">оплатить</a>' : '';
+	$pass_info = $r['pass'] && !$paid ? '<div class="pass-info">Передано клиенту '.FullData($r['pass_day'], 1).'</div>' : '';
+	$paid_info = $r['paid_sum'] > 0 ? '<div class="paid-info">Оплачено <b>'.round($r['paid_sum'], 2).'</b> руб.</div>' : '';
 	return
-		'<tr class="schet-unit'.($r['paid'] ? ' paid' : '').'">'.
+		'<tr class="schet-unit'.($paid ? ' paid' : '').'">'.
 			'<td class="td-content">'.
 				'<a href="'.APP_HTML.'/view/kvit_schet.php?'.VALUES.'&schet_id='.$r['id'].'">'.
 					'Счёт № <b class="pay-nomer">СЦ'.$r['nomer'].'</b>'.
@@ -1137,7 +1146,7 @@ function schet_unit($r, $zayav=1) {
 				$paid_info.
 			($zayav ? '<div>Заявка '.$r['zayav_link'].'.</div>' : '').
 			'<td class="ed">'.
-				(!$r['paid'] ? '<div val="'.$r['id'].'" class="img_edit'._tooltip('Редактировать счёт', -118, 'r').'</div>' : '');
+				($r['paid_sum'] == 0 ? '<div val="'.$r['id'].'" class="img_edit'._tooltip('Редактировать счёт', -118, 'r').'</div>' : '');
 }//schet_unit()
 function zayav_info_accMon($zayav_id) {//Начисления и платежи
 	return
@@ -1439,7 +1448,7 @@ function zayav_cartridge_spisok($v=array()) {
 	$sql = "SELECT * FROM `zayav_schet` WHERE `zayav_id` IN (".implode(',', array_keys($zayav)).")";
 	$q = query($sql);
 	while($r = mysql_fetch_assoc($q))
-		$zayav[$r['zayav_id']]['schet'] .= '<b class="schet-nomer'.($r['paid'] ? ' paid' : '').'">СЦ'.$r['nomer'].'</b>';
+		$zayav[$r['zayav_id']]['schet'] .= '<b class="schet-nomer'.($r['paid_sum'] > $r['sum'] ? ' paid' : '').'">СЦ'.$r['nomer'].'</b>';
 
 
 	foreach($zayav as $id => $r) {

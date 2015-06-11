@@ -399,6 +399,7 @@ function client_info($client_id) {
 		'limit' => 10
 	));
 
+	$schet = report_schet_spisok(array('client_id'=>$client_id));
 
 	$commCount = query_value("SELECT COUNT(`id`)
 							  FROM `vk_comment`
@@ -517,6 +518,7 @@ function client_info($client_id) {
 
 			'<div id="dopLinks">'.
 				'<a class="link sel" val="zayav">Заявки'.($zayavData['all'] ? ' <b class="count">'.$zayavData['all'].'</b>' : '').'</a>'.
+				'<a class="link" val="schet">Счета'.($schet['all'] ? ' <b class="count">'.$schet['all'].'</b>' : '').'</a>'.
 				'<a class="link" val="money">Платежи'.($moneyCount ? ' <b class="count">'.$moneyCount.'</b>' : '').'</a>'.
 				'<a class="link" val="remind">Напоминания'.($remind['all'] ? ' <b class="count">'.$remind['all'].'</b>' : '').'</a>'.
 				'<a class="link" val="comm">Заметки'.($commCount ? ' <b class="count">'.$commCount.'</b>' : '').'</a>'.
@@ -530,6 +532,7 @@ function client_info($client_id) {
 						(!$zayavCartridge['all'] && !$zayavData['all'] ? $zayavData['spisok'] : '').
 						($zayavCartridge['all'] ? $zayavCartridge['spisok'] : '').
 					'</div>'.
+					'<div id="schet_spisok">'.$schet['spisok'].'</div>'.
 					'<div id="money_spisok">'.$money.'</div>'.
 					'<div id="remind-spisok">'.$remind['spisok'].'</div>'.
 					'<div id="comments">'._vkComment('client', $client_id).'</div>'.

@@ -1459,6 +1459,7 @@ switch(@$_POST['op']) {
 		$sql = "INSERT INTO `zayav_schet` (
 					`ws_id`,
 					`nomer`,
+					`client_id`,
 					`zayav_id`,
 					`date_create`,
 					`sum`,
@@ -1468,6 +1469,7 @@ switch(@$_POST['op']) {
 				) VALUES (
 					".WS_ID.",
 					".$nomer.",
+					".$z['client_id'].",
 					".$zayav_id.",
 					'".$date_create."',
 					".$sum.",
@@ -1925,7 +1927,7 @@ switch(@$_POST['op']) {
 		$day = $_POST['day'];
 		$zayav_id = _num($_POST['zayav_id']);
 
-		$sql = "SELECT * FROM `zayav_schet` WHERE `ws_id`=".WS_ID." AND !`pass` AND !`paid` AND `id`=".$schet_id;
+		$sql = "SELECT * FROM `zayav_schet` WHERE `ws_id`=".WS_ID." AND !`pass` AND `id`=".$schet_id;
 		if(!$r = query_assoc($sql))
 			jsonError();
 
@@ -1956,13 +1958,15 @@ switch(@$_POST['op']) {
 	case 'schet_pay'://оплата счёта
 		if(!$schet_id = _num($_POST['schet_id']))
 			jsonError();
+		if(!$sum = _cena($_POST['sum']))
+			jsonError();
 		if(!preg_match(REGEXP_DATE, $_POST['day']))
 			jsonError();
 
 		$day = $_POST['day'];
 		$zayav_id = _num($_POST['zayav_id']);
 
-		$sql = "SELECT * FROM `zayav_schet` WHERE `ws_id`=".WS_ID." AND !`paid` AND `id`=".$schet_id;
+		$sql = "SELECT * FROM `zayav_schet` WHERE `ws_id`=".WS_ID." AND `paid_sum`<`sum` AND `id`=".$schet_id;
 		if(!$r = query_assoc($sql))
 			jsonError();
 
@@ -1970,28 +1974,29 @@ switch(@$_POST['op']) {
 		if(!$z = query_assoc($sql))
 			jsonError();
 
-		$sql = "UPDATE `zayav_schet`
-				SET `paid`=1,
-					`paid_day`='".$day."'
-					WHERE `id`=".$schet_id;
-		query($sql);
-
 		income_insert(array(
 			'zayav_id' => $z['id'],
 			'schet_id' => $schet_id,
+			'schet_paid_day' => $day,
 			'invoice_id' => 4,
-			'sum' => $r['sum'],
+			'sum' => $sum
 		));
 
+		$paidSum = query_value("SELECT SUM(`sum`) FROM `money` WHERE !`deleted` AND `schet_id`=".$schet_id);
+		$sql = "UPDATE `zayav_schet`
+				SET `paid_sum`=".$paidSum."
+				WHERE `id`=".$schet_id;
+		query($sql);
+/*
 		history_insert(array(
 			'type' => 60,
 			'client_id' => $z['client_id'],
 			'zayav_id' => $z['id'],
 			'value' => 'СЦ'.$r['nomer'],
-			'value1' => $r['sum'],
+			'value1' => $sum,
 			'value2' => $r['date_create']
 		));
-
+*/
 		$data = report_schet_spisok();
 		$send['html'] = utf8($data['spisok']);
 		if($zayav_id)

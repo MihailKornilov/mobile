@@ -1037,6 +1037,7 @@ $(document)
 		}
 	})
 
+
 	.on('mouseenter', '.zayav_link', function(e) {
 		var t = $(this),
 			tooltip = t.find('.tooltip');

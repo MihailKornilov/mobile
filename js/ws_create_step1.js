@@ -83,6 +83,7 @@ $('.vkButton').click(function () {
 				t.removeClass('busy');
 		}, 'json')
 	}
+
 	function err(msg) {
 		$('.vkButton').vkHint({
 			msg:'<span class="red">' + msg + '</span>',

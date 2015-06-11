@@ -721,6 +721,7 @@ function income_insert($v) {
 		'zayav_id' => _num(@$v['zayav_id']),
 		'zp_id' => _num(@$v['zp_id']),
 		'schet_id' => _num(@$v['schet_id']),
+		'schet_paid_day' => preg_match(REGEXP_DATE, @$v['schet_paid_day']) ? $v['schet_paid_day'] : '0000-00-00',
 		'invoice_id' => _num($v['invoice_id']),
 		'sum' => _cena($v['sum']),
 		'prepay' => _bool(@$v['prepay']),
@@ -740,6 +741,7 @@ function income_insert($v) {
 				`zayav_id`,
 				`zp_id`,
 				`schet_id`,
+				`schet_paid_day`,
 				`invoice_id`,
 				`sum`,
 				`prepay`,
@@ -751,6 +753,7 @@ function income_insert($v) {
 				".$v['zayav_id'].",
 				".$v['zp_id'].",
 				".$v['schet_id'].",
+				'".$v['schet_paid_day']."',
 				".$v['invoice_id'].",
 				".$v['sum'].",
 				".$v['prepay'].",
@@ -937,12 +940,15 @@ function reportSchetFilter($v) {
 	$send = array(
 		'page' => _isnum(@$v['page']) ? $v['page'] : 1,
 		'limit' => _isnum(@$v['limit']) ? $v['limit'] : 50,
+		'find' => trim(@$v['find']),
+		'client_id' => _isnum(@$v['client_id']),
 		'passpaid' => _isnum(@$v['passpaid'])
 	);
 	return $send;
-}//expenseFilter()
+}//reportSchetFilter()
 function report_schet_right() {
 	return
+		'<div id="find"></div>'.
 		'<div class="findHead">—чета:</div>'.
 		_radio('passpaid',
 			array(
@@ -962,12 +968,23 @@ function report_schet_spisok($v=array()) {
 	$filter = reportSchetFilter($v);
 	$cond = "`ws_id`=".WS_ID;
 
-	switch($filter['passpaid']) {
-		case 1: $cond .= " AND !`pass`"; break;
-		case 2: $cond .= " AND `pass` AND !`paid`"; break;
-		case 3: $cond .= " AND `paid`"; break;
+	if($filter['find'])
+		$cond .= " AND `nomer`="._num($filter['find']);
+	else {
+		if($filter['client_id'])
+			$cond .= " AND `client_id`=" . $filter['client_id'];
+		switch ($filter['passpaid']) {
+			case 1:
+				$cond .= " AND !`pass`";
+				break;
+			case 2:
+				$cond .= " AND `pass` AND `paid_sum`<`sum`";
+				break;
+			case 3:
+				$cond .= " AND `paid_sum`>=`sum`";
+				break;
+		}
 	}
-
 	$sql = "SELECT
 				COUNT(`id`) AS `all`,
 				SUM(`sum`) AS `sum`

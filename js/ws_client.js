@@ -454,6 +454,7 @@ $(document)
 				$('.res').css('display', val == 'zayav' ? 'block' : 'none');
 				$('#zayav_filter').css('display', val == 'zayav' ? 'block' : 'none');
 				$('#zayav_spisok').css('display', val == 'zayav' ? 'block' : 'none');
+				$('#schet_spisok').css('display', val == 'schet' ? 'block' : 'none');
 				$('#money_spisok').css('display', val == 'money' ? 'block' : 'none');
 				$('#remind-spisok').css('display', val == 'remind' ? 'block' : 'none');
 				//$('#remind_spisok').css('display', val == 'remind' ? 'block' : 'none');
