@@ -222,6 +222,7 @@ function GvaluesCreate() {//Составление файла G_values.js
 	fclose($fp);
 
 	//составление файла G_values для конкретной мастерской
+	$place = _devPlace(false, query_value("SELECT `type` FROM `workshop` WHERE `id`=".WS_ID));
 	$save =
 		'var INVOICE_SPISOK='.query_selJson("SELECT `id`,`name` FROM `invoice` WHERE `ws_id`=".WS_ID." ORDER BY `id`").','.
 		"\n".'INVOICE_ASS=_toAss(INVOICE_SPISOK),'.
@@ -234,7 +235,7 @@ function GvaluesCreate() {//Составление файла G_values.js
 		"\n".'WORKER_SPISOK='.query_selJson("SELECT `viewer_id`,CONCAT(`first_name`,' ',`last_name`) FROM `vk_user`
 											 WHERE `ws_id`=".WS_ID."
 											 ORDER BY `dtime_add`").','.
-		"\n".'DEVPLACE_SPISOK='._selJson(_devPlace(false, query_value("SELECT `type` FROM `workshop` WHERE `id`=".WS_ID))).','.
+		"\n".'DEVPLACE_SPISOK='._selJson($place).','.
 		"\n".'ZE_SPISOK='.query_selJson("SELECT `id`,`name` FROM `setup_zayav_expense` WHERE `ws_id`=".WS_ID." ORDER BY `sort`").','.
 		"\n".'ZE_TXT='.query_ptpJson("SELECT `id`,1 FROM `setup_zayav_expense` WHERE `ws_id`=".WS_ID." AND `dop`=1").','.
 		"\n".'ZE_WORKER='.query_ptpJson("SELECT `id`,1 FROM `setup_zayav_expense` WHERE `ws_id`=".WS_ID." AND `dop`=2").','.
@@ -441,6 +442,9 @@ function _devPlace($place_id=false, $ws_type=WS_TYPE) {
 		1 => _wsType($ws_type, 7),
 		2 => 'у клиента'
 	);
+
+	$arr += query_ass("SELECT `id`,`place` FROM `zayav_device_place` WHERE `ws_id`=".WS_ID." ORDER BY `place`");
+
 	if($place_id === false)
 		return $arr;
 	return isset($arr[$place_id]) ? $arr[$place_id] : '';

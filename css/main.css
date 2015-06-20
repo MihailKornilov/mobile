@@ -249,8 +249,8 @@
 #device_image img{height:72px;display:none}
 #zayavAdd .equip_spisok div{margin-right:7px}
 #zayavAdd #place_radio{margin-bottom:4px}
-#place_radio{position:relative}
-#place_other{width:100px;position:absolute;top:34px;left:60px}
+#place-other-div{display:inline-block;position:relative}
+#place_other{width:120px;position:absolute;top:-3px;left:45px}
 #zayavAdd #imei{width:130px}
 #zayavAdd #serial{width:200px}
 #zayavAdd .color_dop tt{display:inline-block;margin:0 4px;position:relative;top:-5px}

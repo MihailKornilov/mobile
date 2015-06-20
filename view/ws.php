@@ -448,7 +448,66 @@ function _zayavFinishCalendar($selDay='0000-00-00', $mon='', $zayav_spisok=0) {
 
 	return $send;
 }//_zayavFinishCalendar()
+function _zayavPlaceCheck($zayav_id, $place_id=0, $place_name='') {// Обновление местонахождения заявки
 
+	// - внесение нового местонахождения, если place_id = 0
+	// - обновление place_id, если отличается от текущего в заявке
+	
+	if(!_num($zayav_id))
+		return 0;
+	if(!$place_id && empty($place_name))
+		return 0;
+
+	$sql = "SELECT * FROM `zayav` WHERE `ws_id`=".WS_ID." AND !`deleted` AND `id`=".$zayav_id;
+	if(!$z = query_assoc($sql))
+		return 0;
+
+	if(!$place_id && !empty($place_name)) {
+		$sql = "SELECT `id`
+			FROM `zayav_device_place`
+			WHERE `ws_id`=".WS_ID."
+			  AND `place`='".$place_name."'
+			LIMIT 1";
+		if (!$place_id = query_value($sql)) {
+			$sql = "INSERT INTO `zayav_device_place` (
+					`ws_id`,
+					`place`
+				) VALUES (
+					".WS_ID.",
+					'".addslashes($place_name)."'
+				)";
+			query($sql);
+			$place_id = mysql_insert_id();
+			GvaluesCreate();
+		}
+	}
+	
+	if($place_id != $z['device_place']) {
+		$sql = "UPDATE `zayav`
+			SET `device_place`=".$place_id.",
+				`device_place_dtime`=CURRENT_TIMESTAMP
+			WHERE `id`=".$zayav_id;
+		query($sql);
+
+		if($z['device_place']) { //история вносится, если это не первое внесение заявки
+			history_insert(array(
+				'type' => 29,
+				'client_id' => $z['client_id'],
+				'zayav_id' => $zayav_id,
+				'value' =>
+					'<table><tr>'.
+						'<td>'._devPlace($z['device_place']).
+						'<td>»'.
+						'<td>'._devPlace($place_id).
+					'</table>'
+			));
+			if($place_id == 2)
+				_vkCommentAdd('zayav', $zayav_id, 'Передано клиенту.');
+		}
+	}
+
+	return $place_id;
+}//_zayavPlaceCheck()
 
 function zayav_add($v=array()) {
 /*	$sql = "SELECT `id`,`name` FROM `setup_fault` ORDER BY SORT";
@@ -534,8 +593,7 @@ function zayavFilter($v) {
 		'model' => _num(@$v['model']),
 		'diagnost' => _bool(@$v['diagnost']),
 		'diff' => _bool(@$v['diff']),
-		'place' => trim(@$v['place']),
-		//'place' => !empty($v['place']) ? win1251(urldecode(htmlspecialchars(trim($v['place'])))) : '',
+		'place' => intval(@$v['place']),
 		'clear' => ''
 	);
 	if(!$filter['client_id'])
@@ -588,12 +646,8 @@ function zayav_spisok($v) {
 		if($filter['diagnost'])
 			$cond .= " AND `zayav_status`=1 AND `diagnost`";
 		if($filter['place']) {
-			if(_isnum($filter['place']))
-				$cond .= " AND `device_place`=".$filter['place'];
-			elseif($filter['place'] == -1)
-				$cond .= " AND !`device_place` AND !LENGTH(`device_place_other`)";
-			else
-				$cond .= " AND !`device_place` AND `device_place_other`='".$filter['place']."'";
+			$cond .= " AND `device_place`=".$filter['place'];
+
 		}
 	}
 
@@ -761,15 +815,6 @@ function zayav_spisok($v) {
 function zayav_list($v) {
 	$data = zayav_spisok($v);
 	$v = $data['filter'];
-	$place_other = array();
-	$sql = "SELECT DISTINCT `device_place_other` AS `other`
-			FROM `zayav`
-			WHERE LENGTH(`device_place_other`)
-			  AND `zayav_status`
-			  AND `ws_id`=".WS_ID;
-	$q = query($sql);
-	while($r = mysql_fetch_assoc($q))
-		$place_other[] = '"'.$r['other'].'"';
 
 	$status = _zayavStatusName();
 	$status[1] .= '<div id="srok">Срок: '._zayavFinish($v['finish']).'</div>';
@@ -811,7 +856,6 @@ function zayav_list($v) {
 				'device_ids:['._zayavBaseDeviceIds().'],'.
 				'vendor_ids:['._zayavBaseVendorIds().'],'.
 				'model_ids:['._zayavBaseModelIds().'],'.
-				'place_other:['.implode(',', $place_other).'],'.
 				'find:"'.$v['find'].'",'.
 				'device_id:"'.$v['device'].'",'.
 				'vendor_id:'.$v['vendor'].','.
@@ -897,7 +941,6 @@ function zayav_info($zayav_id) {
 			'model:'.$z['base_model_id'].','.
 			'status:'.$z['zayav_status'].','.
 			'dev_place:'.$z['device_place'].','.
-			'place_other:"'.$z['device_place_other'].'",'.
 			'imei:"'.$z['imei'].'",'.
 			'serial:"'.$z['serial'].'",'.
 			'color_id:'.$z['color_id'].','.
@@ -984,7 +1027,7 @@ function zayav_info($zayav_id) {
 						($z['serial'] ? '<tr><th>serial:	 <td>'.$z['serial'] : '').
 						($z['equip'] ? '<tr><th valign="top">Комплект:<td>'.zayavEquipSpisok($z['equip']) : '').
 						($z['color_id'] ? '<tr><th>Цвет:  <td>'._color($z['color_id'], $z['color_dop']) : '').
-						'<tr><th>Нахождение:<td><a class="dev_place">'.($z['device_place'] ? @_devPlace($z['device_place']) : $z['device_place_other']).'</a>'.
+						'<tr><th>Нахождение:<td><a class="dev_place">'._devPlace($z['device_place']).'</a>'.
 					'</table>'.
 				'</dev>'.
 
@@ -1146,7 +1189,7 @@ function schet_unit($r, $zayav=1) {
 				$paid_info.
 			($zayav ? '<div>Заявка '.$r['zayav_link'].'.</div>' : '').
 			'<td class="ed">'.
-				($r['paid_sum'] == 0 ? '<div val="'.$r['id'].'" class="img_edit'._tooltip('Редактировать счёт', -118, 'r').'</div>' : '');
+				(!$paid ? '<div val="'.$r['id'].'" class="img_edit'._tooltip('Редактировать счёт', -118, 'r').'</div>' : '');
 }//schet_unit()
 function zayav_info_accMon($zayav_id) {//Начисления и платежи
 	return
@@ -1287,33 +1330,7 @@ function zayav_zp_avai($z) {
 		'}';
 	return '['.implode(',',$send).']';
 }//zayav_zp_avai()
-function zayav_msg_to_client($zayav_id) {//сообщение о передачи устройства клиенту после внесения платежа
-	$parent_id = 0;
-	$sql = "SELECT `id`,`parent_id`
-			FROM `vk_comment`
-			WHERE `table_name`='zayav'
-			  AND `table_id`=".$zayav_id."
-			  AND `status`
-			ORDER BY `id` DESC
-			LIMIT 1";
-	if($r = query_assoc($sql))
-		$parent_id = $r['parent_id'] ? $r['parent_id'] : $r['id'];
-	$sql = "INSERT INTO `vk_comment` (
-				`table_name`,
-				`table_id`,
-				`txt`,
-				`parent_id`,
-				`viewer_id_add`
-			) VALUES (
-				'zayav',
-				".$zayav_id.",
-				'Передано клиенту.',
-				".$parent_id.",
-				".VIEWER_ID."
-			)";
-	query($sql);
-	return utf8(_vkComment('zayav', $zayav_id));
-}//zayav_msg_to_client()
+
 
 
 

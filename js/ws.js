@@ -199,18 +199,11 @@ var AJAX_WS = APP_HTML + '/ajax/ws.php?' + VALUES,
 			}, 'json');
 		}
 	},
-	zayavPlace = function(other) {
-		if(other == undefined)
-			other = '';
+	zayavPlace = function() {
 		if(!window.PLACE_OTHER) {
 			DEVPLACE_SPISOK.push({
 				uid:0,
-				title:'другое: ' +
-					  '<input type="text" ' +
-							 'id="place_other" ' +
-				   (!other ? 'class="dn" ' : '') +
-							 'maxlength="20" ' +
-							 'value="' + other + '" />'
+				title:'<div id="place-other-div">другое:<input type="text" id="place_other" class="dn" /></div>'
 			});
 			window.PLACE_OTHER = 1;
 		}
@@ -218,8 +211,8 @@ var AJAX_WS = APP_HTML + '/ajax/ws.php?' + VALUES,
 			spisok:DEVPLACE_SPISOK,
 			light:1,
 			func:function(val) {
-				$('#place_other')[(val != 0 ? 'add' : 'remove') + 'Class']('dn');
-				if(val == 0)
+				$('#place_other')[(val ? 'add' : 'remove') + 'Class']('dn');
+				if(!val)
 					$('#place_other').val('').focus();
 			}
 		});
@@ -1657,7 +1650,7 @@ $(document)
 				butSubmit:'Сохранить',
 				submit:submit
 			});
-		zayavPlace(ZAYAV.place_other);
+		zayavPlace();
 		$('.st').click(function() {
 			var t = $(this),
 				v = t.attr('val');
@@ -2108,11 +2101,6 @@ $(document)
 				func: zayavSpisok
 			});
 			// Нахождение устройства
-			for (var n = 0; n < Z.place_other.length; n++) {
-				var sp = Z.place_other[n];
-				DEVPLACE_SPISOK.push({uid: encodeURI(sp), title: sp});
-			}
-			DEVPLACE_SPISOK.push({uid: -1, title: 'не известно', content: '<B>не известно</B>'});
 			$('#device_place')._select({
 				width: 155,
 				title0: 'Любое местонахождение',
@@ -2141,26 +2129,27 @@ $(document)
 				location.href = URL + '&p=' + $(this).attr('val');
 			});
 			$('.vkButton').click(function () {
-				if ($(this).hasClass('busy'))
+				var t = $(this),
+					send = {
+						op: 'zayav_add',
+						client_id: $('#client_id').val(),
+						device: $('#dev_device').val(),
+						vendor: $('#dev_vendor').val(),
+						model: $('#dev_model').val(),
+						equip: '',
+						place: $('#place').val(),
+						place_other: $('#place_other').val(),
+						imei: $('#imei').val(),
+						serial: $('#serial').val(),
+						color: $('#color_id').val(),
+						color_dop: $('#color_dop').val(),
+						diagnost: $('#diagnost').val(),
+						comm: $('#comm').val(),
+						pre_cost: $('#pre_cost').val(),
+						day_finish: $('#day_finish').val()
+					};
+				if (t.hasClass('busy'))
 					return;
-				var send = {
-					op: 'zayav_add',
-					client_id: $('#client_id').val(),
-					device: $('#dev_device').val(),
-					vendor: $('#dev_vendor').val(),
-					model: $('#dev_model').val(),
-					equip: '',
-					place: $('#place').val(),
-					place_other: $('#place_other').val(),
-					imei: $('#imei').val(),
-					serial: $('#serial').val(),
-					color: $('#color_id').val(),
-					color_dop: $('#color_dop').val(),
-					diagnost: $('#diagnost').val(),
-					comm: $('#comm').val(),
-					pre_cost: $('#pre_cost').val(),
-					day_finish: $('#day_finish').val()
-				};
 				if (!$('.tr_equip').hasClass('dn')) {
 					var inp = $('.equip_spisok input'),
 						arr = [];
@@ -2181,9 +2170,12 @@ $(document)
 				} else if (send.day_finish == '0000-00-00') msg = 'Не указан срок выполнения ремонта';
 				else {
 					if (send.place > 0) send.place_other = '';
-					$(this).addClass('busy');
+					t.addClass('busy');
 					$.post(AJAX_WS, send, function (res) {
-						location.href = URL + '&p=zayav&d=info&id=' + res.id;
+						if(res.success)
+							location.href = URL + '&p=zayav&d=info&id=' + res.id;
+						else
+							t.removeClass('busy');
 					}, 'json');
 				}
 
