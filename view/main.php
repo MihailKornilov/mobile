@@ -109,6 +109,7 @@ function _header() {
 		(WS_ID ?
 			'<script type="text/javascript" src="'.APP_HTML.'/js/ws'.(DEBUG ? '' : '.min').'.js?'.VERSION.'"></script>'.
 			'<script type="text/javascript" src="'.APP_HTML.'/js/ws_client'.(DEBUG ? '' : '.min').'.js?'.VERSION.'"></script>'.
+			'<script type="text/javascript" src="'.APP_HTML.'/js/ws_tovar'.(DEBUG ? '' : '.min').'.js?'.VERSION.'"></script>'.
 			'<script type="text/javascript" src="'.APP_HTML.'/js/ws_zp'.(DEBUG ? '' : '.min').'.js?'.VERSION.'"></script>'.
 			'<script type="text/javascript" src="'.APP_HTML.'/js/ws_report'.(DEBUG ? '' : '.min').'.js?'.VERSION.'"></script>'
 		: '').
@@ -161,6 +162,8 @@ function GvaluesCreate() {//Составление файла G_values.js
 		"\n".'CLIENT_CATEGORY_ASS='._assJson(_clientCategory(0,1)).','.
 		"\n".'FAULT_ASS='.query_ptpJson("SELECT `id`,`name` FROM `setup_fault` ORDER BY `sort`").','.
 		"\n".'ZPNAME_SPISOK='.Gvalues_obj('setup_zp_name', '`name`', 'device_id').','.
+
+		"\n".'TOVAR_CATEGORY_SPISOK='.query_selJson("SELECT `id`,`name` FROM `tovar_category` ORDER BY `sort` ASC").','.
 
 		"\n".'DEV_SPISOK='.query_selJson("SELECT `id`,`name` FROM `base_device` ORDER BY `sort`").','.
 		"\n".'DEV_ASS=_toAss(DEV_SPISOK),'.

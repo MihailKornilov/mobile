@@ -199,7 +199,7 @@ switch(@$_POST['op']) {
 	case 'worker_name_save':
 		if(!RULES_WORKER)
 			jsonError();
-		if(!$viewer_id = _isnum($_POST['viewer_id']))
+		if(!$viewer_id = _num($_POST['viewer_id']))
 			jsonError();
 
 		$u = _viewer($viewer_id);
@@ -223,7 +223,7 @@ switch(@$_POST['op']) {
 	case 'worker_dop_save':
 		if(!RULES_WORKER)
 			jsonError();
-		if(!$viewer_id = _isnum($_POST['viewer_id']))
+		if(!$viewer_id = _num($_POST['viewer_id']))
 			jsonError();
 
 		$u = _viewer($viewer_id);
@@ -531,7 +531,7 @@ switch(@$_POST['op']) {
 
 	case 'zayav_expense_add':
 		$name = win1251(htmlspecialchars(trim($_POST['name'])));
-		$dop = _isnum($_POST['dop']);
+		$dop = _num($_POST['dop']);
 
 		if(empty($name))
 			jsonError();
@@ -561,11 +561,11 @@ switch(@$_POST['op']) {
 		jsonSuccess($send);
 		break;
 	case 'zayav_expense_edit':
-		if(!$id = _isnum($_POST['id']))
+		if(!$id = _num($_POST['id']))
 			jsonError();
 
 		$name = win1251(htmlspecialchars(trim($_POST['name'])));
-		$dop = _isnum($_POST['dop']);
+		$dop = _num($_POST['dop']);
 
 		if(empty($name))
 			jsonError();
@@ -602,7 +602,7 @@ switch(@$_POST['op']) {
 		jsonSuccess($send);
 		break;
 	case 'zayav_expense_del':
-		if(!$id = _isnum($_POST['id']))
+		if(!$id = _num($_POST['id']))
 			jsonError();
 
 		$sql = "SELECT * FROM `setup_zayav_expense` WHERE `id`=".$id;

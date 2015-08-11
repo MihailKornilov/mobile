@@ -64,32 +64,35 @@ var AJAX_WS = APP_HTML + '/ajax/ws.php?' + VALUES,
 		}
 	},
 
-	colorSel = function(spisok) {
+	_valueColors = function(color_id, color_dop) {
+		var colors = $('#colors');
+		if(!colors.length)
+			return false;
+		colors.html(
+			'<input type="hidden" id="color_id" value="' + _num(color_id) + '" />' +
+			'<tt>-</tt>' +
+			'<input type="hidden" id="color_dop" value="' + _num(color_dop) + '" />'
+		);
 		$('#color_id')._select({
 			width:120,
 			title0:'Цвет не указан',
-			spisok:spisok,
-			func:colorSelDop
+			spisok:COLOR_SPISOK,
+			func:_valueColorSet
 		});
-		$('#color_dop')._select({
+		_valueColorSet(color_id);
+	},
+	_valueColorSet = function(v) {
+		$('#colors').find('tt')[v ? 'show' : 'hide']();
+		$('#color_dop')._select(!v ? 'remove' :  {
 			width:120,
 			title0:'Цвет не указан',
 			spisok:COLOR_SPISOK,
 			func:function(id) {
-				colorSel(id ? COLORPRE_SPISOK : COLOR_SPISOK);
+				$('#color_id')
+					._select(id ? COLORPRE_SPISOK : COLOR_SPISOK)
+					._select($('#color_id').val());
 			}
 		});
-	},
-	colorSelDop = function(id) {
-		if(id) {
-			if($('#color_id_select').length == 0)
-				colorSel($('#color_dop').val() > 0 ? COLORPRE_SPISOK : COLOR_SPISOK);
-			$('.color_dop').removeClass('dn');
-		} else {
-			colorSel(COLOR_SPISOK);
-			$('#color_dop')._select(0);
-			$('.color_dop').addClass('dn');
-		}
 	},
 
 	zayavFilter = function() {
@@ -481,7 +484,8 @@ $.fn.device = function(o) {
 		add:0,
 		device_funcAdd:null, // функции пусты, если нельзя добавлять новые элементы
 		vendor_funcAdd:null,
-		model_funcAdd:null
+		model_funcAdd:null,
+		no_model:0 //не выводить список моделей (для товаров)
 	},o);
 
 	var t = $(this),
@@ -539,7 +543,7 @@ $.fn.device = function(o) {
 	}
 
 	// добавление новых устройств
-	if (o.add > 0) {
+	if(o.add > 0) {
 		o.device_funcAdd = function() {
 			var html = '<table class="device-add-tab">' +
 				'<tr><td class="label">Название:<td><input type="text" id="daname">' +
@@ -737,6 +741,8 @@ $.fn.device = function(o) {
 
 	// вывод списка моделей
 	function getModel(model_id) {
+		if(o.no_model)
+			return;
 		if(model_id != undefined)
 			o.model_id = model_id; //Изменяется значение модели, если нужно
 		modSel.val(o.model_id);
@@ -1254,9 +1260,7 @@ $(document)
 			'<tr><td><td>' + ZAYAV.images +
 			'<tr><td class="label r">IMEI:		  <td><input type="text" id="imei" maxlength="20" value="' + ZAYAV.imei + '">' +
 			'<tr><td class="label r">Серийный номер:<td><input type="text" id="serial" maxlength="30" value="' + ZAYAV.serial + '">' +
-			'<tr><td class="label r">Цвет:' +
-				'<td><input type="hidden" id="color_id" value="' + ZAYAV.color_id + '" />' +
-					'<span class="color_dop dn"><tt>-</tt><input TYPE="hidden" id="color_dop" value="' + ZAYAV.color_dop + '" /></span>' +
+			'<tr><td class="label r">Цвет:<td id="colors">' +
 			'<tr class="tr_equip' + (ZAYAV.equip ? '' : ' dn') + '">' +
 				'<td class="label r top">Комплектация:<td class="equip_spisok">' + ZAYAV.equip +
 			'<tr><td class="label r">Диагностика:<td><input TYPE="hidden" id="diagnost" value="' + ZAYAV.diagnost + '" />' +
@@ -1288,7 +1292,7 @@ $(document)
 		});
 		modelImageGet();
 		imageSortable();
-		colorSelDop(ZAYAV.color_id);
+		_valueColors(ZAYAV.color_id, ZAYAV.color_dop);
 		$('#diagnost')._check();
 
 		function submit() {
@@ -1491,7 +1495,7 @@ $(document)
 			else {
 				dialog.process();
 				$.post(AJAX_WS, send, function (res) {
-					if (res.success) {
+					if(res.success) {
 						$('#cart-tab').html(res.cart);
 						$('#schet-spisok').html(res.schet);
 						$('#money_spisok').html(res.acc);
@@ -1746,7 +1750,7 @@ $(document)
 			};
 			dialog.process();
 			$.post(AJAX_WS, send, function (res) {
-				if (res.success) {
+				if(res.success) {
 					dialog.close();
 					_msg('Изменения сохранены.');
 					document.location.reload();
@@ -2060,7 +2064,7 @@ $(document)
 	})
 
 	.ready(function() {
-		if ($('#zayav').length) {
+		if($('#zayav').length) {
 			$('#find')
 				.vkHint({
 					msg: 'Поиск производится по<br />совпадению в названии<br />модели, imei и серийном<br />номере.',
@@ -2108,13 +2112,13 @@ $(document)
 				func: zayavSpisok
 			});
 			//подсвечивание просмотренной заявки
-			if (Z.cookie_id) {
+			if(Z.cookie_id) {
 				VK.callMethod('scrollWindow', _cookie('zback_scroll'));
 				$('#u' + Z.cookie_id).css('opacity', 0.1).delay(400).animate({opacity: 1}, 700);
 			}
 			zayavFilter();
 		}
-		if ($('#zayavAdd').length) {
+		if($('#zayavAdd').length) {
 			$('#client_id').clientSel({add: 1});
 			$('#dev').device({
 				width: 190,
@@ -2123,7 +2127,7 @@ $(document)
 				func: zayavDevSelect
 			});
 			zayavPlace();
-			colorSelDop(0);
+			_valueColors(0);
 			$('#comm').autosize();
 			$('.vkCancel').click(function () {
 				location.href = URL + '&p=' + $(this).attr('val');
@@ -2148,28 +2152,28 @@ $(document)
 						pre_cost: $('#pre_cost').val(),
 						day_finish: $('#day_finish').val()
 					};
-				if (t.hasClass('busy'))
+				if(t.hasClass('busy'))
 					return;
-				if (!$('.tr_equip').hasClass('dn')) {
+				if(!$('.tr_equip').hasClass('dn')) {
 					var inp = $('.equip_spisok input'),
 						arr = [];
 					for (var n = 0; n < inp.length; n++) {
 						var eq = inp.eq(n);
-						if (eq.val() == 1)
+						if(eq.val() == 1)
 							arr.push(eq.attr('id').split('_')[1]);
 					}
 					send.equip = arr.join();
 				}
 				var msg = '';
-				if (send.client_id == 0) msg = 'Не выбран клиент';
-				else if (send.device == 0) msg = 'Не выбрано устройство';
-				else if (send.place == '-1' || send.place == 0 && !send.place_other) msg = 'Не указано местонахождение устройства';
-				else if (send.pre_cost && (!REGEXP_NUMERIC.test(send.pre_cost) || send.pre_cost == 0)) {
+				if(send.client_id == 0) msg = 'Не выбран клиент';
+				else if(send.device == 0) msg = 'Не выбрано устройство';
+				else if(send.place == '-1' || send.place == 0 && !send.place_other) msg = 'Не указано местонахождение устройства';
+				else if(send.pre_cost && (!REGEXP_NUMERIC.test(send.pre_cost) || send.pre_cost == 0)) {
 					msg = 'Некорректно указана предварительная стоимость';
 					$('#pre_cost').focus();
-				} else if (send.day_finish == '0000-00-00') msg = 'Не указан срок выполнения ремонта';
+				} else if(send.day_finish == '0000-00-00') msg = 'Не указан срок выполнения ремонта';
 				else {
-					if (send.place > 0) send.place_other = '';
+					if(send.place > 0) send.place_other = '';
 					t.addClass('busy');
 					$.post(AJAX_WS, send, function (res) {
 						if(res.success)
@@ -2179,7 +2183,7 @@ $(document)
 					}, 'json');
 				}
 
-				if (msg)
+				if(msg)
 					$(this).vkHint({
 						msg: '<SPAN class="red">' + msg + '</SPAN>',
 						top: -48,
@@ -2190,7 +2194,7 @@ $(document)
 					});
 			});
 		}
-		if ($('#zayav-info').length) {
+		if($('#zayav-info').length) {
 			$('.hist').click(function () {
 				$('#dopLinks .sel').removeClass('sel');
 				$(this).addClass('sel');
@@ -2216,7 +2220,7 @@ $(document)
 							};
 							dialog.process();
 							$.post(AJAX_WS, send, function (res) {
-								if (res.success)
+								if(res.success)
 									location.href = URL + '&p=client&d=info&id=' + res.client_id;
 								else
 									dialog.abort();
@@ -2261,14 +2265,14 @@ $(document)
 							zayav_id: ZAYAV.id,
 							defect: $.trim($('#defect').val())
 						};
-					if (t.hasClass('_busy'))
+					if(t.hasClass('_busy'))
 						return;
-					if (!send.defect) err(1);
+					if(!send.defect) err(1);
 					else {
 						t.addClass('_busy');
 						$.post(AJAX_WS, send, function (res) {
 							t.removeClass('_busy');
-							if (res.success)
+							if(res.success)
 								kvitHtml(res.id);
 						}, 'json');
 					}
@@ -2280,11 +2284,11 @@ $(document)
 						defect: $.trim($('#defect').val()),
 						active: 1
 					};
-					if (!send.defect) err();
+					if(!send.defect) err();
 					else {
 						dialog.process();
 						$.post(AJAX_WS, send, function (res) {
-							if (res.success) {
+							if(res.success) {
 								dialog.close();
 								_msg('Квитанция сохранена');
 								$('#kvit_spisok').html(res.html);
@@ -2318,7 +2322,7 @@ $(document)
 					td.addClass('_busy');
 					$.post(AJAX_WS, send, function (res) {
 						td.removeClass('_busy');
-						if (res.success)
+						if(res.success)
 							_msg('Исполнитель изменён');
 					}, 'json');
 				}
@@ -2352,11 +2356,11 @@ $(document)
 						zayav_id: ZAYAV.id,
 						expense: $('#zes').zayavExpense('get')
 					};
-					if (send.expense == 'sum_error') err('Некорректно указана сумма');
+					if(send.expense == 'sum_error') err('Некорректно указана сумма');
 					else {
 						dialog.process();
 						$.post(AJAX_WS, send, function (res) {
-							if (res.success) {
+							if(res.success) {
 								zayavMoneyUpdate();
 								dialog.close();
 								_msg('Сохранено.');
@@ -2412,18 +2416,18 @@ $(document)
 						remind_txt: $('#remind-txt').val(),
 						remind_day: $('#remind-day').val()
 					};
-					if (!send.comm) {
+					if(!send.comm) {
 						dialog.err('Не указан текст результата');
 						$('#comm').focus();
 					}
-					else if (send.remind && !send.remind_txt) {
+					else if(send.remind && !send.remind_txt) {
 						dialog.err('Не указано содержание напоминания');
 						$('#remind-txt').focus();
 					}
 					else {
 						dialog.process();
 						$.post(AJAX_WS, send, function (res) {
-							if (res.success) {
+							if(res.success) {
 								dialog.close();
 								_msg('Результаты диагностики внесены');
 								document.location.reload();
@@ -2435,7 +2439,7 @@ $(document)
 			});
 		}
 
-		if ($('#zayav-cartridge').length) {
+		if($('#zayav-cartridge').length) {
 			$('#sort')._radio(cartridgeSpisok);
 			$('#desc')._check(cartridgeSpisok);
 			$('#status').rightLink(cartridgeSpisok);

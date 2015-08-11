@@ -406,7 +406,7 @@ switch(@$_POST['op']) {
 		$color_dop = $color ? intval($_POST['color_dop']) : 0;
 		$diagnost = _bool($_POST['diagnost']);
 		$comm = win1251(htmlspecialchars(trim($_POST['comm'])));
-		$pre_cost = _isnum($_POST['pre_cost']);
+		$pre_cost = _num($_POST['pre_cost']);
 		$day_finish = $_POST['day_finish'];
 
 		$modelName = '';
@@ -509,7 +509,7 @@ switch(@$_POST['op']) {
 		jsonSuccess($send);
 		break;
 	case 'equip_check_get':
-		if(!$device_id = _isnum($_POST['device_id']))
+		if(!$device_id = _num($_POST['device_id']))
 			jsonError();
 		$send['spisok'] = utf8(devEquipCheck($device_id));
 		jsonSuccess($send);
@@ -539,7 +539,7 @@ switch(@$_POST['op']) {
 			jsonError();
 
 		$day = $_POST['day'];
-		$zayav_id = _isnum($_POST['zayav_id']);
+		$zayav_id = _num($_POST['zayav_id']);
 		$save = _isbool($_POST['save']);
 
 		if($zayav_id && $save) {
@@ -563,11 +563,11 @@ switch(@$_POST['op']) {
 		jsonSuccess($send);
 		break;
 	case 'zayav_edit':
-		if(!$zayav_id = _isnum($_POST['zayav_id']))
+		if(!$zayav_id = _num($_POST['zayav_id']))
 			jsonError();
-		if(!$client_id = _isnum($_POST['client_id']))
+		if(!$client_id = _num($_POST['client_id']))
 			jsonError();
-		if(!$device = _isnum($_POST['device']))
+		if(!$device = _num($_POST['device']))
 			jsonError();
 		if(!preg_match(REGEXP_NUMERIC, $_POST['vendor']))
 			jsonError();
@@ -701,9 +701,9 @@ switch(@$_POST['op']) {
 		jsonSuccess($send);
 		break;
 	case 'zayav_status_place':
-		if(!$zayav_id = _isnum($_POST['zayav_id']))
+		if(!$zayav_id = _num($_POST['zayav_id']))
 			jsonError();
-		if(!$zayav_status = _isnum($_POST['status']))
+		if(!$zayav_status = _num($_POST['status']))
 			jsonError();
 
 		if(!preg_match(REGEXP_NUMERIC, $_POST['place']))
@@ -744,9 +744,9 @@ switch(@$_POST['op']) {
 		jsonSuccess();
 		break;
 	case 'zayav_cartridge_status':
-		if(!$zayav_id = _isnum($_POST['zayav_id']))
+		if(!$zayav_id = _num($_POST['zayav_id']))
 			jsonError();
-		if(!$zayav_status = _isnum($_POST['status']))
+		if(!$zayav_status = _num($_POST['status']))
 			jsonError();
 
 		$sql = "SELECT * FROM `zayav` WHERE `ws_id`=".WS_ID." AND !`deleted` AND `cartridge` AND `id`=".$zayav_id;
@@ -784,7 +784,7 @@ switch(@$_POST['op']) {
 		jsonSuccess();
 		break;
 	case 'zayav_accrual_add':
-		if(!$zayav_id = _isnum($_POST['zayav_id']))
+		if(!$zayav_id = _num($_POST['zayav_id']))
 			jsonError();
 		if(!preg_match(REGEXP_NUMERIC, $_POST['sum']) || !$_POST['sum'])
 			jsonError();
@@ -869,7 +869,7 @@ switch(@$_POST['op']) {
 		jsonSuccess($send);
 		break;
 	case 'zayav_accrual_del':
-		if(!$id = _isnum($_POST['id']))
+		if(!$id = _num($_POST['id']))
 			jsonError();
 
 		$sql = "SELECT * FROM `accrual` WHERE !`deleted` AND `id`=".$id;
@@ -900,7 +900,7 @@ switch(@$_POST['op']) {
 		jsonSuccess();
 		break;
 	case 'zayav_accrual_rest':
-		if(!$id = _isnum($_POST['id']))
+		if(!$id = _num($_POST['id']))
 			jsonError();
 
 		$sql = "SELECT
@@ -988,9 +988,9 @@ switch(@$_POST['op']) {
 		jsonSuccess($send);
 		break;
 	case 'zayav_zp_set':// Установка запчасти из заявки
-		if(!$zayav_id = _isnum($_POST['zayav_id']))
+		if(!$zayav_id = _num($_POST['zayav_id']))
 			jsonError();
-		if(!$zp_id = _isnum($_POST['zp_id']))
+		if(!$zp_id = _num($_POST['zp_id']))
 			jsonError();
 		if(!isset($_POST['count']))
 			$_POST['count'] = 1;
@@ -1147,7 +1147,7 @@ switch(@$_POST['op']) {
 		jsonSuccess($send);
 		break;
 	case 'zayav_kvit':
-		if(!$zayav_id = _isnum($_POST['zayav_id']))
+		if(!$zayav_id = _num($_POST['zayav_id']))
 			jsonError();
 		$active = _isbool(@$_POST['active']);
 		$defect = win1251(htmlspecialchars(trim($_POST['defect'])));
@@ -1236,7 +1236,7 @@ switch(@$_POST['op']) {
 		jsonSuccess($send);
 		break;
 	case 'zayav_expense_edit':
-		if(!$zayav_id = _isnum($_POST['zayav_id']))
+		if(!$zayav_id = _num($_POST['zayav_id']))
 			jsonError();
 
 		$expenseNew = zayav_expense_test($_POST['expense']);
@@ -1287,7 +1287,7 @@ switch(@$_POST['op']) {
 		jsonSuccess();
 		break;
 	case 'zayav_money_update':
-		if(!$zayav_id = _isnum($_POST['zayav_id']))
+		if(!$zayav_id = _num($_POST['zayav_id']))
 			jsonError();
 
 		$sql = "SELECT * FROM `zayav` WHERE `ws_id`=".WS_ID." AND !`deleted` AND `id`=".$zayav_id;
@@ -1547,7 +1547,7 @@ switch(@$_POST['op']) {
 		jsonSuccess($send);
 		break;
 	case 'zayav_diagnost':
-		if(!$zayav_id = _isnum($_POST['zayav_id']))
+		if(!$zayav_id = _num($_POST['zayav_id']))
 			jsonError();
 
 		$comm = _txt($_POST['comm']);
@@ -1635,13 +1635,13 @@ switch(@$_POST['op']) {
 		jsonSuccess($send);
 		break;
 	case 'zayav_cartridge_add':
-		if(!$client_id = _isnum($_POST['client_id']))
+		if(!$client_id = _num($_POST['client_id']))
 			jsonError();
 
-		if(!$count = _isnum($_POST['count']))
+		if(!$count = _num($_POST['count']))
 			jsonError();
 
-		if(!$pay_type = _isnum($_POST['pay_type']))
+		if(!$pay_type = _num($_POST['pay_type']))
 			jsonError();
 
 		// Если не указан ни один картридж (временно отменено, теперь указывается просто количество)
@@ -1714,7 +1714,7 @@ switch(@$_POST['op']) {
 		jsonSuccess($send);
 		break;
 	case 'zayav_info_cartridge_add'://добавление картриджей к заявке
-		if(!$zayav_id = _isnum($_POST['zayav_id']))
+		if(!$zayav_id = _num($_POST['zayav_id']))
 			jsonError();
 
 		// Если не указан ни один картридж
@@ -1756,9 +1756,9 @@ switch(@$_POST['op']) {
 		jsonSuccess($send);
 		break;
 	case 'zayav_info_cartridge_edit'://применение действия по картриджу
-		if(!$id = _isnum($_POST['id']))
+		if(!$id = _num($_POST['id']))
 			jsonError();
-		if(!$cartridge_id = _isnum($_POST['cart_id']))
+		if(!$cartridge_id = _num($_POST['cart_id']))
 			jsonError();
 
 		$filling = _bool($_POST['filling']);
@@ -1823,7 +1823,7 @@ switch(@$_POST['op']) {
 		jsonSuccess($send);
 		break;
 	case 'zayav_info_cartridge_del'://удаление картриджа из заявки
-		if(!$id = _isnum($_POST['id']))
+		if(!$id = _num($_POST['id']))
 			jsonError();
 
 		$sql = "SELECT * FROM `zayav_cartridge` WHERE `id`=".$id;
@@ -1856,13 +1856,13 @@ switch(@$_POST['op']) {
 		jsonSuccess($send);
 		break;
 	case 'zayav_cartridge_edit':
-		if(!$zayav_id = _isnum($_POST['zayav_id']))
+		if(!$zayav_id = _num($_POST['zayav_id']))
 			jsonError();
-		if(!$client_id = _isnum($_POST['client_id']))
+		if(!$client_id = _num($_POST['client_id']))
 			jsonError();
-		if(!$count = _isnum($_POST['count']))
+		if(!$count = _num($_POST['count']))
 			jsonError();
-		if(!$pay_type = _isnum($_POST['pay_type']))
+		if(!$pay_type = _num($_POST['pay_type']))
 			jsonError();
 
 		$sql = "SELECT * FROM `zayav` WHERE `ws_id`=".WS_ID." AND !`deleted` AND `id`=".$zayav_id;
@@ -2410,13 +2410,13 @@ switch(@$_POST['op']) {
 		jsonSuccess($send);
 		break;
 	case 'zp_compat_add':
-		if(!$zp_id = _isnum($_POST['zp_id']))
+		if(!$zp_id = _num($_POST['zp_id']))
 			jsonError();
-		if(!$device_id = _isnum($_POST['device_id']))
+		if(!$device_id = _num($_POST['device_id']))
 			jsonError();
-		if(!$vendor_id = _isnum($_POST['vendor_id']))
+		if(!$vendor_id = _num($_POST['vendor_id']))
 			jsonError();
-		if(!$model_id = _isnum($_POST['model_id']))
+		if(!$model_id = _num($_POST['model_id']))
 			jsonError();
 
 		$compat_id = _zpCompatId($zp_id);
@@ -2503,7 +2503,7 @@ switch(@$_POST['op']) {
 		jsonSuccess($send);
 		break;
 	case 'zp_price_info':
-		if(!$id = _isnum($_POST['id']))
+		if(!$id = _num($_POST['id']))
 			jsonError();
 		if(!$zp = query_assoc("SELECT * FROM `zp_price` WHERE `id`=".$id))
 			jsonError();
@@ -2672,19 +2672,19 @@ switch(@$_POST['op']) {
 		jsonSuccess($send);
 		break;
 	case 'expense_add':
-		if(!$invoice_id = _isnum($_POST['invoice_id']))
+		if(!$invoice_id = _num($_POST['invoice_id']))
 			jsonError();
 		if(!$sum = _cena($_POST['sum']))
 			jsonError();
 
-		$expense_id = _isnum($_POST['expense_id']);
+		$expense_id = _num($_POST['expense_id']);
 		$prim = win1251(htmlspecialchars(trim($_POST['prim'])));
 		if(!$expense_id && empty($prim))
 			jsonError();
 
-		$worker_id = _isnum($_POST['worker_id']);
-		$mon = _isnum($_POST['mon']);
-		$year = _isnum($_POST['year']);
+		$worker_id = _num($_POST['worker_id']);
+		$mon = _num($_POST['mon']);
+		$year = _num($_POST['year']);
 		if($expense_id == 1 && (!$worker_id || !$year || !$mon))
 			jsonError();
 
@@ -2727,7 +2727,7 @@ switch(@$_POST['op']) {
 		jsonSuccess();
 		break;
 	case 'expense_del':
-		if(!$id = _isnum($_POST['id']))
+		if(!$id = _num($_POST['id']))
 			jsonError();
 
 		$sql = "SELECT * FROM `money` WHERE !`deleted` AND `sum`<0 AND `id`=".$id;
@@ -2761,7 +2761,7 @@ switch(@$_POST['op']) {
 		break;
 
 	case 'invoice_set':
-		if(!$invoice_id = _isnum($_POST['invoice_id']))
+		if(!$invoice_id = _num($_POST['invoice_id']))
 			jsonError();
 		$sum = _cena($_POST['sum']);
 
@@ -2790,7 +2790,7 @@ switch(@$_POST['op']) {
 		jsonSuccess($send);
 		break;
 	case 'invoice_reset':
-		if(!$invoice_id = _isnum($_POST['invoice_id']))
+		if(!$invoice_id = _num($_POST['invoice_id']))
 			jsonError();
 
 		$sql = "SELECT * FROM `invoice` WHERE `id`=".$invoice_id;
@@ -2876,9 +2876,9 @@ switch(@$_POST['op']) {
 		break;
 
 	case 'salary_rate_set':
-		if(!$worker_id = _isnum($_POST['worker_id']))
+		if(!$worker_id = _num($_POST['worker_id']))
 			jsonError();
-		if(!$period = _isnum($_POST['period']))
+		if(!$period = _num($_POST['period']))
 			jsonError();
 
 
@@ -2929,13 +2929,13 @@ switch(@$_POST['op']) {
 		jsonSuccess();
 		break;
 	case 'salary_up':
-		if(!$worker_id = _isnum($_POST['worker_id']))
+		if(!$worker_id = _num($_POST['worker_id']))
 			jsonError();
 		if(!$sum = _cena($_POST['sum']))
 			jsonError();
-		if(!$mon = _isnum($_POST['mon']))
+		if(!$mon = _num($_POST['mon']))
 			jsonError();
-		if(!$year = _isnum($_POST['year']))
+		if(!$year = _num($_POST['year']))
 			jsonError();
 
 		$about = win1251(htmlspecialchars(trim($_POST['about'])));
@@ -2967,13 +2967,13 @@ switch(@$_POST['op']) {
 		jsonSuccess();
 		break;
 	case 'salary_deduct':
-		if(!$worker_id = _isnum($_POST['worker']))
+		if(!$worker_id = _num($_POST['worker']))
 			jsonError();
-		if(!$sum = _isnum($_POST['sum']))
+		if(!$sum = _num($_POST['sum']))
 			jsonError();
-		if(!$year = _isnum($_POST['year']))
+		if(!$year = _num($_POST['year']))
 			jsonError();
-		if(!$mon = _isnum($_POST['mon']))
+		if(!$mon = _num($_POST['mon']))
 			jsonError();
 		$about = win1251(htmlspecialchars(trim($_POST['about'])));
 		$sql = "INSERT INTO `zayav_expense` (
@@ -3003,7 +3003,7 @@ switch(@$_POST['op']) {
 		jsonSuccess();
 		break;
 	case 'salary_del':
-		if(!$id = _isnum($_POST['id']))
+		if(!$id = _num($_POST['id']))
 			jsonError();
 
 		$sql = "SELECT * FROM `zayav_expense` WHERE `id`=".$id;
@@ -3021,7 +3021,7 @@ switch(@$_POST['op']) {
 		jsonSuccess();
 		break;
 	case 'salary_deduct_del':
-		if(!$id = _isnum($_POST['id']))
+		if(!$id = _num($_POST['id']))
 			jsonError();
 
 		$sql = "SELECT * FROM `zayav_expense` WHERE `id`=".$id;
@@ -3040,15 +3040,15 @@ switch(@$_POST['op']) {
 		jsonSuccess();
 		break;
 	case 'salary_zp_add':
-		if(!$worker_id = _isnum($_POST['worker_id']))
+		if(!$worker_id = _num($_POST['worker_id']))
 			jsonError();
-		if(!$invoice_id = _isnum($_POST['invoice_id']))
+		if(!$invoice_id = _num($_POST['invoice_id']))
 			jsonError();
 		if(!$sum = _cena($_POST['sum']))
 			jsonError();
-		if(!$mon = _isnum($_POST['mon']))
+		if(!$mon = _num($_POST['mon']))
 			jsonError();
-		if(!$year = _isnum($_POST['year']))
+		if(!$year = _num($_POST['year']))
 			jsonError();
 
 		$about = win1251(htmlspecialchars(trim($_POST['about'])));
@@ -3093,7 +3093,7 @@ switch(@$_POST['op']) {
 		jsonSuccess();
 		break;
 	case 'salary_start_set':
-		if(!$worker_id = _isnum($_POST['worker_id']))
+		if(!$worker_id = _num($_POST['worker_id']))
 			jsonError();
 		$sum = _cena($_POST['sum']);
 
@@ -3135,30 +3135,30 @@ switch(@$_POST['op']) {
 		jsonSuccess($send);
 		break;
 	case 'salary_bonus_spisok':
-		if(!$worker_id = _isnum($_POST['worker_id']))
+		if(!$worker_id = _num($_POST['worker_id']))
 			jsonError();
-		if(!$year = _isnum($_POST['year']))
+		if(!$year = _num($_POST['year']))
 			jsonError();
-		if(!$week = _isnum($_POST['week']))
+		if(!$week = _num($_POST['week']))
 			jsonError();
 		$send['spisok'] = utf8(salary_worker_bonus($worker_id, $year, $week));
 		jsonSuccess($send);
 		break;
 	case 'salary_bonus':
-		if(!$worker_id = _isnum($_POST['worker_id']))
+		if(!$worker_id = _num($_POST['worker_id']))
 			jsonError();
-		if(!$year = _isnum($_POST['year']))
+		if(!$year = _num($_POST['year']))
 			jsonError();
-		if(!$week = _isnum($_POST['week']))
+		if(!$week = _num($_POST['week']))
 			jsonError();
 
 		$bonus = array();
 		$bonusSum = 0;
 		foreach(explode(',', $_POST['bonus']) as $ex) {
 			$r = explode(':', $ex);
-			if(!$id = _isnum($r[0]))
+			if(!$id = _num($r[0]))
 				jsonError();
-			$expense = _isnum($r[1]);
+			$expense = _num($r[1]);
 			$sum = intval($r[2]);
 			$bonus[$id] = array(
 				'expense' => $expense,
@@ -3214,7 +3214,7 @@ switch(@$_POST['op']) {
 		jsonSuccess();
 		break;
 	case 'salary_bonus_show':// просмотр бонуса по платежам
-		if(!$expense_id = _isnum($_POST['expense_id']))
+		if(!$expense_id = _num($_POST['expense_id']))
 			jsonError();
 
 		$sql = "SELECT * FROM `zayav_expense` WHERE `id`=".$expense_id;

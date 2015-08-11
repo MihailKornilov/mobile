@@ -79,7 +79,7 @@ foreach($aSheet->getRowIterator() as $r => $row) {
 		if($k > 10)
 			break;
 		$v = $cell->getCalculatedValue();
-		if(!$k && _isnum($v))
+		if(!$k && _num($v))
 			$articul = $v;
 		if($k == 2)
 			$name = iconv('utf-8', 'cp1251', $v);

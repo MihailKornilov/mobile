@@ -1,6 +1,15 @@
 .device-add-tab{border-spacing:10px}
 .device-add-tab input{width:170px}
 
+/* Селекты цветов */
+#colors tt{
+	display:inline-block;
+	margin:-0 5px;
+	position:relative;
+	top:-6px;
+}
+
+
 #client-add-tab .ca-table{border-spacing:8px;margin:10px}
 #client-add-tab .label{width:120px;text-align:right}
 #client-add-tab input{width:250px}
@@ -253,7 +262,6 @@
 #place_other{width:120px;position:absolute;top:-3px;left:45px}
 #zayavAdd #imei{width:130px}
 #zayavAdd #serial{width:200px}
-#zayavAdd .color_dop tt{display:inline-block;margin:0 4px;position:relative;top:-5px}
 #zayavAdd #fault .check0,#zayavAdd #fault .check1{white-space:nowrap;margin:0 15px 4px 0}
 #zayavAdd #comm{width:260px;height:40px}
 #zayavAdd .vkButton{margin:10px 7px 0 206px}
@@ -326,7 +334,6 @@
 #zayav-info .dtime_add{cursor:help}
 .zayav-info-edit{border-spacing:8px}
 .zayav-info-edit .equip_spisok div{display:block;margin-bottom:5px}
-.zayav-info-edit .color_dop tt{display:inline-block;margin:0 4px;position:relative;top:-5px}
 .zayav-info-edit ._image-spisok{width:260px}
 .zayav-info-edit #imei{width:244px}
 .zayav-info-edit #serial{width:244px}
@@ -469,6 +476,93 @@
 #zayav-diagnost-tab #comm{width:250px}
 #zayav-diagnost-tab #remind-txt{width:250px}
 #zayav-diagnost-tab .remind-tr{display:none}
+
+
+
+
+
+/* Товары */
+#tovar ._empty{margin:10px}
+#tovar #avai_check{margin-top:20px}
+#tovar ._search{margin-top:15px}
+
+#tovar-add-tab{border-spacing:10px}
+#tovar-add-tab #name{width:242px}
+
+
+.tovar-unit{margin:8px;cursor:pointer}
+.tovar-unit:hover{background-color:#e9edf1}
+.tovar-unit .tb{width:100%}
+.tovar-unit .img{
+	width:80px;
+	height:80px;
+	text-align:center;
+}
+.tovar-unit .cont{
+	padding-left:10px;
+	padding-top:5px;
+	vertical-align:top;
+}
+.tovar-unit:not(:hover) .avai_add{display:none}
+.tovar-unit .avai_add{
+	float:right;
+	margin-right:7px;
+	color:#292;
+	font-weight:bold;
+}
+.tovar-unit .avai{
+	float:right;
+	margin-right:7px;
+	padding:4px 8px;
+	color:#080;
+	font-weight:bold;
+	border:#ddd solid 1px;
+	background-color:#cfc;
+}
+
+#tovar-avai-add .tb{border-spacing:10px}
+#tovar-avai-add .label{text-align:right}
+#tovar-avai-add #count{width:45px}
+#tovar-avai-add span{color:#888;font-size:10px;margin-left:8px}
+
+#tovar-avai-show ._spisok{margin-top:10px}
+#tovar-avai-show tr:hover{background-color:#ffc}
+#tovar-avai-show .name{width:300px}
+#tovar-avai-show .color{
+	display:inline-block;
+	margin-left:5px;
+	padding:2px 7px;
+	color:#555;
+	border:#ddd solid 1px;
+	background-color:#f2f2f2;
+}
+#tovar-avai-show .count{text-align:center;font-weight:bold}
+#tovar-avai-show .bu{
+	display:inline-block;
+	margin-left:5px;
+	background-color:#fcc;
+	padding:2px 7px;
+	color:#900;
+}
+
+#tovar-catalog #filter{
+	background-color:#f7f7f7;
+	padding:10px;
+	border-bottom:#DAE1E8 solid 1px
+}
+#tovar-catalog #filter-tab{width:100%}
+#tovar-catalog #td-button-add{text-align:right}
+#tovar-catalog #tab{border-spacing:10px}
+#tovar-catalog .td{width:194px;vertical-align:top;padding-bottom:10px}
+#tovar-catalog .head{
+	display:block;
+	font-size:13px;
+	font-weight:bold;
+}
+#tovar-catalog ul{list-style-type:disc;margin-left:25px}
+#tovar-catalog li{margin-top:2px}
+#tovar-catalog li a{margin-left:-5px}
+
 
 /* Таблица формирования счёта */
 #schet-add-tab #sa-tab{border-spacing:10px;margin:10px}

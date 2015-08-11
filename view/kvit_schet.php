@@ -140,11 +140,33 @@ function xls_schet_head() {
 	$sheet->getStyle('A13')->getFont()->setBold(true)->setSize(14);
 	$sheet->getStyle('A13')->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
 
-	$client = utf8(htmlspecialchars_decode(_clientName($c)));
-	$sheet->setCellValue('A16', 'Плательщик:        '.$client);
-	$sheet->setCellValue('A17', 'Грузополучатель: '.$client);
+	$line = 16;
+
+	$client = utf8(($c['category_id'] > 2 ? _clientCategory($c['category_id']).' ' : '').htmlspecialchars_decode(_clientName($c)));
+	$sheet->setCellValue('A'.$line, 'Плательщик:        '.$client);
+	$line++;
+	if($c['org_inn'] || $c['org_kpp']) {
+		$sheet->setCellValue('B'.$line,
+			'                  '.
+			($c['org_inn'] ? '    ИНН: '.$c['org_inn'] : '') .
+			($c['org_kpp'] ? '    КПП: '.$c['org_kpp'] : '')
+		);
+		$line++;
+	}
+	if($c['org_adres']) {
+		$sheet->setCellValue('B' . $line, '                      Адрес: '.utf8(htmlspecialchars_decode($c['org_adres'])));;
+		$line++;
+	}
+	$sheet->setCellValue('A'.$line, 'Грузополучатель: '.$client);
+	$line++;
+	if($c['org_adres']) {
+		$sheet->setCellValue('B' . $line, '                      Адрес: '.utf8(htmlspecialchars_decode($c['org_adres'])));;
+		$line++;
+	}
+
+	return $line + 1;
 }//xls_schet_head()
-function xls_schet_tabHead() {//заголовок колонок таблицы
+function xls_schet_tabHead($line) {//заголовок колонок таблицы
 	global $sheet;
 
 	$ram = array(
@@ -160,16 +182,16 @@ function xls_schet_tabHead() {//заголовок колонок таблицы
 			'wrap' => true
 		)
 	);
-	$sheet->getStyle('A19:F19')->applyFromArray($ram);
+	$sheet->getStyle('A'.$line.':F'.$line)->applyFromArray($ram);
 
-	$sheet->getRowDimension('19')->setRowHeight(51);
+	$sheet->getRowDimension($line)->setRowHeight(51);
 
-	$sheet->setCellValue('A19', '№');
-	$sheet->setCellValue('B19', "Наименование\nтовара");
-	$sheet->setCellValue('C19', "Единица\nизме-\nрения");
-	$sheet->setCellValue('D19', "Коли-\nчество");
-	$sheet->setCellValue('E19', 'Цена');
-	$sheet->setCellValue('F19', 'Сумма');
+	$sheet->setCellValue('A'.$line, '№');
+	$sheet->setCellValue('B'.$line, "Наименование\nтовара");
+	$sheet->setCellValue('C'.$line, "Единица\nизме-\nрения");
+	$sheet->setCellValue('D'.$line, "Коли-\nчество");
+	$sheet->setCellValue('E'.$line, 'Цена');
+	$sheet->setCellValue('F'.$line, 'Сумма');
 }//xls_schet_tabHead()
 function xls_tabContent($line) {
 	global $sheet;
@@ -223,10 +245,10 @@ function xls_tabContent($line) {
 		'sum' => $sum
 	);
 }//xls_tabContent()
-function xls_schet_tab() {
+function xls_schet_tab($line) {
 	global $sheet;
 
-	$start = 20;
+	$start = $line + 1;
 	$arr = xls_tabContent($start);
 	$line = $arr['line'];
 	$n = $arr['n'];
@@ -331,7 +353,7 @@ function xls_nakl_rekvisit($line=3) {
 
 	$line += 2;
 	$sheet->setCellValue('A'.$line, 'Покупатель:');
-	$sheet->setCellValue($x.$line, utf8(htmlspecialchars_decode(_clientName($c))));
+	$sheet->setCellValue($x.$line, utf8(($c['category_id'] > 2 ? _clientCategory($c['category_id']).' ' : '').htmlspecialchars_decode(_clientName($c))));
 	$sheet->getStyle($x.$line)->getFont()->setBold(true);
 
 	$line += 2;
@@ -577,7 +599,7 @@ function xls_act_head() {
 	$sheet->getStyle('A4')->getFont()->setBold(true)->setSize(14);
 	$sheet->getStyle('A4')->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
 
-	$client = utf8(htmlspecialchars_decode(_clientName($c)));
+	$client = utf8(($c['category_id'] > 2 ? _clientCategory($c['category_id']).' ' : '').htmlspecialchars_decode(_clientName($c)));
 	$sheet->setCellValue('A6', 'Заказчик: '.$client);
 }//xls_act_head()
 function xls_act_tabHead() {//заголовок колонок таблицы
@@ -745,9 +767,9 @@ pageSetup('Счёт');
 xls_schet_width();
 xls_schet_top();
 xls_schet_rekvisit();
-xls_schet_head();
-xls_schet_tabHead();
-$line = xls_schet_tab();
+$line = xls_schet_head();
+xls_schet_tabHead($line);
+$line = xls_schet_tab($line);
 xls_schet_podpis($line);
 
 if(NAKL) {
@@ -800,7 +822,7 @@ if(ACT) {
 }
 
 
-//$book->setActiveSheetIndex(0);
+$book->setActiveSheetIndex(0);
 
 
 

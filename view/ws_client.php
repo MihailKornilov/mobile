@@ -107,7 +107,7 @@ function clientFilter($v) {
 		'opl' => 0
 	);
 	$filter = array(
-		'page' => _isnum(@$v['page']) ? $v['page'] : 1,
+		'page' => _num(@$v['page']) ? $v['page'] : 1,
 		'find' => strtolower(trim(@$v['find'])),
 		'dolg' => _isbool(@$v['dolg']),
 		'active' => _isbool(@$v['active']),
@@ -186,8 +186,7 @@ function client_data($v=array()) {
 		}
 	}
 
-	$all = query_value("SELECT COUNT(`id`) AS `all` FROM `client` WHERE ".$cond." LIMIT 1");
-	if(!$all)
+	if(!$all = query_value("SELECT COUNT(`id`) AS `all` FROM `client` WHERE ".$cond." LIMIT 1"))
 		return array(
 			'all' => 0,
 			'result' => 'Клиентов не найдено.'.$filter['clear'],

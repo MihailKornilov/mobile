@@ -6,7 +6,7 @@ require_once(DOCUMENT_ROOT.'/view/sa.php');
 
 switch(@$_POST['op']) {
 	case 'user_action':
-		if(!$viewer_id = _isnum($_POST['viewer_id']))
+		if(!$viewer_id = _num($_POST['viewer_id']))
 			jsonError();
 /*		$tables = array(
 			'accrual' => "Начисления",
@@ -51,7 +51,7 @@ switch(@$_POST['op']) {
 		break;
 
 	case 'ws_status_change':
-		if(!$ws_id = _isnum($_POST['ws_id']))
+		if(!$ws_id = _num($_POST['ws_id']))
 			jsonError('Неверный id');
 		$sql = "SELECT * FROM `workshop` WHERE `id`=".$ws_id;
 		if(!$ws = mysql_fetch_assoc(query($sql)))
@@ -183,6 +183,80 @@ switch(@$_POST['op']) {
 			query($sql);
 		}
 		$send['time'] = round(microtime(true) - TIME, 3);
+		jsonSuccess($send);
+		break;
+
+	case 'tovar_category_add':
+		$name = _txt($_POST['name']);
+		if(empty($name))
+			jsonError();
+		$sql = "INSERT INTO `tovar_category` (
+					`name`,
+					`sort`
+				) VALUES (
+					'".addslashes($name)."',
+					"._maxSql('tovar_category')."
+				)";
+		query($sql);
+
+//		GvaluesCreate();
+
+		$send['html'] = utf8(sa_tovar_category_spisok());
+		jsonSuccess($send);
+		break;
+	case 'tovar_category_edit':
+		if(!$id = _num($_POST['id']))
+			jsonError();
+		$name = _txt($_POST['name']);
+		if(empty($name))
+			jsonError();
+
+		$sql = "UPDATE `tovar_category`
+				SET `name`='".addslashes($name)."'
+				WHERE `id`=".$id;
+		query($sql);
+
+		//GvaluesCreate();
+
+		$send['html'] = utf8(sa_tovar_category_spisok());
+		jsonSuccess($send);
+		break;
+	case 'tovar_category_device_load':
+		$sql = "SELECT `id`,`name` FROM `base_device` WHERE !`category_id` ORDER BY `sort`";
+		$send['dev'] = query_selArray($sql);
+		jsonSuccess($send);
+		break;
+	case 'tovar_category_device_add':
+		if(!$id = _num($_POST['id']))
+			jsonError();
+		if(!$device_id = _num($_POST['device_id']))
+			jsonError();
+
+		$sql = "UPDATE `base_device`
+				SET `category_id`=".$id."
+				WHERE `id`=".$device_id;
+		query($sql);
+
+		//GvaluesCreate();
+
+		$send['html'] = utf8(sa_tovar_category_spisok());
+		jsonSuccess($send);
+		break;
+	case 'tovar_category_del':
+		if(!preg_match(REGEXP_NUMERIC, $_POST['id']) || !$_POST['id'])
+			jsonError();
+		$id = intval($_POST['id']);
+
+		$sql = "SELECT * FROM `setup_fault` WHERE `id`=".$id;
+		if(!$r = mysql_fetch_assoc(query($sql)))
+			jsonError();
+
+		$sql = "DELETE FROM `setup_fault` WHERE `id`=".$id;
+		query($sql);
+
+		GvaluesCreate();
+
+		$send['html'] = utf8(sa_fault_spisok());
 		jsonSuccess($send);
 		break;
 

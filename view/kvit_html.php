@@ -79,7 +79,7 @@ function kvit_cut() {
 require_once '../config.php';
 require_once(DOCUMENT_ROOT.'/view/ws.php');
 
-if(!$id = _isnum($_GET['id']))
+if(!$id = _num($_GET['id']))
 	die(win1251('Неверный id квитанции.'));
 
 $sql = "SELECT * FROM `workshop` WHERE `status` AND `id`=".WS_ID;

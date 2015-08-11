@@ -75,7 +75,7 @@ function report() {
 				$left;
 			break;
 		case 'salary':
-			if($worker_id = _isnum(@$_GET['id'])) {
+			if($worker_id = _num(@$_GET['id'])) {
 				$v = salaryFilter(array(
 					'worker_id' => $worker_id,
 					'mon' => intval(@$_GET['mon']),
@@ -179,7 +179,7 @@ function report() {
 				$left;
 			break;
 		case 'salary':
-			if($worker_id = _isnum(@$_GET['id'])) {
+			if($worker_id = _num(@$_GET['id'])) {
 				$v = salaryFilter(array(
 					'worker_id' => $worker_id,
 					'mon' => intval(@$_GET['mon']),
@@ -436,9 +436,9 @@ function history($v=array()) {
 		$v,
 		array(
 			'ws_id' => WS_ID,
-			'client_id' => !empty($v['client_id']) && _isnum($v['client_id']) ? intval($v['client_id']) : 0,
-			'zayav_id' => !empty($v['zayav_id']) && _isnum($v['zayav_id']) ? intval($v['zayav_id']) : 0,
-			'zp_id' => !empty($v['zp_id']) && _isnum($v['zp_id']) ? intval($v['zp_id']) : 0
+			'client_id' => !empty($v['client_id']) && _num($v['client_id']) ? intval($v['client_id']) : 0,
+			'zayav_id' => !empty($v['zayav_id']) && _num($v['zayav_id']) ? intval($v['zayav_id']) : 0,
+			'zp_id' => !empty($v['zp_id']) && _num($v['zp_id']) ? intval($v['zp_id']) : 0
 		)
 	);
 }//history()
@@ -671,6 +671,7 @@ function income_spisok($filter=array()) {
 	//$money = _viewer($money);
 	$money = _zayavNomerLink($money);
 	$money = _zpLink($money);
+	$money = _schetValues($money);
 
 	$send['spisok'] = $page > 1 ? '' :
 		'<input type="hidden" id="money_limit" value="'.$filter['limit'].'" />'.
@@ -705,7 +706,12 @@ function income_unit($r) {
 		$about = 'Заявка '.$r['zayav_link'];
 	if($r['zp_id'])
 		$about = 'Продажа запчасти '.$r['zp_link'];
+	if($r['schet_id'])
+		$about .= '<br />Счёт № СЦ'.$r['schet_nomer'].'. День оплаты: '.FullData($r['schet_paid_day'], 1);
+
 	$about .= ($about ? '. ' : '').$r['prim'];
+
+
 	return
 		'<tr'.($r['deleted'] ? ' class="deleted"' : '').' val="'.$r['id'].'">'.
 			'<td class="sum">'._sumSpace($r['sum']).
@@ -785,10 +791,10 @@ function income_insert($v) {
 
 function expenseFilter($v) {
 	$send = array(
-		'page' => _isnum(@$v['page']) ? $v['page'] : 1,
-		'limit' => _isnum(@$v['limit']) ? $v['limit'] : 30,
-		'category' => _isnum(@$v['category']),
-		'worker' => _isnum(@$v['worker']),
+		'page' => _num(@$v['page']) ? $v['page'] : 1,
+		'limit' => _num(@$v['limit']) ? $v['limit'] : 30,
+		'category' => _num(@$v['category']),
+		'worker' => _num(@$v['worker']),
 		//'invoice_id' => !empty($v['invoice_id']) && preg_match(REGEXP_NUMERIC, $v['invoice_id']) ? $v['invoice_id'] : 0,
 		'year' => !empty($v['year']) && preg_match(REGEXP_NUMERIC, $v['year']) ? $v['year'] : strftime('%Y'),
 		'month' => isset($v['month']) ? $v['month'] : intval(strftime('%m'))
@@ -938,11 +944,11 @@ function expense_spisok($v=array()) {
 
 function reportSchetFilter($v) {
 	$send = array(
-		'page' => _isnum(@$v['page']) ? $v['page'] : 1,
-		'limit' => _isnum(@$v['limit']) ? $v['limit'] : 50,
+		'page' => _num(@$v['page']) ? $v['page'] : 1,
+		'limit' => _num(@$v['limit']) ? $v['limit'] : 50,
 		'find' => trim(@$v['find']),
-		'client_id' => _isnum(@$v['client_id']),
-		'passpaid' => _isnum(@$v['passpaid'])
+		'client_id' => _num(@$v['client_id']),
+		'passpaid' => _num(@$v['passpaid'])
 	);
 	return $send;
 }//reportSchetFilter()
@@ -1015,10 +1021,22 @@ function report_schet_spisok($v=array()) {
 	$q = query($sql);
 
 	$spisok = array();
-	while($r = mysql_fetch_assoc($q))
+	while($r = mysql_fetch_assoc($q)) {
+		$r['paids'] = array();
 		$spisok[$r['id']] = $r;
+	}
 
 	$spisok = _zayavValues($spisok);
+
+
+	//список платежей по счетам
+	$sql = "SELECT * FROM `money` WHERE `schet_id` IN (".implode(',', array_keys($spisok)).")";
+	$q = query($sql);
+	while($r = mysql_fetch_assoc($q))
+		$spisok[$r['schet_id']]['paids'][] = array(
+			'sum' => $r['sum'],
+			'day' => $r['schet_paid_day']
+		);
 
 	foreach($spisok as $r)
 		$send['spisok'] .= schet_unit($r);
@@ -1029,39 +1047,10 @@ function report_schet_spisok($v=array()) {
 			'tr' => 1,
 			'type' => 4,
 			'id' => 'schet_next'
-		) + $filter).
-		($filter['page'] == 1 ? '</table>' : '');
+		) + $filter);
 
 	return $send;
 }//report_schet_spisok()
-
-function _start($v) {//вычисление первой позиции в базе данных
-	return ($v['page'] - 1) * $v['limit'];
-}//_start()
-function _next($v) {//вывод ссылки на догрузку списка
-	$start = _start($v);
-	if($start + $v['limit'] < $v['all']) {
-		$c = $v['all'] - $start - $v['limit'];
-		$c = $c > $v['limit'] ? $v['limit'] : $c;
-
-		switch(@$v['type']) {
-			case 1: break; //клиенты
-			case 2: break; //заявки
-			case 3: break; //платежи
-			case 4: $type = ' сч'._end($c, 'ёт', 'ёта', 'етов'); break;
-			default: $type = ' запис'._end($c, 'ь', 'и', 'ей');
-		}
-
-		$show = '<span>Показать ещё '.$c.$type.'</span>';
-		$id = empty($v['id']) ? '' : ' id="'.$v['id'].'"';
-		return
-			empty($v['tr']) ?
-				'<div class="_next" val="'.($v['page'] + 1).'"'.$id.'>'.$show.'</div>'
-				:
-				'<tr class="_next" val="'.($v['page'] + 1).'"'.$id.'>'.
-					'<td colspan="10">'.$show;
-	}
-}//_next()
 
 function _invoiceBalans($invoice_id, $start=false) {// Получение текущего баланса счёта
 	if($start === false)
@@ -1645,10 +1634,10 @@ function salary_monthList($v) {
 }//salary_monthList()
 function salaryFilter($v) {
 	$v = array(
-		'worker_id' => _isnum(@$v['worker_id']),
-		'mon' => _isnum(@$v['mon']) ? intval($v['mon']) : intval(strftime('%m')),
-		'year' => _isnum(@$v['year']) ? intval($v['year']) : intval(strftime('%Y')),
-		'acc_id' => _isnum(@$v['acc_id'])
+		'worker_id' => _num(@$v['worker_id']),
+		'mon' => _num(@$v['mon']) ? intval($v['mon']) : intval(strftime('%m')),
+		'year' => _num(@$v['year']) ? intval($v['year']) : intval(strftime('%Y')),
+		'acc_id' => _num(@$v['acc_id'])
 	);
 	$v['month'] = _monthDef($v['mon'], 1).' '.$v['year'];
 	$v['year-mon'] = $v['year'].'-'.($v['mon'] < 10 ? 0 : '').$v['mon'];

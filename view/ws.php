@@ -13,7 +13,12 @@ function _mainLinks() {
 			'page' => 'zayav',
 			'show' => 1
 		),
-		array(
+/*		array(
+			'name' => 'Товары',
+			'page' => 'tovar',
+			'show' => 1
+		),
+*/		array(
 			'name' => 'Запчасти',
 			'page' => 'zp',
 			'show' => 1
@@ -462,6 +467,8 @@ function _zayavPlaceCheck($zayav_id, $place_id=0, $place_name='') {// Обновление
 	if(!$z = query_assoc($sql))
 		return 0;
 
+	$gv = 0;
+
 	if(!$place_id && !empty($place_name)) {
 		$sql = "SELECT `id`
 			FROM `zayav_device_place`
@@ -478,7 +485,7 @@ function _zayavPlaceCheck($zayav_id, $place_id=0, $place_name='') {// Обновление
 				)";
 			query($sql);
 			$place_id = mysql_insert_id();
-			GvaluesCreate();
+			$gv++;
 		}
 	}
 	
@@ -501,9 +508,29 @@ function _zayavPlaceCheck($zayav_id, $place_id=0, $place_name='') {// Обновление
 						'<td>'._devPlace($place_id).
 					'</table>'
 			));
+
 			if($place_id == 2)
 				_vkCommentAdd('zayav', $zayav_id, 'Передано клиенту.');
+
+			//удаление пустых местонахождений
+			$sql = "DELETE FROM `zayav_device_place` WHERE `id` IN (
+						SELECT id FROM (
+							SELECT
+								`p`.`id`,
+								COUNT(`z`.`id`) `count`
+							FROM `zayav_device_place` `p`
+								LEFT JOIN  `zayav` `z`
+								ON `p`.`id`=`z`.`device_place`
+							WHERE `p`.`ws_id`=".WS_ID."
+							GROUP BY `p`.`id`
+						) `t` WHERE !`count`
+					)";
+			query($sql);
+			$gv += mysql_affected_rows();
 		}
+
+		if($gv)
+			GvaluesCreate();
 	}
 
 	return $place_id;
@@ -524,7 +551,7 @@ function zayav_add($v=array()) {
 	if(!empty($_GET['back'])) {
 		$back = explode('_', $_GET['back']);
 		if($back[0] == 'client') {
-			$client_id = _isnum(@$back[1]);
+			$client_id = _num(@$back[1]);
 			$back = 'client'.($client_id ? '&d=info&id='.$client_id : '');
 		} else
 			$back = $back[0];
@@ -541,9 +568,7 @@ function zayav_add($v=array()) {
 			'<tr><td class="label topi">Устройство: <td><table><td id="dev"><td id="device_image"></table>'.
 				'<tr><td class="label">IMEI:		<td><input type="text" id="imei" maxlength="20"'.(isset($v['imei']) ? ' value="'.$v['imei'].'"' : '').' />'.
 			'<tr><td class="label">Серийный номер:  <td><input type="text" id="serial" maxlength="30"'.(isset($v['serial']) ? ' value="'.$v['serial'].'"' : '').' />'.
-			'<tr><td class="label">Цвет:'.
-				'<td><input type="hidden" id="color_id" />'.
-					'<span class="color_dop dn"><tt>-</tt><input type="hidden" id="color_dop" /></span>'.
+			'<tr><td class="label">Цвет:<td id="colors">'.
 			'<tr class="tr_equip dn"><td class="label">Комплектация:<td class="equip_spisok">'.
 			'<tr><td class="label topi">Местонахождение устройства<br />после внесения заявки:<td><input type="hidden" id="place" value="-1" />'.
 			'<tr><td class="label">Диагностика:<td>'._check('diagnost').
@@ -584,7 +609,7 @@ function zayavFilter($v) {
 		'find' => trim(@$v['find']),
 		'sort' => _num(@$v['sort']) ? $v['sort'] : 1,
 		'desc' => _bool(@$v['desc']),
-		'status' => _isnum(@$v['status']),
+		'status' => _num(@$v['status']),
 		'finish' => preg_match(REGEXP_DATE, @$v['finish']) ? $v['finish'] : $default['finish'],
 		'zpzakaz' => _num(@$v['zpzakaz']),
 		'executer' => intval(@$v['executer']),
@@ -619,7 +644,7 @@ function zayav_spisok($v) {
 		if($engRus)
 			$regEngRus = '/('.$engRus.')/i';
 
-		if($page ==1 && _isnum($filter['find']))
+		if($page ==1 && _num($filter['find']))
 			$nomer = intval($filter['find']);
 	} else {
 		if($filter['client_id'])
@@ -754,7 +779,7 @@ function zayav_spisok($v) {
 	$sql = "SELECT * FROM `zayav_schet` WHERE `zayav_id` IN (".implode(',', array_keys($zayav)).")";
 	$q = query($sql);
 	while($r = mysql_fetch_assoc($q))
-		$zayav[$r['zayav_id']]['schet'] .= '<b class="schet-nomer'.($r['paid_sum'] > $r['sum'] ? ' paid' : '').'">СЦ'.$r['nomer'].'</b>';
+		$zayav[$r['zayav_id']]['schet'] .= '<b class="schet-nomer'.($r['paid_sum'] >= $r['sum'] ? ' paid' : '').'">СЦ'.$r['nomer'].'</b>';
 
 	foreach($zayav as $id => $r) {
 		$r['model'] = _modelName($r['base_model_id']);
@@ -865,6 +890,31 @@ function zayav_list($v) {
 		'</script>'.
 	'</div>';
 }//zayav_list()
+
+function _schetValues($arr) {//данные о счёте, подставляемые в список
+	$ids = array();
+	$arrIds = array();
+	foreach($arr as $key => $r)
+		if(!empty($r['schet_id'])) {
+			$ids[$r['schet_id']] = 1;
+			$arrIds[$r['schet_id']][] = $key;
+		}
+	if(empty($ids))
+		return $arr;
+	$sql = "SELECT
+	            *
+			FROM `zayav_schet`
+			WHERE `ws_id`=".WS_ID."
+			  AND `id` IN (".implode(',', array_keys($ids)).")";
+	$q = query($sql);
+	while($r = mysql_fetch_assoc($q))
+		foreach($arrIds[$r['id']] as $id) {
+			$arr[$id] += array(
+				'schet_nomer' => $r['nomer']
+			);
+		}
+	return $arr;
+}//_schetValues()
 
 
 function zayavBalansUpdate($zayav_id, $ws_id=WS_ID) {//Обновление баланса клиента
@@ -1069,9 +1119,9 @@ function zayav_expense_test($v) {// Проверка корректности данных расходов заявки
 	$ex = explode(',', $v);
 	foreach($ex as $r) {
 		$ids = explode(':', $r);
-		if(!_isnum($ids[0]))
+		if(!_num($ids[0]))
 			return false;
-		if((_zayavExpense($ids[0], 'worker') || _zayavExpense($ids[0], 'zp')) && !_isnum($ids[1]))
+		if((_zayavExpense($ids[0], 'worker') || _zayavExpense($ids[0], 'zp')) && !_num($ids[1]))
 			return false;
 		if(_zayavExpense($ids[0], 'txt'))
 			$ids[1] = win1251(htmlspecialchars(trim($ids[1])));
@@ -1160,6 +1210,15 @@ function zayav_info_schet_spisok($zayav_id) {
 
 	$spisok = _zayavValues($spisok);
 
+	//список платежей по счетам
+	$sql = "SELECT * FROM `money` WHERE `schet_id` IN (".implode(',', array_keys($spisok)).")";
+	$q = query($sql);
+	while($r = mysql_fetch_assoc($q))
+		$spisok[$r['schet_id']]['paids'][] = array(
+			'sum' => $r['sum'],
+			'day' => $r['schet_paid_day']
+		);
+
 	$send =
 		'<table class="_spisok _money">';
 	foreach($spisok as $r)
@@ -1172,7 +1231,11 @@ function schet_unit($r, $zayav=1) {
 	$to_pass = $r['pass'] || $paid ? '' : '<a class="to-pass" val="'.$r['id'].'">передать клиенту</a>';
 	$to_paid = $r['pass'] && !$paid ? '<a class="to-pay" val="'.$r['id'].'">оплатить</a>' : '';
 	$pass_info = $r['pass'] && !$paid ? '<div class="pass-info">Передано клиенту '.FullData($r['pass_day'], 1).'</div>' : '';
-	$paid_info = $r['paid_sum'] > 0 ? '<div class="paid-info">Оплачено <b>'.round($r['paid_sum'], 2).'</b> руб.</div>' : '';
+	$paid_info = '';
+	if($r['paid_sum'] > 0) {
+		foreach($r['paids'] as $i)
+			$paid_info .= '<div class="paid-info">Оплачено <b>'.round($i['sum'], 2) . '</b> руб. '.FullData($i['day'], 1).'.</div>';
+	}
 	return
 		'<tr class="schet-unit'.($paid ? ' paid' : '').'">'.
 			'<td class="td-content">'.
@@ -1465,7 +1528,7 @@ function zayav_cartridge_spisok($v=array()) {
 	$sql = "SELECT * FROM `zayav_schet` WHERE `zayav_id` IN (".implode(',', array_keys($zayav)).")";
 	$q = query($sql);
 	while($r = mysql_fetch_assoc($q))
-		$zayav[$r['zayav_id']]['schet'] .= '<b class="schet-nomer'.($r['paid_sum'] > $r['sum'] ? ' paid' : '').'">СЦ'.$r['nomer'].'</b>';
+		$zayav[$r['zayav_id']]['schet'] .= '<b class="schet-nomer'.($r['paid_sum'] >= $r['sum'] ? ' paid' : '').'">СЦ'.$r['nomer'].'</b>';
 
 
 	foreach($zayav as $id => $r) {

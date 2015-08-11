@@ -94,6 +94,134 @@ $(document)
 		}, 'json');
 	})
 
+	.on('click', '#sa-tovar-category .add', function() {
+		var t = $(this),
+			html =
+				'<table class="sa-tab">' +
+					'<tr><td class="label r">Наименование:<td><input id="name" type="text" />' +
+				'</table>',
+			dialog = _dialog({
+				width:390,
+				head:'Добавление новой категории товара',
+				content:html,
+				submit:submit
+			});
+		$('#name').keyEnter(submit).focus();
+		function submit() {
+			var send = {
+				op:'tovar_category_add',
+				name:$('#name').val()
+			};
+			if(!send.name) {
+				dialog.err('Не указано наименование');
+				$('#name').focus();
+			} else {
+				dialog.process();
+				$.post(AJAX_SA, send, function(res) {
+					if(res.success) {
+						$('#spisok').html(res.html);
+						dialog.close();
+						_msg('Внесено!');
+						sortable();
+					} else
+						dialog.abort();
+				}, 'json');
+			}
+		}
+	})
+	.on('click', '#sa-tovar-category .img_edit', function() {
+		var t = $(this);
+		while(t[0].tagName != 'TR')
+			t = t.parent();
+		var name = t.find('.name').html(),
+			html =
+				'<table class="sa-tab">' +
+					'<tr><td class="label r">Наименование:<td><input id="name" type="text" value="' + name + '" />' +
+				'</table>',
+			dialog = _dialog({
+				width:390,
+				head:'Редактирование категории товара',
+				content:html,
+				butSubmit:'Сохранить',
+				submit:submit
+			});
+		$('#name').keyEnter(submit).focus();
+		function submit() {
+			var send = {
+				op:'tovar_category_edit',
+				id: t.attr('val'),
+				name:$('#name').val()
+			};
+			if(!send.name) {
+				dialog.err('Не указано наименование');
+				$('#name').focus();
+			} else {
+				dialog.process();
+				$.post(AJAX_SA, send, function(res) {
+					if(res.success) {
+						$('#spisok').html(res.html);
+						dialog.close();
+						_msg('Сохранено');
+						sortable();
+					} else
+						dialog.abort();
+				}, 'json');
+			}
+		}
+	})
+	.on('click', '#sa-tovar-category .img_add', function() {//Прикрепление устройства к категории товара
+		var t = $(this);
+		while(t[0].tagName != 'TR')
+			t = t.parent();
+		var name = t.find('.name').html(),
+			html =
+				'<table class="sa-tab">' +
+					'<tr><td class="label">Категория:<td><b>' + name + '</b>' +
+					'<tr><td class="label">Устройство:<td><input type="hidden" id="device_id" />' +
+				'</table>',
+			dialog = _dialog({
+				width:390,
+				head:'Прикрепление устройства к категории товара',
+				content:html,
+				butSubmit:'Прикрепить',
+				submit:submit
+			});
+
+		$('#device_id')._select({
+			width:250,
+			title0:'не выбрано',
+			spisok:[]
+		})._select('process');
+		$.post(AJAX_SA, {op:'tovar_category_device_load'}, function(res) {
+			if(res.success)
+				$('#device_id')._select(res.dev);
+			else
+				$('#device_id')._select([]);
+		}, 'json');
+
+		function submit() {
+			var send = {
+				op:'tovar_category_device_add',
+				id: t.attr('val'),
+				device_id:_num($('#device_id').val())
+			};
+			if(!send.device_id)
+				dialog.err('Не выбрано устройство');
+			else {
+				dialog.process();
+				$.post(AJAX_SA, send, function(res) {
+					if(res.success) {
+						$('#spisok').html(res.html);
+						dialog.close();
+						_msg('Сохранено');
+						sortable();
+					} else
+						dialog.abort();
+				}, 'json');
+			}
+		}
+	})
+
 	.on('click', '.sa-device .add', function() {
 		var t = $(this),
 			html = '<table class="sa-device-add">' +

@@ -102,6 +102,26 @@ switch($_GET['p']) {
 				$html .= zayav_list($v);
 		}
 		break;
+	case 'tovar':
+		if(!WS_ID)
+			header('Location:'.URL.'&p=wscreate');
+		_mainLinks();
+
+		$v = array();
+		if(HASH_VALUES) {
+			$ex = explode('.', HASH_VALUES);
+			foreach($ex as $r) {
+				$arr = explode('=', $r);
+				$v[$arr[0]] = $arr[1];
+			}
+		} else
+			foreach($_COOKIE as $k => $val) {
+				$arr = explode(VIEWER_ID.'_tovar_', $k);
+				if(isset($arr[1]))
+					$v[$arr[1]] = $val;
+			}
+		$html .= tovar($v);
+		break;
 	case 'zp':
 		if(!WS_ID)
 			header('Location:'.URL.'&p=wscreate');
@@ -150,7 +170,7 @@ switch($_GET['p']) {
 	case 'sa':
 		if(!SA || SA_VIEWER_ID)
 			header('Location:'.URL.'&p=zayav');
-		require_once('view/sa.php');
+		require_once('view/sa.php');//todo удалить после обновления приложения
 		switch(@$_GET['d']) {
 			case 'user': $html .= sa_user(); break;
 			case 'ws':
@@ -160,6 +180,7 @@ switch($_GET['p']) {
 				}
 				$html .= sa_ws();
 				break;
+			case 'tovar_category': $html .= sa_tovar_category(); break;
 			case 'device': $html .= sa_device(); break;
 			case 'vendor': $html .= sa_vendor(); break;
 			case 'model': $html .= sa_model(); break;

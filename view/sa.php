@@ -21,17 +21,18 @@ function sa_index() {
 	$wsCount = query_value("SELECT COUNT(`id`) FROM `workshop`");
 	return '<div class="path">'.sa_cookie_back().'Администрирование</div>'.
 	'<div class="sa-index">'.
-		'<div><B>Организации и сотрудники:</B></div>'.
-		'<A href="'.URL.'&p=sa&d=user">Пользователи ('.$userCount.')</A><br />'.
-		'<A href="'.URL.'&p=sa&d=ws">Организации ('.$wsCount.')</A><br />'.
+		'<div><b>Организации и сотрудники:</b></div>'.
+		'<a href="'.URL.'&p=sa&d=user">Пользователи ('.$userCount.')</a><br />'.
+		'<a href="'.URL.'&p=sa&d=ws">Организации ('.$wsCount.')</a><br />'.
 		'<br />'.
-		'<div><B>Устройства и запчасти:</B></div>'.
-		'<A href="'.URL.'&p=sa&d=device">Устройства / Производители / Модели</A><br />'.
-		'<A href="'.URL.'&p=sa&d=equip">Комплектация и наименования запчастей для устройств</A><br />'.
-		'<A href="'.URL.'&p=sa&d=fault">Виды неисправностей</A><br />'.
-		//'<A href="'.URL.'&p=sa&d=dev-spec">Характеристики устройств для информации</A><br />'.
+		'<div><b>Устройства и запчасти:</b></div>'.
+		'<a href="'.URL.'&p=sa&d=tovar_category">Категории товаров</a><br />'.
+		'<a href="'.URL.'&p=sa&d=device">Устройства / Производители / Модели</a><br />'.
+		'<a href="'.URL.'&p=sa&d=equip">Комплектация и наименования запчастей для устройств</a><br />'.
+		'<a href="'.URL.'&p=sa&d=fault">Виды неисправностей</a><br />'.
+		//'<a href="'.URL.'&p=sa&d=dev-spec">Характеристики устройств для информации</a><br />'.
 		'<br />'.
-		'<A href="'.URL.'&p=sa&d=color">Цвета для устройств и запчастей</A><br />'.
+		'<a href="'.URL.'&p=sa&d=color">Цвета для устройств и запчастей</a><br />'.
 	'</div>';
 }//sa_index()
 
@@ -183,6 +184,53 @@ function sa_ws_info($id) {
 		'<div class="vkButton ws_zayav_balans" val="'.$ws['id'].'"><button>Обновить суммы начислений и платежей заявок</button></div>'.
 	'</div>';
 }//sa_ws_info()
+
+function sa_tovar_category() {
+	return
+		'<div class="path">'.sa_cookie_back().'<a href="'.URL.'&p=sa">Администрирование</a> » Категории товаров</div>'.
+		'<div id="sa-tovar-category">'.
+			'<div class="headName">Категории товаров<a class="add">Новая категория</a></div>'.
+			'<div id="spisok">'.sa_tovar_category_spisok().'</div>'.
+		'</div>';
+}//sa_tovar_category()
+function sa_tovar_category_spisok() {
+	$sql = "SELECT
+	            *,
+				'' `dev`
+			FROM `tovar_category`
+			ORDER BY `sort`";
+	$q = query($sql);
+	if(!mysql_num_rows($q))
+		return 'Категории не определены.';
+	$spisok = array();
+	while($r = mysql_fetch_assoc($q))
+		$spisok[$r['id']] = $r;
+
+	$sql = "SELECT *
+			FROM `base_device`
+			WHERE `category_id`
+			ORDER BY `sort`";
+	$q = query($sql);
+	while($r = mysql_fetch_assoc($q))
+		$spisok[$r['category_id']]['dev'] .= '<div class="dev">'.$r['name'].'</div>';
+
+	$send =
+		'<table class="_spisok">'.
+			'<tr><th>Наименование'.
+				'<th>';
+	foreach($spisok as $id => $r)
+		$send .=
+			'<tr val="'.$id.'">'.
+				'<td class="td-name">'.
+					'<div class="img_add'._tooltip('Прикрепить устройство', -75).'</div>'.
+					'<div class="name">'.$r['name'].'</div>'.
+					$r['dev'].
+				'<td class="ed">'.
+					'<div class="img_edit"></div>';
+	$send .= '</table>';
+	return $send;
+}//sa_tovar_category_spisok()
+
 
 function sa_device() {
 	return '<div class="path">'.sa_cookie_back().'<a href="'.URL.'&p=sa">Администрирование</a> » Устройства</div>'.
@@ -351,10 +399,10 @@ function sa_model() {
 }//sa_model()
 function sa_model_spisok($v) {
 	$filter = array(
-		'page' => _isnum(@$v['page']) ? $v['page'] : 1,
-		'limit' => _isnum(@$v['limit']) ? $v['limit'] : 20,
+		'page' => _num(@$v['page']) ? $v['page'] : 1,
+		'limit' => _num(@$v['limit']) ? $v['limit'] : 20,
 		'find' => unescape(@$v['find']),
-		'vendor_id' => _isnum(@$v['vendor_id'])
+		'vendor_id' => _num(@$v['vendor_id'])
 	);
 
 	$page = $filter['page'];

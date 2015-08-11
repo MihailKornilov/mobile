@@ -54,7 +54,7 @@ var zpFilter = function() {
 							'<div>' + obj.for + '</div>' +
 							'<div class="avai">Текущее наличие: <b>' + obj.count + '</b> шт.</div>' +
 							'<table class="inp">' +
-								'<tr><td class="label">Количество:<td><input type="text" id="count" maxlength="5">' +
+								'<tr><td class="label">Количество:<td><input type="text" id="count" maxlength="5" value="1" />' +
 								'<tr><td class="label">Цена за ед.:<td><input type="text" id="cena" maxlength="10"><span>не обязательно</span>' +
 							'</table>' +
 							'<td valign="top">' + obj.img +

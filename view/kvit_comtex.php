@@ -268,7 +268,7 @@ require_once '../config.php';
 require_once API_PATH.'/excel/PHPExcel.php';
 set_time_limit(10);
 
-if(!$id = _isnum($_GET['id']))
+if(!$id = _num($_GET['id']))
 	die(win1251('Неверный id заявки.'));
 
 $sql = "SELECT * FROM `zayav` WHERE `ws_id`=".WS_ID." AND !`deleted` AND `zayav_status` AND `id`=".$id;

@@ -30,7 +30,7 @@ function setup() {
 		case 'info': $left = setup_info(); break;
 		case 'rekvisit': $left = setup_rekvisit(); break;
 		case 'worker':
-			if($id = _isnum(@$_GET['id'])) {
+			if($id = _num(@$_GET['id'])) {
 				$left = setup_worker_rules($id);
 				break;
 			}
