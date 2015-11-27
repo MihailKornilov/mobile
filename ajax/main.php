@@ -1,15 +1,7 @@
 <?php
 require_once('config.php');
-require_once(API_PATH.'/ajax/vk.php');
 
 switch(@$_POST['op']) {
-	case 'cache_clear':
-		if(!SA)
-			jsonError();
-		_cacheClear();
-		jsonSuccess();
-		break;
-
 	case 'ws_create':
 		$org_name = win1251(htmlspecialchars(trim($_POST['org_name'])));
 		if(empty($org_name))

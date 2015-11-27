@@ -1,39 +1,23 @@
 <?php
-function sa_cookie_back() {
-	if(!empty($_GET['pre_p'])) {
-		$_COOKIE['pre_p'] = $_GET['pre_p'];
-		$_COOKIE['pre_d'] = empty($_GET['pre_d']) ? '' : $_GET['pre_d'];
-		$_COOKIE['pre_d1'] = empty($_GET['pre_d1']) ? '' : $_GET['pre_d1'];
-		$_COOKIE['pre_id'] = empty($_GET['pre_id']) ? '' : $_GET['pre_id'];
-		setcookie('pre_p', $_COOKIE['pre_p'], time() + 2592000, '/');
-		setcookie('pre_d', $_COOKIE['pre_d'], time() + 2592000, '/');
-		setcookie('pre_d1', $_COOKIE['pre_d1'], time() + 2592000, '/');
-		setcookie('pre_id', $_COOKIE['pre_id'], time() + 2592000, '/');
-	}
-	$d = empty($_COOKIE['pre_d']) ? '' :'&d='.$_COOKIE['pre_d'];
-	$d1 = empty($_COOKIE['pre_d1']) ? '' :'&d1='.$_COOKIE['pre_d1'];
-	$id = empty($_COOKIE['pre_id']) ? '' :'&id='.$_COOKIE['pre_id'];
-	return '<a href="'.URL.'&p='.$_COOKIE['pre_p'].$d.$d1.$id.'">Назад</a> » ';
-}//sa_cookie_back()
-
 function sa_index() {
-	$userCount = query_value("SELECT COUNT(`viewer_id`) FROM `vk_user`");
-	$wsCount = query_value("SELECT COUNT(`id`) FROM `workshop`");
-	return '<div class="path">'.sa_cookie_back().'Администрирование</div>'.
-	'<div class="sa-index">'.
+	$sql = "SELECT COUNT(`viewer_id`) FROM `_vkuser` WHERE `app_id`=".APP_ID;
+	$userCount = query_value($sql, GLOBAL_MYSQL_CONNECT);
+	$wsCount = 0; //query_value("SELECT COUNT(`id`) FROM `workshop`");
+	return
 		'<div><b>Организации и сотрудники:</b></div>'.
-		'<a href="'.URL.'&p=sa&d=user">Пользователи ('.$userCount.')</a><br />'.
-		'<a href="'.URL.'&p=sa&d=ws">Организации ('.$wsCount.')</a><br />'.
+		'<a href="'.URL.'&p=sa&d=user">Пользователи ('.$userCount.')</a>'.
+		'<a href="'.URL.'&p=sa&d=ws">Организации ('.$wsCount.')</a>'.
 		'<br />'.
+
 		'<div><b>Устройства и запчасти:</b></div>'.
-		'<a href="'.URL.'&p=sa&d=tovar_category">Категории товаров</a><br />'.
-		'<a href="'.URL.'&p=sa&d=device">Устройства / Производители / Модели</a><br />'.
-		'<a href="'.URL.'&p=sa&d=equip">Комплектация и наименования запчастей для устройств</a><br />'.
-		'<a href="'.URL.'&p=sa&d=fault">Виды неисправностей</a><br />'.
-		//'<a href="'.URL.'&p=sa&d=dev-spec">Характеристики устройств для информации</a><br />'.
+		'<a href="'.URL.'&p=sa&d=tovar_category">Категории товаров</a>'.
+		'<a href="'.URL.'&p=sa&d=device">Устройства / Производители / Модели</a>'.
+		'<a href="'.URL.'&p=sa&d=equip">Комплектация и наименования запчастей для устройств</a>'.
+		'<a href="'.URL.'&p=sa&d=fault">Виды неисправностей</a>'.
+		//'<a href="'.URL.'&p=sa&d=dev-spec">Характеристики устройств для информации</a>'.
 		'<br />'.
-		'<a href="'.URL.'&p=sa&d=color">Цвета для устройств и запчастей</a><br />'.
-	'</div>';
+
+		'<a href="'.URL.'&p=sa&d=color">Цвета для устройств и запчастей</a>';
 }//sa_index()
 
 

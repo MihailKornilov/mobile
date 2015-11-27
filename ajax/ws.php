@@ -1,6 +1,4 @@
 <?php
-require_once('config.php');
-
 switch(@$_POST['op']) {
 	case 'scanner_word':
 		$word = win1251(htmlspecialchars(trim($_POST['word'])));
@@ -133,255 +131,6 @@ switch(@$_POST['op']) {
 		jsonSuccess($send);
 		break;
 
-	case 'client_sel':
-		$send['spisok'] = array();
-		if(!empty($_POST['val']) && !preg_match(REGEXP_WORDFIND, win1251($_POST['val'])))
-			jsonSuccess($send);
-
-		$val = win1251($_POST['val']);
-		$client_id = _num($_POST['client_id']);
-
-		$sql = "SELECT *
-				FROM `client`
-				WHERE `ws_id`=".WS_ID."
-				  AND !`deleted`".
-					(!empty($val) ?
-						" AND (`org_name` LIKE '%".$val."%'
-							OR `org_telefon` LIKE '%".$val."%'
-							OR `org_adres` LIKE '%".$val."%'
-							OR `org_inn` LIKE '%".$val."%'
-							OR `org_kpp` LIKE '%".$val."%'
-							OR `fio1` LIKE '%".$val."%'
-							OR `fio2` LIKE '%".$val."%'
-							OR `fio3` LIKE '%".$val."%'
-							OR `telefon1` LIKE '%".$val."%'
-							OR `telefon2` LIKE '%".$val."%'
-							OR `telefon3` LIKE '%".$val."%'
-							  )"
-					: '').
-					($client_id > 0 ? " AND `id`<=".$client_id : '')."
-				ORDER BY `id` DESC
-				LIMIT 50";
-		$q = query($sql);
-		while($r = mysql_fetch_assoc($q)) {
-			$name = _clientName($r);
-			$telefon = _clientTelefon($r);
-			$unit = array(
-				'uid' => $r['id'],
-				'title' => utf8(htmlspecialchars_decode($name))
-			);
-			if($telefon)
-				$unit['content'] = utf8($name.'<span>'.$telefon.'</span>');
-			$send['spisok'][] = $unit;
-		}
-		jsonSuccess($send);
-		break;
-	case 'client_add':
-		if(!$category_id = _num($_POST['category_id']))
-			jsonError();
-
-		$fio1 = _txt($_POST['fio1']);
-		$fio2 = _txt($_POST['fio2']);
-		$fio3 = _txt($_POST['fio3']);
-		$telefon1 = _txt($_POST['telefon1']);
-		$telefon2 = _txt($_POST['telefon2']);
-		$telefon3 = _txt($_POST['telefon3']);
-		$post1 = _txt($_POST['post1']);
-		$post2 = _txt($_POST['post2']);
-		$post3 = _txt($_POST['post3']);
-		$org_name = _txt($_POST['org_name']);
-		$org_telefon = _txt($_POST['org_telefon']);
-		$org_fax = _txt($_POST['org_fax']);
-		$org_adres = _txt($_POST['org_adres']);
-		$org_inn = _txt($_POST['org_inn']);
-		$org_kpp = _txt($_POST['org_kpp']);
-		$info_dop = _txt($_POST['info_dop']);
-
-		if($category_id == 1 && empty($fio1))//Для частного лица обязательно указывается ФИО
-			jsonError();
-		if($category_id > 1 && empty($org_name))//Для ИП и ООО обязательно указывается Название организации
-			jsonError();
-
-		$sql = "INSERT INTO `client` (
-					`ws_id`,
-					`category_id`,
-					`org_name`,
-					`org_telefon`,
-					`org_fax`,
-					`org_adres`,
-					`org_inn`,
-					`org_kpp`,
-					`info_dop`,
-					`fio1`,
-					`fio2`,
-					`fio3`,
-					`telefon1`,
-					`telefon2`,
-					`telefon3`,
-					`post1`,
-					`post2`,
-					`post3`,
-					`viewer_id_add`
-				) VALUES (
-					".WS_ID.",
-					".$category_id.",
-					'".addslashes($org_name)."',
-					'".addslashes($org_telefon)."',
-					'".addslashes($org_fax)."',
-					'".addslashes($org_adres)."',
-					'".addslashes($org_inn)."',
-					'".addslashes($org_kpp)."',
-					'".addslashes($info_dop)."',
-					'".addslashes($fio1)."',
-					'".addslashes($fio2)."',
-					'".addslashes($fio3)."',
-					'".addslashes($telefon1)."',
-					'".addslashes($telefon2)."',
-					'".addslashes($telefon3)."',
-					'".addslashes($post1)."',
-					'".addslashes($post2)."',
-					'".addslashes($post3)."',
-					".VIEWER_ID."
-				)";
-		query($sql);
-
-		$name = $category_id == 1 ? $fio1 : $org_name;
-		$telefon = $category_id == 1 ? $telefon1 : $org_telefon;
-		$send = array(
-			'uid' => mysql_insert_id(),
-			'title' => utf8($name),
-			'content' => utf8($name.'<span>'.$telefon.'</span>')
-		);
-		history_insert(array(
-			'type' => 3,
-			'client_id' => $send['uid']
-		));
-		jsonSuccess($send);
-		break;
-	case 'client_spisok':
-		$_POST['find'] = win1251($_POST['find']);
-		$data = client_data($_POST);
-		if($data['filter']['page'] == 1)
-			$send['all'] = utf8($data['result']);
-		$send['spisok'] = utf8($data['spisok']);
-		jsonSuccess($send);
-		break;
-	case 'client_edit':
-		if(!$client_id = _num($_POST['id']))
-			jsonError();
-		if(!$category_id = _num($_POST['category_id']))
-			jsonError();
-
-		define('ORG', $category_id > 1);
-
-		$fio1 = _txt($_POST['fio1']);
-		$fio2 = ORG ? _txt($_POST['fio2']) : '';
-		$fio3 = ORG ? _txt($_POST['fio3']) : '';
-		$telefon1 = _txt($_POST['telefon1']);
-		$telefon2 = ORG ? _txt($_POST['telefon2']) : '';
-		$telefon3 = ORG ? _txt($_POST['telefon3']) : '';
-		$post1 = ORG ? _txt($_POST['post1']) : '';
-		$post2 = ORG ? _txt($_POST['post2']) : '';
-		$post3 = ORG ? _txt($_POST['post3']) : '';
-		$org_name = ORG ? _txt($_POST['org_name']) : '';
-		$org_telefon = ORG ? _txt($_POST['org_telefon']) : '';
-		$org_fax = ORG ? _txt($_POST['org_fax']) : '';
-		$org_adres = ORG ? _txt($_POST['org_adres']) : '';
-		$org_inn = ORG ? _txt($_POST['org_inn']) : '';
-		$org_kpp = ORG ? _txt($_POST['org_kpp']) : '';
-		$info_dop = _txt($_POST['info_dop']);
-		$join = _bool($_POST['join']);
-		$client2 = _num($_POST['client2']);
-
-		if(!ORG && empty($fio1))//Для частного лица обязательно указывается ФИО
-			jsonError();
-		if(ORG && empty($org_name))//Для ИП и ООО обязательно указывается Название организации
-			jsonError();
-
-		$sql = "SELECT * FROM `client` WHERE `ws_id`=".WS_ID." AND !`deleted` AND `id`=".$client_id;
-		if(!$client = query_assoc($sql))
-			jsonError();
-
-		if($join) {
-			if(!$client2)
-				jsonError();
-			if(!query_value("SELECT * FROM `client` WHERE `ws_id`=".WS_ID." AND !`deleted` AND `id`=".$client2))
-				jsonError();
-			if($client_id == $client2)
-				jsonError();
-		}
-
-		$sql = "UPDATE `client`
-				SET `category_id`=".$category_id.",
-					`org_name`='".addslashes($org_name)."',
-					`org_telefon`='".addslashes($org_telefon)."',
-					`org_fax`='".addslashes($org_fax)."',
-					`org_adres`='".addslashes($org_adres)."',
-					`org_inn`='".addslashes($org_inn)."',
-					`org_kpp`='".addslashes($org_kpp)."',
-					`info_dop`='".addslashes($info_dop)."',
-					`fio1`='".addslashes($fio1)."',
-					`fio2`='".addslashes($fio2)."',
-					`fio3`='".addslashes($fio3)."',
-					`telefon1`='".addslashes($telefon1)."',
-					`telefon2`='".addslashes($telefon2)."',
-					`telefon3`='".addslashes($telefon3)."',
-					`post1`='".addslashes($post1)."',
-					`post2`='".addslashes($post2)."',
-					`post3`='".addslashes($post3)."'
-			   WHERE `id`=".$client_id;
-		query($sql);
-
-		if($join) {
-			query("UPDATE `accrual`	SET `client_id`=".$client_id." WHERE `client_id`=".$client2);
-			query("UPDATE `money`	SET `client_id`=".$client_id." WHERE `client_id`=".$client2);
-			query("UPDATE `vk_comment` SET `table_id`=".$client_id."  WHERE `table_name`='client' AND `table_id`=".$client2);
-			query("UPDATE `zayav`	SET `client_id`=".$client_id." WHERE `client_id`=".$client2);
-			query("UPDATE `zp_move`	SET `client_id`=".$client_id." WHERE `client_id`=".$client2);
-			query("UPDATE `client`  SET `deleted`=1,`join_id`=".$client_id." WHERE `id`=".$client2);
-			clientBalansUpdate($client_id);
-			history_insert(array(
-				'type' => 11,
-				'client_id' => $client_id,
-				'value' => _clientLink($client2, 1)
-			));
-		}
-
-		$changes = '';
-		if($client['category_id'] != $category_id)
-			$changes .= '<tr><th>Категория:<td>'._clientCategory($client['category_id']).'<td>»<td>'._clientCategory($category_id);
-		if($client['org_name'] != $org_name)
-			$changes .= '<tr><th>Название организации:<td>'.$client['org_name'].'<td>»<td>'.$org_name;
-		if($client['org_telefon'] != $org_telefon)
-			$changes .= '<tr><th>Телефон:<td>'.$client['org_telefon'].'<td>»<td>'.$org_telefon;
-		if($client['org_fax'] != $org_fax)
-			$changes .= '<tr><th>Факс:<td>'.$client['org_fax'].'<td>»<td>'.$org_fax;
-		if($client['org_adres'] != $org_adres)
-			$changes .= '<tr><th>Адрес:<td>'.$client['org_adres'].'<td>»<td>'.$org_adres;
-		if($client['org_inn'] != $org_inn)
-			$changes .= '<tr><th>ИНН:<td>'.$client['org_inn'].'<td>»<td>'.$org_inn;
-		if($client['org_kpp'] != $org_kpp)
-			$changes .= '<tr><th>КПП:<td>'.$client['org_kpp'].'<td>»<td>'.$org_kpp;
-		if($client['info_dop'] != $info_dop)
-			$changes .= '<tr><th>Дополнительнo:<td>'.nl2br($client['info_dop']).'<td>»<td>'.nl2br($info_dop);
-		if($changes)
-			history_insert(array(
-				'type' => 10,
-				'client_id' => $client_id,
-				'value' => '<table>'.$changes.'</table>'
-			));
-
-		jsonSuccess();
-		break;
-	case 'client_zayav_spisok':
-		$_POST['limit'] = 10;
-		$data = zayav_spisok($_POST);
-		if($data['filter']['page'] == 1)
-			$send['all'] = utf8($data['result']);
-		$send['html'] = utf8($data['spisok']);
-		jsonSuccess($send);
-		break;
-
 	case 'zayav_add':
 		if(!$client_id = _num($_POST['client_id']))
 			jsonError();
@@ -475,7 +224,7 @@ switch(@$_POST['op']) {
 		query($sql);
 		$send['id'] = mysql_insert_id();
 
-		_zayavPlaceCheck($send['id'], $place_id, $place_other);
+		zayavPlaceCheck($send['id'], $place_id, $place_other);
 
 		if($comm) {
 			$sql = "INSERT INTO `vk_comment` (
@@ -519,7 +268,7 @@ switch(@$_POST['op']) {
 			jsonError();
 
 		$day = $_POST['day'];
-		$zayav_spisok = _isbool($_POST['zayav_spisok']);
+		$zayav_spisok = _bool($_POST['zayav_spisok']);
 
 		$send['html'] = utf8(_zayavFinishCalendar($day, '', $zayav_spisok));
 		jsonSuccess($send);
@@ -529,7 +278,7 @@ switch(@$_POST['op']) {
 			jsonError();
 
 		$day = $_POST['day'];
-		$zayav_spisok = _isbool($_POST['zayav_spisok']);
+		$zayav_spisok = _bool($_POST['zayav_spisok']);
 
 		$send['html'] = utf8(_zayavFinishCalendar($day, $_POST['mon'], $zayav_spisok));
 		jsonSuccess($send);
@@ -539,8 +288,8 @@ switch(@$_POST['op']) {
 			jsonError();
 
 		$day = $_POST['day'];
-		$zayav_id = _num($_POST['zayav_id']);
-		$save = _isbool($_POST['save']);
+		$zayav_id = _num(@$_POST['zayav_id']);
+		$save = _bool($_POST['save']);
 
 		if($zayav_id && $save) {
 			$sql = "SELECT * FROM `zayav` WHERE `ws_id`=".WS_ID." AND !`deleted` AND `id`=".$zayav_id;
@@ -559,7 +308,7 @@ switch(@$_POST['op']) {
 			setcookie('zback_spisok_page', 1, time() + 3600, '/');
 			$send['all'] = utf8($data['result']);
 		}
-		$send['html'] = utf8($data['spisok']);
+		$send['spisok'] = utf8($data['spisok']);
 		jsonSuccess($send);
 		break;
 	case 'zayav_edit':
@@ -614,91 +363,45 @@ switch(@$_POST['op']) {
 		query($sql);
 
 		if($z['client_id'] != $client_id) {
-			$sql = "UPDATE `accrual`
+			$sql = "UPDATE `_money_accrual`
 					SET `client_id`=".$client_id."
-					WHERE `ws_id`=".WS_ID."
+					WHERE `app_id`=".APP_ID."
+					  AND `ws_id`=".WS_ID."
 					  AND `zayav_id`=".$zayav_id."
 					  AND `client_id`=".$z['client_id'];
-			query($sql);
-			$sql = "UPDATE `money`
+			query($sql, GLOBAL_MYSQL_CONNECT);
+			$sql = "UPDATE `_money_income`
 					SET `client_id`=".$client_id."
-					WHERE `ws_id`=".WS_ID."
+					WHERE `app_id`=".APP_ID."
+					  AND `ws_id`=".WS_ID."
 					  AND `zayav_id`=".$zayav_id."
 					  AND `client_id`=".$z['client_id'];
-			query($sql);
+			query($sql, GLOBAL_MYSQL_CONNECT);
 			clientBalansUpdate($z['client_id']);
 			clientBalansUpdate($client_id);
 		}
 
-		$changes = '';
-		if($z['client_id'] != $client_id)
-			$changes .= '<tr><th>Клиент:<td>'._clientLink($z['client_id']).'<td>»<td>'._clientLink($client_id);
-		if(   $z['base_device_id'] != $device
-		   || $z['base_vendor_id'] != $vendor
-		   || $z['base_model_id'] != $model) {
-			$old = _deviceName($z['base_device_id'])._vendorName($z['base_vendor_id'])._modelName($z['base_model_id']);
-			$new = _deviceName($device)._vendorName($vendor)._modelName($model);
-			$changes .= '<tr><th>Устройство:<td>'.$old.'<td>»<td>'.$new;
-		}
-		if($z['imei'] != $imei)
-			$changes .= '<tr><th>imei:<td>'.$z['imei'].'<td>»<td>'.$imei;
-		if($z['serial'] != $serial)
-			$changes .= '<tr><th>Serial:<td>'.$z['serial'].'<td>»<td>'.$serial;
-		if($z['color_id'] != $color_id || $z['color_dop'] != $color_dop)
-			$changes .= '<tr><th>Цвет:<td>'._color($z['color_id'], $z['color_dop']).'<td>»<td>'._color($color_id, $color_dop);
-		if($z['equip'] != $equip)
-			$changes .= '<tr><th>Комплект:<td>'.zayavEquipSpisok($z['equip']).'<td>»<td>'.zayavEquipSpisok($equip);
-		if($z['pre_cost'] != $pre_cost)
-			$changes .= '<tr><th>Стоимость ремонта:<td>'.($z['pre_cost'] ? $z['pre_cost'] : '').'<td>»<td>'.($pre_cost ? $pre_cost : '');
-		if($z['diagnost'] != $diagnost)
-			$changes .= '<tr><th>Диагностика:<td>'.($z['diagnost'] ? 'да' : 'нет').'<td>»<td>'.($diagnost ? 'да' : 'нет');
+		$old = _deviceName($z['base_device_id'])._vendorName($z['base_vendor_id'])._modelName($z['base_model_id']);
+		$new = _deviceName($device)._vendorName($vendor)._modelName($model);
+
+		$changes =
+			_historyChange('Клиент', $z['client_id'], $client_id, _clientVal($z['client_id'], 'go'), _clientVal($client_id, 'go')).
+			_historyChange('Устройство', $old, $new).
+			_historyChange('imei', $z['imei'], $imei).
+			_historyChange('Serial', $z['serial'], $serial).
+			_historyChange('Цвет', _color($z['color_id'], $z['color_dop']), _color($color_id, $color_dop)).
+			_historyChange('Комплект', zayavEquipSpisok($z['equip']), zayavEquipSpisok($equip)).
+			_historyChange('Стоимость ремонта', $z['pre_cost'] ? $z['pre_cost'] : '', $pre_cost ? $pre_cost : '').
+			_historyChange('Диагностика', _daNet($z['diagnost']), _daNet($diagnost));
 		if($changes)
-			history_insert(array(
-				'type' => 7,
+			_history(array(
+				'type_id' => 72,
 				'client_id' => $z['client_id'],
 				'zayav_id' => $zayav_id,
-				'value' => '<table>'.$changes.'</table>'
+				'v1' => '<table>'.$changes.'</table>'
 			));
 
 		jsonSuccess();
-		break;
-	case 'zayav_delete':
-		if(empty($_POST['zayav_id']) || !preg_match(REGEXP_NUMERIC, $_POST['zayav_id']))
-			jsonError();
-
-		$zayav_id = intval($_POST['zayav_id']);
-		$sql = "SELECT * FROM `zayav` WHERE `ws_id`=".WS_ID." AND !`deleted` AND `id`=".$zayav_id;
-		if(!$z = mysql_fetch_assoc(query($sql)))
-			jsonError();
-
-		$sql = "SELECT COUNT(`sum`)
-				FROM `accrual`
-				WHERE `ws_id`=".WS_ID."
-				  AND !`deleted`
-				  AND `zayav_id`=".$zayav_id;
-		if(query_value($sql))
-			jsonError();
-
-		$sql = "SELECT COUNT(`sum`)
-				FROM `money`
-				WHERE `ws_id`=".WS_ID."
-				  AND !`deleted`
-				  AND `sum`>0
-				  AND `zayav_id`=".$zayav_id;
-		if(query_value($sql))
-			jsonError();
-
-		query("UPDATE `zayav` SET `deleted`=1 WHERE `id`=".$zayav_id);
-		query("UPDATE `remind` SET `status`=0 WHERE `status`=1 AND `zayav_id`=".$zayav_id, GLOBAL_MYSQL_CONNECT);
-
-		history_insert(array(
-			'type' => 2,
-			'client_id' => $z['client_id'],
-			'zayav_id' => $zayav_id
-		));
-
-		$send['client_id'] = $z['client_id'];
-		jsonSuccess($send);
 		break;
 	case 'zayav_status_place':
 		if(!$zayav_id = _num($_POST['zayav_id']))
@@ -738,7 +441,7 @@ switch(@$_POST['op']) {
 			'value1' => $z['zayav_status']
 		));
 
-		_zayavPlaceCheck($zayav_id, $place_id, $place_other);
+		zayavPlaceCheck($zayav_id, $place_id, $place_other);
 		zayav_day_finish_change($zayav_id, $day_finish);
 
 		jsonSuccess();
@@ -779,163 +482,9 @@ switch(@$_POST['op']) {
 		$place_id = _num($_POST['place']);
 		$place_other = !$place_id ? _txt($_POST['place_other']) : '';
 
-		_zayavPlaceCheck($zayav_id, $place_id, $place_other);
+		zayavPlaceCheck($zayav_id, $place_id, $place_other);
 
 		jsonSuccess();
-		break;
-	case 'zayav_accrual_add':
-		if(!$zayav_id = _num($_POST['zayav_id']))
-			jsonError();
-		if(!preg_match(REGEXP_NUMERIC, $_POST['sum']) || !$_POST['sum'])
-			jsonError();
-		if(!preg_match(REGEXP_NUMERIC, $_POST['status']) || !$_POST['status'])
-			jsonError();
-		if(!preg_match(REGEXP_BOOL, $_POST['remind']))
-			jsonError();
-		$remind = intval($_POST['remind']);
-		$remind_txt = win1251(htmlspecialchars(trim($_POST['remind_txt'])));
-		$remind_day = htmlspecialchars(trim($_POST['remind_day']));
-		if($remind) {
-			if(!$remind_txt)
-				jsonError();
-			if(!preg_match(REGEXP_DATE, $remind_day))
-				jsonError();
-		}
-
-		$sum = intval($_POST['sum']);
-		$prim = win1251(htmlspecialchars(trim($_POST['prim'])));
-		$status = intval($_POST['status']);
-
-		$sql = "SELECT * FROM `zayav` WHERE `ws_id`=".WS_ID." AND !`deleted` AND `id`=".$zayav_id;
-		if(!$z = query_assoc($sql))
-			jsonError();
-
-		$sql = "INSERT INTO `accrual` (
-					`ws_id`,
-					`zayav_id`,
-					`client_id`,
-					`sum`,
-					`prim`,
-					`viewer_id_add`
-				) VALUES (
-					".WS_ID.",
-					".$zayav_id.",
-					".$z['client_id'].",
-					".$sum.",
-					'".addslashes($prim)."',
-					".VIEWER_ID."
-				)";
-		query($sql);
-
-		clientBalansUpdate($z['client_id']);
-		zayavBalansUpdate($zayav_id);
-
-		history_insert(array(
-			'type' => 5,
-			'client_id' => $z['client_id'],
-			'zayav_id' => $zayav_id,
-			'value' => $sum
-		));
-
-		//Обновление статуса заявки, если изменялся
-		if($z['zayav_status'] != $status) {
-			$sql = "UPDATE `zayav`
-					SET `zayav_status`=".$status.",`zayav_status_dtime`=CURRENT_TIMESTAMP
-					WHERE `id`=".$zayav_id;
-			query($sql);
-			history_insert(array(
-				'type' => 4,
-				'client_id' => $z['client_id'],
-				'zayav_id' => $zayav_id,
-				'value' => $status,
-				'value1' => $z['zayav_status']
-			));
-			$send['status'] = _zayavStatus($status);
-			$send['status']['name'] = utf8($send['status']['name']);
-			$send['status']['dtime'] = utf8(FullDataTime(curTime()));
-		}
-
-		//Внесение напоминания, если есть
-		if($remind) {
-			_remind_add(array(
-				'zayav_id' => $zayav_id,
-				'txt' => $remind_txt,
-				'day' => $remind_day
-			));
-			$send['remind'] = utf8(_remind_spisok(array('zayav_id'=>$zayav_id), 'spisok'));
-		}
-
-		$send['html'] = utf8(zayav_info_money($zayav_id));
-		jsonSuccess($send);
-		break;
-	case 'zayav_accrual_del':
-		if(!$id = _num($_POST['id']))
-			jsonError();
-
-		$sql = "SELECT * FROM `accrual` WHERE !`deleted` AND `id`=".$id;
-		if(!$r = query_assoc($sql))
-			jsonError();
-
-		$sql = "SELECT * FROM `zayav` WHERE `ws_id`=".WS_ID." AND !`deleted` AND `id`=".$r['zayav_id'];
-		if(!$z = query_assoc($sql))
-			jsonError();
-
-		$sql = "UPDATE `accrual` SET
-					`deleted`=1,
-					`viewer_id_del`=".VIEWER_ID.",
-					`dtime_del`=CURRENT_TIMESTAMP
-				WHERE `id`=".$id;
-		query($sql);
-
-		clientBalansUpdate($r['client_id']);
-		zayavBalansUpdate($r['zayav_id']);
-
-		history_insert(array(
-			'type' => 8,
-			'client_id' => $r['client_id'],
-			'zayav_id' => $r['zayav_id'],
-			'value' => $r['sum'],
-			'value1' => $r['prim']
-		));
-		jsonSuccess();
-		break;
-	case 'zayav_accrual_rest':
-		if(!$id = _num($_POST['id']))
-			jsonError();
-
-		$sql = "SELECT
-		            *,
-					'acc' AS `type`
-				FROM `accrual`
-				WHERE `ws_id`=".WS_ID."
-				  AND `deleted`
-				  AND `id`=".$id;
-		if(!$r = query_assoc($sql))
-			jsonError();
-
-		$sql = "SELECT * FROM `zayav` WHERE `ws_id`=".WS_ID." AND !`deleted` AND `id`=".$r['zayav_id'];
-		if(!$z = query_assoc($sql))
-			jsonError();
-
-		$sql = "UPDATE `accrual` SET
-					`deleted`=0,
-					`viewer_id_del`=0,
-					`dtime_del`='0000-00-00 00:00:00'
-				WHERE `id`=".$id;
-		query($sql);
-
-		clientBalansUpdate($r['client_id']);
-		zayavBalansUpdate($r['zayav_id']);
-
-		history_insert(array(
-			'type' => 27,
-			'client_id' => $r['client_id'],
-			'zayav_id' => $r['zayav_id'],
-			'value' => $r['sum'],
-			'value1' => $r['prim']
-		));
-		$send['html'] = utf8(zayav_accrual_unit($r));
-		jsonSuccess($send);
 		break;
 	case 'zayav_zp_add':
 		if(!preg_match(REGEXP_NUMERIC, $_POST['zayav_id']) || $_POST['zayav_id'] == 0)
@@ -1098,27 +647,7 @@ switch(@$_POST['op']) {
 		$c = query_assoc("SELECT * FROM `client` WHERE !`deleted` AND `id`=".$z['client_id']);
 
 		$telefon = _clientTelefon($c);
-		$html =
-			'<table>'.
-				'<tr><td><div class="image">'._zayavImg($z).'</div>'.
-					'<td class="inf">'.
-						'<div style="background-color:#'._zayavStatusColor($z['zayav_status']).'" '.
-							 'class="tstat'._tooltip('Статус заявки: '._zayavStatusName($z['zayav_status']), -7, 'l').
-						'</div>'.
-	 ($z['cartridge'] ? '<b>Картриджи</b><br />'.
-		                $z['cartridge_count'].' шт.'
-		                :
-						_deviceName($z['base_device_id']).
-						'<div class="tname">'._vendorName($z['base_vendor_id'])._modelName($z['base_model_id']).'</div>'
-	 ).
-						'<table>'.
-							'<tr><td class="label top">Клиент:'.
-								'<td>'._clientName($c).
-									   ($telefon ? '<br />'.$telefon : '').
-							'<tr><td class="label">Баланс:'.
-								'<td><span class="bl" style=color:#'.($c['balans'] < 0 ? 'A00' : '090').'>'.$c['balans'].'</span>'.
-						'</table>'.
-			'</table>';
+
 
 		$send['html'] = utf8($html);
 		jsonSuccess($send);
@@ -1149,7 +678,7 @@ switch(@$_POST['op']) {
 	case 'zayav_kvit':
 		if(!$zayav_id = _num($_POST['zayav_id']))
 			jsonError();
-		$active = _isbool(@$_POST['active']);
+		$active = _bool(@$_POST['active']);
 		$defect = win1251(htmlspecialchars(trim($_POST['defect'])));
 		if(empty($defect))
 			jsonError();
@@ -1235,57 +764,6 @@ switch(@$_POST['op']) {
 
 		jsonSuccess($send);
 		break;
-	case 'zayav_expense_edit':
-		if(!$zayav_id = _num($_POST['zayav_id']))
-			jsonError();
-
-		$expenseNew = zayav_expense_test($_POST['expense']);
-		if($expenseNew === false)
-			jsonError();
-
-		$sql = "SELECT * FROM `zayav` WHERE `ws_id`=".WS_ID." AND !`deleted` AND `id`=".$zayav_id;
-		if(!$z = query_assoc($sql))
-			jsonError();
-
-		$expenseOld = zayav_expense_spisok($z, 'array');
-		if($expenseNew != $expenseOld) {
-			$old = zayav_expense_spisok($z);
-			query("DELETE FROM `zayav_expense` WHERE `zayav_id`=".$zayav_id);
-			foreach($expenseNew as $r) {
-				$sql = "INSERT INTO `zayav_expense` (
-							`ws_id`,
-							`zayav_id`,
-							`category_id`,
-							`txt`,
-							`worker_id`,
-							`zp_id`,
-							`sum`,
-							`mon`,
-							`year`
-						) VALUES (
-							".WS_ID.",
-							".$zayav_id.",
-							".$r[0].",
-							'".(_zayavExpense($r[0], 'txt') ? addslashes($r[1]) : '')."',
-							".(_zayavExpense($r[0], 'worker') ? intval($r[1]) : 0).",
-							".(_zayavExpense($r[0], 'zp') ? intval($r[1]) : 0).",
-							".$r[2].",
-							".intval(strftime('%m')).",
-							".strftime('%Y')."
-						)";
-				query($sql);
-			}
-		//	_zayavBalansUpdate($zayav_id);
-			$changes = '<tr><td>'.$old.'<td>»<td>'.zayav_expense_spisok($z);
-			history_insert(array(
-				'type' => 30,
-				'client_id' => $z['client_id'],
-				'zayav_id' => $zayav_id,
-				'value' => '<table>'.$changes.'</table>'
-			));
-		}
-		jsonSuccess();
-		break;
 	case 'zayav_money_update':
 		if(!$zayav_id = _num($_POST['zayav_id']))
 			jsonError();
@@ -1345,82 +823,6 @@ switch(@$_POST['op']) {
 		));
 
 		jsonSuccess();
-		break;
-	case 'zayav_cartridge_schet_load'://получение данных для счёта по катрриджам
-		if(!$zayav_id = _num($_POST['zayav_id']))
-			jsonError();
-
-		$sql = "SELECT * FROM `zayav` WHERE `ws_id`=".WS_ID." AND !`deleted` AND `id`=".$zayav_id;
-		if(!$z = query_assoc($sql))
-			jsonError();
-
-		$sql = "SELECT *
-				FROM `zayav_cartridge`
-				WHERE `zayav_id`=".$zayav_id."
-				  AND (`filling` OR `restore` OR `chip`)
-				  AND `cost`
-				  AND !`schet_id`
-				ORDER BY `id`";
-		$q = query($sql);
-		$schet = array();
-		$n = 1;
-		while($r = mysql_fetch_assoc($q)) {
-			$same = 0;//тут будет номер, с которым будет найдено совпадение
-			foreach($schet as $sn => $unit) {
-				$diff = 0; // пока различий не обнаружено
-				foreach($unit as $key => $val) {
-					if($key == 'count')
-						continue;
-					if($r[$key] != $val) {
-						$diff = 1;
-						break;
-					}
-				}
-				if(!$diff) { //если различий нет, то запоминание номера и выход
-					$same = $sn;
-					break;
-				}
-			}
-
-			if($same)
-				$schet[$same]['count']++;
-			else {
-				$schet[$n] = array(
-					'cartridge_id' => $r['cartridge_id'],
-					'filling' => $r['filling'],
-					'restore' => $r['restore'],
-					'chip' => $r['chip'],
-					'cost' => $r['cost'],
-					'prim' => $r['prim'],
-					'count' => 1
-				);
-				$n++;
-			}
-		}
-
-		$spisok = array();
-		foreach($schet as $r) {
-			$prim = array();
-			if($r['filling'])
-				$prim[] = 'заправка';
-			if($r['restore'])
-				$prim[] = 'восстановление';
-			if($r['chip'])
-				$prim[] = 'замена чипа у';
-
-			$txt = implode(', ', $prim).' картриджа '._cartridgeName($r['cartridge_id']).($r['prim'] ? ', '.$r['prim'] : '');
-			$txt = mb_ucfirst($txt);
-
-			$spisok[] = array(
-				'name' => utf8($txt),
-				'count' => $r['count'],
-				'cost' => $r['cost'],
-				'cartridge' => 1
-			);
-		}
-
-		$send['spisok'] = $spisok;
-		jsonSuccess($send);
 		break;
 	case 'zayav_cartridge_schet_add'://формирование счёта
 		if(!$zayav_id = _num($_POST['zayav_id']))
@@ -1911,201 +1313,6 @@ switch(@$_POST['op']) {
 		jsonSuccess();
 		break;
 
-	case 'schet_pass'://передача счёта клиенту
-		if(!$schet_id = _num($_POST['schet_id']))
-			jsonError();
-		if(!preg_match(REGEXP_DATE, $_POST['day']))
-			jsonError();
-
-		$day = $_POST['day'];
-		$zayav_id = _num($_POST['zayav_id']);
-
-		$sql = "SELECT * FROM `zayav_schet` WHERE `ws_id`=".WS_ID." AND !`pass` AND `id`=".$schet_id;
-		if(!$r = query_assoc($sql))
-			jsonError();
-
-		$sql = "SELECT * FROM `zayav` WHERE `ws_id`=".WS_ID." AND `id`=".$r['zayav_id'];
-		if(!$z = query_assoc($sql))
-			jsonError();
-
-		$sql = "UPDATE `zayav_schet`
-				SET `pass`=1,
-					`pass_day`='".$day."'
-					WHERE `id`=".$schet_id;
-		query($sql);
-
-		history_insert(array(
-			'type' => 63,
-			'client_id' => $z['client_id'],
-			'zayav_id' => $z['id'],
-			'value' => 'СЦ'.$r['nomer'],
-			'value1' => $day
-		));
-
-		$data = report_schet_spisok();
-		$send['html'] = utf8($data['spisok']);
-		if($zayav_id)
-			$send['zayav_schet'] = utf8(zayav_info_schet_spisok($zayav_id));
-		jsonSuccess($send);
-		break;
-	case 'schet_pay'://оплата счёта
-		if(!$schet_id = _num($_POST['schet_id']))
-			jsonError();
-		if(!$sum = _cena($_POST['sum']))
-			jsonError();
-		if(!preg_match(REGEXP_DATE, $_POST['day']))
-			jsonError();
-
-		$day = $_POST['day'];
-		$zayav_id = _num($_POST['zayav_id']);
-
-		$sql = "SELECT * FROM `zayav_schet` WHERE `ws_id`=".WS_ID." AND `paid_sum`<`sum` AND `id`=".$schet_id;
-		if(!$r = query_assoc($sql))
-			jsonError();
-
-		$sql = "SELECT * FROM `zayav` WHERE `ws_id`=".WS_ID." AND `id`=".$r['zayav_id'];
-		if(!$z = query_assoc($sql))
-			jsonError();
-
-		income_insert(array(
-			'zayav_id' => $z['id'],
-			'schet_id' => $schet_id,
-			'schet_paid_day' => $day,
-			'invoice_id' => 4,
-			'sum' => $sum
-		));
-
-		$paidSum = query_value("SELECT SUM(`sum`) FROM `money` WHERE !`deleted` AND `schet_id`=".$schet_id);
-		$sql = "UPDATE `zayav_schet`
-				SET `paid_sum`=".$paidSum."
-				WHERE `id`=".$schet_id;
-		query($sql);
-/*
-		history_insert(array(
-			'type' => 60,
-			'client_id' => $z['client_id'],
-			'zayav_id' => $z['id'],
-			'value' => 'СЦ'.$r['nomer'],
-			'value1' => $sum,
-			'value2' => $r['date_create']
-		));
-*/
-		$data = report_schet_spisok();
-		$send['html'] = utf8($data['spisok']);
-		if($zayav_id)
-			$send['zayav_schet'] = utf8(zayav_info_schet_spisok($zayav_id));
-		jsonSuccess($send);
-		break;
-	case 'schet_edit_load'://получение данных для редактирования счёта
-		if(!$schet_id = _num($_POST['schet_id']))
-			jsonError();
-
-		$sql = "SELECT * FROM `zayav_schet` WHERE `ws_id`=".WS_ID." AND `id`=".$schet_id;
-		if(!$s = query_assoc($sql))
-			jsonError();
-
-		$sql = "SELECT * FROM `zayav_schet_spisok` WHERE `schet_id`=".$schet_id." ORDER BY `id`";
-		$q = query($sql);
-		$spisok = array();
-		while($r = mysql_fetch_assoc($q)) {
-			$unit = array(
-				'name' => utf8($r['name']),
-				'count' => $r['count'],
-				'cost' => $r['cost']
-			);
-			if(!$r['cartridge'])
-				$unit['del'] = 1;
-			if($r['cartridge'])
-				$unit['cartridge'] = 1;
-			$spisok[] = $unit;
-		}
-
-		$send['spisok'] = $spisok;
-		$send['date_create'] = $s['date_create'];
-		$send['dop'] = $s['nakl'] ? 1 : 2;
-		jsonSuccess($send);
-		break;
-	case 'schet_edit'://редактирование счёта
-		if(!$schet_id = _num($_POST['schet_id']))
-			jsonError();
-		if(!preg_match(REGEXP_DATE, $_POST['date_create']))
-			jsonError();
-		if(!$dop = _num($_POST['dop']))
-			jsonError();
-
-		$date_create = $_POST['date_create'];
-
-		$spisok = @$_POST['spisok'];
-		if(empty($spisok))
-			jsonError();
-
-		$sql = "SELECT * FROM `zayav_schet` WHERE `ws_id`=".WS_ID." AND `id`=".$schet_id;
-		if(!$s = query_assoc($sql))
-			jsonError();
-
-		$sql = "SELECT * FROM `zayav` WHERE `ws_id`=".WS_ID." AND !`deleted` AND `id`=".$s['zayav_id'];
-		if(!$z = mysql_fetch_assoc(query($sql)))
-			jsonError();
-
-		$sum = 0;
-		foreach($spisok as $r) {
-			$r['name'] = _txt($r['name']);
-			$sum += $r['count'] * $r['cost'];
-		}
-
-		$sql = "UPDATE `zayav_schet`
-				SET `date_create`='".$date_create."',
-					`sum`=".$sum.",
-					`nakl`=".($dop == 1 ? 1 : 0).",
-					`act`=".($dop == 2 ? 1 : 0)."
-				WHERE `id`=".$schet_id;
-		query($sql);
-
-		query("DELETE FROM `zayav_schet_spisok` WHERE `schet_id`=".$schet_id);
-
-		//внесение списка наименований для счёта
-		$values = array();
-		foreach($spisok as $r)
-			$values[] = "(".
-				$schet_id.",".
-				"'".addslashes(win1251($r['name']))."',".
-				$r['count'].",".
-				$r['cost'].",".
-				(empty($r['cartridge']) ? 0 : 1).
-				")";
-		$sql = "INSERT INTO `zayav_schet_spisok` (
-					`schet_id`,
-					`name`,
-					`count`,
-					`cost`,
-					`cartridge`
-				) VALUES ".implode(',', $values);
-		query($sql);
-
-		//изменение начисления
-		$sql = "SELECT * FROM `accrual` WHERE !`deleted` AND `schet_id`=".$schet_id;
-		if($r = mysql_fetch_assoc(query($sql))) {
-			$sql = "UPDATE `accrual` SET `sum`=".$sum." WHERE `id`=".$r['id'];
-			query($sql);
-			clientBalansUpdate($z['client_id']);
-			zayavBalansUpdate($z['id']);
-		}
-
-		history_insert(array(
-			'type' => 61,
-			'client_id' => $z['client_id'],
-			'zayav_id' => $z['id'],
-			'value' => 'СЦ'.$s['nomer']
-		));
-
-		$send['schet_zayav'] = utf8(zayav_info_schet_spisok($z['id']));
-		$data = report_schet_spisok();
-		$send['schet_all'] = utf8($data['spisok']);
-		$send['acc'] = utf8(zayav_info_money($z['id']));
-
-		jsonSuccess($send);
-		break;
-
 	case 'zp_add':
 		$zp = array();
 		if(!$zp['name_id'] = _num($_POST['name_id']))
@@ -2541,599 +1748,7 @@ switch(@$_POST['op']) {
 		jsonSuccess($send);
 		break;
 
-	case 'income_spisok':
-		$data = income_spisok($_POST);
-		$send['html'] = utf8($data['spisok']);
-		$send['path'] = utf8(income_path($data['filter']['period']));
-		jsonSuccess($send);
-		break;
-	case 'income_next':
-		$data = income_spisok($_POST);
-		$send['html'] = utf8($data['spisok']);
-		jsonSuccess($send);
-		break;
-	case 'income_add':
-		if(!preg_match(REGEXP_NUMERIC, $_POST['zayav_id']))
-			jsonError();
-		if(!preg_match(REGEXP_NUMERIC, $_POST['invoice_id']) || !$_POST['invoice_id'])
-			jsonError();
-		if(!preg_match(REGEXP_CENA, $_POST['sum']))
-			jsonError();
-		if(!preg_match(REGEXP_BOOL, $_POST['prepay']))
-			jsonError();
-		if(!preg_match(REGEXP_NUMERIC, $_POST['place']))
-			jsonError();
 
-		$place = intval($_POST['place']);
-		$place_other = !$place ? win1251(htmlspecialchars(trim($_POST['place_other']))) : '';
-		$remind_active = _bool($_POST['remind_active']);
-
-		if(!$_POST['zayav_id'] && empty($_POST['prim']))
-			jsonError();
-
-		if(!$v = income_insert($_POST))
-			jsonError();
-
-		$send = array();
-		if($v['zayav_id']) {
-			_zayavPlaceCheck($v['zayav_id'], $place, $place_other);
-			$send['html'] = utf8(zayav_info_money($v['zayav_id']));
-			$send['comment'] = utf8(_vkComment('zayav', $v['zayav_id']));
-			if($remind_active) {
-				_remind_active_to_ready_in_zayav($v['zayav_id']);
-				$send['remind'] = utf8(_remind_spisok(array('zayav_id'=>$v['zayav_id']), 'spisok'));
-			}
-		}
-
-		jsonSuccess($send);
-		break;
-	case 'income_del':
-		if(!preg_match(REGEXP_NUMERIC, $_POST['id']))
-			jsonError();
-		$id = intval($_POST['id']);
-
-		$sql = "SELECT *
-				FROM `money`
-				WHERE `ws_id`=".WS_ID."
-				  AND !`deleted`
-				  AND `id`=".$id;
-		if(!$r = mysql_fetch_assoc(query($sql)))
-			jsonError();
-
-		$sql = "UPDATE `money` SET
-					`deleted`=1,
-					`viewer_id_del`=".VIEWER_ID.",
-					`dtime_del`=CURRENT_TIMESTAMP
-				WHERE `id`=".$id;
-		query($sql);
-
-		invoice_history_insert(array(
-			'action' => 2,
-			'table' => 'money',
-			'id' => $id
-		));
-		clientBalansUpdate($r['client_id']);
-		zayavBalansUpdate($r['zayav_id']);
-
-		history_insert(array(
-			'type' => 9,
-			'client_id' => $r['client_id'],
-			'zayav_id' => $r['zayav_id'],
-			'zp_id' => $r['zp_id'],
-			'value' => round($r['sum'], 2),
-			'value1' => $r['prim'],
-			'value2' => $r['invoice_id']
-		));
-		jsonSuccess();
-		break;
-	case 'income_rest':
-		if(!preg_match(REGEXP_NUMERIC, $_POST['id']))
-			jsonError();
-		$id = intval($_POST['id']);
-		$sql = "SELECT *
-				FROM `money`
-				WHERE `ws_id`=".WS_ID."
-				  AND `deleted`
-				  AND `id`=".$id;
-		if(!$r = mysql_fetch_assoc(query($sql)))
-			jsonError();
-		$sql = "UPDATE `money` SET
-					`deleted`=0,
-					`viewer_id_del`=0,
-					`dtime_del`='0000-00-00 00:00:00'
-				WHERE `id`=".$id;
-		query($sql);
-
-		invoice_history_insert(array(
-			'action' => 3,
-			'table' => 'money',
-			'id' => $id
-		));
-		clientBalansUpdate($r['client_id']);
-		$send = zayavBalansUpdate($r['zayav_id']);
-
-		history_insert(array(
-			'type' => 19,
-			'client_id' => $r['client_id'],
-			'zayav_id' => $r['zayav_id'],
-			'zp_id' => $r['zp_id'],
-			'value' => round($r['sum'], 2),
-			'value1' => $r['prim'],
-			'value2' => $r['invoice_id']
-		));
-
-		jsonSuccess();
-		break;
-
-	case 'expense_spisok':
-		$data = expense_spisok($_POST);
-		$send['html'] = utf8($data['spisok']);
-		$send['mon'] = utf8(expenseMonthSum($_POST));
-		jsonSuccess($send);
-		break;
-	case 'expense_add':
-		if(!$invoice_id = _num($_POST['invoice_id']))
-			jsonError();
-		if(!$sum = _cena($_POST['sum']))
-			jsonError();
-
-		$expense_id = _num($_POST['expense_id']);
-		$prim = win1251(htmlspecialchars(trim($_POST['prim'])));
-		if(!$expense_id && empty($prim))
-			jsonError();
-
-		$worker_id = _num($_POST['worker_id']);
-		$mon = _num($_POST['mon']);
-		$year = _num($_POST['year']);
-		if($expense_id == 1 && (!$worker_id || !$year || !$mon))
-			jsonError();
-
-		$sql = "INSERT INTO `money` (
-					`ws_id`,
-					`sum`,
-					`prim`,
-					`invoice_id`,
-					`expense_id`,
-					`worker_id`,
-					`year`,
-					`mon`,
-					`viewer_id_add`
-				) VALUES (
-					".WS_ID.",
-					-".$sum.",
-					'".addslashes($prim)."',
-					".$invoice_id.",
-					".$expense_id.",
-					".$worker_id.",
-					".$year.",
-					".$mon.",
-					".VIEWER_ID."
-				)";
-		query($sql);
-
-		invoice_history_insert(array(
-			'action' => 6,
-			'table' => 'money',
-			'id' => mysql_insert_id()
-		));
-
-		history_insert(array(
-			'type' => 21,
-			'value' => abs($sum),
-			'value1' => $prim,
-			'value2' => $expense_id ? $expense_id : '',
-			'value3' => $worker_id ? $worker_id : ''
-		));
-		jsonSuccess();
-		break;
-	case 'expense_del':
-		if(!$id = _num($_POST['id']))
-			jsonError();
-
-		$sql = "SELECT * FROM `money` WHERE !`deleted` AND `sum`<0 AND `id`=".$id;
-		if(!$r = query_assoc($sql))
-			jsonError();
-
-		$sql = "UPDATE `money` SET
-					`deleted`=1,
-					`viewer_id_del`=".VIEWER_ID.",
-					`dtime_del`=CURRENT_TIMESTAMP
-				WHERE `id`=".$id;
-		query($sql);
-
-		invoice_history_insert(array(
-			'action' => 7,
-			'table' => 'money',
-			'id' => $id
-		));
-
-		history_insert(array(
-			'type' => 22,
-			'value' => round(abs($r['sum']), 2)
-		));
-		jsonSuccess();
-		break;
-
-	case 'schet_spisok':
-		$data = report_schet_spisok($_POST);
-		$send['html'] = utf8($data['spisok']);
-		jsonSuccess($send);
-		break;
-
-	case 'invoice_set':
-		if(!$invoice_id = _num($_POST['invoice_id']))
-			jsonError();
-		$sum = _cena($_POST['sum']);
-
-		$sql = "SELECT * FROM `invoice` WHERE `ws_id`=".WS_ID." AND `id`=".$invoice_id;
-		if(!$r = mysql_fetch_assoc(query($sql)))
-			jsonError();
-
-		//if($r['start'] != -1 && !VIEWER_ADMIN)
-		if($r['start'] != -1)
-			jsonError();
-
-		query("UPDATE `invoice` SET `start`="._invoiceBalans($invoice_id, $sum)." WHERE `id`=".$invoice_id);
-		xcache_unset(CACHE_PREFIX.'invoice'.WS_ID);
-		invoice_history_insert(array(
-			'action' => 5,
-			'invoice_id' => $invoice_id
-		));
-
-		history_insert(array(
-			'type' => 28,
-			'value' => $sum,
-			'value1' => $invoice_id
-		));
-
-		$send['html'] = utf8(invoice_spisok());
-		jsonSuccess($send);
-		break;
-	case 'invoice_reset':
-		if(!$invoice_id = _num($_POST['invoice_id']))
-			jsonError();
-
-		$sql = "SELECT * FROM `invoice` WHERE `id`=".$invoice_id;
-		if(!$r = mysql_fetch_assoc(query($sql)))
-			jsonError();
-
-		if($r['start'] == -1 || !VIEWER_ADMIN)
-			jsonError();
-
-		query("UPDATE `invoice` SET `start`=-1 WHERE `id`=".$invoice_id);
-		xcache_unset(CACHE_PREFIX.'invoice'.WS_ID);
-
-		history_insert(array(
-			'type' => 53,
-			'value' => $invoice_id
-		));
-
-		$send['html'] = utf8(invoice_spisok());
-		jsonSuccess($send);
-		break;
-	case 'invoice_history':
-		if(empty($_POST['invoice_id']) || !preg_match(REGEXP_NUMERIC, $_POST['invoice_id']))
-			jsonError();
-		$send['html'] = utf8(invoice_history($_POST));
-		jsonSuccess($send);
-		break;
-	case 'invoice_transfer':
-		if(empty($_POST['from']) || !preg_match(REGEXP_NUMERIC, $_POST['from']))
-			jsonError();
-		if(empty($_POST['to']) || !preg_match(REGEXP_NUMERIC, $_POST['to']))
-			jsonError();
-		if(!preg_match(REGEXP_CENA, $_POST['sum']) || $_POST['sum'] == 0)
-			jsonError();
-
-		$from = intval($_POST['from']);
-		$to = intval($_POST['to']);
-		$sum = str_replace(',', '.', $_POST['sum']);
-		$about = win1251(htmlspecialchars(trim($_POST['about'])));
-
-		if($from == $to)
-			jsonError();
-
-		$invoice_from = $from > 100 ? 0 : $from;
-		$invoice_to = $to > 100 ? 0 : $to;
-		$sql = "INSERT INTO `invoice_transfer` (
-					`ws_id`,
-					`invoice_from`,
-					`invoice_to`,
-					`worker_from`,
-					`worker_to`,
-					`sum`,
-					`about`,
-					`viewer_id_add`
-				) VALUES (
-					".WS_ID.",
-					".$invoice_from.",
-					".$invoice_to.",
-					".($from > 100 ? $from : 0).",
-					".($to > 100  ? $to : 0).",
-					".$sum.",
-					'".addslashes($about)."',
-					".VIEWER_ID."
-				)";
-		query($sql);
-
-		invoice_history_insert(array(
-			'action' => 4,
-			'table' => 'invoice_transfer',
-			'id' => mysql_insert_id()
-		));
-
-		history_insert(array(
-			'type' => 39,
-			'value' => $sum,
-			'value1' => $from,
-			'value2' => $to,
-			'value3' => $about
-		));
-
-		$send['i'] = utf8(invoice_spisok());
-		$send['t'] = utf8(transfer_spisok());
-		jsonSuccess($send);
-		break;
-
-	case 'salary_rate_set':
-		if(!$worker_id = _num($_POST['worker_id']))
-			jsonError();
-		if(!$period = _num($_POST['period']))
-			jsonError();
-
-
-		$sum = _cena($_POST['sum']);
-
-		$day = 0;
-		switch($period) {
-			case 1:
-				if(!$day = _num($_POST['day']))
-					jsonError();
-				if($day > 28)
-					jsonError();
-				break;
-			case 2:
-				if(!$day = _num($_POST['day']))
-					jsonError();
-				if($day > 7)
-					jsonError();
-		}
-
-		$sql = "SELECT * FROM `vk_user` WHERE `ws_id`=".WS_ID." AND `viewer_id`=".$worker_id;
-		if(!$r = query_assoc($sql))
-			jsonError();
-
-		$sql = "UPDATE `vk_user`
-		        SET `rate_sum`=".$sum.",
-		            `rate_period`=".$period.",
-		            `rate_day`=".$day."
-				WHERE `viewer_id`=".$worker_id;
-		query($sql);
-
-		$changes = '';
-		if($r['rate_sum'] != $sum)
-			$changes .= '<tr><th>Сумма:<td>'.round($r['rate_sum'], 2).'<td>»<td>'.$sum;
-		if($r['rate_period'] != $period)
-			$changes .= '<tr><th>Период:<td>'.salaryPeriod($r['rate_period']).'<td>»<td>'.salaryPeriod($period);
-		if($r['rate_day'] != $day)
-			$changes .= '<tr><th>День:<td>'.($r['rate_day'] ? $r['rate_day'] : '').'<td>»<td>'.($day ? $day : '');
-		if($changes)
-			history_insert(array(
-				'type' => 35,
-				'value' => $worker_id,
-				'value1' => '<table>'.$changes.'</table>'
-			));
-
-		xcache_unset(CACHE_PREFIX.'viewer_'.$worker_id);
-
-		jsonSuccess();
-		break;
-	case 'salary_up':
-		if(!$worker_id = _num($_POST['worker_id']))
-			jsonError();
-		if(!$sum = _cena($_POST['sum']))
-			jsonError();
-		if(!$mon = _num($_POST['mon']))
-			jsonError();
-		if(!$year = _num($_POST['year']))
-			jsonError();
-
-		$about = win1251(htmlspecialchars(trim($_POST['about'])));
-
-		$sql = "INSERT INTO `zayav_expense` (
-					`ws_id`,
-					`worker_id`,
-					`sum`,
-					`txt`,
-					`mon`,
-					`year`
-				) VALUES (
-					".WS_ID.",
-					".$worker_id.",
-					".$sum.",
-					'".addslashes($about)."',
-					".$mon.",
-					".$year."
-				)";
-		query($sql);
-
-		history_insert(array(
-			'type' => 36,
-			'value' => $sum,
-			'value1' => $about,
-			'value2' => $worker_id
-		));
-
-		jsonSuccess();
-		break;
-	case 'salary_deduct':
-		if(!$worker_id = _num($_POST['worker']))
-			jsonError();
-		if(!$sum = _num($_POST['sum']))
-			jsonError();
-		if(!$year = _num($_POST['year']))
-			jsonError();
-		if(!$mon = _num($_POST['mon']))
-			jsonError();
-		$about = win1251(htmlspecialchars(trim($_POST['about'])));
-		$sql = "INSERT INTO `zayav_expense` (
-					`ws_id`,
-					`worker_id`,
-					`sum`,
-					`txt`,
-					`year`,
-					`mon`
-				) VALUES (
-					".WS_ID.",
-					".$worker_id.",
-					-".$sum.",
-					'".addslashes($about)."',
-					".$year.",
-					".$mon."
-				)";
-		query($sql);
-
-		history_insert(array(
-			'type' => 44,
-			'value' => $sum,
-			'value1' => $about,
-			'value2' => $worker_id
-		));
-
-		jsonSuccess();
-		break;
-	case 'salary_del':
-		if(!$id = _num($_POST['id']))
-			jsonError();
-
-		$sql = "SELECT * FROM `zayav_expense` WHERE `id`=".$id;
-		if(!$r = query_assoc($sql))
-			jsonError();
-
-		query("DELETE FROM `zayav_expense` WHERE `id`=".$id);
-
-		history_insert(array(
-			'type' => 50,
-			'value' => _cena($r['sum']),
-			'value1' => $r['worker_id']
-		));
-
-		jsonSuccess();
-		break;
-	case 'salary_deduct_del':
-		if(!$id = _num($_POST['id']))
-			jsonError();
-
-		$sql = "SELECT * FROM `zayav_expense` WHERE `id`=".$id;
-		if(!$r = query_assoc($sql))
-			jsonError();
-
-		query("DELETE FROM `zayav_expense` WHERE `id`=".$id);
-
-		history_insert(array(
-			'type' => 51,
-			'value' => round(abs($r['sum']), 2),
-			'value1' => $r['txt'],
-			'value2' => $r['worker_id']
-		));
-
-		jsonSuccess();
-		break;
-	case 'salary_zp_add':
-		if(!$worker_id = _num($_POST['worker_id']))
-			jsonError();
-		if(!$invoice_id = _num($_POST['invoice_id']))
-			jsonError();
-		if(!$sum = _cena($_POST['sum']))
-			jsonError();
-		if(!$mon = _num($_POST['mon']))
-			jsonError();
-		if(!$year = _num($_POST['year']))
-			jsonError();
-
-		$about = win1251(htmlspecialchars(trim($_POST['about'])));
-		$about = _monthDef($mon).' '.$year.($about ? ', ' : '').$about;
-
-		$sql = "INSERT INTO `money` (
-					`ws_id`,
-					`sum`,
-					`prim`,
-					`invoice_id`,
-					`expense_id`,
-					`worker_id`,
-					`year`,
-					`mon`,
-					`viewer_id_add`
-				) VALUES (
-					".WS_ID.",
-					-".$sum.",
-					'".addslashes($about)."',
-					".$invoice_id.",
-					1,
-					".$worker_id.",
-					".$year.",
-					".$mon.",
-					".VIEWER_ID."
-				)";
-		query($sql);
-
-		invoice_history_insert(array(
-			'action' => 6,
-			'table' => 'money',
-			'id' => mysql_insert_id()
-		));
-
-		history_insert(array(
-			'type' => 37,
-			'value' => $sum,
-			'value1' => $about,
-			'value2' => $worker_id
-		));
-
-		jsonSuccess();
-		break;
-	case 'salary_start_set':
-		if(!$worker_id = _num($_POST['worker_id']))
-			jsonError();
-		$sum = _cena($_POST['sum']);
-
-		$sql = "SELECT * FROM `vk_user` WHERE `ws_id`=".WS_ID." AND `viewer_id`=".$worker_id;
-		if(!$r = query_assoc($sql))
-			jsonError();
-
-		$sMoney = query_value("
-				SELECT IFNULL(SUM(`sum`),0)
-				FROM `money`
-				WHERE `ws_id`=".WS_ID."
-				  AND `worker_id`=".$worker_id."
-				  AND `sum`<0
-				  AND !`deleted`");
-		$sExpense = query_value("
-				SELECT IFNULL(SUM(`sum`),0)
-				FROM `zayav_expense`
-				WHERE `ws_id`=".WS_ID."
-				  AND `mon`
-			      AND `worker_id`=".$worker_id);
-		$start = round($sum - $sMoney - $sExpense, 2);
-
-		query("UPDATE `vk_user` SET `salary_balans_start`=".$start." WHERE `viewer_id`=".$worker_id);
-
-		xcache_unset(CACHE_PREFIX.'viewer_'.$worker_id);
-
-		history_insert(array(
-			'type' => 45,
-			'value' => $worker_id,
-			'value1' => $sum
-		));
-
-		$send['html'] = utf8(salary_worker_spisok(array('worker_id'=>$worker_id)));
-		jsonSuccess($send);
-		break;
-	case 'salary_spisok':
-		$send['html'] = utf8(salary_worker_spisok($_POST));
-		$send['month'] = utf8(salary_monthList($_POST));
-		jsonSuccess($send);
-		break;
 	case 'salary_bonus_spisok':
 		if(!$worker_id = _num($_POST['worker_id']))
 			jsonError();
@@ -3185,7 +1800,7 @@ switch(@$_POST['op']) {
 
 		$first_day = date('Y-m-d', ($week - 1) * 7 * 86400 + strtotime('1/1/'.$year) - date('w', strtotime('1/1/'.$year)) * 86400 + 86400);
 		$last_day = date('Y-m-d', $week * 7 * 86400 + strtotime('1/1/'.$year) - date('w', strtotime('1/1/'.$year)) * 86400);
-		$about = 'Бонус по платежам, '._viewerRules($worker_id, 'RULES_MONEY_PROCENT').'%:'.
+		$about = 'Бонус по платежам, '.__viewerRules($worker_id, 'RULES_MONEY_PROCENT').'%:'.
 				 '<br />'.
 				 '<a class="bonus-show" val="'.$insert_id.'">'.
 					$week.'-я неделя ('.FullData($first_day).' - '.FullData($last_day).')'.
@@ -3227,19 +1842,16 @@ switch(@$_POST['op']) {
 		break;
 }
 
-jsonError();
-
-
 function zayav_day_finish_change($zayav_id, $day) {//изменение срока выполнения
 	$sql = "SELECT * FROM `zayav` WHERE `ws_id`=".WS_ID." AND !`deleted` AND `id`=".$zayav_id;
 	$z = query_assoc($sql);
 	if($day != $z['day_finish'] && $day != '0000-00-00') {
 		query("UPDATE `zayav` SET `day_finish`='".$day."' WHERE `id`=".$zayav_id);
-		history_insert(array(
-			'type' => 52,
+		_history(array(
+			'type_id' => 52,
 			'client_id' => $z['client_id'],
 			'zayav_id' => $zayav_id,
-			'value' => '<table><tr>'.
+			'v1' => '<table><tr>'.
 				'<th>Срок:'.
 					'<td>'.($z['day_finish'] == '0000-00-00' ? 'не указан' : FullData($z['day_finish'], 0, 1, 1)).
 					'<td>»'.

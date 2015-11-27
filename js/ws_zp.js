@@ -41,7 +41,7 @@ var zpFilter = function() {
 	},
 	zpSpisok = function() {
 		$('#mainLinks').addClass('busy');
-		$.post(AJAX_WS, zpFilter(), function (res) {
+		$.post(AJAX_MAIN, zpFilter(), function (res) {
 			$('#mainLinks').removeClass('busy');
 			$('.result').html(res.all);
 			$('#zp-spisok').html(res.html);
@@ -83,7 +83,7 @@ var zpFilter = function() {
 				$('#cena').focus();
 			} else {
 				dialog.process();
-				$.post(AJAX_WS, send, function(res) {
+				$.post(AJAX_MAIN, send, function(res) {
 					dialog.abort();
 					if(res.success) {
 						obj.callback(res);
@@ -122,7 +122,7 @@ var zpFilter = function() {
 			op:'zp_avai_update',
 			zp_id: ZP.id
 		};
-		$.post(AJAX_WS, send, function(res) {
+		$.post(AJAX_MAIN, send, function(res) {
 			if(res.success) {
 				ZP.count = res.count;
 				$('.move').html(res.move);
@@ -153,7 +153,7 @@ $(document)
 			send = zpFilter();
 		send.page = $(this).attr('val');
 		next.addClass('busy');
-		$.post(AJAX_WS, send, function (res) {
+		$.post(AJAX_MAIN, send, function (res) {
 			if(res.success)
 				next.after(res.html).remove();
 			else
@@ -197,7 +197,7 @@ $(document)
 				zp_id:tr.attr('val'),
 				count:count
 			};
-			$.post(AJAX_WS, send, function(res) {
+			$.post(AJAX_MAIN, send, function(res) {
 				t.removeClass('_busy');
 				if(res.success)
 					t.find('.zcol')[(count > 0 ? 'remove' : 'add') + 'Class']('no');
@@ -222,7 +222,7 @@ $(document)
 				zp_id:unit.attr('val'),
 				count:count
 			};
-			$.post(AJAX_WS, send, function(res) {
+			$.post(AJAX_MAIN, send, function(res) {
 				t.removeClass('busy');
 				if(res.success) {
 					t.find('.cnt').html(count > 0 ? 'ано: <b>' + count + '</b>' : 'ать');
@@ -263,7 +263,7 @@ $(document)
 				op:'zp_price_info',
 				id:$(this).attr('val')
 			};
-		$.post(AJAX_WS, send, function(res) {
+		$.post(AJAX_MAIN, send, function(res) {
 			var html =
 				'<div id="price-info-tab">' +
 					'<table id="head">' +
@@ -335,7 +335,7 @@ $(document)
 				val:val || ''
 			};
 			$('#price_id')._select('process');
-			$.post(AJAX_WS, send, function(res) {
+			$.post(AJAX_MAIN, send, function(res) {
 				$('#price_id')._select('cancel');
 				if(res.success)
 					$('#price_id')._select(res.spisok);
@@ -358,7 +358,7 @@ $(document)
 			else if(!send.device_id) dialog.err('Не выбрано устройство');
 			else {
 				dialog.process();
-				$.post(AJAX_WS, send, function(res) {
+				$.post(AJAX_MAIN, send, function(res) {
 					dialog.abort();
 					if(res.success) {
 						dialog.close();
@@ -403,7 +403,7 @@ $(document)
 				$('#zayavNomer').focus();
 			} else {
 				dialog.process();
-				$.post(AJAX_WS, send, function(res) {
+				$.post(AJAX_MAIN, send, function(res) {
 					dialog.abort();
 					if(res.success) {
 						zpAvaiUpdate();
@@ -475,7 +475,7 @@ $(document)
 				$('#cena').focus();
 			} else {
 				dialog.process();
-				$.post(AJAX_WS, send, function(res) {
+				$.post(AJAX_MAIN, send, function(res) {
 					if(res.success) {
 						zpAvaiUpdate();
 						dialog.close();
@@ -535,7 +535,7 @@ $(document)
 				$('#count').focus();
 			} else {
 				dialog.process();
-				$.post(AJAX_WS, send, function(res) {
+				$.post(AJAX_MAIN, send, function(res) {
 					dialog.abort();
 					if(res.success) {
 						zpAvaiUpdate();
@@ -560,7 +560,7 @@ $(document)
 					id:id
 				};
 				dialog.process();
-				$.post(AJAX_WS, send, function(res) {
+				$.post(AJAX_MAIN, send, function(res) {
 					dialog.abort();
 					if(res.success) {
 						zpAvaiUpdate();
@@ -581,7 +581,7 @@ $(document)
 				page:$(this).attr('val')
 			};
 		next.addClass('busy');
-		$.post(AJAX_WS, send, function (res) {
+		$.post(AJAX_MAIN, send, function (res) {
 			if(res.success)
 				next.after(res.spisok).remove();
 			else
@@ -642,7 +642,7 @@ $(document)
 					color_id:sp.color_id
 				};
 				cres.addClass('_busy');
-				$.post(AJAX_WS, send, function(res) {
+				$.post(AJAX_MAIN, send, function(res) {
 					cres.removeClass('_busy');
 					if(res.success)
 						finded(res);
@@ -689,7 +689,7 @@ $(document)
 				model_id:dev.model_id
 			};
 			dialog.process();
-			$.post(AJAX_WS, send, function(res) {
+			$.post(AJAX_MAIN, send, function(res) {
 				dialog.abort();
 				if(res.success) {
 					dialog.close();
@@ -714,7 +714,7 @@ $(document)
 					zp_id:ZP.id
 				};
 				dialog.process();
-				$.post(AJAX_WS, send, function(res) {
+				$.post(AJAX_MAIN, send, function(res) {
 					dialog.abort();
 					if(res.success) {
 						dialog.close();
@@ -775,7 +775,7 @@ $(document)
 					else if(!send.device_id) dialog.err('Не выбрано устройство');
 					else {
 						dialog.process();
-						$.post(AJAX_WS, send, function(res) {
+						$.post(AJAX_MAIN, send, function(res) {
 							dialog.abort();
 							if(res.success) {
 								dialog.close();

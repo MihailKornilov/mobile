@@ -1,7 +1,4 @@
 <?php
-require_once('config.php');
-require_once(API_PATH.'/ajax/vk.php');
-
 switch(@$_POST['op']) {
 	case 'tovar_spisok':
 		$filter = tovarFilter($_POST);
@@ -141,5 +138,3 @@ switch(@$_POST['op']) {
 		break;
 
 }
-
-jsonError();

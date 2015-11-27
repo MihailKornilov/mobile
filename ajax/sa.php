@@ -1,8 +1,6 @@
 <?php
-require_once('config.php');
-if(!SA) jsonError();
-require_once(DOCUMENT_ROOT.'/view/ws.php');
-require_once(DOCUMENT_ROOT.'/view/sa.php');
+if(!SA)
+	jsonError();
 
 switch(@$_POST['op']) {
 	case 'user_action':
@@ -749,5 +747,3 @@ switch(@$_POST['op']) {
 		jsonSuccess($send);
 		break;
 }
-
-jsonError();

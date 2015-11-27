@@ -1,104 +1,21 @@
 <?php
-function _hashRead() {
-	$_GET['p'] = isset($_GET['p']) ? $_GET['p'] : 'zayav';
-	if(empty($_GET['hash'])) {
-		define('HASH_VALUES', false);
-		if(APP_START) {// восстановление последней посещённой страницы
-			$_GET['p'] = isset($_COOKIE['p']) ? $_COOKIE['p'] : $_GET['p'];
-			$_GET['d'] = isset($_COOKIE['d']) ? $_COOKIE['d'] : '';
-			$_GET['d1'] = isset($_COOKIE['d1']) ? $_COOKIE['d1'] : '';
-			$_GET['id'] = isset($_COOKIE['id']) ? $_COOKIE['id'] : '';
-		} else
-			_hashCookieSet();
-		return;
-	}
-	$ex = explode('.', $_GET['hash']);
-	$r = explode('_', $ex[0]);
-	unset($ex[0]);
-	define('HASH_VALUES', empty($ex) ? false : implode('.', $ex));
-	$_GET['p'] = $r[0];
-	unset($_GET['d']);
-	unset($_GET['d1']);
-	unset($_GET['id']);
-	switch($_GET['p']) {
-		case 'client':
-			if(isset($r[1]))
-				if(preg_match(REGEXP_NUMERIC, $r[1])) {
-					$_GET['d'] = 'info';
-					$_GET['id'] = intval($r[1]);
-				}
-			break;
-		case 'zayav':
-			if(isset($r[1]))
-				if(preg_match(REGEXP_NUMERIC, $r[1])) {
-					$_GET['d'] = 'info';
-					$_GET['id'] = intval($r[1]);
-				} else {
-					$_GET['d'] = $r[1];
-					if(isset($r[2]))
-						$_GET['id'] = intval($r[2]);
-				}
-			break;
-		case 'zp':
-			if(isset($r[1]))
-				if(preg_match(REGEXP_NUMERIC, $r[1])) {
-					$_GET['d'] = 'info';
-					$_GET['id'] = intval($r[1]);
-				}
-			break;
-		default:
-			if(isset($r[1])) {
-				$_GET['d'] = $r[1];
-				if(isset($r[2]))
-					$_GET['d1'] = $r[2];
-			}
-	}
-	_hashCookieSet();
-}//_hashRead()
-function _hashCookieSet() {
-	setcookie('p', $_GET['p'], time() + 2592000, '/');
-	setcookie('d', isset($_GET['d']) ? $_GET['d'] : '', time() + 2592000, '/');
-	setcookie('d1', isset($_GET['d1']) ? $_GET['d1'] : '', time() + 2592000, '/');
-	setcookie('id', isset($_GET['id']) ? $_GET['id'] : '', time() + 2592000, '/');
-}//_hashCookieSet()
 function _cacheClear($ws_id=WS_ID) {
-	$sql = "SELECT `viewer_id` FROM `vk_user` WHERE `ws_id`=".$ws_id;
-	$q = query($sql);
-	while($r = mysql_fetch_assoc($q)) {
-		xcache_unset(CACHE_PREFIX.'viewer_'.$r['viewer_id']);
-		xcache_unset(CACHE_PREFIX.'viewer_rules_'.$r['viewer_id']);
-		//xcache_unset(CACHE_PREFIX.'pin_enter_count'.$r['viewer_id']);
-	}
-	xcache_unset(CACHE_PREFIX.'setup_global');
 	xcache_unset(CACHE_PREFIX.'device_name');
 	xcache_unset(CACHE_PREFIX.'vendor_name');
 	xcache_unset(CACHE_PREFIX.'model_name_count');
 	xcache_unset(CACHE_PREFIX.'zp_name');
 	xcache_unset(CACHE_PREFIX.'color_name');
 	xcache_unset(CACHE_PREFIX.'device_equip');
-	xcache_unset(CACHE_PREFIX.'invoice'.$ws_id);
-	xcache_unset(CACHE_PREFIX.'expense'.$ws_id);
 	xcache_unset(CACHE_PREFIX.'zayav_expense'.$ws_id);
 	xcache_unset(CACHE_PREFIX.'remind_active'.$ws_id);
 	xcache_unset(CACHE_PREFIX.'workshop_'.$ws_id);
 	xcache_unset(CACHE_PREFIX.'cartridge'.$ws_id);
 	GvaluesCreate();
-	query("UPDATE `setup_global` SET `script_style`=`script_style`+1");
 }//_cacheClear()
-
-function _header() {
-	global $html;
-	$html =
-		'<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">'.
-		'<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="ru" lang="ru">'.
-
-		'<head>'.
-		'<meta http-equiv="content-type" content="text/html; charset=windows-1251" />'.
-		'<title>Hi-tech Service - Приложение '.APP_ID.'</title>'.
-
-		_api_scripts().
-
-		(defined('WS_DEVS') ? '<script type="text/javascript">var WS_DEVS=['.WS_DEVS.'];</script>' : '').
+function _appScripts() {
+	return
+	//	(defined('WS_DEVS') ? '<script type="text/javascript">var WS_DEVS=['.WS_DEVS.'];</script>' : '').
+	//	'<script type="text/javascript">var WS_DEVS=['.WS_DEVS.'];</script>'.
 
 		'<script type="text/javascript" src="'.APP_HTML.'/js/G_values.js?'.G_VALUES.'"></script>'.
 		'<script type="text/javascript" src="'.APP_HTML.'/js/G_values_'.WS_ID.'.js?'.G_VALUES.'"></script>'.
@@ -108,7 +25,6 @@ function _header() {
 
 		(WS_ID ?
 			'<script type="text/javascript" src="'.APP_HTML.'/js/ws'.(DEBUG ? '' : '.min').'.js?'.VERSION.'"></script>'.
-			'<script type="text/javascript" src="'.APP_HTML.'/js/ws_client'.(DEBUG ? '' : '.min').'.js?'.VERSION.'"></script>'.
 			'<script type="text/javascript" src="'.APP_HTML.'/js/ws_tovar'.(DEBUG ? '' : '.min').'.js?'.VERSION.'"></script>'.
 			'<script type="text/javascript" src="'.APP_HTML.'/js/ws_zp'.(DEBUG ? '' : '.min').'.js?'.VERSION.'"></script>'.
 			'<script type="text/javascript" src="'.APP_HTML.'/js/ws_report'.(DEBUG ? '' : '.min').'.js?'.VERSION.'"></script>'
@@ -124,43 +40,14 @@ function _header() {
 		(@$_GET['p'] == 'sa' ?
 			'<link rel="stylesheet" type="text/css" href="'.APP_HTML.'/css/sa'.(DEBUG ? '' : '.min').'.css?'.VERSION.'" />'.
 			'<script type="text/javascript" src="'.APP_HTML.'/js/sa'.(DEBUG ? '' : '.min').'.js?'.VERSION.'"></script>'
-		: '').
-
-		'</head>'.
-		'<body>'.
-		'<div id="frameBody">'.
-			'<iframe id="frameHidden" name="frameHidden"></iframe>'.
-			(SA_VIEWER_ID ? '<div class="sa_viewer_msg">Вы вошли под пользователем '._viewer(SA_VIEWER_ID, 'link').'. <a class="leave">Выйти</a></div>' : '');
-}//_header()
-
-function _dopLinks($p, $data, $d=false, $d1=false) {//Дополнительное меню на сером фоне
-	$s = $d1 ? $d1 : $d;
-	$page = false;
-	foreach($data as $link) {
-		if($s == $link['d']) {
-			$page = true;
-			break;
-		}
-	}
-	$send = '<div id="dopLinks">';
-	foreach($data as $link) {
-		if($page)
-			$sel = $s == $link['d'] ?  ' sel' : '';
-		else
-			$sel = isset($link['sel']) ? ' sel' : '';
-		$ld = $d1 ? $d.'&d1='.$link['d'] : $link['d'];
-		$send .= '<a href="'.URL.'&p='.$p.'&d='.$ld.'" class="link'.$sel.'">'.$link['name'].'</a>';
-	}
-	$send .= '</div>';
-	return $send;
-}//_dopLinks()
+		: '');
+}//_appScripts()
 
 function GvaluesCreate() {//Составление файла G_values.js
-	$save = 'function _toAss(s){var a=[];for(var n=0;n<s.length;a[s[n].uid]=s[n].title,n++);return a}'.
-	"\n".'var COLOR_SPISOK='.query_selJson("SELECT `id`,`name` FROM `setup_color_name` ORDER BY `name` ASC").','.
+	$save =
+		 'var COLOR_SPISOK='.query_selJson("SELECT `id`,`name` FROM `setup_color_name` ORDER BY `name` ASC").','.
 		"\n".'COLORPRE_SPISOK='.query_selJson("SELECT `id`,`predlog` FROM `setup_color_name` ORDER BY `predlog` ASC").','.
-		"\n".'CLIENT_CATEGORY_ASS='._assJson(_clientCategory(0,1)).','.
-		"\n".'FAULT_ASS='.query_ptpJson("SELECT `id`,`name` FROM `setup_fault` ORDER BY `sort`").','.
+		"\n".'FAULT_ASS='.query_assJson("SELECT `id`,`name` FROM `setup_fault` ORDER BY `sort`").','.
 		"\n".'ZPNAME_SPISOK='.Gvalues_obj('setup_zp_name', '`name`', 'device_id').','.
 
 		"\n".'TOVAR_CATEGORY_SPISOK='.query_selJson("SELECT `id`,`name` FROM `tovar_category` ORDER BY `sort` ASC").','.
@@ -178,79 +65,30 @@ function GvaluesCreate() {//Составление файла G_values.js
 
 		"\n".'CARTRIDGE_TYPE='._selJson(_cartridgeType()).','.
 
-		"\n".'ZE_DOP='._selJson(_zayavExpenseDop()).','.
-		"\n".'SALARY_PERIOD='._selJson(salaryPeriod()).','.
-		"\n".'PAY_TYPE='._selJson(_payType()).','.
-		"\n".'COUNTRY_SPISOK=['.
-			'{uid:1,title:"Россия"},'.
-			'{uid:2,title:"Украина"},'.
-			'{uid:3,title:"Беларусь"},'.
-			'{uid:4,title:"Казахстан"},'.
-			'{uid:5,title:"Азербайджан"},'.
-			'{uid:6,title:"Армения"},'.
-			'{uid:7,title:"Грузия"},'.
-			'{uid:8,title:"Израиль"},'.
-			'{uid:11,title:"Кыргызстан"},'.
-			'{uid:12,title:"Латвия"},'.
-			'{uid:13,title:"Литва"},'.
-			'{uid:14,title:"Эстония"},'.
-			'{uid:15,title:"Молдова"},'.
-			'{uid:16,title:"Таджикистан"},'.
-			'{uid:17,title:"Туркмения"},'.
-			'{uid:18,title:"Узбекистан"}],'.
-		'COUNTRY_ASS=_toAss(COUNTRY_SPISOK),'.
-		"\n".'CITY_SPISOK=['.
-			'{uid:1,title:"Москва",content:"<b>Москва</b>"},'.
-			'{uid:2,title:"Санкт-Петербург",content:"<b>Санкт-Петербург</b>"},'.
-			'{uid:35,title:"Великий Новгород"},'.
-			'{uid:10,title:"Волгоград"},'.
-			'{uid:49,title:"Екатеринбург"},'.
-			'{uid:60,title:"Казань"},'.
-			'{uid:61,title:"Калининград"},'.
-			'{uid:72,title:"Краснодар"},'.
-			'{uid:73,title:"Красноярск"},'.
-			'{uid:87,title:"Мурманск"},'.
-			'{uid:95,title:"Нижний Новгород"},'.
-			'{uid:99,title:"Новосибирск"},'.
-			'{uid:104,title:"Омск"},'.
-			'{uid:110,title:"Пермь"},'.
-			'{uid:119,title:"Ростов-на-Дону"},'.
-			'{uid:123,title:"Самара"},'.
-			'{uid:125,title:"Саратов"},'.
-			'{uid:151,title:"Уфа"},'.
-			'{uid:158,title:"Челябинск"}];';
+		"\n".'PAY_TYPE='._selJson(_payType()).';';
 
 	$fp = fopen(APP_PATH.'/js/G_values.js', 'w+');
 	fwrite($fp, $save);
 	fclose($fp);
 
 	//составление файла G_values для конкретной мастерской
-	$place = _devPlace(false, query_value("SELECT `type` FROM `workshop` WHERE `id`=".WS_ID));
 	$save =
-		'var INVOICE_SPISOK='.query_selJson("SELECT `id`,`name` FROM `invoice` WHERE `ws_id`=".WS_ID." ORDER BY `id`").','.
-		"\n".'INVOICE_ASS=_toAss(INVOICE_SPISOK),'.
-		"\n".'EXPENSE_SPISOK='.query_selJson("SELECT `id`,`name` FROM `setup_expense` WHERE `ws_id`=".WS_ID." ORDER BY `sort` ASC").','.
-		"\n".'EXPENSE_WORKER='.query_ptpJson("SELECT `id`,`show_worker` FROM `setup_expense` WHERE `ws_id`=".WS_ID." AND `show_worker`").','.
-		"\n".'CARTRIDGE_SPISOK='.query_selJson("SELECT `id`,`name` FROM `setup_cartridge` WHERE `ws_id`=".WS_ID." ORDER BY `name`").','.
-		"\n".'CARTRIDGE_FILLING='.query_ptpJson("SELECT `id`,`cost_filling` FROM `setup_cartridge` WHERE `ws_id`=".WS_ID).','.
-		"\n".'CARTRIDGE_RESTORE='.query_ptpJson("SELECT `id`,`cost_restore` FROM `setup_cartridge` WHERE `ws_id`=".WS_ID).','.
-		"\n".'CARTRIDGE_CHIP='.query_ptpJson("SELECT `id`,`cost_chip` FROM `setup_cartridge` WHERE `ws_id`=".WS_ID).','.
-		"\n".'WORKER_SPISOK='.query_selJson("SELECT `viewer_id`,CONCAT(`first_name`,' ',`last_name`) FROM `vk_user`
-											 WHERE `ws_id`=".WS_ID."
-											 ORDER BY `dtime_add`").','.
-		"\n".'DEVPLACE_SPISOK='._selJson($place).','.
-		"\n".'ZE_SPISOK='.query_selJson("SELECT `id`,`name` FROM `setup_zayav_expense` WHERE `ws_id`=".WS_ID." ORDER BY `sort`").','.
-		"\n".'ZE_TXT='.query_ptpJson("SELECT `id`,1 FROM `setup_zayav_expense` WHERE `ws_id`=".WS_ID." AND `dop`=1").','.
-		"\n".'ZE_WORKER='.query_ptpJson("SELECT `id`,1 FROM `setup_zayav_expense` WHERE `ws_id`=".WS_ID." AND `dop`=2").','.
-		"\n".'ZE_ZP='.query_ptpJson("SELECT `id`,1 FROM `setup_zayav_expense` WHERE `ws_id`=".WS_ID." AND `dop`=3").';';
+		'var CARTRIDGE_SPISOK='.query_selJson("SELECT `id`,`name` FROM `setup_cartridge` WHERE `ws_id`=".WS_ID." ORDER BY `name`").','.
+		"\n".'CARTRIDGE_FILLING='.query_assJson("SELECT `id`,`cost_filling` FROM `setup_cartridge` WHERE `ws_id`=".WS_ID).','.
+		"\n".'CARTRIDGE_RESTORE='.query_assJson("SELECT `id`,`cost_restore` FROM `setup_cartridge` WHERE `ws_id`=".WS_ID).','.
+		"\n".'CARTRIDGE_CHIP='.query_assJson("SELECT `id`,`cost_chip` FROM `setup_cartridge` WHERE `ws_id`=".WS_ID).','.
+		"\n".'DEVPLACE_SPISOK='._selJson(_devPlace()).';';
 
 	$fp = fopen(APP_PATH.'/js/G_values_'.WS_ID.'.js', 'w+');
 	fwrite($fp, $save);
 	fclose($fp);
 
-
-	query("UPDATE `setup_global` SET `g_values`=`g_values`+1");
-	xcache_unset(CACHE_PREFIX.'setup_global');
+	//обновление значения версии файла G_values.js
+	$sql = "UPDATE `_setup`
+			SET `value`=`value`+1
+			WHERE `app_id`=".APP_ID."
+			  AND `key`='G_VALUES'";
+	query($sql, GLOBAL_MYSQL_CONNECT);
 }//GvaluesCreate()
 
 function _button($id, $name, $width=0) {
@@ -299,17 +137,6 @@ function _wsType($i=false, $p=1) {
 		return $arr[$p];
 	return $arr[$p][$i];
 }//_wsType()
-function _clientCategory($i=0, $menu=0) {//Категории клиентов
-	$arr = array(
-		1 => $menu ? 'Частное лицо' : 'Ф.И.О.',
-		2 => 'Организация',
-		3 => 'ИП',
-		4 => 'ООО',
-		5 => 'ОАО',
-		6 => 'ЗАО'
-	);
-	return $i ? $arr[$i] : $arr;
-}//_clientCategory()
 
 function _deviceName($device_id, $rod=false) {
 	if(!defined('DEVICE_LOADED')) {
@@ -446,7 +273,11 @@ function _devPlace($place_id=false, $ws_type=WS_TYPE) {
 		2 => 'у клиента'
 	);
 
-	$arr += query_ass("SELECT `id`,`place` FROM `zayav_device_place` WHERE `ws_id`=".WS_ID." ORDER BY `place`");
+	$sql = "SELECT `id`,`place`
+			FROM `zayav_device_place`
+			WHERE `ws_id`=".WS_ID."
+			ORDER BY `place`";
+	$arr += query_ass($sql);
 
 	if($place_id === false)
 		return $arr;

@@ -477,8 +477,8 @@ function zp_move($zp_id, $page=1) {
 	$spisok = array();
 	while($r = mysql_fetch_assoc($q))
 		$spisok[$r['id']] = $r;
-	$spisok = _zayavNomerLink($spisok);
-	$spisok = _clientLink($spisok);
+	$spisok = _zayavValToList($spisok);
+	$spisok = _clientValToList($spisok);
 	$move = '';
 	$type = array(
 		'' => 'Приход',
@@ -500,7 +500,7 @@ function zp_move($zp_id, $page=1) {
 				($r['zayav_id'] ? 'по заявке '.$r['zayav_link'].'.' : '').
 				($r['client_id'] ? 'клиенту '.$r['client_link'].'.' : '').
 			($r['prim'] ? '<div class="prim">'.$r['prim'].'</div>' : '').
-			'<div class="dtime'._tooltip(viewerAdded($r['viewer_id_add']), -1, 'l').FullDataTime($r['dtime_add']).'</div>'.
+			'<div class="dtime'._tooltip(_viewerAdded($r['viewer_id_add']), -1, 'l').FullDataTime($r['dtime_add']).'</div>'.
 		'</div>';
 	}
 	if($start + $limit < $all) {

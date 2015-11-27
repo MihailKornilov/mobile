@@ -9,7 +9,7 @@ $(document)
 			viewer_id:un.attr('val')
 		};
 		t.html('&nbsp;').addClass('_busy');
-		$.post(AJAX_SA, send, function(res) {
+		$.post(AJAX_MAIN, send, function(res) {
 			if(res.success)
 				t.after(res.html).remove();
 			else
@@ -23,7 +23,7 @@ $(document)
 				op:'ws_status_change',
 				ws_id:t.attr('val')
 			};
-		$.post(AJAX_SA, send, function(res) {
+		$.post(AJAX_MAIN, send, function(res) {
 			if(res.success)
 				document.location.reload();
 			else
@@ -57,7 +57,7 @@ $(document)
 				op:'ws_del',
 				ws_id:t.attr('val')
 			};
-			$.post(AJAX_SA, send, function(res) {
+			$.post(AJAX_MAIN, send, function(res) {
 				if(res.success)
 					document.location.reload();
 			}, 'json');
@@ -70,7 +70,7 @@ $(document)
 				ws_id:t.attr('val')
 			};
 		t.addClass('busy');
-		$.post(AJAX_SA, send, function(res) {
+		$.post(AJAX_MAIN, send, function(res) {
 			t.removeClass('busy');
 			if(res.success) {
 				t.next().remove('span');
@@ -85,7 +85,7 @@ $(document)
 				ws_id:t.attr('val')
 			};
 		t.addClass('busy');
-		$.post(AJAX_SA, send, function(res) {
+		$.post(AJAX_MAIN, send, function(res) {
 			t.removeClass('busy');
 			if(res.success) {
 				t.next().remove('span');
@@ -117,7 +117,7 @@ $(document)
 				$('#name').focus();
 			} else {
 				dialog.process();
-				$.post(AJAX_SA, send, function(res) {
+				$.post(AJAX_MAIN, send, function(res) {
 					if(res.success) {
 						$('#spisok').html(res.html);
 						dialog.close();
@@ -157,7 +157,7 @@ $(document)
 				$('#name').focus();
 			} else {
 				dialog.process();
-				$.post(AJAX_SA, send, function(res) {
+				$.post(AJAX_MAIN, send, function(res) {
 					if(res.success) {
 						$('#spisok').html(res.html);
 						dialog.close();
@@ -192,7 +192,7 @@ $(document)
 			title0:'не выбрано',
 			spisok:[]
 		})._select('process');
-		$.post(AJAX_SA, {op:'tovar_category_device_load'}, function(res) {
+		$.post(AJAX_MAIN, {op:'tovar_category_device_load'}, function(res) {
 			if(res.success)
 				$('#device_id')._select(res.dev);
 			else
@@ -209,7 +209,7 @@ $(document)
 				dialog.err('Не выбрано устройство');
 			else {
 				dialog.process();
-				$.post(AJAX_SA, send, function(res) {
+				$.post(AJAX_MAIN, send, function(res) {
 					if(res.success) {
 						$('#spisok').html(res.html);
 						dialog.close();
@@ -271,7 +271,7 @@ $(document)
 					$('#name_mn').focus();
 			} else {
 				dialog.process();
-				$.post(AJAX_SA, send, function(res) {
+				$.post(AJAX_MAIN, send, function(res) {
 					if(res.success) {
 						$('.spisok').html(res.html);
 						dialog.close();
@@ -301,7 +301,7 @@ $(document)
 			op:'device_get',
 			id:id
 		};
-		$.post(AJAX_SA, send, function(res) {
+		$.post(AJAX_MAIN, send, function(res) {
 			if(res.success) {
 				var html = '<table class="sa-device-add">' +
 					'<tr><td class="label r">Наименование:<td><input id="name" type="text" maxlength="100" value="' + res.name + '" />' +
@@ -348,7 +348,7 @@ $(document)
 					$('#name_mn').focus();
 			} else {
 				dialog.process();
-				$.post(AJAX_SA, send, function(res) {
+				$.post(AJAX_MAIN, send, function(res) {
 					if(res.success) {
 						$('.spisok').html(res.html);
 						dialog.close();
@@ -378,7 +378,7 @@ $(document)
 				id:t.attr('val')
 			};
 			dialog.process();
-			$.post(AJAX_SA, send, function(res) {
+			$.post(AJAX_MAIN, send, function(res) {
 				if(res.success) {
 					$('.spisok').html(res.html);
 					dialog.close();
@@ -424,7 +424,7 @@ $(document)
 				$('#name').focus();
 			} else {
 				dialog.process();
-				$.post(AJAX_SA, send, function(res) {
+				$.post(AJAX_MAIN, send, function(res) {
 					if(res.success) {
 						$('.spisok').html(res.html);
 						dialog.close();
@@ -475,7 +475,7 @@ $(document)
 				$('#name').focus();
 			} else {
 				dialog.process();
-				$.post(AJAX_SA, send, function(res) {
+				$.post(AJAX_MAIN, send, function(res) {
 					if(res.success) {
 						$('.spisok').html(res.html);
 						dialog.close();
@@ -505,7 +505,7 @@ $(document)
 				vendor_id:t.attr('val')
 			};
 			dialog.process();
-			$.post(AJAX_SA, send, function(res) {
+			$.post(AJAX_MAIN, send, function(res) {
 				if(res.success) {
 					$('.spisok').html(res.html);
 					dialog.close();
@@ -528,7 +528,7 @@ $(document)
 			find:$('#find')._search('val')
 		};
 		t.addClass('busy');
-		$.post(AJAX_SA, send, function(res) {
+		$.post(AJAX_MAIN, send, function(res) {
 			if(res.success) {
 				t.parent().remove();
 				$('._spisok').append(res.html);
@@ -559,7 +559,7 @@ $(document)
 				hint('Не указано наименование');
 			else {
 				dialog.process();
-				$.post(AJAX_SA, send, function(res) {
+				$.post(AJAX_MAIN, send, function(res) {
 					if(res.success) {
 						$('._spisok').find('.tr').remove().end().append(res.html);
 						dialog.close();
@@ -618,7 +618,7 @@ $(document)
 				$('#name').focus();
 			} else {
 				dialog.process();
-				$.post(AJAX_SA, send, function(res) {
+				$.post(AJAX_MAIN, send, function(res) {
 					if(res.success) {
 						mod.find('.name b').html(send.name);
 						dialog.close();
@@ -647,7 +647,7 @@ $(document)
 				model_id:t.attr('val')
 			};
 			dialog.process();
-			$.post(AJAX_SA, send, function(res) {
+			$.post(AJAX_MAIN, send, function(res) {
 				if(res.success) {
 					t.remove();
 					dialog.close();
@@ -668,7 +668,7 @@ $(document)
 		};
 		$('#eq-spisok').addClass('dis');
 		$('#zp-spisok').addClass('dis');
-		$.post(AJAX_SA, send, function(res) {
+		$.post(AJAX_MAIN, send, function(res) {
 			$('#eq-spisok').removeClass('dis').html(res.equip);
 			$('#zp-spisok').removeClass('dis').html(res.zp);
 			sortable();
@@ -698,7 +698,7 @@ $(document)
 				$('#name').focus();
 			} else {
 				dialog.process();
-				$.post(AJAX_SA, send, function(res) {
+				$.post(AJAX_MAIN, send, function(res) {
 					if(res.success) {
 						$('#eq-spisok').html(res.html);
 						dialog.close();
@@ -740,7 +740,7 @@ $(document)
 				$('#name').focus();
 			} else {
 				dialog.process();
-				$.post(AJAX_SA, send, function(res) {
+				$.post(AJAX_MAIN, send, function(res) {
 					if(res.success) {
 						t.find('.name').html(send.name)
 						dialog.close();
@@ -770,7 +770,7 @@ $(document)
 				device_id:$('.sa-equip .rightLink .sel').attr('val')
 			};
 			dialog.process();
-			$.post(AJAX_SA, send, function(res) {
+			$.post(AJAX_MAIN, send, function(res) {
 				if(res.success) {
 					$('#eq-spisok').html(res.html);
 					dialog.close();
@@ -795,7 +795,7 @@ $(document)
 			ids:arr.join()
 		};
 		$('.path').addClass('busy');
-		$.post(AJAX_SA, send, function(res) {
+		$.post(AJAX_MAIN, send, function(res) {
 			$('.path').removeClass('busy');
 		}, 'json');
 	})
@@ -828,7 +828,7 @@ $(document)
 				$('#name').focus();
 			} else {
 				dialog.process();
-				$.post(AJAX_SA, send, function(res) {
+				$.post(AJAX_MAIN, send, function(res) {
 					if(res.success) {
 						t.find('.name').html(send.name);
 						dialog.close();
@@ -857,7 +857,7 @@ $(document)
 				id:t.attr('val')
 			};
 			dialog.process();
-			$.post(AJAX_SA, send, function(res) {
+			$.post(AJAX_MAIN, send, function(res) {
 				if(res.success) {
 					$('#zp-spisok').html(res.html);
 					dialog.close();
@@ -889,7 +889,7 @@ $(document)
 				$('#name').focus();
 			} else {
 				dialog.process();
-				$.post(AJAX_SA, send, function(res) {
+				$.post(AJAX_MAIN, send, function(res) {
 					if(res.success) {
 						$('.spisok').html(res.html);
 						dialog.close();
@@ -938,7 +938,7 @@ $(document)
 				$('#name').focus();
 			} else {
 				dialog.process();
-				$.post(AJAX_SA, send, function(res) {
+				$.post(AJAX_MAIN, send, function(res) {
 					if(res.success) {
 						$('.spisok').html(res.html);
 						dialog.close();
@@ -978,7 +978,7 @@ $(document)
 				id:t.attr('val')
 			};
 			dialog.process();
-			$.post(AJAX_SA, send, function(res) {
+			$.post(AJAX_MAIN, send, function(res) {
 				if(res.success) {
 					$('.spisok').html(res.html);
 					dialog.close();
@@ -1018,7 +1018,7 @@ $(document)
 				$('#name').focus();
 			} else {
 				dialog.process();
-				$.post(AJAX_SA, send, function(res) {
+				$.post(AJAX_MAIN, send, function(res) {
 					if(res.success) {
 						$('.spisok').html(res.html);
 						dialog.close();
@@ -1074,7 +1074,7 @@ $(document)
 				$('#name').focus();
 			} else {
 				dialog.process();
-				$.post(AJAX_SA, send, function(res) {
+				$.post(AJAX_MAIN, send, function(res) {
 					if(res.success) {
 						$('.spisok').html(res.html);
 						dialog.close();
@@ -1113,7 +1113,7 @@ $(document)
 				id:t.attr('val')
 			};
 			dialog.process();
-			$.post(AJAX_SA, send, function(res) {
+			$.post(AJAX_MAIN, send, function(res) {
 				if(res.success) {
 					$('.spisok').html(res.html);
 					dialog.close();
@@ -1141,7 +1141,7 @@ $(document)
 						find:escape(val)
 					};
 					path.addClass('busy');
-					$.post(AJAX_SA, send, function(res) {
+					$.post(AJAX_MAIN, send, function(res) {
 						path.removeClass('busy');
 						if(res.success)
 							$('.spisok').html(res.html);

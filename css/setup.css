@@ -1,14 +1,3 @@
-#setup .left{padding:15px}
-#setup .headName{margin:0 0 15px}
-#setup .right{padding:0;width:170px;border-left:0}
-#setup .rightLink a.sel{border-color:#6B8EB5}
-
-.setup-tab{border-spacing:10px}
-.setup-tab .label{text-align:right}
-.setup-tab #name{width:210px}
-.setup-tab textarea{width:210px;height:70px}
-
-
 #setup-service .unit{
 	border:#ddd solid 1px;
 	padding:10px 20px;
@@ -38,43 +27,6 @@
 #setup-service-cartridge .cost span{cursor:default}
 #setup-service-cartridge .count{text-align:center}
 
-
-#setup_worker .headName{margin-bottom:15px}
-#setup_worker .unit,#setup_worker_add .res{border-spacing:10px;border:#DDE solid 1px;width:300px;margin:6px 0 6px 20px}
-#setup_worker .unit td,#setup_worker_add .res td{vertical-align:top}
-#setup_worker .photo,#setup_worker_add .photo{width:50px}
-#setup_worker .photo img,#setup_worker_add .photo img{width:50px;height:50px}
-#setup_worker .img_del{float:right;margin-top:2px}
-#setup_worker .name,#setup_worker_add .name{font-weight:bold;font-size:12px;color:#45688e}
-#setup_worker .activity{margin-top:5px;color:#888;font-size:10px}
-#setup_worker_add h1{font-weight:bold;color:#31618C}
-#setup_worker_add h2{
-	border:#ddd solid 1px;
-	margin:7px 0;
-	padding:10px;
-	background-color:#ffe;
-	color:#333;
-}
-#setup_worker_add #viewer_id{width:240px;padding:5px;height:13px;margin:7px 5px 0 0}
-#setup_worker_add .vkButton{margin:0}
-#setup_worker_add .res{margin:10px 0 0 15px}
-#setup_worker_add .manual{display:inline-block;margin-top:15px}
-#setup_worker_add .manual_tab{border-spacing:8px;margin-top:25px;display:none}
-#setup_worker_add .manual_tab input{width:230px}
-#setup_worker_add #sex_radio div{display:inline-block;margin-right:15px}
-
-#setup_rules{padding-bottom:30px}
-#setup_rules .utab td{padding-right:10px;vertical-align:top}
-#setup_rules .vklink{color:#777;display:inline-block;margin-top:10px}
-#setup_rules .name{font-weight:bold;font-size:12px;color:#45688e}
-#setup_rules .headName{margin:20px 0 10px}
-#setup_rules .pin-clear{margin-left:97px}
-#setup_rules .rtab{border-spacing:8px}
-#setup_rules .lab{width:150px;text-align:right}
-#setup_rules .rtab input{width:160px}
-#setup_rules .setup-div div{display:block;margin-bottom:5px;color:#555}
-#setup_rules #rules_money_procent{width:30px}
-
 #setup_info .tab{margin:10px 0 30px 0;border-spacing:10px}
 #setup_info .tab .label{text-align:right}
 #setup_info #devs{margin:15px 0 40px 149px}
@@ -92,25 +44,4 @@
 #setup_info .del_inf{margin:2px 0 10px 20px}
 #setup_info #info_del{margin-left:149px}
 
-#setup_rekvisit .headName{margin:0}
-#setup_rekvisit .t{border-spacing:10px;margin:0 0 20px 5px}
-#setup_rekvisit .label{width:135px}
-#setup_rekvisit input{width:240px}
-#setup_rekvisit textarea{width:240px;height:40px}
-
-#setup_invoice .name{vertical-align:top;width:170px}
-#setup_invoice .type{vertical-align:top}
-#setup_invoice pre{color:#777;font-size:10px;margin:3px 7px}
-
-#setup_expense .name{width:180px}
-#setup_expense td.name{cursor:move}
-#setup_expense .worker{width:80px;text-align:center}
-#setup_expense .use{width:55px;text-align:center}
-#setup_expense .set{width:35px}
-
-#setup_zayav_expense .name{width:130px}
-#setup_zayav_expense td.name{cursor:move}
-#setup_zayav_expense .dop{width:150px}
-#setup_zayav_expense .use{width:55px;text-align:center}
-#setup_zayav_expense .set{width:35px}
 

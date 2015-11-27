@@ -1,6 +1,4 @@
-var AJAX_WS = APP_HTML + '/ajax/ws.php?' + VALUES,
-	AJAX_SA = APP_HTML + '/ajax/sa.php?' + VALUES,
-	scannerWord = '',
+var scannerWord = '',
 	scannerTime = 0,
 	scannerTimer,
 	scannerDialog,
@@ -54,7 +52,7 @@ var AJAX_WS = APP_HTML + '/ajax/ws.php?' + VALUES,
 		dev.html('');
 		if(send.model_id > 0) {
 			dev.addClass('busy');
-			$.post(AJAX_WS, send, function(res) {
+			$.post(AJAX_MAIN, send, function(res) {
 				if(res.success)
 					 dev.html(res.img)
 						.find('img').on('load', function() {
@@ -95,6 +93,102 @@ var AJAX_WS = APP_HTML + '/ajax/ws.php?' + VALUES,
 		});
 	},
 
+	zayavEdit = function() {
+		var html =
+			'<table class="zayav-info-edit">' +
+				'<tr><td class="label r">Клиент:		<td><input type="hidden" id="client_id" value="' + ZAYAV.client_id + '">' +
+				'<tr><td class="label r top">Устройство:<td><table><td id="dev"><td id="device_image"></table>' +
+				'<tr><td><td>' + ZAYAV.images +
+				'<tr><td class="label r">IMEI:		  <td><input type="text" id="imei" maxlength="20" value="' + ZAYAV.imei + '">' +
+				'<tr><td class="label r">Серийный номер:<td><input type="text" id="serial" maxlength="30" value="' + ZAYAV.serial + '">' +
+				'<tr><td class="label r">Цвет:<td id="colors">' +
+				'<tr class="tr_equip' + (ZAYAV.equip ? '' : ' dn') + '">' +
+					'<td class="label r top">Комплектация:<td class="equip_spisok">' + ZAYAV.equip +
+				'<tr><td class="label r">Диагностика:<td><input TYPE="hidden" id="diagnost" value="' + ZAYAV.diagnost + '" />' +
+				'<tr><td class="label">Стоимость ремонта:<td><input type="text" class="money" id="pre_cost" maxlength="11" value="' + (ZAYAV.pre_cost ? ZAYAV.pre_cost : '') + '" /> руб.' +
+			'</table>',
+			dialog = _dialog({
+				width:420,
+				top:30,
+				head:'Заявка №' + ZAYAV.nomer + ' - Редактирование',
+				content:html,
+				butSubmit:'Сохранить',
+				submit:submit
+			});
+		$('#client_id').clientSel({width:267});
+		$('#client_id_select').vkHint({
+			msg:'Если изменяется клиент, то начисления и платежи заявки применяются на нового клиента.',
+			width:200,
+			top:-83,
+			left:-2,
+			delayShow:1500
+		});
+		$('#dev').device({
+			width:190,
+			device_id:ZAYAV.device,
+			vendor_id:ZAYAV.vendor,
+			model_id:ZAYAV.model,
+			add:1,
+			func:zayavDevSelect
+		});
+		modelImageGet();
+		imageSortable();
+		_valueColors(ZAYAV.color_id, ZAYAV.color_dop);
+		$('#diagnost')._check();
+
+		function submit() {
+			var msg,
+				send = {
+					op:'zayav_edit',
+					zayav_id:ZAYAV.id,
+					client_id:$('#client_id').val(),
+					device:$('#dev_device').val(),
+					vendor:$('#dev_vendor').val(),
+					model:$('#dev_model').val(),
+					imei: $.trim($('#imei').val()),
+					serial:$.trim($('#serial').val()),
+					color_id:$('#color_id').val(),
+					color_dop:$('#color_dop').val(),
+					equip:'',
+					diagnost:$('#diagnost').val(),
+					pre_cost:$('#pre_cost').val()
+				};
+			if(!$('.tr_equip').hasClass('dn')) {
+				var inp = $('.equip_spisok input'),
+					arr = [];
+				for(var n = 0; n < inp.length; n++) {
+					var eq = inp.eq(n);
+					if(eq.val() == 1)
+						arr.push(eq.attr('id').split('_')[1]);
+				}
+				send.equip = arr.join();
+			}
+			if(send.deivce == 0) msg = 'Не выбрано устройство';
+			else if(send.client_id == 0) msg = 'Не выбран клиент';
+			else if(send.pre_cost && !REGEXP_NUMERIC.test(send.pre_cost)) {
+				msg = 'Некорректно указана предварительная стоимость';
+				$('#pre_cost').focus();
+			} else {
+				dialog.process();
+				$.post(AJAX_MAIN, send, function(res) {
+					if(res.success) {
+						dialog.close();
+						_msg('Данные изменены!');
+						document.location.reload();
+					} else
+						dialog.abort();
+				}, 'json');
+			}
+			if(msg)
+				dialog.bottom.vkHint({
+					msg:'<SPAN class="red">' + msg + '</SPAN>',
+					top:-47,
+					left:107,
+					show:1,
+					remove:1
+				});
+		}
+	},
 	zayavFilter = function() {
 		var v = {
 				op:'zayav_spisok',
@@ -113,8 +207,6 @@ var AJAX_WS = APP_HTML + '/ajax/ws.php?' + VALUES,
 				place:$('#device_place').val()
 			},
 			loc = '';
-		if(v.status != '1')
-			v.finish = '0000-00-00';
 		if(v.sort != '1') loc += '.sort=' + v.sort;
 		if(v.desc != '0') loc += '.desc=' + v.desc;
 		if(v.find) loc += '.find=' + escape(v.find);
@@ -148,15 +240,14 @@ var AJAX_WS = APP_HTML + '/ajax/ws.php?' + VALUES,
 
 		return v;
 	},
-	zayavSpisok = function() {
-		var send = zayavFilter();
-		$('.condLost')[(send.find ? 'add' : 'remove') + 'Class']('hide');
-
-		$('#mainLinks').addClass('busy');
-		$.post(AJAX_WS, send, function (res) {
-			$('.result').html(res.all);
-			$('#spisok').html(res.html);
-			$('#mainLinks').removeClass('busy');
+	zayavSpisok = function(v, id) {
+		_filterSpisok(ZAYAV, v, id);
+		$('.condLost')[(ZAYAV.find ? 'add' : 'remove') + 'Class']('hide');
+		$.post(AJAX_MAIN, ZAYAV, function(res) {
+			if(res.success) {
+				$('.result').html(res.all);
+				$('#spisok').html(res.spisok);
+			}
 		}, 'json');
 	},
 	zayavMoneyUpdate = function() {//обновление информации о платежах
@@ -164,7 +255,7 @@ var AJAX_WS = APP_HTML + '/ajax/ws.php?' + VALUES,
 			op:'zayav_money_update',
 			zayav_id:ZAYAV.id
 		};
-		$.post(AJAX_WS, send, function(res) {
+		$.post(AJAX_MAIN, send, function(res) {
 			if(res.success) {
 				$('b.acc').html(res.acc);
 				$('.acc_tr')[(!res.acc ? 'add' : 'remove') + 'Class']('dn');
@@ -191,7 +282,7 @@ var AJAX_WS = APP_HTML + '/ajax/ws.php?' + VALUES,
 				op:'equip_check_get',
 				device_id:dev.device_id
 			};
-			$.post(AJAX_WS, send, function(res) {
+			$.post(AJAX_MAIN, send, function(res) {
 				if(res.spisok) {
 					$('.equip_spisok').html(res.spisok);
 					$('.tr_equip').removeClass('dn');
@@ -202,7 +293,7 @@ var AJAX_WS = APP_HTML + '/ajax/ws.php?' + VALUES,
 			}, 'json');
 		}
 	},
-	zayavPlace = function() {
+	zayavPlace = function(func) {
 		if(!window.PLACE_OTHER) {
 			DEVPLACE_SPISOK.push({
 				uid:0,
@@ -217,6 +308,8 @@ var AJAX_WS = APP_HTML + '/ajax/ws.php?' + VALUES,
 				$('#place_other')[(val ? 'add' : 'remove') + 'Class']('dn');
 				if(!val)
 					$('#place_other').val('').focus();
+				if(typeof func == 'function')
+					func();
 			}
 		});
 	},
@@ -270,7 +363,7 @@ var AJAX_WS = APP_HTML + '/ajax/ws.php?' + VALUES,
 				$('#name').focus();
 			} else {
 				dialog.process();
-				$.post(AJAX_WS, send, function(res) {
+				$.post(AJAX_MAIN, send, function(res) {
 					if(res.success) {
 						if(send.from == 'setup')
 							$('#spisok').html(res.spisok);
@@ -336,7 +429,7 @@ var AJAX_WS = APP_HTML + '/ajax/ws.php?' + VALUES,
 			} else if(!send.pay_type) dialog.err('Укажите вид расчёта');
 			else {
 				dialog.process();
-				$.post(AJAX_WS, send, function(res) {
+				$.post(AJAX_MAIN, send, function(res) {
 					if(res.success) {
 						dialog.close();
 						_msg('Заявка внесена');
@@ -368,7 +461,7 @@ var AJAX_WS = APP_HTML + '/ajax/ws.php?' + VALUES,
 	cartridgeSpisok = function() {
 		var send = cartridgeFilter();
 		$('#mainLinks').addClass('busy');
-		$.post(AJAX_WS, send, function(res) {
+		$.post(AJAX_MAIN, send, function(res) {
 			$('#mainLinks').removeClass('busy');
 			if(res.success) {
 				$('.result').html(res.all);
@@ -398,7 +491,7 @@ var AJAX_WS = APP_HTML + '/ajax/ws.php?' + VALUES,
 			if(!send.ids) dialog.err('Не выбрано ни одного картриджа');
 			else {
 				dialog.process();
-				$.post(AJAX_WS, send, function(res) {
+				$.post(AJAX_MAIN, send, function(res) {
 					if(res.success) {
 						dialog.close();
 						$('#cart-tab').html(res.html);
@@ -600,7 +693,7 @@ $.fn.device = function(o) {
 			addHint();
 		else {
 			dialog.process();
-			$.post(AJAX_WS, send, function(res) {
+			$.post(AJAX_MAIN, send, function(res) {
 				dialog.abort();
 				if(res.success) {
 					DEV_SPISOK.push({uid:res.id, title:send.name});
@@ -629,7 +722,7 @@ $.fn.device = function(o) {
 			addHint();
 		else {
 			dialog.process();
-			$.post(AJAX_WS, send, function(res) {
+			$.post(AJAX_MAIN, send, function(res) {
 				dialog.abort();
 				if(res.success) {
 					// если у устройства нет производителей, сначала создаётся пустой массив
@@ -660,7 +753,7 @@ $.fn.device = function(o) {
 			addHint();
 		} else {
 			dialog.process();
-			$.post(AJAX_WS, send, function (res) {
+			$.post(AJAX_MAIN, send, function (res) {
 				dialog.abort();
 				if(res.success) {
 					// если у производителя нет моделей, сначала создаётся пустой массив
@@ -779,139 +872,6 @@ $.fn.device = function(o) {
 		};
 	}
 };
-$.fn.zayavExpense = function(o) {
-	var t = $(this),
-		id = t.attr('id'),
-		num = 1,
-		n;
-
-	if(typeof o == 'string') {
-		if(o == 'get') {
-			var units = t.find('.ptab'),
-				send = [];
-			for(n = 0; n < units.length; n++) {
-				var u = units.eq(n),
-					attr = id + u.attr('val'),
-					cat_id = $('#' + attr + 'cat').val(),
-					sum = u.find('.zesum').val(),
-					dop = '';
-				if(cat_id == 0)
-					continue;
-				if(!_cena(sum) && sum != '0')
-					return 'sum_error';
-				if(ZE_TXT[cat_id])
-					dop = u.find('.zetxt').val();
-				else if(ZE_WORKER[cat_id]) {
-					dop = $('#' + attr + 'worker').val();
-				} else if(ZE_ZP[cat_id])
-					dop = $('#' + attr + 'zp').val();
-
-				send.push(cat_id + ':' +
-						  dop + ':' +
-						  sum);
-			}
-			return send.join();
-		}
-	}
-
-	t.html('<div id="_ze-edit"></div>');
-	var ze = t.find('#_ze-edit');
-
-	if(typeof o == 'object')
-		for(n = 0; n < o.length; n++)
-			itemAdd(o[n])
-
-	itemAdd();
-
-	function itemAdd(v) {
-		if(!v)
-			v = [
-				0, //0 - категория
-				'',//1 - описание, id сотрудника или id запчасти
-				'' //2 - сумма
-			];
-		var attr = id + num,
-			attr_cat = attr + 'cat',
-			attr_worker = attr + 'worker',
-			attr_zp = attr + 'zp',
-			html =
-				'<table id="ptab'+ num + '" class="ptab" val="' + num + '"><tr>' +
-					'<td><input type="hidden" id="' + attr_cat + '" value="' + v[0] + '" />' +
-					'<td class="tddop">' +
-						(v[0] && ZE_TXT[v[0]] ? '<input type="text" class="zetxt" placeholder="описание не указано" tabindex="' + (num * 10 - 1) + '" value="' + v[1] + '" />' : '') +
-						(v[0] && ZE_WORKER[v[0]] ? '<input type="hidden" id="' + attr_worker + '" value="' + v[1] + '" />' : '') +
-						(v[0] && ZE_ZP[v[0]] ? '<input type="hidden" id="' + attr_zp + '" value="' + v[1] + '" />' : '') +
-					'<td class="tdsum' + (v[0] ? '' : ' dn') + '">' +
-						'<input type="text" class="zesum" maxlength="6" tabindex="' + (num * 10) + '" value="' + v[2] + '" />руб.' +
-				'</table>';
-		ze.append(html);
-		var ptab = $('#ptab' + num),
-			tddop = ptab.find('.tddop'),
-			zesum = ptab.find('.zesum');
-		$('#' + attr_cat)._select({
-			width:130,
-			disabled:0,
-			title0:'Категория',
-			spisok:ZE_SPISOK,
-			func:function(id) {
-				ptab.find('.tdsum')[(id ? 'remove' : 'add') + 'Class']('dn');
-				if(ZE_TXT[id]) {
-					tddop.html('<input type="text" class="zetxt" placeholder="описание не указано" tabindex="' + (num * 10 - 11) + '" />');
-					tddop.find('.zetxt').focus();
-				} else if(ZE_WORKER[id]) {
-					tddop.html('<input type="hidden" id="' + attr_worker + '" />');
-					$('#' + attr_worker)._select({
-						width:240,
-						title0:'Сотрудник не указан',
-						spisok:WORKER_SPISOK,
-						func:function(v) {
-							zesum.focus();
-						}
-					});
-					zesum.focus();
-				} else if(ZE_ZP[id]) {
-					tddop.html('<input type="hidden" id="' + attr_zp + '" />');
-					$('#' + attr_zp)._select({
-						width:240,
-						title0:'Запчасть не выбрана',
-						spisok:ZAYAV.zp_avai,
-						func:function(v) {
-							zesum.focus();
-						}
-					});
-					zesum.focus();
-				} else {
-					tddop.html('');
-					zesum.focus();
-				}
-				zesum.val(id == 1 ? ZAYAV.worker_zp : '');
-				if(id && !ptab.next().hasClass('ptab'))
-					itemAdd();
-			}
-		});
-		if(v[0] && ZE_WORKER[v[0]])
-			$('#' + attr_worker)._select({
-				width:240,
-				disabled:0,
-				title0:'Сотрудник',
-				spisok:WORKER_SPISOK,
-				func:function(v) {
-					zesum.focus();
-				}
-			});
-		if(v[0] && ZE_ZP[v[0]])
-			$('#' + attr_zp)._select({
-				width:240,
-				title0:'Запчасть не выбрана',
-				spisok:ZAYAV.zp_avai,
-				func:function(v) {
-					zesum.focus();
-				}
-			});
-		num++;
-	}
-	return t;
-};
 $.fn.cartridge = function(o) {
 	var t = $(this),
 		id = t.attr('id'),
@@ -987,7 +947,7 @@ $(document)
 					word:scannerWord
 				};
 				scannerDialog.process();
-				$.post(AJAX_WS, send, function(res) {
+				$.post(AJAX_MAIN, send, function(res) {
 					if(res.success) {
 						if(e.target.localName == 'input') {
 							scannerDialog.close();
@@ -1036,23 +996,9 @@ $(document)
 		}
 	})
 
-
-	.on('mouseenter', '.zayav_link', function(e) {
-		var t = $(this),
-			tooltip = t.find('.tooltip');
-		if(!tooltip.hasClass('empty'))
-			return;
-		var send = {
-			op:'zayav_tooltip',
-			id:t.attr('val')
-		};
-		$.post(AJAX_WS, send, function(res) {
-			if(e.clientY < 90)
-				tooltip.css('top', '12px');
-			tooltip
-				.html(res.html)
-				.removeClass('empty');
-		}, 'json');
+	.on('mouseenter', '.zayav_link', function(e) {//поправка подсказки для заявки, если уходит выше экрана
+		if(e.clientY < 90)
+			$(this).find('.tooltip').css('top', '12px');
 	})
 	.on('keyup', '#zayavNomer', function() {
 		var t = $(this);
@@ -1064,7 +1010,7 @@ $(document)
 			op:'zayav_nomer_info',
 			nomer:t.val()
 		};
-		$.post(AJAX_WS, send, function(res) {
+		$.post(AJAX_MAIN, send, function(res) {
 			t.removeClass('_busy');
 			if(res.success)
 				t.after(res.html);
@@ -1089,7 +1035,7 @@ $(document)
 				day:$('#day_finish').val(),
 				zayav_spisok:$('#zayav').length
 			};
-		$.post(AJAX_WS, send, function(res) {
+		$.post(AJAX_MAIN, send, function(res) {
 			if(res.success)
 				dialog.content.html(res.html);
 			else
@@ -1108,13 +1054,13 @@ $(document)
 					zayav_id:window.ZAYAV ? ZAYAV.id : 0,
 					save:save
 				};
-				$.post(AJAX_WS, send, function(res) {
+				$.post(AJAX_MAIN, send, function(res) {
 					t.removeClass('_busy');
 					if(res.success) {
 						t.prev('input').val(send.day);
 						t.find('span').html(res.data);
 						if($('#zayav').length)
-							zayavSpisok();
+							zayavSpisok(send.day, 'finish');
 					}
 				}, 'json');
 			});
@@ -1129,7 +1075,7 @@ $(document)
 			day:$('#day_finish').val(),
 			zayav_spisok:$('#zayav').length
 		};
-		$.post(AJAX_WS, send, function(res) {
+		$.post(AJAX_MAIN, send, function(res) {
 			if(res.success)
 				$('#zayav-finish-calendar').after(res.html).remove();
 			else
@@ -1169,20 +1115,6 @@ $(document)
 		}
 	})
 
-	.on('click', '#zayav ._next', function() {
-		if($(this).hasClass('busy'))
-			return;
-		var next = $(this),
-			send = zayavFilter();
-		send.page = $(this).attr('val');
-		next.addClass('busy');
-		$.post(AJAX_WS, send, function (res) {
-			if(res.success)
-				next.after(res.html).remove();
-			else
-				next.removeClass('busy');
-		}, 'json');
-	})
 	.on('click', '.zayav_unit', function() {
 		_cookie('zback_scroll', VK_SCROLL);
 		var t = $(this),
@@ -1204,8 +1136,6 @@ $(document)
 				delayShow:500
 			});
 	})
-	.on('click', '#zayav #sort_radio div', zayavSpisok)
-	.on('click', '#zayav #zpzakaz_radio div', zayavSpisok)
 	.on('click', '#zayav .clear', function() {
 		$('#find')._search('clear');
 		$('#sort')._radio(1);
@@ -1226,7 +1156,21 @@ $(document)
 			device_multiselect:1,
 			func:zayavSpisok
 		});
-		$('#device_place')._select(0);
+		$('#place')._select(0);
+
+		ZAYAV.find = '';
+		ZAYAV.sort = 1;
+		ZAYAV.desc = 0;
+		ZAYAV.status = 0;
+		ZAYAV.finish = '0000-00-00';
+		ZAYAV.diagnost = 0;
+		ZAYAV.diff = 0;
+		ZAYAV.zpzakaz = 0;
+		ZAYAV.executer = 0;
+		ZAYAV.device = 0;
+		ZAYAV.vendor = 0;
+		ZAYAV.model = 0;
+		ZAYAV.place = 0;
 		zayavSpisok();
 	})
 
@@ -1237,7 +1181,7 @@ $(document)
 			send = cartridgeFilter();
 		send.page = $(this).attr('val');
 		next.addClass('busy');
-		$.post(AJAX_WS, send, function (res) {
+		$.post(AJAX_MAIN, send, function (res) {
 			if(res.success)
 				next.after(res.html).remove();
 			else
@@ -1253,363 +1197,7 @@ $(document)
 		cartridgeSpisok();
 	})
 
-	.on('click', '#zayav-info .zedit', function() {
-		var html = '<table class="zayav-info-edit">' +
-			'<tr><td class="label r">Клиент:		<td><input type="hidden" id="client_id" value="' + ZAYAV.client_id + '">' +
-			'<tr><td class="label r top">Устройство:<td><table><td id="dev"><td id="device_image"></table>' +
-			'<tr><td><td>' + ZAYAV.images +
-			'<tr><td class="label r">IMEI:		  <td><input type="text" id="imei" maxlength="20" value="' + ZAYAV.imei + '">' +
-			'<tr><td class="label r">Серийный номер:<td><input type="text" id="serial" maxlength="30" value="' + ZAYAV.serial + '">' +
-			'<tr><td class="label r">Цвет:<td id="colors">' +
-			'<tr class="tr_equip' + (ZAYAV.equip ? '' : ' dn') + '">' +
-				'<td class="label r top">Комплектация:<td class="equip_spisok">' + ZAYAV.equip +
-			'<tr><td class="label r">Диагностика:<td><input TYPE="hidden" id="diagnost" value="' + ZAYAV.diagnost + '" />' +
-			'<tr><td class="label">Стоимость ремонта:<td><input type="text" class="money" id="pre_cost" maxlength="11" value="' + (ZAYAV.pre_cost ? ZAYAV.pre_cost : '') + '" /> руб.' +
-		'</table>',
-			dialog = _dialog({
-				width:420,
-				top:30,
-				head:'Заявка №' + ZAYAV.nomer + ' - Редактирование',
-				content:html,
-				butSubmit:'Сохранить',
-				submit:submit
-			});
-		$('#client_id').clientSel({width:267});
-		$('#client_id_select').vkHint({
-			msg:'Если изменяется клиент, то начисления и платежи заявки применяются на нового клиента.',
-			width:200,
-			top:-83,
-			left:-2,
-			delayShow:1500
-		});
-		$('#dev').device({
-			width:190,
-			device_id:ZAYAV.device,
-			vendor_id:ZAYAV.vendor,
-			model_id:ZAYAV.model,
-			add:1,
-			func:zayavDevSelect
-		});
-		modelImageGet();
-		imageSortable();
-		_valueColors(ZAYAV.color_id, ZAYAV.color_dop);
-		$('#diagnost')._check();
-
-		function submit() {
-			var msg,
-				send = {
-					op:'zayav_edit',
-					zayav_id:ZAYAV.id,
-					client_id:$('#client_id').val(),
-					device:$('#dev_device').val(),
-					vendor:$('#dev_vendor').val(),
-					model:$('#dev_model').val(),
-					imei: $.trim($('#imei').val()),
-					serial:$.trim($('#serial').val()),
-					color_id:$('#color_id').val(),
-					color_dop:$('#color_dop').val(),
-					equip:'',
-					diagnost:$('#diagnost').val(),
-					pre_cost:$('#pre_cost').val()
-				};
-			if(!$('.tr_equip').hasClass('dn')) {
-				var inp = $('.equip_spisok input'),
-					arr = [];
-				for(var n = 0; n < inp.length; n++) {
-					var eq = inp.eq(n);
-					if(eq.val() == 1)
-						arr.push(eq.attr('id').split('_')[1]);
-				}
-				send.equip = arr.join();
-			}
-			if(send.deivce == 0) msg = 'Не выбрано устройство';
-			else if(send.client_id == 0) msg = 'Не выбран клиент';
-			else if(send.pre_cost && !REGEXP_NUMERIC.test(send.pre_cost)) {
-				msg = 'Некорректно указана предварительная стоимость';
-				$('#pre_cost').focus();
-			} else {
-				dialog.process();
-				$.post(AJAX_WS, send, function(res) {
-					if(res.success) {
-						dialog.close();
-						_msg('Данные изменены!');
-						document.location.reload();
-					} else
-						dialog.abort();
-				}, 'json');
-			}
-			if(msg)
-				dialog.bottom.vkHint({
-					msg:'<SPAN class="red">' + msg + '</SPAN>',
-					top:-47,
-					left:107,
-					show:1,
-					remove:1
-				});
-		}
-	})
-	.on('click', '#zayav-info .schet-add', function() {
-		var t = $(this),
-			spisok,// содержимое таблицы
-			num,// очередной номер элемента таблицы
-			dialog = _dialog({
-				top:20,
-				width:580,
-				head:'Формирование счёта',
-				load:1,
-				butSubmit:'Сформировать',
-				submit:submit
-			});
-		var send = {
-			op:'zayav_cartridge_schet_load',
-			zayav_id:ZAYAV.id
-		};
-		$.post(AJAX_WS, send, function(res) {
-			if(res.success) {
-				spisok = res.spisok;
-				var html =
-					'<div id="schet-add-tab">' +
-						'<table class="_spisok" id="schet-tab"></table>' +
-						'<div id="itog"></div>' +
-						'<table id="sa-tab">' +
-							'<tr><td class="label r">Дата:<td><input id="date_create" type="hidden" />' +
-							'<tr><td class="label r topi">Приложения:<td><input id="dop" type="hidden" />' +
-							'<tr><td><td><input id="acc" type="hidden" />' +
-						'</table>' +
-					'</div>';
-
-				dialog.content.html(html);
-				spisokPrint();
-				$('#date_create')._calendar({lost:1});
-				$('#dop')._radio({
-					light:1,
-					spisok:[
-						{uid:1,title:'Накладная'},
-						{uid:2,title:'Акт выполненных работ'}
-					]
-				});
-				$('#acc')._check({
-					name:'Произвести начисление по счёту'
-				});
-			} else
-				dialog.loadError();
-		}, 'json');
-		function spisokPrint() {
-			var html =
-					'<tr><th>№' +
-						'<th>Наименование товара' +
-						'<th>Кол-во' +
-						'<th>Цена' +
-						'<th>Сумма' +
-						'<th>',
-				sum = 0;
-			for(var n = 0; n < spisok.length; n++) {
-				var sp = spisok[n],
-				s = sp.cost * sp.count;
-				html +=
-					'<tr><td class="td-n">' + (n + 1) +
-						'<td class="td-name">' + sp.name +
-						'<td class="td-count">' + sp.count +
-						'<td class="td-cost">' + sp.cost +
-						'<td class="td-sum">' + s +
-						'<td>' + (sp.del ? '<div val="' + n + '" class="img_del pole-del' + _tooltip('Удалить', -29) + '</div>' : '');
-				sum += s;
-			}
-			num = n + 1;
-			html += '<tr><td colspan="6" class="_next" id="pole-add">Добавить позицию для счёта';
-			$('#schet-tab').html(html);
-			$('#itog').html('Всего наименований ' + n + ', на сумму ' + sum + ' руб.');
-			$('#pole-add').click(poleAdd);
-			$('.pole-del').click(function() {
-				spisok.splice(_num($(this).attr('val')), 1);
-				spisokPrint();
-			});
-		}
-		function poleAdd() {
-			var t = $(this),
-				html =
-					'<tr id="tr-add">' +
-						'<td class="td-n">' + num +
-						'<td class="td-name"><input type="text" id="name" />' +
-						'<td class="td-count"><input type="text" id="count" value="1" />' +
-						'<td class="td-cost"><input type="text" id="cost" />' +
-						'<td><div class="vkButton"><button>OK</button></div>' +
-						'<td><div class="img_del' + _tooltip('Отменить', -32) + '</div>';
-			t.parent().hide();
-			$('#schet-tab').append(html);
-			$('#name').focus();
-			$('#tr-add .img_del').click(function() {
-				$('#tr-add').remove();
-				t.parent().show();
-			});
-			$('#tr-add .vkButton').click(poleSubmit);
-		}
-		function poleSubmit() {
-			var name = $.trim($('#name').val()),
-				count = _num($('#count').val()),
-				cost = _num($('#cost').val());
-			if(!name) {
-				poleErr('Не указано наименование');
-				$('#name').focus();
-				return;
-			}
-			if(!count) {
-				poleErr('Некорректная сумма');
-				$('#count').focus();
-				return;
-			}
-			if(!cost) {
-				poleErr('Некорректное количество');
-				$('#cost').focus();
-				return;
-			}
-			spisok.push({
-				name:name,
-				count:count,
-				cost:cost,
-				del:1
-			});
-			spisokPrint();
-		}
-		function poleErr(msg) {
-			$('#name').vkHint({
-				msg:'<span class="red">' + msg + '</span>',
-				remove:1,
-				indent:40,
-				show:1,
-				top:-58,
-				left:404
-			});
-		}
-		function submit() {
-			var send = {
-				op:'zayav_cartridge_schet_add',
-				zayav_id:ZAYAV.id,
-				spisok:spisok,
-				date_create:$('#date_create').val(),
-				dop:_num($('#dop').val()),
-				acc:_num($('#acc').val())
-			};
-			if(!send.spisok.length) dialog.err('Не добавлено ни одной позиции');
-			else if(!send.dop) dialog.err('Выберите дополнительный документ');
-			else {
-				dialog.process();
-				$.post(AJAX_WS, send, function (res) {
-					if(res.success) {
-						$('#cart-tab').html(res.cart);
-						$('#schet-spisok').html(res.schet);
-						$('#money_spisok').html(res.acc);
-						dialog.close();
-						_msg('Новый счёт сформирован');
-					} else
-						dialog.abort();
-				}, 'json');
-			}
-		}
-	})
-	.on('click', '#zayav-info .acc_add', function() {
-		var html = '<table class="zayav_accrual_add">' +
-				'<tr><td class="label">Сумма: <td><input type="text" id="sum" class="money" maxlength="5" /> руб.' +
-				'<tr><td class="label">Примечание:<em>(не обязательно)</em><td><input type="text" id="prim" maxlength="100" />' +
-				'<tr><td class="label">Статус заявки: <td><input type="hidden" id="acc_status" value="2" />' +
-				'<tr><td class="label">Добавить напоминание:<td><input type="hidden" id="acc_remind" />' +
-			'</table>' +
-
-			'<table class="zayav_accrual_add remind">' +
-				'<tr><td class="label">Содержание:<td><input type="text" id="reminder_txt" value="Позвонить и сообщить о готовности.">' +
-				'<tr><td class="label">Дата:<td><input type="hidden" id="reminder_day">' +
-			'</table>';
-		var dialog = _dialog({
-			top:60,
-			width:420,
-			head:'Заявка №' + ZAYAV.nomer + ' - Начисление за выполненную работу',
-			content:html,
-			submit:submit
-		});
-		$('#sum').focus();
-		$('#sum,#prim,#reminder_txt').keyEnter(submit);
-		$('#acc_status')._dropdown({spisok:STATUS});
-		$('#acc_remind')._check();
-		$('#acc_remind_check').click(function(id) {
-			$('.zayav_accrual_add.remind').toggle();
-		});
-		$('#reminder_day')._calendar();
-
-		function submit() {
-			var msg,
-				send = {
-					op:'zayav_accrual_add',
-					zayav_id:ZAYAV.id,
-					sum:$('#sum').val(),
-					prim:$('#prim').val(),
-					status:$('#acc_status').val(),
-					remind:$('#acc_remind').val(),
-					remind_txt:$('#reminder_txt').val(),
-					remind_day:$('#reminder_day').val()
-				};
-			if(!REGEXP_NUMERIC.test(send.sum)) { msg = 'Некорректно указана сумма.'; $('#sum').focus(); }
-			else if(send.remind == 1 && !send.remind_txt) { msg = 'Не указан текст напоминания'; $('#reminder_txt').focus(); }
-			else {
-				dialog.process();
-				$.post(AJAX_WS, send, function(res) {
-					dialog.abort();
-					if(res.success) {
-						dialog.close();
-						_msg('Начисление успешно произведено!');
-						$('#money_spisok').html(res.html);
-						zayavMoneyUpdate();
-						if(res.status) {
-							$('#status')
-								.html(res.status.name)
-								.css('background-color', '#' + res.status.color);
-							$('#status_dtime').html(res.status.dtime);
-						}
-						if(res.remind)
-							$('#remind-spisok').html(res.remind);
-					}
-				}, 'json');
-			}
-
-			if(msg)
-				dialog.bottom.vkHint({
-					msg:'<SPAN class="red">' + msg + '</SPAN>',
-					top:-48,
-					left:123,
-					indent:40,
-					remove:1,
-					show:1
-				});
-		}
-	})
-	.on('click', '#zayav-info .acc_del', function() {
-		var send = {
-			op:'zayav_accrual_del',
-			id:$(this).attr('val')
-		};
-		var tr = $(this).parent().parent();
-		tr.html('<td colspan="4" class="deleting">Удаление...');
-		$.post(AJAX_WS, send, function(res) {
-			if(res.success) {
-				tr.find('.deleting').html('Начисление удалено. <a class="acc_rest" val="' + send.id + '">Восстановить</a>');
-				zayavMoneyUpdate();
-			}
-		}, 'json');
-	})
-	.on('click', '#zayav-info .acc_rest', function() {
-		var send = {
-				op:'zayav_accrual_rest',
-				id:$(this).attr('val')
-			},
-			t = $(this),
-			tr = t.parent().parent();
-		t.remove();
-		$.post(AJAX_WS, send, function(res) {
-			if(res.success) {
-				tr.after(res.html).remove();
-				zayavMoneyUpdate();
-			}
-		}, 'json');
-	})
+	.on('click', '#zayav-info .zedit', zayavEdit)
 	.on('click', '#zayav-info .status_place', function() {
 		var html =
 			'<div id="zayav-status">' +
@@ -1687,7 +1275,7 @@ $(document)
 				dialog.err('Не указан срок выполнения');
 			else {
 				dialog.process();
-				$.post(AJAX_WS, send, function(res) {
+				$.post(AJAX_MAIN, send, function(res) {
 					if(res.success) {
 						dialog.close();
 						_msg('Изменения сохранены.');
@@ -1749,7 +1337,7 @@ $(document)
 				status: _num($('#zs-status').val())
 			};
 			dialog.process();
-			$.post(AJAX_WS, send, function (res) {
+			$.post(AJAX_MAIN, send, function (res) {
 				if(res.success) {
 					dialog.close();
 					_msg('Изменения сохранены.');
@@ -1787,7 +1375,7 @@ $(document)
 				$('#place_other').focus();
 			} else {
 				dialog.process();
-				$.post(AJAX_WS, send, function(res) {
+				$.post(AJAX_MAIN, send, function(res) {
 					if(res.success) {
 						dialog.close();
 						_msg('Изменения сохранены.');
@@ -1815,7 +1403,7 @@ $(document)
 				zayav_id:ZAYAV.id,
 				zp_id:t.parent().parent().attr('val')
 			};
-		$.post(AJAX_WS, send, function(res) {
+		$.post(AJAX_MAIN, send, function(res) {
 			if(res.success) {
 				t.html('Заказано!').attr('class', 'zakaz_ok');
 				_msg(res.msg);
@@ -1866,7 +1454,7 @@ $(document)
 				dialog.err('Не выбрано наименование запчасти');
 			else {
 				dialog.process();
-				$.post(AJAX_WS, send, function(res) {
+				$.post(AJAX_MAIN, send, function(res) {
 					if(res.success) {
 						_msg('Внесение запчасти произведено');
 						dialog.close();
@@ -1901,7 +1489,7 @@ $(document)
 				zayav_id:ZAYAV.id
 			};
 			dialog.process();
-			$.post(AJAX_WS, send, function(res) {
+			$.post(AJAX_MAIN, send, function(res) {
 				if(res.success) {
 					zayavMoneyUpdate();
 					dialog.close();
@@ -1950,7 +1538,7 @@ $(document)
 			else if(!send.pay_type) dialog.err('Укажите вид расчёта');
 			else {
 				dialog.process();
-				$.post(AJAX_WS, send, function(res) {
+				$.post(AJAX_MAIN, send, function(res) {
 					if(res.success) {
 						dialog.close();
 						_msg('Заявка изменена');
@@ -2024,7 +1612,7 @@ $(document)
 			if(!send.cart_id) dialog.err('Не выбран картридж');
 			else {
 				dialog.process();
-				$.post(AJAX_WS, send, function(res) {
+				$.post(AJAX_MAIN, send, function(res) {
 					if(res.success) {
 						dialog.close();
 						$('#cart-tab').html(res.html);
@@ -2052,7 +1640,7 @@ $(document)
 				id:id
 			};
 			dialog.process();
-			$.post(AJAX_WS, send, function(res) {
+			$.post(AJAX_MAIN, send, function(res) {
 				if(res.success) {
 					dialog.close();
 					$('#cart-tab').html(res.html);
@@ -2080,11 +1668,13 @@ $(document)
 					enter: 1,
 					func: zayavSpisok
 				})
-				.inp(Z.find);
+				.inp(ZAYAV.find);
+			$('#sort')._radio(zayavSpisok);
 			$('#desc')._check(zayavSpisok);
 			$('#status').rightLink(zayavSpisok);
 			$('#diagnost')._check(zayavSpisok);
 			$('#diff')._check(zayavSpisok);
+			$('#zpzakaz')._radio(zayavSpisok);
 			WORKER_SPISOK.push({uid: -1, title: 'Не назначен', content: '<b>Не назначен</b>'});
 			$('#executer')._select({
 				width: 155,
@@ -2095,17 +1685,22 @@ $(document)
 			$('#dev').device({
 				width: 155,
 				type_no: 1,
-				device_id: Z.device_id,
-				vendor_id: Z.vendor_id,
-				model_id: Z.model_id,
+				device_id: ZAYAV.device,
+				vendor_id: ZAYAV.vendor,
+				model_id: ZAYAV.model,
 				device_multiselect: 1,
 				device_ids: Z.device_ids,
 				vendor_ids: Z.vendor_ids,
 				model_ids: Z.model_ids,
-				func: zayavSpisok
+				func: function(v) {
+					ZAYAV.device = v.device_id;
+					ZAYAV.vendor = v.vendor_id;
+					ZAYAV.model = v.model_id;
+					zayavSpisok();
+				}
 			});
 			// Нахождение устройства
-			$('#device_place')._select({
+			$('#place')._select({
 				width: 155,
 				title0: 'Любое местонахождение',
 				spisok: DEVPLACE_SPISOK,
@@ -2116,7 +1711,6 @@ $(document)
 				VK.callMethod('scrollWindow', _cookie('zback_scroll'));
 				$('#u' + Z.cookie_id).css('opacity', 0.1).delay(400).animate({opacity: 1}, 700);
 			}
-			zayavFilter();
 		}
 		if($('#zayavAdd').length) {
 			$('#client_id').clientSel({add: 1});
@@ -2175,7 +1769,7 @@ $(document)
 				else {
 					if(send.place > 0) send.place_other = '';
 					t.addClass('busy');
-					$.post(AJAX_WS, send, function (res) {
+					$.post(AJAX_MAIN, send, function (res) {
 						if(res.success)
 							location.href = URL + '&p=zayav&d=info&id=' + res.id;
 						else
@@ -2195,6 +1789,36 @@ $(document)
 			});
 		}
 		if($('#zayav-info').length) {
+			$('#zayav-action')._dropdown({
+				head:'Действие',
+				nosel:1,
+				spisok:[
+					{uid:1, title:'Редактировать данные заявки'},
+					{uid:2, title:'<b>Распечатать квитанцию</b>'},
+					{uid:3, title:'Сформировать счёт'},
+					{uid:4, title:'Изменить статус заявки'},
+					{uid:5, title:'Начислить'},
+					{uid:6, title:'<b>Принять платёж</b>'},
+					{uid:7, title:'Возврат'},
+					{uid:8, title:'Изменить расходы по заявке'},
+					{uid:9, title:'Новое напоминание'},
+					{uid:10, title:'Изменить срок выполнения заявки'},
+					{uid:11, title:'Изменить местонахождение устройства'},
+					{uid:12, title:'Добавить запчасть к устройству'},
+					{uid:13, title:'<tt class="red">Удалить заявку</tt>'}
+				],
+				func:function(v) {
+					switch(v) {
+						case 1: zayavEdit(); break;
+						case 5: _accrualAdd(); break;
+						case 6: _incomeAdd(); break;
+						case 7: _refundAdd(); break;
+						case 8: _zayavExpenseEdit(); break;
+						case 9: _remindAdd(); break;
+					}
+				}
+			});
+
 			$('.hist').click(function () {
 				$('#dopLinks .sel').removeClass('sel');
 				$(this).addClass('sel');
@@ -2205,37 +1829,6 @@ $(document)
 				$(this).addClass('sel');
 				$('.itab').removeClass('h');
 			});
-			$('.delete')
-				.click(function () {
-					var dialog = _dialog({
-						top: 110,
-						width: 250,
-						head: 'Удаление заявки',
-						content: '<center>Подтвердите удаление заявки.</center>',
-						butSubmit: 'Удалить',
-						submit: function () {
-							var send = {
-								op: 'zayav_delete',
-								zayav_id: ZAYAV.id
-							};
-							dialog.process();
-							$.post(AJAX_WS, send, function (res) {
-								if(res.success)
-									location.href = URL + '&p=client&d=info&id=' + res.client_id;
-								else
-									dialog.abort();
-							}, 'json');
-						}
-					});
-				})
-				.vkHint({
-					msg: 'Заявку можно удалить при отсутствии платежей и начислений. Также удаляются все задачи к этой заявке.',
-					width: 150,
-					ugol: 'top',
-					top: 39,
-					left: 457,
-					indent: 'right'
-				});
 			$('.img_print').click(function () {
 				var html = '<table class="zayav-print">' +
 						'<tr><td class="label">Дата приёма:<td>' + PRINT.dtime +
@@ -2270,7 +1863,7 @@ $(document)
 					if(!send.defect) err(1);
 					else {
 						t.addClass('_busy');
-						$.post(AJAX_WS, send, function (res) {
+						$.post(AJAX_MAIN, send, function (res) {
 							t.removeClass('_busy');
 							if(res.success)
 								kvitHtml(res.id);
@@ -2287,7 +1880,7 @@ $(document)
 					if(!send.defect) err();
 					else {
 						dialog.process();
-						$.post(AJAX_WS, send, function (res) {
+						$.post(AJAX_MAIN, send, function (res) {
 							if(res.success) {
 								dialog.close();
 								_msg('Квитанция сохранена');
@@ -2320,7 +1913,7 @@ $(document)
 							executer_id: v
 						};
 					td.addClass('_busy');
-					$.post(AJAX_WS, send, function (res) {
+					$.post(AJAX_MAIN, send, function (res) {
 						td.removeClass('_busy');
 						if(res.success)
 							_msg('Исполнитель изменён');
@@ -2333,53 +1926,6 @@ $(document)
 				width: 150,
 				top: -79,
 				left: -50
-			});
-			$('#ze-edit').click(function () {
-				var html =
-						'<table class="ze-edit-tab">' +
-						'<tr><td class="label">Заявка: <td><b>№' + ZAYAV.nomer + '</b>' +
-						'<tr><td class="label">Расходы:<td>' +
-						'<tr><td colspan="2" id="zes">' +
-						'</table>',
-					dialog = _dialog({
-						top: 30,
-						width: 510,
-						head: 'Изменение расходов заявки',
-						content: html,
-						butSubmit: 'Сохранить',
-						submit: submit
-					});
-				$('#zes').zayavExpense(ZAYAV.expense);
-				function submit() {
-					var send = {
-						op: 'zayav_expense_edit',
-						zayav_id: ZAYAV.id,
-						expense: $('#zes').zayavExpense('get')
-					};
-					if(send.expense == 'sum_error') err('Некорректно указана сумма');
-					else {
-						dialog.process();
-						$.post(AJAX_WS, send, function (res) {
-							if(res.success) {
-								zayavMoneyUpdate();
-								dialog.close();
-								_msg('Сохранено.');
-							} else
-								dialog.abort();
-						}, 'json');
-					}
-				}
-
-				function err(msg) {
-					dialog.bottom.vkHint({
-						msg: '<SPAN class="red">' + msg + '</SPAN>',
-						top: -47,
-						left: 167,
-						indent: 40,
-						show: 1,
-						remove: 1
-					});
-				}
 			});
 			$('#diagnost-ready').click(function () {
 				var html =
@@ -2426,7 +1972,7 @@ $(document)
 					}
 					else {
 						dialog.process();
-						$.post(AJAX_WS, send, function (res) {
+						$.post(AJAX_MAIN, send, function (res) {
 							if(res.success) {
 								dialog.close();
 								_msg('Результаты диагностики внесены');
