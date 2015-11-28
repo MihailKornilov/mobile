@@ -18,5 +18,5 @@ define('APP_PATH', 'c:/www/nyandoma'.APP_HTML);
 $_GET['viewer_id'] = 982006;
 //$_GET['viewer_id'] = 2170788;     //Виталик
 //$_GET['viewer_id'] = 36447948;    //Максим Подосинный
-$_GET['viewer_id'] = 1382858;     //Серёга Ш.
+//$_GET['viewer_id'] = 1382858;     //Серёга Ш.
 //$_GET['viewer_id'] = 7207410;     //Никита Кузьмин

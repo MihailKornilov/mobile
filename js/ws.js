@@ -1810,6 +1810,14 @@ $(document)
 				func:function(v) {
 					switch(v) {
 						case 1: zayavEdit(); break;
+						case 3:
+							_schetEdit({
+								edit:1,
+								client_id:ZAYAV.client_id,
+								client:ZAYAV.client_link,
+								zayav_id:ZAYAV.id
+							});
+							break;
 						case 5: _accrualAdd(); break;
 						case 6: _incomeAdd(); break;
 						case 7: _refundAdd(); break;

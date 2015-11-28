@@ -197,42 +197,16 @@ function history_types($v, $filter) {
 function history_types($v, $filter) {
 	switch($v['type']) {
 		case 2: return $filter['zayav_id'] ? 'Заявка удалена.' : 'Удалена заявка '.$v['zayav_link'].'.';
-		case 6: return
-			'Внесён платёж '.
-			($v['value2'] ? '<span class="oplata">'._invoice($v['value2']).'</span> ' : '').
-			'на сумму <b>'.$v['value'].'</b> руб. '.
-			($v['value1'] ? '<span class="prim">('.$v['value1'].')</span> ' : '').
-			($v['zayav_id'] && !$filter['zayav_id'] ? 'по заявке '.$v['zayav_link'].'. ' : '').
-			($v['zp_id'] ? '<br />Продана запчасть '.$v['zp_link'].'. ' : '');
 
-		case 9:
-			return 'Удалён платёж '.
-				($v['value2'] ? '<span class="oplata">'._invoice($v['value2']).'</span> ' : '').
-				'на сумму <b>'.$v['value'].'</b> руб. '.
-				($v['value1'] ? '<span class="prim">('.$v['value1'].')</span> ' : '').
-				($v['zayav_id'] && !$filter['zayav_id'] ? ' у заявки '.$v['zayav_link'] : '').
-				($v['zp_id'] ? ' (Продажа запчасти '.$v['zp_link'].')' : '').
-				'.';
 		case 15: return 'Произведено списание запчасти '.$v['zp_link'].'';
 		case 16: return 'Произведён возврат запчасти '.$v['zp_link'].'';
 		case 18: return 'Внесено наличие запчасти '.$v['zp_link'].' в количестве '.$v['value'].' шт.';
-		case 19:
-			return 'Восстановлен платёж '.
-				($v['value2'] ? '<span class="oplata">'._invoice($v['value2']).'</span> ' : '').
-				'на сумму <b>'.$v['value'].'</b> руб. '.
-				($v['value1'] ? '<span class="prim">('.$v['value1'].')</span> ' : '').
-				($v['zayav_id'] && !$filter['zayav_id'] ? ' у заявки '.$v['zayav_link'] : '').
-				($v['zp_id'] ? ' (Продажа запчасти '.$v['zp_link'].')' : '').
-				'.';
+
 		case 20:
 			return 'Создано новое задание'.
 				($v['zayav_id'] && !$filter['zayav_id'] ? ' для заявки '.$v['zayav_link'] : '').
 				($v['client_id']  && !$filter['client_id'] ? ' для клиента '.$v['client_link'] : '').
 				'.';
-		case 27: return 'Восстановлено начисление на сумму <b>'.$v['value'].'</b> руб. '.
-						($v['value1'] ? '('.$v['value1'].')' : '').
-						($filter['zayav_id'] ? '' : ' у заявки '.$v['zayav_link']).
-						'.';
 
 		case 46: return 'Автоматическое начисление з/п сотруднику <u>'._viewer($v['value1'], 'name').'</u> '.
 						'в размере <b>'.$v['value'].'</b> руб. <em>('.$v['value2'].')</em>.';
@@ -250,19 +224,6 @@ function history_types($v, $filter) {
 			'Операции с картриджем <u>'.$v['value'].'</u>'.
 			($filter['zayav_id'] ? '' : ' по заявке '.$v['zayav_link']).
 			':<div class="changes">'.$v['value1'].'</div>';
-
-
-		case 59: return
-			'Сформирован счёт № <b>'.$v['value'].'</b> от <u>'.FullData($v['value2']).' г.</u> на сумму '.$v['value1'].' руб.'.
-			($filter['zayav_id'] ? '' : ' по заявке '.$v['zayav_link']).'.';
-
-		case 1004: return 'В настройках: организация удалена.';
-
-		case 1010: return 'В настройках: удаление счёта <u>'.$v['value'].'</u>.';
-
-		case 1011: return 'В настройках: внесение нового вида платежа <u>'.$v['value'].'</u>.';
-		case 1012: return 'В настройках: изменение вида платежа <u>'.$v['value'].'</u>:<div class="changes">'.$v['value1'].'</div>';
-		case 1013: return 'В настройках: удаление вида платежа <u>'.$v['value'].'</u>.';
 
 		case 1017: return '<a href="'.URL.'&p=setup&d=service&d1=cartridge">В настройках:</a> внесение нового картриджа <u>'.$v['value'].'</u>.';
 		case 1018: return '<a href="'.URL.'&p=setup&d=service&d1=cartridge">В настройках:</a> изменение данных картриджа <u>'.$v['value'].'</u>:<div class="changes">'.$v['value1'].'</div>';

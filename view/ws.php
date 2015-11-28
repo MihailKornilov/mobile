@@ -634,7 +634,7 @@ function zayav_spisok($v) {
  			  ($r['imei'] ? '<tr><td class="label">IMEI:<td>'.$r['imei'] : '').
 		    ($r['serial'] ? '<tr><td class="label">Серийный номер:<td>'.$r['serial'] : '').
 	(isset($zpZakaz[$id]) ? '<tr><td class="label">Заказаны з/п:<td class="zz">'.implode(', ', $zpZakaz[$id]) : '').
-			 ($r['schet'] ? '<tr><td class="label">Счета:<td>'.$r['schet'] : '').
+			 ($r['schet'] ? '<tr><td class="label topi">Счета на оплату:<td>'.$r['schet'] : '').
 						'</table>'.
 					'<td class="image">'.$img.
 				'</table>'.
