@@ -1,9 +1,13 @@
 <?php
 require_once('config.php');
 
-if(!WS_ID)
-	header('Location:'.URL.'&p=wscreate');
-
+if(!WS_ID) {
+	switch(@$_GET['d']) {
+		case 'step1': $html = ws_create_step1(); break;
+		default: $html = ws_create_info();
+	}
+	die(_header().$html._footer());
+}
 
 //сброс нахождения в списке заявок
 setcookie('zback_spisok', '', time() - 3600, '/');
@@ -17,15 +21,6 @@ $html .= _global_index();
 
 
 switch($_GET['p']) {
-	case 'wscreate':
-		if(WS_ID)
-			header('Location:'.URL.'&p=zayav');
-		switch(@$_GET['d']) {
-			case 'step1': $html .= ws_create_step1(); break;
-			default: $html .= ws_create_info();
-		}
-		break;
-
 	case 'zayav':
 		switch(@$_GET['d']) {
 			case 'add':

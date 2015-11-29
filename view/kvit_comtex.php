@@ -140,9 +140,9 @@ function xls_comtex_content($col, $row) {//левая сторона
 	$sheet->setCellValue($colLabel.$row[4], 'Комплектность');
 	$sheet->setCellValue($colItem.$row[4], utf8(trim(_deviceName($z['base_device_id'])).(zayavEquipSpisok($z['equip']) ? ', '.zayavEquipSpisok($z['equip']) : '')));
 	$sheet->setCellValue($colLabel.$row[5], 'Владелец');
-	$sheet->setCellValue($colItem.$row[5], utf8(htmlspecialchars_decode(_clientName($c))));
+	$sheet->setCellValue($colItem.$row[5], utf8(htmlspecialchars_decode(_clientVal($z['client_id'], 'name'))));
 	$sheet->setCellValue($colLabel.$row[6], 'Телефоны');
-	$sheet->setCellValue($colItem.$row[6], utf8(htmlspecialchars_decode(_clientTelefon($c))));
+	$sheet->setCellValue($colItem.$row[6], utf8(htmlspecialchars_decode(_clientVal($z['client_id'], 'phone'))));
 	$sheet->setCellValue($colLabel.$row[7], 'Внешний вид');
 	$sheet->setCellValue($colItem.$row[7], 'б/у');
 
@@ -275,9 +275,8 @@ $sql = "SELECT * FROM `zayav` WHERE `ws_id`=".WS_ID." AND !`deleted` AND `zayav_
 if(!$z = query_assoc($sql))
 	die(win1251('Заявки не существует.'));
 
-$c = query_assoc("SELECT * FROM `client` WHERE `ws_id`=".WS_ID." AND !`deleted` AND `id`=".$z['client_id']);
-
-$z['defect'] = query_value("SELECT `txt` FROM `vk_comment` WHERE `status` AND `table_name`='zayav' AND `table_id`=".$id." AND !`parent_id` ORDER BY `id` DESC");
+$sql = "SELECT `txt` FROM `vk_comment` WHERE `status` AND `table_name`='zayav' AND `table_id`=".$id." AND !`parent_id` ORDER BY `id` DESC";
+$z['defect'] = query_value($sql);
 
 $book = new PHPExcel();
 $book->setActiveSheetIndex(0);

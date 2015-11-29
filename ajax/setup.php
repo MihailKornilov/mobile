@@ -6,20 +6,20 @@ switch(@$_POST['op']) {
 		if(!$type = _num($_POST['type']))
 			jsonError();
 
-		$sql = "SELECT * FROM `workshop` WHERE `status` AND `id`=".WS_ID;
-		if(!$r = mysql_fetch_assoc(query($sql)))
+		$sql = "SELECT * FROM `setup` WHERE `id`=".WS_ID;
+		$r = query_assoc($sql);
+
+		if($r['ws_type_id'] == $type)
 			jsonError();
 
-		if($r['type'] == $type)
-			jsonError();
+		$sql = "UPDATE `setup` SET `ws_type_id`=".$type." WHERE `id`=".WS_ID;
+		query($sql);
 
-		query("UPDATE `workshop` SET `type`=".$type." WHERE `id`=".WS_ID);
-
-		history_insert(array(
-			'type' => 1021,
-			'value' =>
+		_history(array(
+			'type_id' => 1031,
+			'v1' =>
 				'<table>'.
-					'<tr><td>'._wsType($r['type']).'<td>»<td>'._wsType($type).
+					'<tr><td>'._wsType($r['ws_type_id']).'<td>»<td>'._wsType($type).
 				'</table>'
 		));
 
@@ -27,30 +27,49 @@ switch(@$_POST['op']) {
 		jsonSuccess();
 		break;
 	case 'info_devs_set':
-		if(!RULES_INFO)
+//		if(!RULES_INFO)
+//			jsonError();
+
+		if(!$ids = _ids($_POST['devs']))
 			jsonError();
-		foreach(explode(',', $_POST['devs']) as $id)
-			if(!preg_match(REGEXP_NUMERIC, $id))
-				jsonError();
-		query("UPDATE `workshop` SET `devs`='".$_POST['devs']."' WHERE `id`=".WS_ID);
+
+		$sql = "UPDATE `setup` SET `devs`='".$ids."' WHERE `id`=".WS_ID;
+		query($sql);
+
 		xcache_unset(CACHE_PREFIX.'workshop_'.WS_ID);
+
 		jsonSuccess();
 		break;
 	case 'info_del':
 		if(!VIEWER_ADMIN)
 			jsonError();
-		xcache_unset(CACHE_PREFIX.'viewer_'.VIEWER_ADMIN);
-		query("UPDATE `workshop` SET `status`=0,`dtime_del`=CURRENT_TIMESTAMP WHERE `id`=".WS_ID);
-		query("UPDATE `vk_user` SET `ws_id`=0,`admin`=0 WHERE `ws_id`=".WS_ID);
-		_cacheClear();
 
-		history_insert(array(
-			'type' => 1004
+		xcache_unset(CACHE_PREFIX.'viewer_'.VIEWER_ADMIN);
+
+		$sql = "UPDATE `_ws`
+				SET `deleted`=1,
+					`dtime_del`=CURRENT_TIMESTAMP
+				WHERE `app_id`=".APP_ID."
+				  AND `id`=".WS_ID;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		$sql = "UPDATE `_vkuser`
+				SET `ws_id`=0,
+					`admin`=0,
+					`worker`=0
+				WHERE `app_id`=".APP_ID."
+				  AND `ws_id`=".WS_ID;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		_cacheClear();
+		_globalCacheClear();
+
+		_history(array(
+			'type_id' => 1032
 		));
 
 		jsonSuccess();
 		break;
-
 
 	case 'cartridge_toggle'://подключение-отключение услуги заправки картриджей
 		if(!VIEWER_ADMIN)
@@ -58,11 +77,11 @@ switch(@$_POST['op']) {
 
 		$v = _bool($_POST['v']);
 
-		$old = query_value("SELECT `service_cartridge` FROM `workshop` WHERE `id`=".WS_ID);
+		$old = query_value("SELECT `service_cartridge` FROM `setup` WHERE `ws_id`=".WS_ID);
 		if($old == $v)
 			jsonError();
 
-		query("UPDATE `workshop` SET `service_cartridge`=".$v." WHERE `id`=".WS_ID);
+		query("UPDATE `setup` SET `service_cartridge`=".$v." WHERE `ws_id`=".WS_ID);
 		xcache_unset(CACHE_PREFIX.'workshop_'.WS_ID);
 
 		jsonSuccess();
@@ -97,10 +116,11 @@ switch(@$_POST['op']) {
 			query($sql);
 			$sql = "DELETE FROM `setup_cartridge` WHERE `id`=".$join_id;
 			query($sql);
-			history_insert(array(
-				'type' => 1019,
-				'value' => $name,
-				'value1' => $j['name']
+
+			_history(array(
+				'type_id' => 1019,
+				'v1' => $name,
+				'v2' => $j['name']
 			));
 		}
 
@@ -116,22 +136,18 @@ switch(@$_POST['op']) {
 		xcache_unset(CACHE_PREFIX.'cartridge'.WS_ID);
 		GvaluesCreate();
 
-		$changes = '';
-		if($r['type_id'] != $type_id)
-			$changes .= '<tr><th>Вид:<td>'._cartridgeType($r['type_id']).'<td>»<td>'._cartridgeType($type_id);
-		if($r['name'] != $name)
-			$changes .= '<tr><th>Модель:<td>'.$r['name'].'<td>»<td>'.$name;
-		if($r['cost_filling'] != $cost_filling)
-			$changes .= '<tr><th>Заправка:<td>'.$r['cost_filling'].'<td>»<td>'.$cost_filling;
-		if($r['cost_restore'] != $cost_restore)
-			$changes .= '<tr><th>Восстановление:<td>'.$r['cost_restore'].'<td>»<td>'.$cost_restore;
-		if($r['cost_chip'] != $cost_chip)
-			$changes .= '<tr><th>Замена чипа:<td>'.$r['cost_chip'].'<td>»<td>'.$cost_chip;
+		$changes =
+			_historyChange('Вид', _cartridgeType($r['type_id']), _cartridgeType($type_id)).
+			_historyChange('Модель', $r['name'], $name).
+			_historyChange('Заправка', $r['cost_filling'], $cost_filling).
+			_historyChange('Восстановление', $r['cost_restore'], $cost_restore).
+			_historyChange('Замена чипа', $r['cost_chip'], $cost_chip);
+
 		if($changes)
-			history_insert(array(
-				'type' => 1018,
-				'value' => $name,
-				'value1' => '<table>'.$changes.'</table>'
+			_history(array(
+				'type_id' => 1034,
+				'v1' => $name,
+				'v2' => '<table>'.$changes.'</table>'
 			));
 
 		$send['html'] = utf8(setup_service_cartridge_spisok($id));

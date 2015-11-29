@@ -10,20 +10,21 @@ function _cacheClear($ws_id=WS_ID) {
 	xcache_unset(CACHE_PREFIX.'remind_active'.$ws_id);
 	xcache_unset(CACHE_PREFIX.'workshop_'.$ws_id);
 	xcache_unset(CACHE_PREFIX.'cartridge'.$ws_id);
-	GvaluesCreate();
+	GvaluesCreate($ws_id);
 }//_cacheClear()
 function _appScripts() {
 	return
-	//	(defined('WS_DEVS') ? '<script type="text/javascript">var WS_DEVS=['.WS_DEVS.'];</script>' : '').
-	//	'<script type="text/javascript">var WS_DEVS=['.WS_DEVS.'];</script>'.
-
-		'<script type="text/javascript" src="'.APP_HTML.'/js/G_values.js?'.G_VALUES.'"></script>'.
-		'<script type="text/javascript" src="'.APP_HTML.'/js/G_values_'.WS_ID.'.js?'.G_VALUES.'"></script>'.
 
 		'<link rel="stylesheet" type="text/css" href="'.APP_HTML.'/css/main'.(DEBUG ? '' : '.min').'.css?'.VERSION.'" />'.
 		'<script type="text/javascript" src="'.APP_HTML.'/js/main'.(DEBUG ? '' : '.min').'.js?'.VERSION.'"></script>'.
 
 		(WS_ID ?
+			'<script type="text/javascript">'.
+				'var WS_DEVS=['.WS_DEVS.'],'.
+					'WS_TYPE=['.WS_TYPE.'];'.
+			'</script>'.
+			'<script type="text/javascript" src="'.APP_HTML.'/js/G_values.js?'.G_VALUES.'"></script>'.
+			'<script type="text/javascript" src="'.APP_HTML.'/js/G_values_'.WS_ID.'.js?'.G_VALUES.'"></script>'.
 			'<script type="text/javascript" src="'.APP_HTML.'/js/ws'.(DEBUG ? '' : '.min').'.js?'.VERSION.'"></script>'.
 			'<script type="text/javascript" src="'.APP_HTML.'/js/ws_tovar'.(DEBUG ? '' : '.min').'.js?'.VERSION.'"></script>'.
 			'<script type="text/javascript" src="'.APP_HTML.'/js/ws_zp'.(DEBUG ? '' : '.min').'.js?'.VERSION.'"></script>'.
@@ -43,7 +44,7 @@ function _appScripts() {
 		: '');
 }//_appScripts()
 
-function GvaluesCreate() {//Составление файла G_values.js
+function GvaluesCreate($ws_id=WS_ID) {//Составление файла G_values.js
 	$save =
 		 'var COLOR_SPISOK='.query_selJson("SELECT `id`,`name` FROM `setup_color_name` ORDER BY `name` ASC").','.
 		"\n".'COLORPRE_SPISOK='.query_selJson("SELECT `id`,`predlog` FROM `setup_color_name` ORDER BY `predlog` ASC").','.
@@ -73,13 +74,13 @@ function GvaluesCreate() {//Составление файла G_values.js
 
 	//составление файла G_values для конкретной мастерской
 	$save =
-		'var CARTRIDGE_SPISOK='.query_selJson("SELECT `id`,`name` FROM `setup_cartridge` WHERE `ws_id`=".WS_ID." ORDER BY `name`").','.
-		"\n".'CARTRIDGE_FILLING='.query_assJson("SELECT `id`,`cost_filling` FROM `setup_cartridge` WHERE `ws_id`=".WS_ID).','.
-		"\n".'CARTRIDGE_RESTORE='.query_assJson("SELECT `id`,`cost_restore` FROM `setup_cartridge` WHERE `ws_id`=".WS_ID).','.
-		"\n".'CARTRIDGE_CHIP='.query_assJson("SELECT `id`,`cost_chip` FROM `setup_cartridge` WHERE `ws_id`=".WS_ID).','.
+		'var CARTRIDGE_SPISOK='.query_selJson("SELECT `id`,`name` FROM `setup_cartridge` WHERE `ws_id`=".$ws_id." ORDER BY `name`").','.
+		"\n".'CARTRIDGE_FILLING='.query_assJson("SELECT `id`,`cost_filling` FROM `setup_cartridge` WHERE `ws_id`=".$ws_id).','.
+		"\n".'CARTRIDGE_RESTORE='.query_assJson("SELECT `id`,`cost_restore` FROM `setup_cartridge` WHERE `ws_id`=".$ws_id).','.
+		"\n".'CARTRIDGE_CHIP='.query_assJson("SELECT `id`,`cost_chip` FROM `setup_cartridge` WHERE `ws_id`=".$ws_id).','.
 		"\n".'DEVPLACE_SPISOK='._selJson(_devPlace()).';';
 
-	$fp = fopen(APP_PATH.'/js/G_values_'.WS_ID.'.js', 'w+');
+	$fp = fopen(APP_PATH.'/js/G_values_'.$ws_id.'.js', 'w+');
 	fwrite($fp, $save);
 	fclose($fp);
 

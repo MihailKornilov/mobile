@@ -3,45 +3,66 @@ require_once('config.php');
 
 switch(@$_POST['op']) {
 	case 'ws_create':
-		$org_name = win1251(htmlspecialchars(trim($_POST['org_name'])));
-		if(empty($org_name))
+		if(!$org_name = _txt($_POST['org_name']))
 			jsonError();
 		if(!$country_id = _num($_POST['country_id']))
 			jsonError();
 		if(!$city_id = _num($_POST['city_id']))
 			jsonError();
+		if(!$devs = _ids($_POST['devs']))
+			jsonError();
 
 		$country_name = _txt($_POST['country_name']);
 		$city_name = _txt($_POST['city_name']);
 
-		$ex = explode(',', $_POST['devs']);
-		foreach($ex as $id)
-			if(!preg_match(REGEXP_NUMERIC, $id))
-				jsonError();
-
-		$sql = "INSERT INTO `workshop` (
+		$sql = "INSERT INTO `_ws` (
+				`app_id`,
 				`admin_id`,
-				`org_name`,
+				`name`,
 				`country_id`,
 				`country_name`,
 				`city_id`,
-				`city_name`,
-				`devs`
+				`city_name`
 			) VALUES (
+				".APP_ID.",
 				".VIEWER_ID.",
 				'".$org_name."',
 				".$country_id.",
-				'".$country_name."',
+				'".addslashes($country_name)."',
 				".$city_id.",
-				'".$city_name."',
-				'".$_POST['devs']."'
+				'".addslashes($city_name)."'
+			)";
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		$sql = "SELECT `id`
+				FROM `_ws`
+				WHERE `app_id`=".APP_ID."
+				  AND `admin_id`=".VIEWER_ID."
+				ORDER BY `id` DESC
+				LIMIT 1";
+		$ws_id = query_value($sql, GLOBAL_MYSQL_CONNECT);
+
+		$sql = "UPDATE `_vkuser`
+				SET `ws_id`=".$ws_id.",
+					`admin`=1,
+					`worker`=1
+				WHERE `app_id`=".APP_ID."
+				  AND `viewer_id`=".VIEWER_ID;
+		query($sql, GLOBAL_MYSQL_CONNECT);
+
+		$sql = "INSERT INTO `setup` (
+				`ws_id`,
+				`devs`
+			) VALUES (
+				".$ws_id.",
+				'".$devs."'
 			)";
 		query($sql);
 
-		$ws_id = query_value("SELECT `id` FROM `workshop` WHERE `admin_id`=".VIEWER_ID." ORDER BY `id` DESC LIMIT 1");
-
-		query("UPDATE `vk_user` SET `ws_id`=".$ws_id.",`admin`=1 WHERE `viewer_id`=".VIEWER_ID);
 		_cacheClear($ws_id);
+		_globalCacheClear($ws_id);
+		_globalValuesJS();
+
 		jsonSuccess();
 		break;
 

@@ -33,6 +33,7 @@ $('#countries')._select({
 		});
 	}
 });
+
 $('#cities')._select({
 	width:180,
 	title0:'Город не указан',

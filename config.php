@@ -13,8 +13,10 @@ require_once(DOCUMENT_ROOT.'/view/sa.php');
 
 
 //глобальные константы для конкретной организации
-$sql = "SELECT * FROM `setup` WHERE `ws_id`=".WS_ID." LIMIT 1";
-$setup = query_assoc($sql);
-define('WS_DEVS', $setup['devs']);
-define('WS_TYPE', $setup['ws_type_id']);
-define('SERVIVE_CARTRIDGE', $setup['service_cartridge']);
+if(WS_ID) {
+	$sql = "SELECT * FROM `setup` WHERE `ws_id`=".WS_ID." LIMIT 1";
+	$setup = query_assoc($sql);
+	define('WS_DEVS', $setup['devs']);
+	define('WS_TYPE', $setup['ws_type_id']);
+	define('SERVIVE_CARTRIDGE', $setup['service_cartridge']);
+}

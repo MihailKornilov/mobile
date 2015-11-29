@@ -130,7 +130,7 @@ function xls_cartridge_border($y) {//рамки для обоих сторон
 
 }//xls_cartridge_border()
 function xls_cartridge_content($col) {//левая сторона
-	global $sheet, $z, $c;
+	global $sheet, $z;
 
 	$colLabel = pageNum($col);
 	$colItem = pageNum($col + 5);
@@ -139,14 +139,14 @@ function xls_cartridge_content($col) {//левая сторона
 
 	$sheet->setCellValue($colLabel.$y, 'Клиент');
 	$sheet->getStyle($colLabel.$y)->getFont()->setSize(8);
-	$sheet->setCellValue($colItem.$y, utf8(htmlspecialchars_decode(_clientName($c))));
+	$sheet->setCellValue($colItem.$y, utf8(htmlspecialchars_decode(_clientVal($z['client_id'], 'name'))));
 	$sheet->getStyle($colItem.$y)->getFont()->setSize(8);
 	xls_comtex_item_border($col, $y);
 
 	$y++;
 	$sheet->setCellValue($colLabel.$y, 'Контактный тел.');
 	$sheet->getStyle($colLabel.$y)->getFont()->setSize(8);
-	$sheet->setCellValue($colItem.$y, utf8(htmlspecialchars_decode(_clientTelefon($c))));
+	$sheet->setCellValue($colItem.$y, utf8(htmlspecialchars_decode(_clientVal($z['client_id'], 'phone'))));
 	$sheet->getStyle($colItem.$y)->getFont()->setSize(8);
 	xls_comtex_item_border($col, $y);
 
@@ -214,8 +214,6 @@ $sql = "SELECT *
 		  AND `id`=".$id;
 if(!$z = query_assoc($sql))
 	die(win1251('Заявки не существует.'));
-
-$c = query_assoc("SELECT * FROM `client` WHERE `ws_id`=".WS_ID." AND !`deleted` AND `id`=".$z['client_id']);
 
 $book = new PHPExcel();
 $book->setActiveSheetIndex(0);

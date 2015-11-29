@@ -119,6 +119,7 @@ $('#zayav-count').highcharts('StockChart', {
 	]
 });
 
+
 $('#zayav-count-mon').highcharts('StockChart', {
 	chart: {
 		zoomType: 'x',

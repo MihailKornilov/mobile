@@ -5,9 +5,9 @@ function kvit_head() {
 	'<table class="head">'.
 		'<tr><td>'.BARCODE.
 			'<td class="rekvisit">'.
-				'<h1>'._wsType(WS_TYPE).' «<b>'.$ws['org_name'].'</b>»</h1>'.
+				'<h1>'._wsType(WS_TYPE).' «<b>'.$ws['name'].'</b>»</h1>'.
 				'<h1>Адрес: '.$ws['adres_yur'].'.</h1>'.
-				'<h2>Телефон: '.$ws['telefon'].'. Время работы: '.$ws['time_work'].'.</h2>'.
+				'<h2>Телефон: '.$ws['phone'].'. Время работы: '.$ws['time_work'].'.</h2>'.
 	'</table>';
 }//kvit_head()
 function kvit_name($nomer, $barcode=0) {
@@ -67,7 +67,7 @@ function kvit_podpis($bottom=0) {
 	return
 	'<div class="podpis'.($bottom ? ' bottom' : '').'">'.
 		'<h1>С условиями ремонта согласен(а).<span>Подпись Заказчика: ________________________________</span></h1>'.
-		'<h2>Аппарат принял: __________________________ ('._viewer(VIEWER_ID, 'name').')'.
+		'<h2>Аппарат принял: __________________________ ('._viewer(VIEWER_ID, 'viewer_name').')'.
 			'<em>'.FullData(curTime()).'</em>'.
 		'</h2>'.
 	'</div>';
@@ -77,13 +77,12 @@ function kvit_cut() {
 }//kvit_cut()
 
 require_once '../config.php';
-require_once(DOCUMENT_ROOT.'/view/ws.php');
 
 if(!$id = _num($_GET['id']))
 	die(win1251('Неверный id квитанции.'));
 
-$sql = "SELECT * FROM `workshop` WHERE `status` AND `id`=".WS_ID;
-if(!$ws = query_assoc($sql))
+$sql = "SELECT * FROM `_ws` WHERE !`deleted` AND `app_id`=".APP_ID." AND `id`=".WS_ID;
+if(!$ws = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
 	die(win1251('Организации не существует.'));
 
 $sql = "SELECT * FROM `zayav_kvit` WHERE `ws_id`=".WS_ID." AND `id`=".$id;
@@ -119,7 +118,6 @@ echo '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www
 	'</html>';
 
 
-mysql_close();
 exit;
 
 

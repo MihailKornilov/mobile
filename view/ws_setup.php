@@ -20,14 +20,23 @@ function setup() {
 }//setup()
 
 function setup_info() {
-	$sql = "SELECT * FROM `workshop` WHERE `status` AND `id`=".WS_ID;
-	if(!$ws = mysql_fetch_assoc(query($sql))) {
+	$sql = "SELECT *
+			FROM `_ws`
+			WHERE `app_id`=".APP_ID."
+			  AND `id`=".WS_ID;
+	if(!$ws = query_assoc($sql, GLOBAL_MYSQL_CONNECT)) {
 		_cacheClear();
 		header('Location:'.URL);
 	}
 
+
+	$sql = "SELECT *
+			FROM `setup`
+			WHERE `ws_id`=".WS_ID;
+	$setup = query_assoc($sql);
+
 	$devs = array();
-	foreach(explode(',', $ws['devs']) as $d)
+	foreach(explode(',', $setup['devs']) as $d)
 		$devs[$d] = $d;
 
 	$sql = "SELECT `id`,`name_mn` FROM `base_device` ORDER BY `sort`";
@@ -42,25 +51,25 @@ function setup_info() {
 	'<div id="setup_info">'.
 		'<div class="headName">Основная информация</div>'.
 		'<table class="tab">'.
-			'<tr><td class="label">Название организации:<td><b>'.$ws['org_name'].'</b>'.
+			'<tr><td class="label">Название организации:<td><b>'.$ws['name'].'</b>'.
 			'<tr><td class="label">Город:<td>'.$ws['city_name'].', '.$ws['country_name'].
-			'<tr><td class="label">Главный администратор:<td>'._viewer($ws['admin_id'], 'name').
-			'<tr><td class="label">Вид организации:<td><input type="hidden" id="type" value="'.$ws['type'].'" />'.
+			'<tr><td class="label">Главный администратор:<td>'._viewer($ws['admin_id'], 'viewer_name').
+			'<tr><td class="label">Вид организации:<td><input type="hidden" id="type" value="'.$setup['ws_type_id'].'" />'.
 			'<tr><td><td>'._button('info_save', 'Сохранить').
 		'</table>'.
 
 		'<div class="headName">Категории ремонтируемых устройств</div>'.
 		'<div id="devs">'.$checkDevs.'</div>'.
 
-		'<div class="headName">Удаление '._wsType($ws['type'], 2).'</div>'.
-		'<div class="del_inf">'._wsType($ws['type']).', а также все данные удаляются без возможности восстановления.</div>'.
-		_button('info_del', 'Удалить '._wsType($ws['type'], 4)).
+		'<div class="headName">Удаление '._wsType($setup['ws_type_id'], 2).'</div>'.
+		'<div class="del_inf">'._wsType($setup['ws_type_id']).', а также все данные удаляются без возможности восстановления.</div>'.
+		_button('info_del', 'Удалить '._wsType($setup['ws_type_id'], 4)).
 	'</div>';
 }//setup_info()
 
 
 function setup_service() {
-	$r = query_assoc("SELECT * FROM `workshop` WHERE `id`=".WS_ID);
+	$r = query_assoc("SELECT * FROM `setup` WHERE `ws_id`=".WS_ID);
 	return
 	'<div id="setup-service">'.
 		'<div class="headName">Виды оказываемых услуг</div>'.
@@ -85,7 +94,7 @@ function setup_service() {
 			'<h2>Заправка, восстановление картриджей от лазерных принтеров, копиров и МФУ. Замена чипов, фотовалов.</h2>'.
 			'<h3><a class="s-cartridge-toggle">Включить</a></h3>'.
 			'<h4>'.
-				'<a href="'.URL.'&p=setup&d=service&d1=cartridge">Настроить</a> :: '.
+				'<a href="'.URL.'&p=setup&d=service&d1=cartridge&id=1">Настроить</a> :: '.
 				'<a class="s-cartridge-toggle off">Отключить</a>'.
 			'</h4>'.
 		'</div>'.
@@ -112,13 +121,8 @@ function setup_service_cartridge_spisok($edit_id=0) {
 			  AND `type_id`=".$type_id."
 			GROUP BY `s`.`id`
 			ORDER BY `name`";
-		$q = query($sql);
-		if(!mysql_num_rows($q))
+		if(!$spisok = query_arr($sql))
 			continue;
-
-		$spisok = array();
-		while ($r = mysql_fetch_assoc($q))
-			$spisok[$r['id']] = $r;
 
 		$send .=
 			'<div class="type">'.$name.':</div>'.
@@ -156,26 +160,6 @@ function setup_service_cartridge_spisok($edit_id=0) {
 }//setup_service_cartridge_spisok()
 
 /*
-function setup_worker_spisok() {
-	$sql = "SELECT *,
-				   CONCAT(`first_name`,' ',`last_name`) AS `name`
-			FROM `vk_user`
-			WHERE `ws_id`=".WS_ID."
-			ORDER BY `dtime_add`";
-	$q = query($sql);
-	$send = '';
-	while($r = mysql_fetch_assoc($q)) {
-		$send .=
-		'<table class="unit" val="'.$r['viewer_id'].'">'.
-			'<tr><td class="photo"><a href="'.URL.'&p=setup&d=worker&id='.$r['viewer_id'].'"><img src="'.$r['photo'].'"></a>'.
-				'<td>'.($r['viewer_id'] == VIEWER_ADMIN ? '' : '<div class="img_del'._tooltip('Удалить сотрудника', -66).'</div>').
-					'<a href="'.URL.'&p=setup&d=worker&id='.$r['viewer_id'].'" class="name">'.$r['name'].'</a>'.
-					($r['enter_last'] != '0000-00-00 00:00:00' ? '<div class="activity">Заходил'.($r['sex'] == 1 ? 'a' : '').' в приложение '.FullDataTime($r['enter_last']).'</div>' : '').
-		'</table>';
-	}
-	return $send;
-}//setup_worker_spisok()
-
 function _setupRules($rls, $admin=0) {
 	$rules = array(
 		'RULES_MONEY_PROCENT' => array(	// процент от платежей

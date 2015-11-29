@@ -189,7 +189,6 @@ $(document)
 		}
 
 	})
-
 	.on('click', '#tovar-catalog a.dev', function() {
 		_cookie(VIEWER_ID + '_tovar_device_id', $(this).attr('val'));
 		location.reload();

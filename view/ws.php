@@ -526,7 +526,6 @@ function zayav_spisok($v) {
 		'filter' => $filter
 	);
 
-	$limit_save = $limit;
 	if(!ZAYAV_PAGE1)
 		setcookie('zback_spisok_page', $page, time() + 3600, '/');
 	if(!empty($_COOKIE['zback_info']) && ZAYAV_PAGE1 && !empty($_COOKIE['zback_spisok_page']) && $_COOKIE['zback_spisok_page'] > 1) {
@@ -817,11 +816,6 @@ function zayav_info($zayav_id) {
 		'<table class="itab">'.
 			'<tr class="z-info"><td id="left">'.
 				'<div class="headName">Заявка №'.$z['nomer'].'<input type="hidden" id="zayav-action" /></div>'.
-/*
-	  (WS_ID != 3 ? '<a class="img_print'._tooltip('Распечатать квитанцию', -75).'</a>' :
-					'<a href="'.APP_HTML.'/view/kvit_comtex.php?'.VALUES.'&id='.$zayav_id.'" class="img_xls'._tooltip('Распечатать квитанцию в xls', -168, 'r').'</a>'
-	  ).
-*/
 				'<table class="tabInfo">'.
 					'<tr><td class="label">Устройство: <td>'._deviceName($z['base_device_id']).'<a><b>'.MODEL.'</b></a>'.
 					'<tr><td class="label">Клиент:	 <td>'._clientVal($z['client_id'], 'go').
@@ -843,10 +837,10 @@ function zayav_info($zayav_id) {
 					'<tr class="op_tr'.($z['oplata_sum'] ? '' : ' dn').'"><td class="label">Оплачено:	<td><b class="op">'.$z['oplata_sum'].'</b> руб.'.
 						'<span class="dopl'.(DOPL ? '' : ' dn')._tooltip('Необходимая доплата', -60).(DOPL > 0 ? '+' : '').DOPL.'</span>'.
 				'</table>'.
+
 				'<div id="kvit_spisok">'.zayav_kvit($zayav_id).'</div>'.
 
-//				zayav_info_schet($zayav_id).
-
+				_zayavInfoAccrual($zayav_id).
 				_zayav_expense($zayav_id).
 				_remind_zayav($zayav_id).
 				_zayavInfoMoney($zayav_id).
@@ -1037,6 +1031,7 @@ function zayavCartridgeFilter($v) {
 }//zayavCartridgeFilter()
 function zayav_cartridge_spisok($v=array()) {
 	$filter = zayavCartridgeFilter($v);
+	$filter = _filterJs('CARTRIDGE', $filter);
 
 	$page = $filter['page'];
 	$limit = $filter['limit'];
@@ -1058,7 +1053,7 @@ function zayav_cartridge_spisok($v=array()) {
 		return array(
 			'all' => 0,
 			'result' => 'Заявок не найдено'.$filter['clear'],
-			'spisok' => '<div class="_empty">Заявок не найдено</div>',
+			'spisok' => $filter['js'].'<div class="_empty">Заявок не найдено</div>',
 			'filter' => $filter
 		);
 
@@ -1068,12 +1063,11 @@ function zayav_cartridge_spisok($v=array()) {
 			'Показан'._end($all, 'а', 'о').' '.$all.' заяв'._end($all, 'ка', 'ки', 'ок').
 			'<span id="c-sum">('.$r['sum'].' картридж'._end($r['sum'], '', 'а', 'ей').')</span>'.
 			$filter['clear'],
-		'spisok' => '',
+		'spisok' => $filter['js'],
 		'filter' => $filter
 	);
 
 	$start = ($page - 1) * $limit;
-	$limit_save = $limit;
 
 	$zayav = array();
 
@@ -1127,14 +1121,11 @@ function zayav_cartridge_spisok($v=array()) {
 		'</div>';
 	}
 
-	if($start + $limit < $all) {
-		$c = $all - $start - $limit;
-		$c = $c > $limit ? $limit_save : $c;
-		$send['spisok'] .=
-			'<div class="_next" val="'.($page + 1).'">'.
-				'<span>Показать ещё '.$c.' заяв'._end($c, 'ку', 'ки', 'ок').'</span>'.
-			'</div>';
-	}
+	$send['spisok'] .= _next($filter + array(
+			'type' => 2,
+			'all' => $all
+		));
+
 	return $send;
 }//zayav_cartridge_spisok()
 
@@ -1154,7 +1145,7 @@ function zayav_cartridge_info($z) {
 				'nomer:'.$z['nomer'].','.
 				'head:"№<b>'.$z['nomer'].'</b>",'.
 				'client_id:'.$z['client_id'].','.
-				'cartridge_count:'.$z['cartridge_count'].','.
+				'client_link:"'.addslashes(_clientVal($z['client_id'], 'link')).'",'.'cartridge_count:'.$z['cartridge_count'].','.
 				'pay_type:'.$z['pay_type'].','.
 				'status:'.$z['zayav_status'].
 			'};'.
@@ -1179,7 +1170,7 @@ function zayav_cartridge_info($z) {
 				'<table class="tabInfo">'.
 					'<tr><td class="label r">Клиент:	 <td>'._clientVal($z['client_id'], 'go').
 					'<tr><td class="label r">Дата приёма:'.
-						'<td class="dtime_add'._tooltip('Заявку вн'.(_viewer($z['viewer_id_add'], 'sex') == 1 ? 'есла' : 'ёс').' '._viewer($z['viewer_id_add'], 'name'), -70).FullDataTime($z['dtime_add']).
+						'<td class="dtime_add'._tooltip('Заявку '.(_viewerAdded($z['viewer_id_add'])), -70).FullDataTime($z['dtime_add']).
   ($z['pay_type'] ? '<tr><td class="label r">Расчёт:<td>'._payType($z['pay_type']) : '').
 					'<tr><td class="label r">Статус:'.
 						'<td><div id="status" style="background-color:#'._zayavStatusColor($z['zayav_status']).'" class="cartridge_status">'.
@@ -1190,12 +1181,11 @@ function zayav_cartridge_info($z) {
 					'<tr><td class="label r top">Список:<td id="cart-tab">'.zayav_cartridge_info_tab($zayav_id).
 				'</table>'.
 
-//				zayav_info_schet($zayav_id).
-
+				_zayavInfoAccrual($zayav_id).
 				_zayav_expense($zayav_id).
 				_remind_zayav($zayav_id).
 				_zayavInfoMoney($zayav_id).
-				_vkComment('zayav', $z['id']).
+				_vkComment('zayav', $zayav_id).
 
 			'<tr class="z-hist"><td>'.
 				'<div class="headName">Заявка №'.$z['nomer'].' - история действий</div>'.
@@ -1204,16 +1194,15 @@ function zayav_cartridge_info($z) {
 	'</div>';
 }//zayav_cartridge_info()
 function zayav_cartridge_info_tab($zayav_id) {//список картриджей в инфо по заявке
-	$sql = "SELECT
-				`c`.*,
-				`s`.`nomer`
- 			FROM `zayav_cartridge` `c`
- 				LEFT JOIN `zayav_schet` `s`
-				ON `c`.`schet_id`=`s`.`id`
- 			WHERE `c`.`zayav_id`=".$zayav_id."
- 			ORDER BY `c`.`id`";
-	$q = query($sql);
-	$send = '<table class="_spisok _money">'.
+	$sql = "SELECT *
+ 			FROM `zayav_cartridge`
+ 			WHERE `zayav_id`=".$zayav_id."
+ 			ORDER BY `id`";
+	$spisok = query_arr($sql);
+
+	$spisok = _schetValToList($spisok);
+
+	$send = '<table class="_spisok">'.
 		'<tr>'.
 			'<th>'.
 			'<th>Наименование'.
@@ -1223,7 +1212,7 @@ function zayav_cartridge_info_tab($zayav_id) {//список картриджей в инфо по заяв
 			'<th>';
 
 	$n = 1;
-	while($r = mysql_fetch_assoc($q)) {
+	foreach($spisok as $r) {
 		$prim = array();
 		if($r['filling'])
 			$prim[] = 'заправлен';
@@ -1242,7 +1231,7 @@ function zayav_cartridge_info_tab($zayav_id) {//список картриджей в инфо по заяв
 				'<td class="cart-prim">'.$prim.
 				'<td class="ed">'.
 					($r['schet_id'] ?
-						'<div class="nomer">СЦ'.$r['nomer'].'</div>'
+						'<div class="nomer">'.$r['schet_nomer'].'</div>'
 						:
 						'<div class="img_edit cart-edit'._tooltip('Изменить', -33).'</div>'.
 						'<div class="img_del cart-del'._tooltip('Удалить', -29).'</div>'.
