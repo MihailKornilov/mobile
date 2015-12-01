@@ -1231,7 +1231,7 @@ $(document)
 	})
 
 	.on('click', '#zayav-info .zedit', zayavEdit)
-	.on('click', '#zayav-info .status_place', function() {
+	.on('click', '#zayav-status-button .status_place', function() {
 		var html =
 			'<div id="zayav-status">' +
 		(ZAYAV.status != 1 ?
@@ -1319,7 +1319,7 @@ $(document)
 			}
 		}
 	})
-	.on('click', '#zayav-info .cartridge_status', function() {
+	.on('click', '#zayav-status-button .cartridge_status', function() {
 		var html =
 				'<div id="zayav-status">' +
 					(ZAYAV.status != 1 ?
@@ -1373,7 +1373,7 @@ $(document)
 			$.post(AJAX_MAIN, send, function (res) {
 				if(res.success) {
 					dialog.close();
-					_msg('Изменения сохранены.');
+					_msg('Изменения сохранены');
 					document.location.reload();
 				} else
 					dialog.abort();
@@ -1580,8 +1580,8 @@ $(document)
 			}
 		}
 	})
-	.on('click', '#zayav-info #cart-add', zayavInfoCartridgeAdd)
-	.on('click', '#zayav-info .cart-edit', function() {
+	.on('click', '#zayav-cartridge-info #cart-add', zayavInfoCartridgeAdd)
+	.on('click', '#zayav-cartridge-info .cart-edit', function() {
 		var t = $(this);
 		while(t[0].tagName != 'TR')
 			t = t.parent();
@@ -1654,7 +1654,7 @@ $(document)
 			}
 		}
 	})
-	.on('click', '#zayav-info .cart-del', function() {
+	.on('click', '#zayav-cartridge-info .cart-del', function() {
 		var t = $(this);
 		while(t[0].tagName != 'TR')
 			t = t.parent();
@@ -1955,12 +1955,51 @@ $(document)
 				}
 			});
 		}
-
 		if($('#zayav-cartridge').length) {
 			$('#sort')._radio(cartridgeSpisok);
 			$('#desc')._check(cartridgeSpisok);
 			$('#status').rightLink(cartridgeSpisok);
 			$('#paytype')._radio(cartridgeSpisok);
 			$('#noschet')._check(cartridgeSpisok);
+		}
+		if($('#zayav-cartridge-info').length) {
+			$('#zayav-action')._dropdown({
+				head:'Действие',
+				nosel:1,
+				spisok:[
+//					{uid:1, title:'Редактировать данные заявки'},
+					{uid:2, title:'<b>Распечатать квитанцию</b>'},
+					{uid:3, title:'Сформировать счёт на оплату'},
+//					{uid:4, title:'Изменить статус заявки'},
+					{uid:5, title:'Начислить'},
+					{uid:6, title:'<b>Принять платёж</b>'},
+					{uid:7, title:'Возврат'},
+					{uid:8, title:'Изменить расходы по заявке'},
+					{uid:9, title:'Новое напоминание'}
+//					{uid:13, title:'<tt class="red">Удалить заявку</tt>'}
+				],
+				func:function(v) {
+					switch(v) {
+//						case 1: zayavEdit(); break;
+						case 2:
+							if(WS_ID == 3)
+								location.href = APP_HTML + '/view/kvit_cartridge.php?' + VALUES + '&id=' + ZAYAV.id;
+							break;
+						case 3:
+							_schetEdit({
+								edit:1,
+								client_id:ZAYAV.client_id,
+								client:ZAYAV.client_link,
+								zayav_id:ZAYAV.id
+							});
+							break;
+						case 5: _accrualAdd(); break;
+						case 6: _incomeAdd(); break;
+						case 7: _refundAdd(); break;
+						case 8: _zayavExpenseEdit(); break;
+						case 9: _remindAdd(); break;
+					}
+				}
+			});
 		}
 	});

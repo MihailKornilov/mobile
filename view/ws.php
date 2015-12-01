@@ -40,6 +40,15 @@ function _zayavStatusColor($id=false) {
 		$send[$id] = $r['color'];
 	return $send;
 }//_zayavStatusColor()
+function zayavStatusButton($z, $class) {
+	return
+		'<div id="zayav-status-button">'.
+			'<h1 style="background-color:#'._zayavStatusColor($z['zayav_status']).'" class="'.$class.'">'.
+				_zayavStatusName($z['zayav_status']).
+			'</h1>'.
+			'<span>от '.FullDataTime($z['zayav_status_dtime'], 1).'</span>'.
+		'</div>';
+}//zayavStatusButton()
 function zayavStatusChange($zayav_id, $status) {//изменение статуса заявки и внесение истории (для внесения начисления)
 	$sql = "SELECT *
 			FROM `zayav`
@@ -107,6 +116,63 @@ function _zayavValToList($arr) {//вставка данных заявок в массив по zayav_id
 
 	return $arr;
 }//_zayavValToList()
+function _zayavCountToClient($spisok) {//прописывание квадратиков с количеством заявок в список клиентов
+	$ids = implode(',', array_keys($spisok));
+	/*
+	// общее количество заявок
+	$sql = "SELECT
+				`client_id` AS `id`,
+				COUNT(`id`) AS `count`
+			FROM `zayav`
+			WHERE `ws_id`=".WS_ID."
+			  AND `zayav_status`
+			  AND `client_id` IN (".implode(',', array_keys($spisok)).")
+			GROUP BY `client_id`";
+	$q = query($sql);
+	while($r = mysql_fetch_assoc($q))
+		$spisok[$r['id']]['zayav_count'] = $r['count'];
+*/
+	//заявки, ожидающие выполнения
+	$sql = "SELECT
+				`client_id` AS `id`,
+				COUNT(`id`) AS `count`
+			FROM `zayav`
+			WHERE `ws_id`=".WS_ID."
+			  AND `zayav_status`=1
+			  AND `client_id` IN (".$ids.")
+			GROUP BY `client_id`";
+	$q = query($sql);
+	while($r = mysql_fetch_assoc($q))
+		$spisok[$r['id']]['zayav_wait'] = $r['count'];
+
+	//выполненные заявки
+	$sql = "SELECT
+				`client_id` AS `id`,
+				COUNT(`id`) AS `count`
+			FROM `zayav`
+			WHERE `ws_id`=".WS_ID."
+			  AND `zayav_status`=2
+			  AND `client_id` IN (".$ids.")
+			GROUP BY `client_id`";
+	$q = query($sql);
+	while($r = mysql_fetch_assoc($q))
+		$spisok[$r['id']]['zayav_ready'] = $r['count'];
+
+	//отменённые заявки
+	$sql = "SELECT
+				`client_id` AS `id`,
+				COUNT(`id`) AS `count`
+			FROM `zayav`
+			WHERE `ws_id`=".WS_ID."
+			  AND `zayav_status`=3
+			  AND `client_id` IN (".$ids.")
+			GROUP BY `client_id`";
+	$q = query($sql);
+	while($r = mysql_fetch_assoc($q))
+		$spisok[$r['id']]['zayav_fail'] = $r['count'];
+
+	return $spisok;
+}//_zayavCountToClient()
 function _zayavTooltip($z, $v) {
 	return $html =
 		'<table>'.
@@ -828,11 +894,7 @@ function zayav_info($zayav_id) {
   ($z['zayav_status'] == 1 && $z['diagnost'] ?
 					'<tr><td colspan="2">'._button('diagnost-ready', 'Внести результаты диагностики', 300)
   : '').
-					'<tr><td class="label">Статус:'.
-						'<td><div id="status" style="background-color:#'._zayavStatusColor($z['zayav_status']).'" class="status_place">'.
-								_zayavStatusName($z['zayav_status']).
-							'</div>'.
-							'<div id="status_dtime">от '.FullDataTime($z['zayav_status_dtime'], 1).'</div>'.
+					'<tr><td class="label">Статус:<td>'.zayavStatusButton($z, 'status_place').
 					'<tr class="acc_tr'.($z['accrual_sum'] ? '' : ' dn').'"><td class="label">Начислено: <td><b class="acc">'.$z['accrual_sum'].'</b> руб.'.
 					'<tr class="op_tr'.($z['oplata_sum'] ? '' : ' dn').'"><td class="label">Оплачено:	<td><b class="op">'.$z['oplata_sum'].'</b> руб.'.
 						'<span class="dopl'.(DOPL ? '' : ' dn')._tooltip('Необходимая доплата', -60).(DOPL > 0 ? '+' : '').DOPL.'</span>'.
@@ -962,6 +1024,8 @@ function zayav_zp_avai($z) {
 		'}';
 	return '['.implode(',',$send).']';
 }//zayav_zp_avai()
+
+
 
 
 
@@ -1151,46 +1215,42 @@ function zayav_cartridge_info($z) {
 			'};'.
 	'</script>'.
 
-	'<div id="zayav-info">'.
+	'<div id="zayav-cartridge-info">'.
 		'<div id="dopLinks">'.
 			'<a class="link info sel">Информация</a>'.
-			'<a class="link zc-edit">Редактирование</a>'.
-			'<a class="link acc_add">Начислить</a>'.
+			'<a class="link">Редактирование</a>'.
+			'<a class="link _accrual-add">Начислить</a>'.
 			'<a class="link _income-add">Принять платёж</a>'.
 			'<a class="link hist">История</a>'.
 		'</div>'.
 
-		'<table class="itab">'.
-			'<tr class="z-info"><td id="left">'.
+		'<div class="page">'.
+			'<div class="headName">'.
+				'Заявка №'.$z['nomer'].' - заправка картриджей'.
+				'<input type="hidden" id="zayav-action" />'.
+			'</div>'.
+			'<table id="tab">'.
+				'<tr><td class="label">Клиент:	 <td>'._clientVal($z['client_id'], 'go').
+				'<tr><td class="label">Дата приёма:'.
+					'<td class="dtime_add'._tooltip('Заявку '.(_viewerAdded($z['viewer_id_add'])), -70).FullDataTime($z['dtime_add']).
+                '<tr><td class="label">Расчёт:<td>'._payType($z['pay_type']).
+				'<tr><td class="label">Статус:<td>'.zayavStatusButton($z, 'cartridge_status').
+				'<tr><td class="label">Количество:<td><b>'.$z['cartridge_count'].'</b> шт.'.
+				'<tr><td class="label top">Список:<td id="cart-tab">'.zayav_cartridge_info_tab($zayav_id).
+			'</table>'.
 
-				'<div class="headName">'.
-					'Заявка №'.$z['nomer'].' - заправка картриджей'.
-					'<a href="'.APP_HTML.'/view/kvit_cartridge.php?'.VALUES.'&id='.$zayav_id.'" class="img_xls'._tooltip('Распечатать квитанцию в xls', -168, 'r').'</a>'.
-				'</div>'.
-				'<table class="tabInfo">'.
-					'<tr><td class="label r">Клиент:	 <td>'._clientVal($z['client_id'], 'go').
-					'<tr><td class="label r">Дата приёма:'.
-						'<td class="dtime_add'._tooltip('Заявку '.(_viewerAdded($z['viewer_id_add'])), -70).FullDataTime($z['dtime_add']).
-  ($z['pay_type'] ? '<tr><td class="label r">Расчёт:<td>'._payType($z['pay_type']) : '').
-					'<tr><td class="label r">Статус:'.
-						'<td><div id="status" style="background-color:#'._zayavStatusColor($z['zayav_status']).'" class="cartridge_status">'.
-								_zayavStatusName($z['zayav_status']).
-							'</div>'.
-							'<div id="status_dtime">от '.FullDataTime($z['zayav_status_dtime'], 1).'</div>'.
-					'<tr><td class="label r">Количество:<td><b>'.$z['cartridge_count'].'</b> шт.'.
-					'<tr><td class="label r top">Список:<td id="cart-tab">'.zayav_cartridge_info_tab($zayav_id).
-				'</table>'.
+			_zayavInfoAccrual($zayav_id).
+			_zayav_expense($zayav_id).
+			_remind_zayav($zayav_id).
+			_zayavInfoMoney($zayav_id).
+			_vkComment('zayav', $zayav_id).
+		'</div>'.
 
-				_zayavInfoAccrual($zayav_id).
-				_zayav_expense($zayav_id).
-				_remind_zayav($zayav_id).
-				_zayavInfoMoney($zayav_id).
-				_vkComment('zayav', $zayav_id).
+		'<div class="page dn">'.
+			'<div class="headName">Заявка №'.$z['nomer'].' - история действий</div>'.
+			$history['spisok'].
+		'</div>'.
 
-			'<tr class="z-hist"><td>'.
-				'<div class="headName">Заявка №'.$z['nomer'].' - история действий</div>'.
-				$history['spisok'].
-		'</table>'.
 	'</div>';
 }//zayav_cartridge_info()
 function zayav_cartridge_info_tab($zayav_id) {//список картриджей в инфо по заявке

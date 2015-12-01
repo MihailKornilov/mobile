@@ -61,9 +61,12 @@ function setup_info() {
 		'<div class="headName">Категории ремонтируемых устройств</div>'.
 		'<div id="devs">'.$checkDevs.'</div>'.
 
+	(VIEWER_ADMIN ?
 		'<div class="headName">Удаление '._wsType($setup['ws_type_id'], 2).'</div>'.
 		'<div class="del_inf">'._wsType($setup['ws_type_id']).', а также все данные удаляются без возможности восстановления.</div>'.
-		_button('info_del', 'Удалить '._wsType($setup['ws_type_id'], 4)).
+		_button('info_del', 'Удалить '._wsType($setup['ws_type_id'], 4))
+	: '').
+
 	'</div>';
 }//setup_info()
 

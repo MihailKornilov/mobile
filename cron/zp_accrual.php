@@ -62,6 +62,7 @@ while($r = mysql_fetch_assoc($q)) {
 	query($sql, GLOBAL_MYSQL_CONNECT);
 
 	_balans(array(
+		'ws_id' => $r['ws_id'],
 		'action_id' => 19,
 		'worker_id' => $r['viewer_id'],
 		'sum' => $r['salary_rate_sum']

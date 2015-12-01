@@ -62,6 +62,20 @@
 #zayav ._empty{margin:10px 10px 0}
 
 
+/* Цветная кнопка статуса заявки  */
+#zayav-status-button h1 {
+	display:inline-block;
+	border:#DDD solid 1px;
+	width:140px;
+	text-align:center;
+	padding:2px 0 3px 0;
+	color:#666;
+	cursor:pointer;
+}
+#zayav-status-button h1:hover{border-color:#bbd; color:#444}
+#zayav-status-button span{color:#aaa;font-size:10px;margin-left:10px}
+
+
 /* Список заявок с картриджами */
 #zayav-cartridge #c-sum{color:#777;margin-left:10px}
 #zayav-cartridge .clear{float:right}
@@ -72,6 +86,19 @@
 #zayav-cartridge #noschet_check{margin-top:20px}
 #zayav-cartridge ._empty{margin:10px 2px 0 10px;}
 #zayav-cartridge ._next{margin:6px 5px 0 8px}
+
+/* Информация о заявке с картриджами */
+#zayav-cartridge-info .page{margin:10px}
+#zayav-cartridge-info .headName{margin:10px 0}
+#zayav-cartridge-info .headName ._dropdown{float:right;margin-right:115px}
+#zayav-cartridge-info #tab{border-spacing:8px}
+#zayav-cartridge-info .label{width:70px}
+#zayav-cartridge-info .n{text-align:right;color:#777}
+#zayav-cartridge-info .cost{text-align:right}/* стоимость заправки картриджа */
+#zayav-cartridge-info .cart-name{width:130px}
+#zayav-cartridge-info .cart-prim{font-size:10px;color:#444}
+#zayav-cartridge-info .cart-prim u{font-size:10px}
+#zayav-cartridge-info .ready{background-color:#dfd}
 
 
 
@@ -198,17 +225,6 @@
 .zayav-info-edit ._image-spisok{width:260px}
 .zayav-info-edit #imei{width:244px}
 .zayav-info-edit #serial{width:244px}
-#zayav-info #status {
-	display:inline-block;
-	border:#DDD solid 1px;
-	width:140px;
-	text-align:center;
-	padding:2px 0 3px 0;
-	color:#666;
-	cursor:pointer;
-}
-#zayav-info #status:hover{border-color:#bbd; color:#444}
-#zayav-info #status_dtime{display:inline-block;color:#aaa;font-size:10px;margin-left:10px}
 #zayav-info .dopl{margin-left:10px;color:#888;cursor:default}
 #zayav-info #diagnost-ready{margin-left:40px}
 #zayav-info #_remind-zayav{margin-top:15px}
@@ -288,12 +304,6 @@
 #zayav-status .about{color:#777;margin-top:3px}
 #zayav-status #zs-tab{border-spacing:8px;display:none}
 
-#zayav-info .n{text-align:right;color:#777}
-#zayav-info .cost{text-align:right}/* стоимость заправки картриджа */
-#zayav-info .cart-name{width:130px}
-#zayav-info .cart-prim{font-size:10px;color:#444}
-#zayav-info .cart-prim u{font-size:10px}
-#zayav-info .ready{background-color:#dfd}
 
 /* Таблица с результатами диагностики */
 #zayav-diagnost-tab #comm{width:250px}
