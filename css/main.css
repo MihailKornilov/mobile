@@ -99,6 +99,7 @@
 #zayav-cartridge-info .cart-prim{font-size:10px;color:#444}
 #zayav-cartridge-info .cart-prim u{font-size:10px}
 #zayav-cartridge-info .ready{background-color:#dfd}
+#zayav-cartridge-info #cart-tab .nomer{margin:0 4px;color:#777}
 
 
 
@@ -227,22 +228,11 @@
 .zayav-info-edit #serial{width:244px}
 #zayav-info .dopl{margin-left:10px;color:#888;cursor:default}
 #zayav-info #diagnost-ready{margin-left:40px}
-#zayav-info #_remind-zayav{margin-top:15px}
-#zayav-info ._remind-add{
-	float:right;
-	background-color:#fff;
-	width:15px;
-	height:15px;
-	margin:-2px -5px 0 0;
-	border:#ddd solid 1px;
-	background-position:2px 2px;
-}
 #zayav-info #remind-spisok{margin:8px 0}
 #zayav-info .acc{color:#07a;cursor:default}
 #zayav-info .op{color:#090;cursor:default}
 #zayav-info .deleting{text-align:center;color:#555}
 #zayav-info #kvit_spisok{margin-bottom:8px}
-#zayav-info #cart-tab .nomer{margin:0 4px;color:#777}
 #zayav-info #right{vertical-align:top;width:200px}
 #zayav-info #foto{text-align:center;margin-bottom:10px}
 #zayav-info .devContent{border-left:#e9edf1 solid 1px}

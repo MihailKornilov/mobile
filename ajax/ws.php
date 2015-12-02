@@ -446,35 +446,6 @@ switch(@$_POST['op']) {
 
 		jsonSuccess();
 		break;
-	case 'zayav_cartridge_status':
-		if(!$zayav_id = _num($_POST['zayav_id']))
-			jsonError();
-		if(!$zayav_status = _num($_POST['status']))
-			jsonError();
-
-		$sql = "SELECT * FROM `zayav` WHERE `ws_id`=".WS_ID." AND !`deleted` AND `cartridge` AND `id`=".$zayav_id;
-		if(!$z = mysql_fetch_assoc(query($sql)))
-			jsonError();
-
-		if($z['zayav_status'] == $zayav_status)
-			jsonError();
-
-		$sql = "UPDATE `zayav`
-				SET `zayav_status`=".$zayav_status.",
-					`zayav_status_dtime`=CURRENT_TIMESTAMP
-				WHERE `id`=".$zayav_id;
-		query($sql);
-
-		_history(array(
-			'type_id' => 71,
-			'client_id' => $z['client_id'],
-			'zayav_id' => $zayav_id,
-			'v1' => $z['zayav_status'],
-			'v2' => $zayav_status
-		));
-
-		jsonSuccess();
-		break;
 	case 'zayav_device_place':
 		if(!$zayav_id = _num($_POST['zayav_id']))
 			jsonError();
@@ -1136,7 +1107,7 @@ switch(@$_POST['op']) {
 		$send['spisok'] = utf8($data['spisok']);
 		jsonSuccess($send);
 		break;
-	case 'zayav_cartridge_edit':
+	case 'zayav_cartridge_edit'://редактирование заявки по картриджам
 		if(!$zayav_id = _num($_POST['zayav_id']))
 			jsonError();
 		if(!$client_id = _num($_POST['client_id']))
@@ -1188,6 +1159,55 @@ switch(@$_POST['op']) {
 				'zayav_id' => $zayav_id,
 				'v1' => '<table>'.$changes.'</table>'
 			));
+
+		jsonSuccess();
+		break;
+	case 'zayav_cartridge_status':
+		if(!$zayav_id = _num($_POST['zayav_id']))
+			jsonError();
+		if(!$zayav_status = _num($_POST['status']))
+			jsonError();
+
+		$sql = "SELECT * FROM `zayav` WHERE `ws_id`=".WS_ID." AND !`deleted` AND `cartridge` AND `id`=".$zayav_id;
+		if(!$z = mysql_fetch_assoc(query($sql)))
+			jsonError();
+
+		if($z['zayav_status'] == $zayav_status)
+			jsonError();
+
+		$sql = "UPDATE `zayav`
+				SET `zayav_status`=".$zayav_status.",
+					`zayav_status_dtime`=CURRENT_TIMESTAMP
+				WHERE `id`=".$zayav_id;
+		query($sql);
+
+		_history(array(
+			'type_id' => 71,
+			'client_id' => $z['client_id'],
+			'zayav_id' => $zayav_id,
+			'v1' => $z['zayav_status'],
+			'v2' => $zayav_status
+		));
+
+		jsonSuccess();
+		break;
+	case 'zayav_cartridge_ids':
+		if(!$ids = _ids($_POST['ids']))
+			jsonError();
+
+		$send['arr'] = zayav_cartridge_for_schet($ids);
+		jsonSuccess($send);
+		break;
+	case 'zayav_cartridge_schet_set':
+		if(!$schet_id = _num($_POST['schet_id']))
+			jsonError();
+		if(!$ids = _ids($_POST['ids']))
+			jsonError();
+
+		$sql = "UPDATE `zayav_cartridge`
+				SET `schet_id`=".$schet_id."
+				WHERE `id` IN (".$ids.")";
+		query($sql);
 
 		jsonSuccess();
 		break;
@@ -1740,10 +1760,6 @@ function zayav_day_finish_change($zayav_id, $day) {//изменение срока выполнения
 		));
 	}
 }//zayav_day_finish_change()
-mb_internal_encoding('UTF-8');
-function mb_ucfirst($text) {
-	return mb_strtoupper(mb_substr($text, 0, 1)).mb_substr($text, 1);
-}
 
 
 

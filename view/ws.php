@@ -675,7 +675,7 @@ function zayav_spisok($v) {
 			$r['imei'] = '';
 			$r['serial'] = '';
 		}
-		$diff = $r['accrual_sum'] - $r['oplata_sum'];
+		$diff = round($r['accrual_sum'] - $r['oplata_sum'], 2);
 		$send['spisok'] .=
 			'<div class="zayav_unit" id="u'.$id.'" style="background-color:#'._zayavStatusColor($r['zayav_status']).'" val="'.$id.'">'.
 				'<table width="100%">'.
@@ -690,10 +690,10 @@ function zayav_spisok($v) {
 							'<tr><td class="label">Дата подачи:'.
 								'<td>'.FullData($r['dtime_add'], 1).
 			($r['zayav_status'] == 2 ? '<b class="date-ready'._tooltip('Дата выполнения', -47).FullData($r['zayav_status_dtime'], 1, 1).'</b>' : '').
-									($r['accrual_sum'] || $r['oplata_sum'] ?
+									($r['accrual_sum'] || round($r['oplata_sum'], 2) ?
 										'<div class="balans'.($diff ? ' diff' : '').'">'.
 											'<span class="acc'._tooltip('Начислено', -39).$r['accrual_sum'].'</span>/'.
-											'<span class="opl'._tooltip($diff ? ($diff > 0 ? 'Недо' : 'Пере').'плата '.abs($diff).' руб.' : 'Оплачено', -17, 'l').$r['oplata_sum'].'</span>'.
+											'<span class="opl'._tooltip($diff ? ($diff > 0 ? 'Недо' : 'Пере').'плата '.abs($diff).' руб.' : 'Оплачено', -17, 'l').round($r['oplata_sum'], 2).'</span>'.
 										'</div>'
 									: '').
  			  ($r['imei'] ? '<tr><td class="label">IMEI:<td>'.$r['imei'] : '').
@@ -765,6 +765,9 @@ function zayav_list($v) {
 }//zayav_list()
 
 function zayavBalansUpdate($zayav_id) {//Обновление баланса заявки
+	if(empty($zayav_id))
+		return;
+
 	$sql = "SELECT IFNULL(SUM(`sum`),0)
 			FROM `_money_accrual`
 			WHERE `app_id`=".APP_ID."
@@ -781,18 +784,22 @@ function zayavBalansUpdate($zayav_id) {//Обновление баланса заявки
 			  AND `zayav_id`=".$zayav_id;
 	$income = query_value($sql, GLOBAL_MYSQL_CONNECT);
 
+	$sql = "SELECT IFNULL(SUM(`sum`),0)
+			FROM `_money_refund`
+			WHERE `app_id`=".APP_ID."
+			  AND `ws_id`=".WS_ID."
+			  AND !`deleted`
+			  AND `zayav_id`=".$zayav_id;
+	$refund = query_value($sql, GLOBAL_MYSQL_CONNECT);
+
+	$income -= $refund;
+
 	$sql = "UPDATE `zayav`
 			SET `accrual_sum`=".$accrual.",
 				`oplata_sum`=".$income."
 			WHERE `ws_id`=".WS_ID."
 			  AND `id`=".$zayav_id;
 	query($sql);
-
-	return array(
-		'acc' => round($accrual, 2),
-		'opl' => round($income, 2),
-		'diff' => $accrual - $income
-	);
 }//zayavBalansUpdate()
 function zayavEquipSpisok($ids) {//Список комплектации через запятую
 	if(empty($ids))
@@ -830,10 +837,6 @@ function zayav_info($zayav_id) {
 	$status = _zayavStatusName();
 	unset($status[0]);
 	$history = _history(array('zayav_id'=>$zayav_id));
-
-	$sql = "SELECT SUM(`sum`) FROM `_money_accrual` WHERE !`deleted` AND `zayav_id`=".$zayav_id;
-	$acc_sum = query_value($sql, GLOBAL_MYSQL_CONNECT);
-//	$expense_sum = query_value("SELECT SUM(`sum`) FROM `zayav_expense` WHERE `zayav_id`=".$zayav_id." AND `category_id`!=1");
 
 	return '<script type="text/javascript">'.
 		'var STATUS='._selJson($status).','.
@@ -896,7 +899,7 @@ function zayav_info($zayav_id) {
   : '').
 					'<tr><td class="label">Статус:<td>'.zayavStatusButton($z, 'status_place').
 					'<tr class="acc_tr'.($z['accrual_sum'] ? '' : ' dn').'"><td class="label">Начислено: <td><b class="acc">'.$z['accrual_sum'].'</b> руб.'.
-					'<tr class="op_tr'.($z['oplata_sum'] ? '' : ' dn').'"><td class="label">Оплачено:	<td><b class="op">'.$z['oplata_sum'].'</b> руб.'.
+					'<tr class="op_tr'.(round($z['oplata_sum'], 2) ? '' : ' dn').'"><td class="label">Оплачено:	<td><b class="op">'.round($z['oplata_sum'], 2).'</b> руб.'.
 						'<span class="dopl'.(DOPL ? '' : ' dn')._tooltip('Необходимая доплата', -60).(DOPL > 0 ? '+' : '').DOPL.'</span>'.
 				'</table>'.
 
@@ -1026,6 +1029,16 @@ function zayav_zp_avai($z) {
 }//zayav_zp_avai()
 
 
+
+
+
+
+function mb_ucfirst($txt) {
+	mb_internal_encoding('UTF-8');
+	$txt = utf8($txt);
+	$txt = mb_strtoupper(mb_substr($txt, 0, 1)).mb_substr($txt, 1);
+	return win1251($txt);
+}
 
 
 
@@ -1161,7 +1174,7 @@ function zayav_cartridge_spisok($v=array()) {
 
 
 	foreach($zayav as $id => $r) {
-		$diff = $r['accrual_sum'] - $r['oplata_sum'];
+		$diff = round($r['accrual_sum'] - $r['oplata_sum'], 2);
 		$send['spisok'] .=
 		'<div class="zayav_unit cart" id="u'.$id.'" style="background-color:#'._zayavStatusColor($r['zayav_status']).'" val="'.$id.'">'.
 			'<h2>#'.$r['nomer'].'</h2>'.
@@ -1174,10 +1187,10 @@ function zayav_cartridge_spisok($v=array()) {
 			: '').
 				'<tr><td class="label">Дата подачи:'.
 					'<td>'.FullData($r['dtime_add'], 1).
-						($r['accrual_sum'] || $r['oplata_sum'] ?
+						($r['accrual_sum'] || round($r['oplata_sum'], 2) ?
 							'<div class="balans'.($diff ? ' diff' : '').'">'.
 								'<span class="acc'._tooltip('Начислено', -39).$r['accrual_sum'].'</span>/'.
-								'<span class="opl'._tooltip($diff ? ($diff > 0 ? 'Недо' : 'Пере').'плата '.abs($diff).' руб.' : 'Оплачено', -17, 'l').$r['oplata_sum'].'</span>'.
+								'<span class="opl'._tooltip($diff ? ($diff > 0 ? 'Недо' : 'Пере').'плата '.abs($diff).' руб.' : 'Оплачено', -17, 'l').round($r['oplata_sum'], 2).'</span>'.
 							'</div>'
 						: '').
  ($r['schet'] ? '<tr><td class="label">Счета:<td>'.$r['schet'] : '').
@@ -1269,7 +1282,8 @@ function zayav_cartridge_info_tab($zayav_id) {//список картриджей в инфо по заяв
 			'<th>Стоимость'.
 			'<th>Дата<br />выполнения'.
 			'<th>Примечание'.
-			'<th>';
+			'<th>'.
+			'<th>'._check('check_all');
 
 	$n = 1;
 	foreach($spisok as $r) {
@@ -1282,8 +1296,11 @@ function zayav_cartridge_info_tab($zayav_id) {//список картриджей в инфо по заяв
 			$prim[] = 'заменён чип';
 		$prim = !empty($prim) ? implode(', ', $prim) : '';
 		$prim .= ($prim && $r['prim'] ? ', ' : '').'<u>'.$r['prim'].'</u>';
+
+		$ready = $r['filling'] || $r['restore'] || $r['chip'];
+
 		$send .=
-			'<tr val="'.$r['id'].'"'.($r['filling'] || $r['restore'] || $r['chip'] ? ' class="ready"' : '').'>'.
+			'<tr val="'.$r['id'].'"'.($ready ? ' class="ready"' : '').'>'.
 				'<td class="n">'.($n++).
 				'<td class="cart-name"><b>'._cartridgeName($r['cartridge_id']).'</b>'.
 				'<td class="cost">'.($r['cost'] ? $r['cost'] : '').
@@ -1299,14 +1316,83 @@ function zayav_cartridge_info_tab($zayav_id) {//список картриджей в инфо по заяв
 						'<input type="hidden" class="filling" value="'.$r['filling'].'" />'.
 						'<input type="hidden" class="restore" value="'.$r['restore'].'" />'.
 						'<input type="hidden" class="chip" value="'.$r['chip'].'" />'
-					);
+					).
+				'<td class="ch">'.($ready && !$r['schet_id'] ? _check('ch'.$r['id']) : '');
+
 	}
 
-	$send .= '<tr><td colspan="6" class="_next" id="cart-add">'.
-				'<span>Добавить картриджи</span>';
-
-	$send .= '</table>';
+	$send .=
+		'<tr><td colspan="7" class="_next" id="cart-add">'.
+			'<span>Добавить картриджи</span>'.
+	'</table>';
 
 	return $send;
 }//zayav_cartridge_info_tab()
+function zayav_cartridge_for_schet($ids) {
+	$sql = "SELECT *
+			FROM `zayav_cartridge`
+			WHERE `id` IN (".$ids.")
+			  AND (`filling` OR `restore` OR `chip`)
+			  AND `cost`
+			  AND !`schet_id`
+			ORDER BY `id`";
+	$q = query($sql);
+	$schet = array();
+	$n = 1;
+	while($r = mysql_fetch_assoc($q)) {
+		$same = 0;//тут будет номер, с которым будет найдено совпадение
+		foreach($schet as $sn => $unit) {
+			$diff = 0; // пока различий не обнаружено
+			foreach($unit as $key => $val) {
+				if($key == 'count')
+					continue;
+				if($r[$key] != $val) {
+					$diff = 1;
+					break;
+				}
+			}
+			if(!$diff) { //если различий нет, то запоминание номера и выход
+				$same = $sn;
+				break;
+			}
+		}
+
+		if($same)
+			$schet[$same]['count']++;
+		else {
+			$schet[$n] = array(
+				'cartridge_id' => $r['cartridge_id'],
+				'filling' => $r['filling'],
+				'restore' => $r['restore'],
+				'chip' => $r['chip'],
+				'cost' => $r['cost'],
+				'prim' => $r['prim'],
+				'count' => 1
+			);
+			$n++;
+		}
+	}
+
+	$spisok = array();
+	foreach($schet as $r) {
+		$prim = array();
+		if($r['filling'])
+			$prim[] = 'заправка';
+		if($r['restore'])
+			$prim[] = 'восстановление';
+		if($r['chip'])
+			$prim[] = 'замена чипа у';
+
+		$txt = implode(', ', $prim).' картриджа '._cartridgeName($r['cartridge_id']).($r['prim'] ? ', '.$r['prim'] : '');
+		$txt = mb_ucfirst($txt);
+
+		$spisok[] = array(
+			'name' => utf8($txt),
+			'count' => $r['count'],
+			'cost' => $r['cost'],
+			'readonly' => 1
+		);
+	}
+	return $spisok;
+}//zayav_cartridge_for_schet()
 

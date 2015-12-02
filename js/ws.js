@@ -513,6 +513,17 @@ var scannerWord = '',
 			}
 		}, 'json');
 	},
+	cartridgeSchetSet = function(schet_id) {
+		var send = {
+			op:'zayav_cartridge_schet_set',
+			schet_id:schet_id,
+			ids:_checkAll()
+		};
+		$.post(AJAX_MAIN, send, function(res) {
+			if(res.success)
+				location.reload();
+		}, 'json');
+	},
 	zayavInfoCartridgeAdd = function() {
 		var html =
 				'<table id="cartridge-add-tab">' +
@@ -1986,12 +1997,41 @@ $(document)
 								location.href = APP_HTML + '/view/kvit_cartridge.php?' + VALUES + '&id=' + ZAYAV.id;
 							break;
 						case 3:
-							_schetEdit({
-								edit:1,
-								client_id:ZAYAV.client_id,
-								client:ZAYAV.client_link,
-								zayav_id:ZAYAV.id
-							});
+							if(!_checkAll()) {
+								_schetEdit({
+									edit:1,
+									client_id:ZAYAV.client_id,
+									client:ZAYAV.client_link,
+									zayav_id:ZAYAV.id,
+									func:function() {
+										location.reload();
+									}
+								});
+								break;
+							}
+							var	dialog = _dialog({
+									head:'Получение информации о картриджах',
+									load:1,
+									butSubmit:''
+								}),
+								send = {
+									op:'zayav_cartridge_ids',
+									ids:_checkAll()
+								};
+							$.post(AJAX_MAIN, send, function(res) {
+								if(res.success) {
+									dialog.close();
+									_schetEdit({
+										edit:1,
+										client_id:ZAYAV.client_id,
+										client:ZAYAV.client_link,
+										zayav_id:ZAYAV.id,
+										arr:res.arr,
+										func:cartridgeSchetSet
+									});
+								} else
+									dialog.loadError();
+							}, 'json');
 							break;
 						case 5: _accrualAdd(); break;
 						case 6: _incomeAdd(); break;
