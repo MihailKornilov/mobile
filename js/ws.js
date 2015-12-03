@@ -2002,10 +2002,7 @@ $(document)
 									edit:1,
 									client_id:ZAYAV.client_id,
 									client:ZAYAV.client_link,
-									zayav_id:ZAYAV.id,
-									func:function() {
-										location.reload();
-									}
+									zayav_id:ZAYAV.id
 								});
 								break;
 							}

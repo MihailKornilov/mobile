@@ -1033,14 +1033,6 @@ function zayav_zp_avai($z) {
 
 
 
-function mb_ucfirst($txt) {
-	mb_internal_encoding('UTF-8');
-	$txt = utf8($txt);
-	$txt = mb_strtoupper(mb_substr($txt, 0, 1)).mb_substr($txt, 1);
-	return win1251($txt);
-}
-
-
 
 // ---===! zayav cartridge !===--- Картриджи
 
@@ -1396,3 +1388,9 @@ function zayav_cartridge_for_schet($ids) {
 	return $spisok;
 }//zayav_cartridge_for_schet()
 
+function zayavCartridgeSchetDel($schet_id) {//отвязка картриджей от счёта при удалении счёта
+	$sql = "UPDATE `zayav_cartridge`
+			SET `schet_id`=0
+			WHERE `schet_id`=".$schet_id;
+	query($sql);
+}//zayavCartridgeSchetDel()
