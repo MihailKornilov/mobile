@@ -557,6 +557,50 @@ var scannerWord = '',
 			}
 		}
 	},
+	zayavCartridgeEdit = function() {//редактирование заявки с картриджами
+		var html =
+				'<table id="cartridge-add-tab">' +
+					'<tr><td class="label">Клиент:' +
+						'<td><input type="hidden" id="client_id" value="' + ZAYAV.client_id + '" />' +
+					'<tr><td class="label"><b>Количество картриджей:</b><td><input type="text" id="count" value="' + ZAYAV.cartridge_count + '" /> шт.' +
+					'<tr><td class="label topi">Расчёт:<td><input type="hidden" id="pay_type" value="' + ZAYAV.pay_type + '" />' +
+				'</table>',
+			dialog = _dialog({
+				width:470,
+				head:'Редактирование заявки',
+				content:html,
+				butSubmit:'Сохранить',
+				submit:submit
+			});
+		$('#client_id').clientSel({add:1});
+		$('#pay_type')._radio({
+			light:1,
+			spisok:PAY_TYPE
+		});
+		function submit() {
+			var send = {
+				op:'zayav_cartridge_edit',
+				zayav_id:ZAYAV.id,
+				client_id:_num($('#client_id').val()),
+				count:_num($('#count').val()),
+				pay_type:_num($('#pay_type').val())
+			};
+			if(!send.client_id) dialog.err('Не указан клиент');
+			else if(!send.count) dialog.err('Не указано количество картриджей');
+			else if(!send.pay_type) dialog.err('Укажите вид расчёта');
+			else {
+				dialog.process();
+				$.post(AJAX_MAIN, send, function(res) {
+					if(res.success) {
+						dialog.close();
+						_msg();
+						location.reload();
+					} else
+						dialog.abort();
+				}, 'json');
+			}
+		}
+	},
 
 	zpNameSelect = function(id, name_id) {
 		if(!window.ZPNAME)
@@ -1169,10 +1213,9 @@ $(document)
 		}
 	})
 	.on('click', '.zayav_unit', function() {
-		_cookie('zback_scroll', VK_SCROLL);
-		var t = $(this),
-			from = t.hasClass('cart') ? '&from=cartridge' : '';
-		location.href = URL + '&p=zayav&d=info&id=' + t.attr('val') + from;
+		var id = $(this).attr('val');
+		_scroll('set', 'u' + id);
+		location.href = URL + '&p=zayav&d=info&id=' + id;
 	})
 	.on('mouseenter', '.zayav_unit', function() {
 		var t = $(this),
@@ -1227,19 +1270,6 @@ $(document)
 		zayavSpisok();
 	})
 
-	.on('click', '#zayav-cartridge .clear', function() {
-		$('#sort')._radio(1);
-		$('#desc')._check(0);
-		$('#status').rightLink(0);
-		$('#paytype')._radio(0);
-		$('#noschet')._check(0);
-		CARTRIDGE.sort = 1;
-		CARTRIDGE.desc = 0;
-		CARTRIDGE.status = 0;
-		CARTRIDGE.paytype = 0;
-		CARTRIDGE.noschet = 0;
-		cartridgeSpisok();
-	})
 
 	.on('click', '#zayav-info .zedit', zayavEdit)
 	.on('click', '#zayav-status-button .status_place', function() {
@@ -1547,52 +1577,22 @@ $(document)
 		kvitHtml($(this).attr('val'));
 	})
 
-	.on('click', '#zayav-info .zc-edit', function() {//редактирование заявки с картриджами
-		var html =
-				'<table id="cartridge-add-tab">' +
-					'<tr><td class="label">Клиент:' +
-						'<td><input type="hidden" id="client_id" value="' + ZAYAV.client_id + '" />' +
-					'<tr><td class="label"><b>Количество картриджей:</b><td><input type="text" id="count" value="' + ZAYAV.cartridge_count + '" /> шт.' +
-					'<tr><td class="label topi">Расчёт:<td><input type="hidden" id="pay_type" value="' + ZAYAV.pay_type + '" />' +
-				'</table>',
-			dialog = _dialog({
-				width:470,
-				head:'Редактирование заявки',
-				content:html,
-				butSubmit:'Сохранить',
-				submit:submit
-			});
-		$('#client_id').clientSel({add:1});
-		$('#pay_type')._radio({
-			light:1,
-			spisok:PAY_TYPE
-		});
-		function submit() {
-			var send = {
-				op:'zayav_cartridge_edit',
-				zayav_id:ZAYAV.id,
-				client_id:_num($('#client_id').val()),
-				count:_num($('#count').val()),
-				pay_type:_num($('#pay_type').val())
-			};
-			if(!send.client_id) dialog.err('Не указан клиент');
-			else if(!send.count) dialog.err('Не указано количество картриджей');
-			else if(!send.pay_type) dialog.err('Укажите вид расчёта');
-			else {
-				dialog.process();
-				$.post(AJAX_MAIN, send, function(res) {
-					if(res.success) {
-						dialog.close();
-						_msg('Заявка изменена');
-						document.location.reload();
-					} else
-						dialog.abort();
-				}, 'json');
-			}
-		}
+	.on('click', '#zayav-cartridge .clear', function() {
+		$('#sort')._radio(1);
+		$('#desc')._check(0);
+		$('#status').rightLink(0);
+		$('#paytype')._radio(0);
+		$('#noschet')._check(0);
+		CARTRIDGE.sort = 1;
+		CARTRIDGE.desc = 0;
+		CARTRIDGE.status = 0;
+		CARTRIDGE.paytype = 0;
+		CARTRIDGE.noschet = 0;
+		cartridgeSpisok();
 	})
+	.on('click', '#zayav-cartridge-info #edit', zayavCartridgeEdit)
 	.on('click', '#zayav-cartridge-info #cart-add', zayavInfoCartridgeAdd)
-	.on('click', '#zayav-cartridge-info .cart-edit', function() {
+	.on('click', '#zayav-cartridge-info .cart-edit', function() {//выполнение действия надо картриджем
 		var t = $(this);
 		while(t[0].tagName != 'TR')
 			t = t.parent();
@@ -1748,11 +1748,6 @@ $(document)
 				spisok: DEVPLACE_SPISOK,
 				func: zayavSpisok
 			});
-			//подсвечивание просмотренной заявки
-			if(Z.cookie_id) {
-				VK.callMethod('scrollWindow', _cookie('zback_scroll'));
-				$('#u' + Z.cookie_id).css('opacity', 0.1).delay(400).animate({opacity: 1}, 700);
-			}
 		}
 		if($('#zayavAdd').length) {
 			$('#client_id').clientSel({add: 1});
@@ -1978,7 +1973,7 @@ $(document)
 				head:'Действие',
 				nosel:1,
 				spisok:[
-//					{uid:1, title:'Редактировать данные заявки'},
+					{uid:1, title:'Редактировать заявку'},
 					{uid:2, title:'<b>Распечатать квитанцию</b>'},
 					{uid:3, title:'Сформировать счёт на оплату'},
 //					{uid:4, title:'Изменить статус заявки'},
@@ -1991,7 +1986,7 @@ $(document)
 				],
 				func:function(v) {
 					switch(v) {
-//						case 1: zayavEdit(); break;
+						case 1: zayavCartridgeEdit(); break;
 						case 2:
 							if(WS_ID == 3)
 								location.href = APP_HTML + '/view/kvit_cartridge.php?' + VALUES + '&id=' + ZAYAV.id;

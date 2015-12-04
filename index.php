@@ -22,7 +22,7 @@ $html .= _global_index();
 
 switch($_GET['p']) {
 	case 'zayav':
-		switch(@$_GET['d']) {
+		switch(zayavCookie('get')) {
 			case 'add':
 				$v = array();
 				if(isset($_GET['imei']) && preg_match(REGEXP_WORD, $_GET['imei']))
@@ -44,13 +44,7 @@ switch($_GET['p']) {
 
 				$html .= zayav_cartridge($v);
 				break;
-			case 'info':
-				if(!$id = _num(@$_GET['id'])) {
-					$html .= 'Страницы не существует';
-					break;
-				}
-				$html .= zayav_info($id);
-				break;
+			case 'info': $html .= zayav_info(); break;
 			default:
 				setcookie('zback_spisok', 1, time() + 3600, '/');
 				$v = array();

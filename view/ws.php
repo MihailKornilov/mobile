@@ -461,6 +461,19 @@ function zayav_add($v=array()) {
 	'</div>';
 }//zayav_add()
 
+function zayavCookie($action='set', $v='device') {//сохранение страницы с заявками в куках, чтобы было понятно, куда возвращаться
+	$key = APP_ID.'_'.VIEWER_ID.'_zayav_type';
+
+	if($action == 'get') {
+		if(empty($_GET['d']))
+			return @$_COOKIE[$key];
+		return $_GET['d'];
+	}
+
+	setcookie($key, $v, time() + 3600, '/');
+	return '';
+}//zayavCookie()
+
 function zayavFilter($v) {
 	$default = array(
 		'page' => 1,
@@ -606,7 +619,7 @@ function zayav_spisok($v) {
 			FROM `zayav`
 			WHERE ".$cond."
 			ORDER BY `".($filter['sort'] == 2 ? 'zayav_status_dtime' : 'dtime_add')."` ".($filter['desc'] ? 'ASC' : 'DESC')."
-			LIMIT "._start($filter).",".$filter['limit'];
+			LIMIT "._startLimit($filter);
 	$q = query($sql);
 	while($r = mysql_fetch_assoc($q)) {
 		if(isset($nomer) && $nomer == $r['nomer'])
@@ -714,6 +727,8 @@ function zayav_spisok($v) {
 	return $send;
 }//zayav_spisok()
 function zayav_list($v) {
+	zayavCookie();
+
 	$data = zayav_spisok($v);
 	$v = $data['filter'];
 
@@ -814,7 +829,12 @@ function zayavEquipSpisok($ids) {//Список комплектации через запятую
 			$send[] = $r['name'];
 	return implode(', ', $send);
 }//zayavEquipSpisok()
-function zayav_info($zayav_id) {
+function zayav_info() {
+	zayavCookie();
+
+	if(!$zayav_id = _num(@$_GET['id']))
+		return _err('Страницы не существует');
+
 	//Установка id заявки, если переход со списка заявок
 	if(!empty($_COOKIE['zback_spisok']))
 		setcookie('zback_info', $zayav_id, time() + 3600, '/');
@@ -826,7 +846,7 @@ function zayav_info($zayav_id) {
 			  AND `zayav_status`
 			  AND `id`=".$zayav_id;
 	if(!$z = mysql_fetch_assoc(query($sql)))
-		return 'Заявки не существует.';
+		return _err('Заявки не существует.');
 
 	if($z['cartridge'])
 		return zayav_cartridge_info($z);
@@ -1030,13 +1050,11 @@ function zayav_zp_avai($z) {
 
 
 
-
-
-
-
 // ---===! zayav cartridge !===--- Картриджи
 
 function zayav_cartridge($v) {
+	zayavCookie('set', 'cartridge');
+
 	$data = zayav_cartridge_spisok($v);
 	$v = $data['filter'];
 
@@ -1046,7 +1064,7 @@ function zayav_cartridge($v) {
 	'<div id="zayav-cartridge">'.
 
 		'<div id="dopLinks">'.
-			'<a class="link" href="'.URL.'&p=zayav">Оборудование</a>'.
+			'<a class="link" href="'.URL.'&p=zayav&d=device">Оборудование</a>'.
 			'<a class="link sel">Картриджи</a>'.
 		'</div>'.
 
@@ -1168,7 +1186,7 @@ function zayav_cartridge_spisok($v=array()) {
 	foreach($zayav as $id => $r) {
 		$diff = round($r['accrual_sum'] - $r['oplata_sum'], 2);
 		$send['spisok'] .=
-		'<div class="zayav_unit cart" id="u'.$id.'" style="background-color:#'._zayavStatusColor($r['zayav_status']).'" val="'.$id.'">'.
+		'<div class="zayav_unit" id="u'.$id.'" style="background-color:#'._zayavStatusColor($r['zayav_status']).'" val="'.$id.'">'.
 			'<h2>#'.$r['nomer'].'</h2>'.
 			'<a class="name">Картридж'.(count($r['cart']) > 1 ? 'и' : '').' '.implode(', ', $r['cart']).'</a>'.
 			'<table class="utab">'.
@@ -1199,6 +1217,8 @@ function zayav_cartridge_spisok($v=array()) {
 }//zayav_cartridge_spisok()
 
 function zayav_cartridge_info($z) {
+	zayavCookie('set', 'cartridge');
+
 	$zayav_id = $z['id'];
 	$status = _zayavStatusName();
 	unset($status[0]);
@@ -1223,7 +1243,7 @@ function zayav_cartridge_info($z) {
 	'<div id="zayav-cartridge-info">'.
 		'<div id="dopLinks">'.
 			'<a class="link info sel">Информация</a>'.
-			'<a class="link">Редактирование</a>'.
+			'<a class="link" id="edit">Редактирование</a>'.
 			'<a class="link _accrual-add">Начислить</a>'.
 			'<a class="link _income-add">Принять платёж</a>'.
 			'<a class="link hist">История</a>'.
