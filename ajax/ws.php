@@ -733,30 +733,6 @@ switch(@$_POST['op']) {
 
 		jsonSuccess($send);
 		break;
-	case 'zayav_money_update':
-		if(!$zayav_id = _num($_POST['zayav_id']))
-			jsonError();
-
-		$sql = "SELECT * FROM `zayav` WHERE `ws_id`=".WS_ID." AND !`deleted` AND `id`=".$zayav_id;
-		if(!$z = query_assoc($sql))
-			jsonError();
-
-		$send = zayavBalansUpdate($zayav_id);
-
-		$expense = zayav_expense_spisok($z, 'all');
-		$send['html'] = utf8($expense['html']);
-		foreach($expense['array'] as $n => $r)
-			$expense['array'][$n][1] = utf8($expense['array'][$n][1]);
-		$send['array'] = $expense['array'];
-		$send['acc_sum'] = utf8(zayav_acc_sum($z));
-
-		//подсчёт начисления зп для сотрудника
-		$acc_sum = query_value("SELECT SUM(`sum`) FROM `accrual` WHERE !`deleted` AND `zayav_id`=".$zayav_id);
-		$expense_sum = query_value("SELECT SUM(`sum`) FROM `zayav_expense` WHERE `zayav_id`=".$zayav_id." AND `category_id`!=1");
-		$send['worker_zp'] = round(($acc_sum - $expense_sum) * 0.3);
-
-		jsonSuccess($send);
-		break;
 	case 'zayav_executer_change'://изменение исполнителя заявки
 		if(!$zayav_id = _num($_POST['zayav_id']))
 			jsonError();

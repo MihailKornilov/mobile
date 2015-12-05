@@ -250,28 +250,6 @@ var scannerWord = '',
 			}
 		}, 'json');
 	},
-	zayavMoneyUpdate = function() {//обновление информации о платежах
-		var send = {
-			op:'zayav_money_update',
-			zayav_id:ZAYAV.id
-		};
-		$.post(AJAX_MAIN, send, function(res) {
-			if(res.success) {
-				$('b.acc').html(res.acc);
-				$('.acc_tr')[(!res.acc ? 'add' : 'remove') + 'Class']('dn');
-				$('b.op').html(res.opl);
-				$('.op_tr')[(!res.opl ? 'add' : 'remove') + 'Class']('dn');
-				$('.dopl')
-					[(!res.diff ? 'add' : 'remove') + 'Class']('dn')
-					.html((res.diff > 0 ? '+' : '') + res.diff);
-				//обновление расходов по заявке
-				$('.ze-spisok').remove();
-				$('#ze_acc').html(res.acc_sum).after(res.html);
-				ZAYAV.expense = res.array;
-				ZAYAV.worker_zp = res.worker_zp;
-			}
-		}, 'json');
-	},
 	zayavDevSelect = function(dev) {
 		modelImageGet(dev);
 		if(dev.device_id == 0) {

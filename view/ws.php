@@ -783,6 +783,7 @@ function zayavBalansUpdate($zayav_id) {//ќбновление баланса за€вки
 	if(empty($zayav_id))
 		return;
 
+	//начислени€
 	$sql = "SELECT IFNULL(SUM(`sum`),0)
 			FROM `_money_accrual`
 			WHERE `app_id`=".APP_ID."
@@ -791,6 +792,7 @@ function zayavBalansUpdate($zayav_id) {//ќбновление баланса за€вки
 			  AND `zayav_id`=".$zayav_id;
 	$accrual = query_value($sql, GLOBAL_MYSQL_CONNECT);
 
+	//платежи
 	$sql = "SELECT IFNULL(SUM(`sum`),0)
 			FROM `_money_income`
 			WHERE `app_id`=".APP_ID."
@@ -799,6 +801,7 @@ function zayavBalansUpdate($zayav_id) {//ќбновление баланса за€вки
 			  AND `zayav_id`=".$zayav_id;
 	$income = query_value($sql, GLOBAL_MYSQL_CONNECT);
 
+	//возвраты
 	$sql = "SELECT IFNULL(SUM(`sum`),0)
 			FROM `_money_refund`
 			WHERE `app_id`=".APP_ID."
@@ -809,9 +812,19 @@ function zayavBalansUpdate($zayav_id) {//ќбновление баланса за€вки
 
 	$income -= $refund;
 
+	//наличие счетов
+	$sql = "SELECT COUNT(`id`)
+			FROM `_schet`
+			WHERE `app_id`=".APP_ID."
+			  AND `ws_id`=".WS_ID."
+			  AND !`deleted`
+			  AND `zayav_id`=".$zayav_id;
+	$schet = query_value($sql, GLOBAL_MYSQL_CONNECT);
+
 	$sql = "UPDATE `zayav`
 			SET `accrual_sum`=".$accrual.",
-				`oplata_sum`=".$income."
+				`oplata_sum`=".$income.",
+				`schet`=".$schet."
 			WHERE `ws_id`=".WS_ID."
 			  AND `id`=".$zayav_id;
 	query($sql);
@@ -834,10 +847,6 @@ function zayav_info() {
 
 	if(!$zayav_id = _num(@$_GET['id']))
 		return _err('—траницы не существует');
-
-	//”становка id за€вки, если переход со списка за€вок
-	if(!empty($_COOKIE['zback_spisok']))
-		setcookie('zback_info', $zayav_id, time() + 3600, '/');
 
 	$sql = "SELECT *
 			FROM `zayav`

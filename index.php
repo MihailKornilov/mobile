@@ -9,10 +9,6 @@ if(!WS_ID) {
 	die(_header().$html._footer());
 }
 
-//сброс нахождения в списке заявок
-setcookie('zback_spisok', '', time() - 3600, '/');
-setcookie('zback_info', '', time() - 3600, '/');
-
 
 
 $html = _header();
@@ -31,38 +27,9 @@ switch($_GET['p']) {
 					$v['serial'] = strtoupper(htmlspecialchars(trim($_GET['serial'])));
 				$html .= zayav_add($v);
 				break;
-			case 'cartridge':
-				if(!SERVIVE_CARTRIDGE)
-					header('Location:'.URL.'&p=zayav');
-
-				$v = array();
-				foreach($_COOKIE as $k => $val) {
-					$arr = explode(VIEWER_ID.'_cart_', $k);
-					if(isset($arr[1]))
-						$v[$arr[1]] = $val;
-				}
-
-				$html .= zayav_cartridge($v);
-				break;
+			case 'cartridge': $html .= zayav_cartridge(_hashFilter('cartridge')); break;
 			case 'info': $html .= zayav_info(); break;
-			default:
-				setcookie('zback_spisok', 1, time() + 3600, '/');
-				$v = array();
-				if(HASH_VALUES) {
-					$ex = explode('.', HASH_VALUES);
-					foreach($ex as $r) {
-						$arr = explode('=', $r);
-						$v[$arr[0]] = $arr[1];
-					}
-				} else {
-					foreach($_COOKIE as $k => $val) {
-						$arr = explode(APP_ID.'_'.VIEWER_ID.'_zayav_', $k);
-						if(isset($arr[1]))
-							$v[$arr[1]] = $val;
-					}
-				}
-				$v['find'] = unescape(@$v['find']);
-				$html .= zayav_list($v);
+			default: $html .= zayav_list(_hashFilter('zayav'));
 		}
 		break;
 	case 'tovar':
