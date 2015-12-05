@@ -905,13 +905,13 @@ function zayav_info() {
 	'</script>'.
 	'<div id="zayav-info">'.
 		'<div id="dopLinks">'.
-			'<a class="link info sel">Информация</a>'.
+			'<a class="link a-page sel">Информация</a>'.
 			'<a class="link zedit">Редактирование</a>'.
 			'<a class="link _accrual-add">Начислить</a>'.
 			'<a class="link _income-add">Принять платёж</a>'.
-			'<a class="link hist">История</a>'.
+			'<a class="link a-page">История</a>'.
 		'</div>'.
-		'<table class="itab">'.
+		'<table class="page">'.
 			'<tr class="z-info"><td id="left">'.
 				'<div class="headName">Заявка №'.$z['nomer'].'<input type="hidden" id="zayav-action" /></div>'.
 				'<table class="tabInfo">'.
@@ -960,10 +960,13 @@ function zayav_info() {
 				'</div>'.
 				'<div id="zpSpisok">'.zayav_zp($z).'</div>'.
 
-			'<tr class="z-hist">'.
-				'<td><div class="headName">Заявка №'.$z['nomer'].' - история действий</div>'.
-					 $history['spisok'].
 		'</table>'.
+
+		'<div class="page dn">'.
+			'<div class="headName">Заявка №'.$z['nomer'].' - история действий</div>'.
+			$history['spisok'].
+		'</div>'.
+
 	'</div>';
 }//zayav_info()
 function zayav_kvit($zayav_id) {
@@ -1251,11 +1254,11 @@ function zayav_cartridge_info($z) {
 
 	'<div id="zayav-cartridge-info">'.
 		'<div id="dopLinks">'.
-			'<a class="link info sel">Информация</a>'.
+			'<a class="link a-page sel">Информация</a>'.
 			'<a class="link" id="edit">Редактирование</a>'.
 			'<a class="link _accrual-add">Начислить</a>'.
 			'<a class="link _income-add">Принять платёж</a>'.
-			'<a class="link hist">История</a>'.
+			'<a class="link a-page">История</a>'.
 		'</div>'.
 
 		'<div class="page">'.

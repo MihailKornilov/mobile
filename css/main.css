@@ -208,16 +208,11 @@
 
 
 /* Информация о заявке */
-#zayav-info .itab{width:100%;border-spacing:10px}
-#zayav-info .h .z-info,#zayav-info .itab:not(.h) .z-hist{display:none}
-#zayav-info .z-hist .result{font-weight:normal}
+#zayav-info table.page{width:100%;border-spacing:10px}
+#zayav-info div.page{margin:10px}
 #zayav-info #left{vertical-align:top}
 #zayav-info .headName{margin:0;padding:4px 3px}
 #zayav-info .headName ._dropdown{float:right}
-#zayav-info .img_print{float:right}
-#zayav-info .img_word{float:right}
-#zayav-info .img_xls{float:right}
-#zayav-info .img_doc{float:right;margin-top:2px}
 #zayav-info .tabInfo{margin:2px 10px 15px 4px;border-spacing:8px}
 #zayav-info .label{width:75px}
 #zayav-info .kvit_defect{color:#777}

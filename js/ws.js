@@ -1804,6 +1804,13 @@ $(document)
 			});
 		}
 		if($('#zayav-info').length) {
+			$('.a-page').click(function () {
+				var t = $(this);
+				t.parent().find('.link').removeClass('sel');
+				var i = t.addClass('sel').index();
+				$('.page:first')[(i ? 'add' : 'remove') + 'Class']('dn');
+				$('.page:last')[(!i ? 'add' : 'remove') + 'Class']('dn');
+			});
 			$('#zayav-action')._dropdown({
 				head:'Действие',
 				nosel:1,
@@ -1846,16 +1853,6 @@ $(document)
 						case 9: _remindAdd(); break;
 					}
 				}
-			});
-			$('.hist').click(function () {
-				$('#dopLinks .sel').removeClass('sel');
-				$(this).addClass('sel');
-				$('.itab').addClass('h');
-			});
-			$('.info').click(function () {
-				$('#dopLinks .sel').removeClass('sel');
-				$(this).addClass('sel');
-				$('.itab').removeClass('h');
 			});
 			$('#executer_id')._dropdown({
 				title0: 'не указан',
@@ -1947,6 +1944,13 @@ $(document)
 			$('#noschet')._check(cartridgeSpisok);
 		}
 		if($('#zayav-cartridge-info').length) {
+			$('.a-page').click(function () {
+				var t = $(this);
+				t.parent().find('.link').removeClass('sel');
+				var i = t.addClass('sel').index();
+				$('.page:first')[(i ? 'add' : 'remove') + 'Class']('dn');
+				$('.page:last')[(!i ? 'add' : 'remove') + 'Class']('dn');
+			});
 			$('#zayav-action')._dropdown({
 				head:'Действие',
 				nosel:1,
