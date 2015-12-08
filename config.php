@@ -12,6 +12,7 @@ require_once(DOCUMENT_ROOT.'/view/ws_setup.php');
 require_once(DOCUMENT_ROOT.'/view/sa.php');
 
 
+
 //глобальные константы для конкретной организации
 if(WS_ID) {
 	$sql = "SELECT * FROM `setup` WHERE `ws_id`=".WS_ID." LIMIT 1";
@@ -20,3 +21,7 @@ if(WS_ID) {
 	define('WS_TYPE', $setup['ws_type_id']);
 	define('SERVIVE_CARTRIDGE', $setup['service_cartridge']);
 }
+
+
+
+require_once API_PATH.'/nofunc.php';

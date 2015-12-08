@@ -271,7 +271,7 @@ set_time_limit(10);
 if(!$id = _num($_GET['id']))
 	die(win1251('Неверный id заявки.'));
 
-$sql = "SELECT * FROM `zayav` WHERE `ws_id`=".WS_ID." AND !`deleted` AND `zayav_status` AND `id`=".$id;
+$sql = "SELECT * FROM `zayav` WHERE `ws_id`=".WS_ID." AND !`deleted` AND `status` AND `id`=".$id;
 if(!$z = query_assoc($sql))
 	die(win1251('Заявки не существует.'));
 

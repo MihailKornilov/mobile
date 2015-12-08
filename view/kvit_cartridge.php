@@ -210,7 +210,7 @@ $sql = "SELECT *
 		WHERE `ws_id`=".WS_ID."
 		  AND !`deleted`
 		  AND `cartridge`
-		  AND `zayav_status`
+		  AND `status`
 		  AND `id`=".$id;
 if(!$z = query_assoc($sql))
 	die(win1251('Заявки не существует.'));

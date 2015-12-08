@@ -427,13 +427,13 @@ var scannerWord = '',
 		if(!window.CLIENT)
 			CLIENT = {
 				id:0,
-				fio:''
+				name:''
 			};
 		var html =
 				'<table id="cartridge-add-tab">' +
 					'<tr><td class="label">Клиент:' +
 						'<td><input type="hidden" id="client_id" value="' + CLIENT.id + '" />' +
-							'<b>' + CLIENT.fio + '</b>' +
+							'<b>' + CLIENT.name + '</b>' +
 					'<tr><td class="label"><b>Количество картриджей:</b><td><input type="text" id="count" /> шт.' +
 					'<tr><td class="label topi">Расчёт:<td><input type="hidden" id="pay_type" />' +
 					'<tr><td class="label topi">Список картриджей:<td id="crt">' +

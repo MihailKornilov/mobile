@@ -59,13 +59,13 @@ function statistic() {
 	//Выполненные заявки
 	$sql = "SELECT
 				COUNT(`id`) AS `count`,
-				DATE_FORMAT(`zayav_status_dtime`, '%Y-%m-%d') AS `day`
+				DATE_FORMAT(`status_dtime`, '%Y-%m-%d') AS `day`
 			FROM `zayav`
 			WHERE `ws_id`=".WS_ID."
 			  AND !`deleted`
-			  AND `zayav_status`=2
-			GROUP BY DATE_FORMAT(`zayav_status_dtime`, '%Y-%m-%d')
-			ORDER BY `zayav_status_dtime`";
+			  AND `status`=2
+			GROUP BY DATE_FORMAT(`status_dtime`, '%Y-%m-%d')
+			ORDER BY `status_dtime`";
 	$q = query($sql);
 	$zayav_ok = array();
 	while($r = mysql_fetch_assoc($q))
@@ -74,13 +74,13 @@ function statistic() {
 	//Отменённые заявки
 	$sql = "SELECT
 				COUNT(`id`) AS `count`,
-				DATE_FORMAT(`zayav_status_dtime`, '%Y-%m-%d') AS `day`
+				DATE_FORMAT(`status_dtime`, '%Y-%m-%d') AS `day`
 			FROM `zayav`
 			WHERE `ws_id`=".WS_ID."
 			  AND !`deleted`
-			  AND `zayav_status`=3
-			GROUP BY DATE_FORMAT(`zayav_status_dtime`, '%Y-%m-%d')
-			ORDER BY `zayav_status_dtime`";
+			  AND `status`=3
+			GROUP BY DATE_FORMAT(`status_dtime`, '%Y-%m-%d')
+			ORDER BY `status_dtime`";
 	$q = query($sql);
 	$zayav_fail = array();
 	while($r = mysql_fetch_assoc($q))
@@ -121,13 +121,13 @@ function statistic() {
 	//Выполненные заявки - месяц
 	$sql = "SELECT
 				COUNT(`id`) AS `count`,
-				DATE_FORMAT(`zayav_status_dtime`, '%Y-%m-15') AS `mon`
+				DATE_FORMAT(`status_dtime`, '%Y-%m-15') AS `mon`
 			FROM `zayav`
 			WHERE `ws_id`=".WS_ID."
 			  AND !`deleted`
-			  AND `zayav_status`=2
-			GROUP BY DATE_FORMAT(`zayav_status_dtime`, '%Y-%m')
-			ORDER BY `zayav_status_dtime`";
+			  AND `status`=2
+			GROUP BY DATE_FORMAT(`status_dtime`, '%Y-%m')
+			ORDER BY `status_dtime`";
 	$q = query($sql);
 	$zayavmon_ok = array();
 	while($r = mysql_fetch_assoc($q))
@@ -136,13 +136,13 @@ function statistic() {
 	//Отменённые заявки - месяц
 	$sql = "SELECT
 				COUNT(`id`) AS `count`,
-				DATE_FORMAT(`zayav_status_dtime`, '%Y-%m-15') AS `mon`
+				DATE_FORMAT(`status_dtime`, '%Y-%m-15') AS `mon`
 			FROM `zayav`
 			WHERE `ws_id`=".WS_ID."
 			  AND !`deleted`
-			  AND `zayav_status`=3
-			GROUP BY DATE_FORMAT(`zayav_status_dtime`, '%Y-%m')
-			ORDER BY `zayav_status_dtime`";
+			  AND `status`=3
+			GROUP BY DATE_FORMAT(`status_dtime`, '%Y-%m')
+			ORDER BY `status_dtime`";
 	$q = query($sql);
 	$zayavmon_fail = array();
 	while($r = mysql_fetch_assoc($q))

@@ -1,54 +1,6 @@
 <?php
 // ---===! zayav !===--- Секция заявок
 
-function _zayavStatus($id=false) {
-	$arr = array(
-		'0' => array(
-			'name' => 'Любой статус',
-			'color' => 'ffffff'
-		),
-		'1' => array(
-			'name' => 'Ожидает выполнения',
-			'color' => 'E8E8FF'
-		),
-		'2' => array(
-			'name' => 'Выполнено!',
-			'color' => 'CCFFCC'
-		),
-		'3' => array(
-			'name' => 'Завершить не удалось',
-			'color' => 'FFDDDD'
-		)
-	);
-	return $id ? $arr[$id] : $arr;
-}//_zayavStatus()
-function _zayavStatusName($id=false) {
-	$status = _zayavStatus();
-	if($id)
-		return $status[$id]['name'];
-	$send = array();
-	foreach($status as $id => $r)
-		$send[$id] = $r['name'];
-	return $send;
-}//_zayavStatusName()
-function _zayavStatusColor($id=false) {
-	$status = _zayavStatus();
-	if($id)
-		return $status[$id]['color'];
-	$send = array();
-	foreach($status as $id => $r)
-		$send[$id] = $r['color'];
-	return $send;
-}//_zayavStatusColor()
-function zayavStatusButton($z, $class) {
-	return
-		'<div id="zayav-status-button">'.
-			'<h1 style="background-color:#'._zayavStatusColor($z['zayav_status']).'" class="'.$class.'">'.
-				_zayavStatusName($z['zayav_status']).
-			'</h1>'.
-			'<span>от '.FullDataTime($z['zayav_status_dtime'], 1).'</span>'.
-		'</div>';
-}//zayavStatusButton()
 function zayavStatusChange($zayav_id, $status) {//изменение статуса заявки и внесение истории (для внесения начисления)
 	$sql = "SELECT *
 			FROM `zayav`
@@ -57,16 +9,16 @@ function zayavStatusChange($zayav_id, $status) {//изменение статуса заявки и вне
 			  AND `id`=".$zayav_id;
 	$z = query_assoc($sql);
 
-	if($z['zayav_status'] != $status) {
+	if($z['status'] != $status) {
 		$sql = "UPDATE `zayav`
-				SET `zayav_status`=".$status.",`zayav_status_dtime`=CURRENT_TIMESTAMP
+				SET `status`=".$status.",`status_dtime`=CURRENT_TIMESTAMP
 				WHERE `id`=".$zayav_id;
 		query($sql);
 		_history(array(
 			'type_id' => 71,
 			'client_id' => $z['client_id'],
 			'zayav_id' => $zayav_id,
-			'v1' => $z['zayav_status'],
+			'v1' => $z['status'],
 			'v2' => $status,
 		));
 	}
@@ -105,7 +57,7 @@ function _zayavValToList($arr) {//вставка данных заявок в массив по zayav_id
 						'<div class="tooltip">'._zayavTooltip($r, $arr[$id]).'</div>'.
 					'</a>',
 				'zayav_color' => //подсветка заявки на основании статуса
-					'<a href="'.URL.'&p=zayav&d=info&id='.$r['id'].'" class="zayav_link color" style="background-color:#'._zayavStatusColor($r['zayav_status']).'">'.
+					'<a href="'.URL.'&p=zayav&d=info&id='.$r['id'].'" class="zayav_link color"'._zayavStatus($r['status'], 'bg').'>'.
 						'№'.$r['nomer'].
 						'<div class="tooltip">'._zayavTooltip($r, $arr[$id]).'</div>'.
 					'</a>',
@@ -125,7 +77,7 @@ function _zayavCountToClient($spisok) {//прописывание квадратиков с количеством 
 				COUNT(`id`) AS `count`
 			FROM `zayav`
 			WHERE `ws_id`=".WS_ID."
-			  AND `zayav_status`
+			  AND `status`
 			  AND `client_id` IN (".implode(',', array_keys($spisok)).")
 			GROUP BY `client_id`";
 	$q = query($sql);
@@ -138,7 +90,7 @@ function _zayavCountToClient($spisok) {//прописывание квадратиков с количеством 
 				COUNT(`id`) AS `count`
 			FROM `zayav`
 			WHERE `ws_id`=".WS_ID."
-			  AND `zayav_status`=1
+			  AND `status`=1
 			  AND `client_id` IN (".$ids.")
 			GROUP BY `client_id`";
 	$q = query($sql);
@@ -151,7 +103,7 @@ function _zayavCountToClient($spisok) {//прописывание квадратиков с количеством 
 				COUNT(`id`) AS `count`
 			FROM `zayav`
 			WHERE `ws_id`=".WS_ID."
-			  AND `zayav_status`=2
+			  AND `status`=2
 			  AND `client_id` IN (".$ids.")
 			GROUP BY `client_id`";
 	$q = query($sql);
@@ -164,7 +116,7 @@ function _zayavCountToClient($spisok) {//прописывание квадратиков с количеством 
 				COUNT(`id`) AS `count`
 			FROM `zayav`
 			WHERE `ws_id`=".WS_ID."
-			  AND `zayav_status`=3
+			  AND `status`=3
 			  AND `client_id` IN (".$ids.")
 			GROUP BY `client_id`";
 	$q = query($sql);
@@ -178,8 +130,8 @@ function _zayavTooltip($z, $v) {
 		'<table>'.
 			'<tr><td><div class="image">'._zayavImg($z).'</div>'.
 				'<td class="inf">'.
-					'<div style="background-color:#'._zayavStatusColor($z['zayav_status']).'" '.
-						'class="tstat'._tooltip('Статус заявки: '._zayavStatusName($z['zayav_status']), -7, 'l').
+					'<div'._zayavStatus($z['status'], 'bg').' '.
+						'class="tstat'._tooltip('Статус заявки: '._zayavStatus($z['status']), -7, 'l').
 					'</div>'.
 					_deviceName($z['base_device_id']).
 					'<div class="tname">'._vendorName($z['base_vendor_id'])._modelName($z['base_model_id']).'</div>'.
@@ -205,7 +157,7 @@ function _zayavBaseDeviceIds($client_id=0) { //список id устройств, которые испо
 			FROM `zayav` `z` USE INDEX(`i_zayav_status`),
 				 `base_device` `b`
 			WHERE `b`.`id`=`z`.`base_device_id`
-			  AND `z`.`zayav_status`
+			  AND `z`.`status`
 			  AND `z`.`ws_id`=".WS_ID."
 			  ".($client_id ? "AND `z`.`client_id`=".$client_id : '')."
 			GROUP BY `b`.`id`
@@ -221,7 +173,7 @@ function _zayavBaseVendorIds($client_id=0) { //список id производителей, которые
 			FROM `zayav` `z`,
 				 `base_vendor` `b`
 			WHERE `b`.`id`=`z`.`base_vendor_id`
-			  AND `z`.`zayav_status`
+			  AND `z`.`status`
 			  AND `z`.`ws_id`=".WS_ID."
 			  ".($client_id ? "AND `z`.`client_id`=".$client_id : '')."
 			GROUP BY `b`.`id`
@@ -237,7 +189,7 @@ function _zayavBaseModelIds($client_id=0) { //список id производителей, которые 
 			FROM `zayav` `z`,
 				 `base_model` `b`
 			WHERE `b`.`id`=`z`.`base_model_id`
-			  AND `z`.`zayav_status`
+			  AND `z`.`status`
 			  AND `z`.`ws_id`=".WS_ID."
 			  ".($client_id ? "AND `z`.`client_id`=".$client_id : '')."
 			GROUP BY `b`.`id`";
@@ -295,7 +247,7 @@ function _zayavFinishCalendar($selDay='0000-00-00', $mon='', $zayav_spisok=0) {
 			FROM `zayav`
 			WHERE `ws_id`=".WS_ID."
 			  AND !`deleted`
-			  AND `zayav_status`=1
+			  AND `status`=1
 			  AND `day_finish` LIKE ('".$mon."%')
 			GROUP BY DATE_FORMAT(`day_finish`,'%d')";
 	$q = query($sql);
@@ -531,7 +483,8 @@ function zayav_spisok($v) {
 	$cond = "`ws_id`=".WS_ID."
 		 AND !`deleted`
 		 AND !`cartridge`
-		 AND `zayav_status`";
+		 AND `status`";
+	$nomer = 0;
 
 	if($filter['find']) {
 		$engRus = _engRusChar($filter['find']);
@@ -547,7 +500,7 @@ function zayav_spisok($v) {
 		if($filter['client_id'])
 			$cond .= " AND `client_id`=".$filter['client_id'];
 		if($filter['status']) {
-			$cond .= " AND `zayav_status`=".$filter['status'];
+			$cond .= " AND `status`=".$filter['status'];
 			if($filter['status'] == 1 && $filter['finish'] != '0000-00-00')
 				$cond .= " AND `day_finish`='".$filter['finish']."'";
 		}
@@ -566,7 +519,7 @@ function zayav_spisok($v) {
 		if($filter['model'])
 			$cond .= " AND `base_model_id`=".$filter['model'];
 		if($filter['diagnost'])
-			$cond .= " AND `zayav_status`=1 AND `diagnost`";
+			$cond .= " AND `status`=1 AND `diagnost`";
 		if($filter['place']) {
 			$cond .= " AND `device_place`=".$filter['place'];
 
@@ -578,9 +531,9 @@ function zayav_spisok($v) {
 
 	$zayav = array();
 	$images = array();
-	if(isset($nomer)) {
-		$sql = "SELECT * FROM `zayav` WHERE `ws_id`=".WS_ID." AND `zayav_status` AND `nomer`=".$nomer;
-		if($r = mysql_fetch_assoc(query($sql))) {
+	if($nomer) {
+		$sql = "SELECT * FROM `zayav` WHERE `ws_id`=".WS_ID." AND `status` AND `nomer`=".$nomer;
+		if($r = query_assoc($sql)) {
 			$all++;
 			$limit--;
 			$r['nomer_find'] = 1;
@@ -605,24 +558,17 @@ function zayav_spisok($v) {
 		'filter' => $filter
 	);
 
-	if(!ZAYAV_PAGE1)
-		setcookie('zback_spisok_page', $page, time() + 3600, '/');
-	if(!empty($_COOKIE['zback_info']) && ZAYAV_PAGE1 && !empty($_COOKIE['zback_spisok_page']) && $_COOKIE['zback_spisok_page'] > 1) {
-		setcookie('zback_info', '', time() - 3600, '/');
-		$page = $_COOKIE['zback_spisok_page'];
-		$limit *= $_COOKIE['zback_spisok_page'];
-	}
 	$sql = "SELECT
 	            *,
 				'' AS `note`,
 				'' AS `schet`
 			FROM `zayav`
 			WHERE ".$cond."
-			ORDER BY `".($filter['sort'] == 2 ? 'zayav_status_dtime' : 'dtime_add')."` ".($filter['desc'] ? 'ASC' : 'DESC')."
+			ORDER BY `".($filter['sort'] == 2 ? 'status_dtime' : 'dtime_add')."` ".($filter['desc'] ? 'ASC' : 'DESC')."
 			LIMIT "._startLimit($filter);
 	$q = query($sql);
 	while($r = mysql_fetch_assoc($q)) {
-		if(isset($nomer) && $nomer == $r['nomer'])
+		if($nomer == $r['nomer'])
 			continue;
 		$zayav[$r['id']] = $r;
 		$images[] = 'zayav'.$r['id'];
@@ -690,7 +636,7 @@ function zayav_spisok($v) {
 		}
 		$diff = round($r['accrual_sum'] - $r['oplata_sum'], 2);
 		$send['spisok'] .=
-			'<div class="zayav_unit" id="u'.$id.'" style="background-color:#'._zayavStatusColor($r['zayav_status']).'" val="'.$id.'">'.
+			'<div class="zayav_unit" id="u'.$id.'"'._zayavStatus($r['status'], 'bg').' val="'.$id.'">'.
 				'<table width="100%">'.
 					'<tr><td valign=top>'.
 						'<h2'.(isset($r['nomer_find']) ? ' class="finded"' : '').'>#'.$r['nomer'].'</h2>'.
@@ -702,7 +648,7 @@ function zayav_spisok($v) {
    (!$filter['client_id'] ? '<tr><td class="label">Клиент:<td>'.$r['client_go'] : '').
 							'<tr><td class="label">Дата подачи:'.
 								'<td>'.FullData($r['dtime_add'], 1).
-			($r['zayav_status'] == 2 ? '<b class="date-ready'._tooltip('Дата выполнения', -47).FullData($r['zayav_status_dtime'], 1, 1).'</b>' : '').
+			($r['status'] == 2 ? '<b class="date-ready'._tooltip('Дата выполнения', -47).FullData($r['status_dtime'], 1, 1).'</b>' : '').
 									($r['accrual_sum'] || round($r['oplata_sum'], 2) ?
 										'<div class="balans'.($diff ? ' diff' : '').'">'.
 											'<span class="acc'._tooltip('Начислено', -39).$r['accrual_sum'].'</span>/'.
@@ -732,7 +678,7 @@ function zayav_list($v) {
 	$data = zayav_spisok($v);
 	$v = $data['filter'];
 
-	$status = _zayavStatusName();
+	$status = _zayavStatus();
 	$status[1] .= '<div id="srok">Срок: '._zayavFinish($v['finish']).'</div>';
 
 	return
@@ -772,8 +718,7 @@ function zayav_list($v) {
 			'var Z={'.
 				'device_ids:['._zayavBaseDeviceIds().'],'.
 				'vendor_ids:['._zayavBaseVendorIds().'],'.
-				'model_ids:['._zayavBaseModelIds().'],'.
-				'cookie_id:'.(!empty($_COOKIE['zback_info']) ? $_COOKIE['zback_info'] : 0).
+				'model_ids:['._zayavBaseModelIds().']'.
 			'};'.
 		'</script>'.
 	'</div>';
@@ -852,7 +797,7 @@ function zayav_info() {
 			FROM `zayav`
 			WHERE `ws_id`=".WS_ID."
 			  AND !`deleted`
-			  AND `zayav_status`
+			  AND `status`
 			  AND `id`=".$zayav_id;
 	if(!$z = mysql_fetch_assoc(query($sql)))
 		return _err('Заявки не существует.');
@@ -863,13 +808,12 @@ function zayav_info() {
 	define('MODEL', _vendorName($z['base_vendor_id'])._modelName($z['base_model_id']));
 	define('DOPL', $z['accrual_sum'] - $z['oplata_sum']);
 
-	$status = _zayavStatusName();
+	$status = _zayavStatus();
 	unset($status[0]);
 	$history = _history(array('zayav_id'=>$zayav_id));
 
 	return '<script type="text/javascript">'.
-		'var STATUS='._selJson($status).','.
-		'ZAYAV={'.
+		'var ZAYAV={'.
 			'id:'.$zayav_id.','.
 			'nomer:'.$z['nomer'].','.
 			'head:"№<b>'.$z['nomer'].'</b>",'.
@@ -878,7 +822,8 @@ function zayav_info() {
 			'device:'.$z['base_device_id'].','.
 			'vendor:'.$z['base_vendor_id'].','.
 			'model:'.$z['base_model_id'].','.
-			'status:'.$z['zayav_status'].','.
+			'status:'.$z['status'].','.
+			'status_sel:'._selJson($status).','.
 			'dev_place:'.$z['device_place'].','.
 			'imei:"'.$z['imei'].'",'.
 			'serial:"'.$z['serial'].'",'.
@@ -923,10 +868,10 @@ function zayav_info() {
                     '<tr><td class="label">Срок:<td>'._zayavFinish($z['day_finish']).
                     '<tr><td class="label">Исполнитель:'.
 						'<td id="executer_td"><input type="hidden" id="executer_id" value="'.$z['executer_id'].'" />'.
-  ($z['zayav_status'] == 1 && $z['diagnost'] ?
+  ($z['status'] == 1 && $z['diagnost'] ?
 					'<tr><td colspan="2">'._button('diagnost-ready', 'Внести результаты диагностики', 300)
   : '').
-					'<tr><td class="label">Статус:<td>'.zayavStatusButton($z, 'status_place').
+					'<tr><td class="label">Статус:<td>'._zayavStatusButton($z, 'status_place').
 					'<tr class="acc_tr'.($z['accrual_sum'] ? '' : ' dn').'"><td class="label">Начислено: <td><b class="acc">'.$z['accrual_sum'].'</b> руб.'.
 					'<tr class="op_tr'.(round($z['oplata_sum'], 2) ? '' : ' dn').'"><td class="label">Оплачено:	<td><b class="op">'.round($z['oplata_sum'], 2).'</b> руб.'.
 						'<span class="dopl'.(DOPL ? '' : ' dn')._tooltip('Необходимая доплата', -60).(DOPL > 0 ? '+' : '').DOPL.'</span>'.
@@ -1070,8 +1015,6 @@ function zayav_cartridge($v) {
 	$data = zayav_cartridge_spisok($v);
 	$v = $data['filter'];
 
-	$status = _zayavStatusName();
-
 	return
 	'<div id="zayav-cartridge">'.
 
@@ -1091,7 +1034,7 @@ function zayav_cartridge($v) {
 					_radio('sort', array(1=>'По дате добавления',2=>'По обновлению статуса'), $v['sort']).
 					_check('desc', 'Обратный порядок', $v['desc']).
 					'<div class="findHead">Статус заявки</div>'.
-					_rightLink('status', $status, $v['status']).
+					_rightLink('status', _zayavStatus(), $v['status']).
 					'<div class="findHead">Расчёт</div>'.
 					_radio('paytype', array(0=>'Все заявки',1=>'Наличный',2=>'Безналиный'), $v['paytype'], 1).
 					_check('noschet', 'Счета не выписаны', $v['noschet']).
@@ -1139,7 +1082,7 @@ function zayav_cartridge_spisok($v=array()) {
 	if($filter['client_id'])
 		$cond .= " AND `client_id`=".$filter['client_id'];
 	if($filter['status'])
-		$cond .= " AND `zayav_status`=".$filter['status'];
+		$cond .= " AND `status`=".$filter['status'];
 	if($filter['paytype'])
 		$cond .= " AND `pay_type`=".$filter['paytype'];
 	if($filter['noschet'])
@@ -1176,7 +1119,7 @@ function zayav_cartridge_spisok($v=array()) {
 				'' AS `schet`
 			FROM `zayav`
 			WHERE ".$cond."
-			ORDER BY `".($filter['sort'] == 2 ? 'zayav_status_dtime' : 'dtime_add')."` ".($filter['desc'] ? 'ASC' : 'DESC')."
+			ORDER BY `".($filter['sort'] == 2 ? 'status_dtime' : 'dtime_add')."` ".($filter['desc'] ? 'ASC' : 'DESC')."
 			LIMIT ".$start.",".$limit;
 	$q = query($sql);
 	while($r = mysql_fetch_assoc($q)) {
@@ -1198,7 +1141,7 @@ function zayav_cartridge_spisok($v=array()) {
 	foreach($zayav as $id => $r) {
 		$diff = round($r['accrual_sum'] - $r['oplata_sum'], 2);
 		$send['spisok'] .=
-		'<div class="zayav_unit" id="u'.$id.'" style="background-color:#'._zayavStatusColor($r['zayav_status']).'" val="'.$id.'">'.
+		'<div class="zayav_unit" id="u'.$id.'"'._zayavStatus($r['status'], 'bg').' val="'.$id.'">'.
 			'<h2>#'.$r['nomer'].'</h2>'.
 			'<a class="name">Картридж'.(count($r['cart']) > 1 ? 'и' : '').' '.implode(', ', $r['cart']).'</a>'.
 			'<table class="utab">'.
@@ -1232,7 +1175,7 @@ function zayav_cartridge_info($z) {
 	zayavCookie('set', 'cartridge');
 
 	$zayav_id = $z['id'];
-	$status = _zayavStatusName();
+	$status = _zayavStatus();
 	unset($status[0]);
 
 	$history = _history(array('zayav_id'=>$zayav_id));
@@ -1248,7 +1191,8 @@ function zayav_cartridge_info($z) {
 				'client_id:'.$z['client_id'].','.
 				'client_link:"'.addslashes(_clientVal($z['client_id'], 'link')).'",'.'cartridge_count:'.$z['cartridge_count'].','.
 				'pay_type:'.$z['pay_type'].','.
-				'status:'.$z['zayav_status'].
+				'status:'.$z['status'].','.
+				'status_sel:'._selJson($status).
 			'};'.
 	'</script>'.
 
@@ -1271,7 +1215,7 @@ function zayav_cartridge_info($z) {
 				'<tr><td class="label">Дата приёма:'.
 					'<td class="dtime_add'._tooltip('Заявку '.(_viewerAdded($z['viewer_id_add'])), -70).FullDataTime($z['dtime_add']).
                 '<tr><td class="label">Расчёт:<td>'._payType($z['pay_type']).
-				'<tr><td class="label">Статус:<td>'.zayavStatusButton($z, 'cartridge_status').
+				'<tr><td class="label">Статус:<td>'._zayavStatusButton($z, 'cartridge_status').
 				'<tr><td class="label">Количество:<td><b>'.$z['cartridge_count'].'</b> шт.'.
 				'<tr><td class="label top">Список:<td id="cart-tab">'.zayav_cartridge_info_tab($zayav_id).
 			'</table>'.

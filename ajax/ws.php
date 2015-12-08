@@ -183,8 +183,7 @@ switch(@$_POST['op']) {
 					`color_id`,
 					`color_dop`,
 
-					`zayav_status`,
-					`zayav_status_dtime`,
+					`status_dtime`,
 
 					`device_place`,
 
@@ -209,7 +208,6 @@ switch(@$_POST['op']) {
 					".$color.",
 					".$color_dop.",
 
-					1,
 					current_timestamp,
 
 					".$place_id.",
@@ -304,10 +302,8 @@ switch(@$_POST['op']) {
 	case 'zayav_spisok':
 		$_POST['find'] = win1251($_POST['find']);
 		$data = zayav_spisok($_POST);
-		if($data['filter']['page'] == 1) {
-			setcookie('zback_spisok_page', 1, time() + 3600, '/');
+		if($data['filter']['page'] == 1)
 			$send['all'] = utf8($data['result']);
-		}
 		$send['spisok'] = utf8($data['spisok']);
 		jsonSuccess($send);
 		break;
@@ -424,12 +420,12 @@ switch(@$_POST['op']) {
 		if(!$z = mysql_fetch_assoc(query($sql)))
 			jsonError();
 
-		if($z['zayav_status'] == $zayav_status)
+		if($z['status'] == $zayav_status)
 			jsonError();
 
 		$sql = "UPDATE `zayav`
-				SET `zayav_status`=".$zayav_status.",
-					`zayav_status_dtime`=CURRENT_TIMESTAMP
+				SET `status`=".$zayav_status.",
+					`status_dtime`=CURRENT_TIMESTAMP
 				WHERE `id`=".$zayav_id;
 		query($sql);
 
@@ -437,7 +433,7 @@ switch(@$_POST['op']) {
 			'type_id' => 71,
 			'client_id' => $z['client_id'],
 			'zayav_id' => $zayav_id,
-			'v1' => $z['zayav_status'],
+			'v1' => $z['status'],
 			'v2' => $zayav_status
 		));
 
@@ -630,7 +626,7 @@ switch(@$_POST['op']) {
 				FROM `zayav`
 				WHERE `ws_id`=".WS_ID."
 				  AND `nomer`=".$nomer."
-				  AND `zayav_status`
+				  AND `status`
 				LIMIT 1";
 		if(!$z = mysql_fetch_assoc(query($sql)))
 			$send['html'] = '<span class="zayavNomerTab">Заявка не найдена</span>';
@@ -901,8 +897,8 @@ switch(@$_POST['op']) {
 					`cartridge_count`,
 					`pay_type`,
 
-					`zayav_status`,
-					`zayav_status_dtime`,
+					`status`,
+					`status_dtime`,
 
 					`barcode`,
 					`viewer_id_add`
@@ -1148,12 +1144,12 @@ switch(@$_POST['op']) {
 		if(!$z = mysql_fetch_assoc(query($sql)))
 			jsonError();
 
-		if($z['zayav_status'] == $zayav_status)
+		if($z['status'] == $zayav_status)
 			jsonError();
 
 		$sql = "UPDATE `zayav`
-				SET `zayav_status`=".$zayav_status.",
-					`zayav_status_dtime`=CURRENT_TIMESTAMP
+				SET `status`=".$zayav_status.",
+					`status_dtime`=CURRENT_TIMESTAMP
 				WHERE `id`=".$zayav_id;
 		query($sql);
 
@@ -1161,7 +1157,7 @@ switch(@$_POST['op']) {
 			'type_id' => 71,
 			'client_id' => $z['client_id'],
 			'zayav_id' => $zayav_id,
-			'v1' => $z['zayav_status'],
+			'v1' => $z['status'],
 			'v2' => $zayav_status
 		));
 

@@ -100,7 +100,7 @@ function sa_device_spisok() {
 				`bd`.`id` AS `id`,
 				COUNT(`z`.`id`) AS `count`
 			FROM `base_device` AS `bd`,`zayav` AS `z`
-			WHERE `bd`.`id`=`z`.`base_device_id` AND `z`.`zayav_status`>0
+			WHERE `bd`.`id`=`z`.`base_device_id` AND `z`.`status`>0
 			GROUP BY `bd`.`id`";
 	$q = query($sql);
 	while($r = mysql_fetch_assoc($q))
@@ -176,7 +176,7 @@ function sa_vendor_spisok($device_id) {
 				 `zayav` AS `z`
 			WHERE `v`.`device_id`=".$device_id."
 			  AND `v`.`id`=`z`.`base_vendor_id`
-			  AND `z`.`zayav_status`>0
+			  AND `z`.`status`>0
 			GROUP BY `v`.`id`";
 	$q = query($sql);
 	while($r = mysql_fetch_assoc($q))
