@@ -79,19 +79,18 @@ function kvit_cut() {
 require_once '../config.php';
 
 if(!$id = _num($_GET['id']))
-	die(win1251('Неверный id квитанции.'));
+	die('Неверный id квитанции.');
 
 $sql = "SELECT * FROM `_ws` WHERE !`deleted` AND `app_id`=".APP_ID." AND `id`=".WS_ID;
 if(!$ws = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
-	die(win1251('Организации не существует.'));
+	die('Организации не существует.');
 
 $sql = "SELECT * FROM `zayav_kvit` WHERE `ws_id`=".WS_ID." AND `id`=".$id;
 if(!$k = query_assoc($sql))
-	die(win1251('Квитанции не существует.'));
+	die('Квитанции не существует.');
 
-$sql = "SELECT * FROM `zayav` WHERE `ws_id`=".WS_ID." AND !`deleted` AND `id`=".$k['zayav_id'];
-if(!$z = query_assoc($sql))
-	die(win1251('Заявки не существует.'));
+if(!$z = _zayavQuery($k['zayav_id']))
+	die('Заявки не существует.');
 
 define('BARCODE', '<img src="'.API_HTML.'/barcode/barcode.php?code='.$z['barcode'].'&encoding=ean&mode=gif" />');
 

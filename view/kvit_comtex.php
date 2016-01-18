@@ -271,12 +271,14 @@ set_time_limit(10);
 if(!$id = _num($_GET['id']))
 	die(win1251('Неверный id заявки.'));
 
-$sql = "SELECT * FROM `zayav` WHERE `ws_id`=".WS_ID." AND !`deleted` AND `status` AND `id`=".$id;
-if(!$z = query_assoc($sql))
+if(!$z = _zayavQuery($id))
 	die(win1251('Заявки не существует.'));
 
-$sql = "SELECT `txt` FROM `vk_comment` WHERE `status` AND `table_name`='zayav' AND `table_id`=".$id." AND !`parent_id` ORDER BY `id` DESC";
-$z['defect'] = query_value($sql);
+$z['defect'] = _note(array(
+	'last' => 1,
+	'p' => 'zayav',
+	'id' => $id
+));
 
 $book = new PHPExcel();
 $book->setActiveSheetIndex(0);
@@ -293,11 +295,10 @@ xls_comtex_rules();
 xls_comtex_rules(23, 31);
 
 header('Content-Type:application/vnd.ms-excel');
-header('Content-Disposition:attachment;filename="kvit_'.strftime('%Y-%m-%d').'.xls"');
+header('Content-Disposition:attachment;filename="kvit_'.$z['nomer'].'_'.strftime('%Y-%m-%d').'.xls"');
 $writer = PHPExcel_IOFactory::createWriter($book, 'Excel5');
 $writer->save('php://output');
 
-mysql_close();
 exit;
 
 

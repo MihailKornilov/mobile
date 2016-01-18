@@ -461,7 +461,11 @@ function zp_info($zp_id) {
 	'</div>';
 }//zp_info()
 function zp_move($zp_id, $page=1) {
-	$all = query_value("SELECT COUNT(`id`) FROM `zp_move` WHERE `ws_id`=".WS_ID." AND `zp_id`=".$zp_id);
+	$sql = "SELECT COUNT(`id`)
+			FROM `zp_move`
+			WHERE `ws_id`=".WS_ID."
+			  AND `zp_id`=".$zp_id;
+	$all = query_value($sql);
 	if(!$all)
 		return '<div class="unit">Движения запчасти нет.</div>';
 
@@ -473,12 +477,10 @@ function zp_move($zp_id, $page=1) {
 			  AND `zp_id`=".$zp_id."
 			ORDER BY `id` DESC
 			LIMIT ".$start.",".$limit;
-	$q = query($sql);
-	$spisok = array();
-	while($r = mysql_fetch_assoc($q))
-		$spisok[$r['id']] = $r;
-	$spisok = _zayavValToList($spisok);
+	$spisok = query_arr($sql);
 	$spisok = _clientValToList($spisok);
+	$spisok = _zayavValToList($spisok);
+
 	$move = '';
 	$type = array(
 		'' => 'Приход',
@@ -490,13 +492,12 @@ function zp_move($zp_id, $page=1) {
 	);
 	$n = 0;
 	foreach($spisok as $r) {
-		$cena = round($r['cena'], 2);
 		$summa = round($r['summa'], 2);
 		$count = abs($r['count']);
 		$move .= '<div class="unit">'.
 				(!$n++ && $page == 1 ? '<div val="'.$r['id'].'" class="img_del'._tooltip('Удалить запись', -50).'</div>' : '').
 				$type[$r['type']].' <b>'.$count.'</b> шт. '.
-				($summa ? 'на сумму '.$summa.' руб.'.($count > 1 ? ' <span class="cenaed">('.$cena.' руб./шт.)</span> ' : '') : '').
+				($summa ? 'на сумму '.$summa.' руб.'.($count > 1 ? ' <span class="cenaed">('._cena($r['cena']).' руб./шт.)</span> ' : '') : '').
 				($r['zayav_id'] ? 'по заявке '.$r['zayav_link'].'.' : '').
 				($r['client_id'] ? 'клиенту '.$r['client_link'].'.' : '').
 			($r['prim'] ? '<div class="prim">'.$r['prim'].'</div>' : '').

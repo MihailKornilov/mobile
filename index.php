@@ -9,7 +9,8 @@ if(!WS_ID) {
 	die(_header().$html._footer());
 }
 
-
+if(!WS_ACCESS)
+	die(_header()._noauth()._footer());
 
 $html = _header();
 $html .= _menu();
@@ -17,7 +18,7 @@ $html .= _global_index();
 
 
 switch($_GET['p']) {
-	case 'zayav':
+	case 'zayav1':
 		switch(zayavCookie('get')) {
 			case 'add':
 				$v = array();
@@ -101,7 +102,6 @@ switch($_GET['p']) {
 			case 'model': $html .= sa_model(); break;
 			case 'equip': $html .= sa_equip(); break;
 			case 'fault': $html .= sa_fault(); break;
-			case 'color': $html .= sa_color(); break;
 			case 'zpname': $html .= sa_zpname(); break;
 		}
 		break;

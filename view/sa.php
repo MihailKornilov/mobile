@@ -5,12 +5,9 @@ function sa_index() {
 		'<a href="'.URL.'&p=sa&d=tovar_category">Категории товаров</a>'.
 		'<a href="'.URL.'&p=sa&d=device">Устройства / Производители / Модели</a>'.
 		'<a href="'.URL.'&p=sa&d=equip">Комплектация и наименования запчастей для устройств</a>'.
-		'<a href="'.URL.'&p=sa&d=fault">Виды неисправностей</a>'.
+		'<a href="'.URL.'&p=sa&d=fault">Виды неисправностей</a>';
 		//'<a href="'.URL.'&p=sa&d=dev-spec">Характеристики устройств для информации</a>'.
-		'<br />'.
-
-		'<a href="'.URL.'&p=sa&d=color">Цвета для устройств и запчастей</a>';
-}//sa_index()
+}
 
 
 function sa_tovar_category() {
@@ -20,7 +17,7 @@ function sa_tovar_category() {
 			'<div class="headName">Категории товаров<a class="add">Новая категория</a></div>'.
 			'<div id="spisok">'.sa_tovar_category_spisok().'</div>'.
 		'</div>';
-}//sa_tovar_category()
+}
 function sa_tovar_category_spisok() {
 	$sql = "SELECT
 	            *,
@@ -57,7 +54,7 @@ function sa_tovar_category_spisok() {
 					'<div class="img_edit"></div>';
 	$send .= '</table>';
 	return $send;
-}//sa_tovar_category_spisok()
+}
 
 
 function sa_device() {
@@ -67,7 +64,7 @@ function sa_device() {
 		'<div class="headName">Список устройств<a class="add">Добавить новое наименование</a></div>'.
 		'<div class="spisok">'.sa_device_spisok().'</div>'.
 	'</div>';
-}//sa_device()
+}
 function sa_device_spisok() {
 	$sql = "SELECT
 				`bd`.`id` AS `id`,
@@ -128,7 +125,7 @@ function sa_device_spisok() {
 			'</table>';
 	$spisok .= '</dl>';
 	return $spisok;
-}//sa_device_spisok()
+}
 function sa_vendor() {
 	if(empty($_GET['id']) || !preg_match(REGEXP_NUMERIC, $_GET['id']))
 		return 'Ошибка id. <a href="'.URL.'&p=sa&d=device">Назад</a>.';
@@ -148,7 +145,7 @@ function sa_vendor() {
 		'<div class="headName">Список производителей для "'.$dev['name'].'"<a class="add">Добавить</a></div>'.
 		'<div class="spisok">'.sa_vendor_spisok($device_id).'</div>'.
 	'</div>';
-}//sa_vendor()
+}
 function sa_vendor_spisok($device_id) {
 	$sql = "SELECT
 				`bv`.`id`,
@@ -202,7 +199,7 @@ function sa_vendor_spisok($device_id) {
 			'</table>';
 	$spisok .= '</dl>';
 	return $spisok;
-}//sa_vendor_spisok()
+}
 function sa_model() {
 	if(empty($_GET['vendor_id']) || !preg_match(REGEXP_NUMERIC, $_GET['vendor_id']))
 		return 'Ошибка vendor_id. <a href="'.URL.'&p=sa&d=device">Назад</a>.';
@@ -224,7 +221,7 @@ function sa_model() {
 		'<div id="find"></div>'.
 		'<div class="spisok">'.sa_model_spisok(array('vendor_id'=>$vendor_id)).'</div>'.
 	'</div>';
-}//sa_model()
+}
 function sa_model_spisok($v) {
 	$filter = array(
 		'page' => _num(@$v['page']) ? $v['page'] : 1,
@@ -319,7 +316,7 @@ function sa_model_spisok($v) {
 	}
 	$send .= $page == 1 ? '</table>' : '';
 	return $send;
-}//sa_model_spisok()
+}
 
 
 function sa_equip() {
@@ -342,7 +339,7 @@ function sa_equip() {
 					'<div id="zp-spisok">'.sa_zpname_spisok($default_id).'</div>'.
 		'</table>'.
 	'</div>';
-}//sa_equip()
+}
 function sa_equip_spisok($device_id) {
 	$equip = query_value("SELECT `equip` FROM `base_device` WHERE `id`=".$device_id);
 	$arr = explode(',', $equip);
@@ -373,7 +370,7 @@ function sa_equip_spisok($device_id) {
 	return
 		'<div class="headName">Комплектация<a class="add" id="equip-add">Добавить</a></div>'.
 		($spisok ? $spisok : 'Вариантов комплектаций нет');
-}//sa_equip_spisok()
+}
 function sa_zpname_spisok($device_id) {
 	$sql = "SELECT
 	            `s`.*,
@@ -404,7 +401,7 @@ function sa_zpname_spisok($device_id) {
    ($r['zp'] ? '' : '<div class="img_del zpname-del"></div>');
 	$send .= '</table>';
 	return $send;
-}//sa_equip_spisok()
+}
 
 function sa_fault() {
 	return '<div class="path">'.sa_cookie_back().'<a href="'.URL.'&p=sa">Администрирование</a> » Виды неисправностей</div>'.
@@ -413,7 +410,7 @@ function sa_fault() {
 		'<div class="spisok">'.sa_fault_spisok().'</div>'.
 	'</div>';
 
-}//sa_fault()
+}
 function sa_fault_spisok() {
 	$sql = "SELECT * FROM `setup_fault` ORDER BY `sort`";
 	$q = query($sql);
@@ -436,59 +433,4 @@ function sa_fault_spisok() {
 			'</table>';
 	$send .= '</dl>';
 	return $send;
-}//sa_fault_spisok()
-
-function sa_color() {
-	return '<div class="path">'.sa_cookie_back().'<a href="'.URL.'&p=sa">Администрирование</a> » Цвета</div>'.
-	'<div class="sa-color">'.
-		'<div class="headName">Цвета для устройств и запчастей<a class="add">Новый цвет</a></div>'.
-		'<div class="spisok">'.sa_color_spisok().'</div>'.
-	'</div>';
-}//sa_color()
-function sa_color_spisok() {
-	$sql = "SELECT
-				`c`.*,
-				COUNT(`z`.`id`) AS `zayav`,
-				0 AS `zp`
-			FROM `setup_color_name` AS `c`
-				LEFT JOIN `zayav` AS `z`
-				ON `c`.`id`=`z`.`color_id`
-			GROUP BY `c`.`id`
-			ORDER BY `c`.`name`";
-	$q = query($sql);
-	if(!mysql_num_rows($q))
-		return 'Цвета не внесены.';
-	$color = array();
-	while($r = mysql_fetch_assoc($q))
-		$color[$r['id']] = $r;
-
-	$sql = "SELECT
-				`c`.`id` AS `id`,
-				COUNT(`zp`.`id`) AS `zp`
-			FROM `setup_color_name` AS `c`,
-				 `zp_catalog` AS `zp`
-			WHERE `c`.`id`=`zp`.`color_id`
-			GROUP BY `c`.`id`";
-	$q = query($sql);
-	while($r = mysql_fetch_assoc($q))
-		$color[$r['id']]['zp'] = $r['zp'];
-
-	$send =
-		'<table class="_spisok">'.
-			'<tr><th>Предлог'.
-				'<th>Цвет'.
-				'<th>Кол-во<br />заявок'.
-				'<th>Кол-во<br />запчастей'.
-				'<th>';
-	foreach($color as $id => $r)
-		$send .=
-			'<tr val="'.$id.'">'.
-				'<td class="pre">'.$r['predlog'].
-				'<td class="name">'.$r['name'].
-				'<td class="zayav">'.($r['zayav'] ? $r['zayav'] : '').
-				'<td class="zp">'.($r['zp'] ? $r['zp'] : '').
-				'<td><div class="img_edit"></div>'.
-					($r['zayav'] || $r['zp'] ? '' : '<div class="img_del"></div>');
-	$send .= '</table>';
-	return $send;
-}//sa_color_spisok()
+}

@@ -1,112 +1,18 @@
 .device-add-tab{border-spacing:10px}
 .device-add-tab input{width:170px}
 
-/* Селекты цветов */
-#colors tt{
-	display:inline-block;
-	margin:-0 5px;
-	position:relative;
-	top:-6px;
-}
-
-/* список заявок */
-#zayav .clear{float:right}
-#zayav #spisok{
-	padding-bottom:10px;
-	background-color:#f7f7f7;
-	vertical-align:top;
-}
-#zayav .right{width:155px;border:0;padding-bottom:300px;padding-left:0}
-#zayav .condLost.hide{display:none}
-#zayav .rightLink a:not(.sel) #srok{display:none}
-#zayav #srok,#zayav #srok *{font-size:10px}
-#zayav #srok{margin-top:8px}
-#zayav .day-finish-link{color:#BCDCFF}
-.zayav_unit{
-	cursor:pointer;
-	margin:10px 10px 0;
-	border:#ccc solid 1px;
-	border-radius:2px;
-	box-shadow: 0 0 5px rgba(0,0,0,0.2);
-}
-.zayav_unit:hover{border:#bbb solid 1px;box-shadow: 0 0 5px rgba(0,0,0,0.4);}
-.zayav_unit .name{display:block;margin:4px 0 2px 6px;font-size:12px}
-.zayav_unit .name b{font-size:12px}
-.zayav_unit H2{float:right;font-size:10px;color:#777;margin:4px}
-.zayav_unit H2.finded{background:#FFC;color:#444;text-decoration:underline}
-.zayav_unit em{background:#FFC;border-bottom:1px solid #FE2;font-size:12px}
-.zayav_unit b em{font-weight:bold}
-.zayav_unit .utab{border-spacing:2px;width:100%;margin-bottom:4px}
-.zayav_unit .utab em{font-size:11px}
-.zayav_unit .label{width:90px;padding-left:10px}
-.zayav_unit .date-ready{margin-left:20px;color:#090}
-.zayav_unit .balans{float:right;margin-right:2px;color:#777}
-.zayav_unit .acc{color:#07a;cursor:default;font-size:10px}
-.zayav_unit .opl{color:#090;cursor:default;font-size:10px}
-.zayav_unit .diff .acc,.zayav_unit .diff .opl{color:#c33}
-.zayav_unit .zz{color:#a33}
-.zayav_unit .image{
-	width:80px;
-	height:80px;
-	vertical-align:top;
-	text-align:center;
-	border-left:#DDD solid 1px;
-	background-color:#FFF;
-}
-.zayav_unit .note{display:none}
-#zayav #find{margin-top:15px}
-#zayav #desc_check{margin-top:10px}
-#zayav #diagnost_check{margin-top:15px}
-#zayav #diff_check{margin-top:10px}
-#zayav ._next{margin:6px 8px 0}
-#zayav ._empty{margin:10px 10px 0}
 
 
-
-/* Список заявок с картриджами */
-#zayav-cartridge #c-sum{color:#777;margin-left:10px}
-#zayav-cartridge .clear{float:right}
-#zayav-cartridge #spisok{padding-bottom:10px;background-color:#f7f7f7;vertical-align:top}
-#zayav-cartridge .zayav_unit .label{width:75px}
-#zayav-cartridge .right{border:0;width:155px;padding-bottom:300px}
-#zayav-cartridge #desc_check{margin-top:10px}
-#zayav-cartridge #noschet_check{margin-top:20px}
-#zayav-cartridge ._empty{margin:10px 2px 0 10px;}
-#zayav-cartridge ._next{margin:6px 5px 0 8px}
 
 /* Информация о заявке с картриджами */
-#zayav-cartridge-info .page{margin:10px}
-#zayav-cartridge-info .headName{margin:10px 0}
-#zayav-cartridge-info .headName ._dropdown{float:right;margin-right:115px}
-#zayav-cartridge-info #tab{border-spacing:8px}
-#zayav-cartridge-info .label{width:70px}
-#zayav-cartridge-info .n{text-align:right;color:#777}
-#zayav-cartridge-info .cost{text-align:right}/* стоимость заправки картриджа */
-#zayav-cartridge-info .cart-name{width:130px}
-#zayav-cartridge-info .cart-prim{font-size:10px;color:#444}
-#zayav-cartridge-info .cart-prim u{font-size:10px}
-#zayav-cartridge-info .ready{background-color:#dfd}
-#zayav-cartridge-info #cart-tab .nomer{margin:0 4px;color:#777}
-
-
-
-
-/* Таблица выбора вида новой заявки */
-#zayav-add-tab{margin:20px}
-#zayav-add-tab .unit{
-	border:#ccd solid 1px;
-	padding:25px 20px;
-	margin-bottom:25px;
-	background-color:#E8E8FF;
-	color:#777;
-	font-weight:bold;
-	font-size:13px;
-	text-align:center;
-	cursor:pointer;
-}
-#zayav-add-tab .unit:hover{color:#2B587A}
-
-
+#zayav-cartridge .n{text-align:right;color:#777}
+#zayav-cartridge .cost{text-align:right}/* стоимость заправки картриджа */
+#zayav-cartridge .cart-name{width:130px}
+#zayav-cartridge .cart-prim{font-size:10px;color:#444}
+#zayav-cartridge .cart-prim u{font-size:10px}
+#zayav-cartridge .ready{background-color:#dfd}
+#zayav-cartridge .nomer{margin:0 4px;color:#777}
+#zayav-cartridge .ch{text-align:center}
 
 /* Таблица внесения нового картриджа */
 #cartridge-new-tab{border-spacing:10px}
@@ -127,121 +33,34 @@
 
 
 
-/* Внесение новой заявки */
-#zayavAdd{padding:20px 10px 140px 10px;background-color:#F7F7F7}
-#zayavAdd .headName{margin-bottom:15px}
-#zayavAdd .label{width:190px;text-align:right}
+
+/* Картинка устройства в редактировании заявки */
 #device_image{padding-left:5px;vertical-align:top;min-width:50px}
 #device_image img{height:72px;display:none}
-#zayavAdd .equip_spisok div{margin-right:7px}
-#zayavAdd #place_radio{margin-bottom:4px}
-#place-other-div{display:inline-block;position:relative}
-#place_other{width:120px;position:absolute;top:-3px;left:45px}
-#zayavAdd #imei{width:130px}
-#zayavAdd #serial{width:200px}
-#zayavAdd #fault .check0,#zayavAdd #fault .check1{white-space:nowrap;margin:0 15px 4px 0}
-#zayavAdd #comm{width:260px;height:40px}
-#zayavAdd .vkButton{margin:10px 7px 0 206px}
 
-.day-finish-link{display:inline-block;cursor:pointer;color:#2B587A}
-.day-finish-link:hover{text-decoration:underline}
-.day-finish-link._busy span{visibility:hidden}
-
-#zayav-finish-calendar #fc-head{width:100%}
-#zayav-finish-calendar #fc-head td{padding:10px;text-align:center}
-#zayav-finish-calendar #fc-head td.ch{
-	width:47px;
-	cursor:pointer;
-	font-size:18px;
-	font-weight:bold;
-	color:#aaa;
-}
-#zayav-finish-calendar #fc-head td.ch:hover{background-color:#f7f7fd;color:#555}
-#zayav-finish-calendar #fc-head span{font-size:14px}
-#zayav-finish-calendar #fc-head._busy span{visibility:hidden}
-#zayav-finish-calendar #fc-mon{width:100%;border-collapse:collapse}
-#zayav-finish-calendar #fc-mon td{border:#ddd solid 1px}
-#zayav-finish-calendar #week-name td{
-	font-weight:bold;
-	font-size:13px;
-	background-color:#eee;
-	color:#555;
-	text-align:center;
-	padding:10px;
-}
-#zayav-finish-calendar td.d{width:47px;height:40px;text-align:center}
-#zayav-finish-calendar td.d.old{background-color:#f8f8f8;color:#888}
-#zayav-finish-calendar td.d.sel{background-color:#ffb}
-#zayav-finish-calendar td.d:not(.old):hover{cursor:pointer;background-color:#afa}
-#zayav-finish-calendar td.d b{
-	display:inline-block;
-	font-size:13px;
-	padding:1px 5px;
-	border:#cec solid 1px;
-	background-color:#dfd;
-	color:#080;
-}
-#zayav-finish-calendar #fc-cancel{
-	border:#cec solid 1px;
-	padding:10px;
-	text-align:center;
-	font-size:12px;
-	margin-top:10px;
-	cursor:pointer;
-	color:#555;
-}
-#zayav-finish-calendar #fc-cancel:hover{background-color:#afa}
-#zayav-finish-calendar .fc-old-sel:hover{cursor:pointer;text-decoration:underline}
-
-
-/* Информация о заявке */
-#zayav-info table.page{width:100%;border-spacing:10px}
-#zayav-info div.page{margin:10px}
-#zayav-info #left{vertical-align:top}
-#zayav-info .headName{margin:0;padding:4px 3px}
-#zayav-info .headName ._dropdown{float:right}
-#zayav-info .tabInfo{margin:2px 10px 15px 4px;border-spacing:8px}
-#zayav-info .label{width:75px}
-#zayav-info .kvit_defect{color:#777}
-.zayav-info-edit{border-spacing:8px}
-.zayav-info-edit .equip_spisok div{display:block;margin-bottom:5px}
-.zayav-info-edit ._image-spisok{width:260px}
-.zayav-info-edit #imei{width:244px}
-.zayav-info-edit #serial{width:244px}
-#zayav-info .dopl{margin-left:10px;color:#888;cursor:default}
-#zayav-info #diagnost-ready{margin-left:40px}
-#zayav-info #remind-spisok{margin:8px 0}
-#zayav-info .acc{color:#07a;cursor:default}
-#zayav-info .op{color:#090;cursor:default}
-#zayav-info .deleting{text-align:center;color:#555}
-#zayav-info #kvit_spisok{margin-bottom:8px}
-#zayav-info #right{vertical-align:top;width:200px}
-#zayav-info #foto{text-align:center;margin-bottom:10px}
-#zayav-info .devContent{border-left:#e9edf1 solid 1px}
-#zayav-info .devName{padding:7px 0 0 7px}
-#zayav-info .devName a{font-weight:bold}
-#zayav-info .devInfo{margin:7px 0 10px 7px;border-spacing:1px}
-#zayav-info .devInfo *{font-size:10px}
-#zayav-info .devInfo th{width:70px;color:#777;text-align:left;font-size:10px}
-#zayav-info .goZp{font-weight:bold}
-.zayav_zp_add center{margin-bottom:15px}
-.zayav_zp_add center,.zayav_zp_add center b{font-size:12px}
-.zayav_zp_add #version{width:188px}
-.zayav_zp_set,.zayav_zp_set b{font-size:12px}
-#zayav-info #zpSpisok{margin:7px 7px 60px}
-#zayav-info #zpSpisok *{font-size:10px}
-#zayav-info #zpSpisok .unit{border-bottom:#DEE3EF solid 1px;padding-bottom:4px;margin-bottom:7px}
-#zayav-info #zpSpisok .unit:not(:hover) .zakaz,#zayav-info #zpSpisok .unit:not(:hover) .set{visibility:hidden}
-#zayav-info #zpSpisok .zakaz{color:#567f9e}
-#zayav-info #zpSpisok .set{color:#567f9e;float:right}
-#zayav-info #zpSpisok .version{color:#333}
-#zayav-info #zpSpisok .color{color:#777}
-#zayav-info #zpSpisok .zakaz_ok{color:#933}
-#zayav-info #zpSpisok .avai{float:right;color:#393;margin-left:4px}
-#zayav-info #zpSpisok ._empty{margin:5px 0;padding:20px 10px;font-size:12px}
-#zayav-info #zpSpisok .unit:not(:hover) .image{display:none}
-#zayav-info #zpSpisok .image{position:relative}
-#zayav-info #zpSpisok .image div{
+/* Информация об устройстве в информации о заявке */
+#zayav-info-device{width:200px}
+#zayav-info-device #content{border-left:#e9edf1 solid 1px}
+#zayav-info-device #dev-name{padding:7px 0 0 7px}
+#zayav-info-device #dev-name a{font-weight:bold}
+#zayav-info-device #info{margin:7px 0 10px 7px;border-spacing:1px}
+#zayav-info-device #info *{font-size:10px}
+#zayav-info-device #info th{width:70px;color:#777;text-align:left;font-size:10px}
+/* Список запчастей*/
+#zayav-info-device #zp-go{font-weight:bold}
+#zayav-zp-spisok{padding:3px 7px 60px;border-left:#e9edf1 solid 1px}
+#zayav-zp-spisok *{font-size:10px}
+#zayav-zp-spisok .unit{border-bottom:#DEE3EF solid 1px;padding-bottom:4px;margin-bottom:7px}
+#zayav-zp-spisok .unit:not(:hover) .zakaz,#zayav-zp-spisok .unit:not(:hover) .set{visibility:hidden}
+#zayav-zp-spisok .zakaz{color:#567f9e}
+#zayav-zp-spisok .set{color:#567f9e;float:right}
+#zayav-zp-spisok .version{color:#333}
+#zayav-zp-spisok .color{color:#777}
+#zayav-zp-spisok .zakaz_ok{color:#933}
+#zayav-zp-spisok .avai{float:right;color:#393;margin-left:4px}
+#zayav-zp-spisok .unit:not(:hover) .image{display:none}
+#zayav-zp-spisok .image{position:relative}
+#zayav-zp-spisok .image div{
 	position:absolute;
 	top:0;
 	left:-94px;
@@ -252,6 +71,32 @@
 	padding:5px;
 	text-align:center;
 }
+#zayav-zp-spisok ._empty{margin:5px 0;padding:20px 10px;font-size:12px}
+
+
+/* Местонахождение устройства: поле Другое */
+#place-other-div{display:inline-block;position:relative}
+#place_other{width:120px;position:absolute;top:-3px;left:45px}
+
+
+
+
+
+
+
+
+
+
+
+
+#zayav-info .kvit_defect{color:#777}
+#zayav-info #diagnost-ready{margin-left:40px}
+#zayav-info #kvit_spisok{margin-bottom:8px}
+
+.zayav_zp_add center{margin-bottom:15px}
+.zayav_zp_add center,.zayav_zp_add center b{font-size:12px}
+.zayav_zp_add #version{width:188px}
+.zayav_zp_set,.zayav_zp_set b{font-size:12px}
 .zayav-print{border-spacing:10px}
 .zayav-print .label{width:90px}
 .zayav-print i{font:11px Arial;color:#999}
@@ -259,22 +104,6 @@
 .zayav-print #preview{display:block;padding:10px;text-align:center}
 .zayav-print #preview._busy span{visibility:hidden}
 .zayav-print #preview:hover{background-color:#e9edf1;text-decoration:none}
-#zayav-status{margin:10px}
-#zayav-status .st{
-	padding:10px 15px;
-	font-size:13px;
-	font-weight:bold;
-	border:#ddd solid 1px;
-	color:#357;
-	cursor:pointer;
-	margin-bottom:10px;
-}
-#zayav-status .st:hover{border-color:#BBD}
-#zayav-status .c1{background-color:#E8E8FF}
-#zayav-status .c2{background-color:#CFC}
-#zayav-status .c3{background-color:#FDD}
-#zayav-status .about{color:#777;margin-top:3px}
-#zayav-status #zs-tab{border-spacing:8px;display:none}
 
 
 /* Таблица с результатами диагностики */

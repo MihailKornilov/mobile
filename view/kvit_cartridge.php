@@ -152,7 +152,7 @@ function xls_cartridge_content($col) {//левая сторона
 
 	$y++;
 	$sheet->setCellValue($colLabel.$y, 'Кол-во картриджей');
-	$sheet->setCellValue($colItem.$y, $z['cartridge_count']);
+	$sheet->setCellValue($colItem.$y, $z['count']);
 	$sheet->getStyle($colLabel.$y)->getFont()->setSize(8);
 	xls_comtex_item_border($col, $y);
 
@@ -205,14 +205,7 @@ set_time_limit(10);
 if(!$id = _num($_GET['id']))
 	die(win1251('Неверный id заявки.'));
 
-$sql = "SELECT *
-		FROM `zayav`
-		WHERE `ws_id`=".WS_ID."
-		  AND !`deleted`
-		  AND `cartridge`
-		  AND `status`
-		  AND `id`=".$id;
-if(!$z = query_assoc($sql))
+if(!$z = _zayavQuery($id))
 	die(win1251('Заявки не существует.'));
 
 $book = new PHPExcel();

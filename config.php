@@ -22,6 +22,4 @@ if(WS_ID) {
 	define('SERVIVE_CARTRIDGE', $setup['service_cartridge']);
 }
 
-
-
 require_once API_PATH.'/nofunc.php';

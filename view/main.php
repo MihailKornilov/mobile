@@ -4,14 +4,13 @@ function _cacheClear($ws_id=WS_ID) {
 	xcache_unset(CACHE_PREFIX.'vendor_name');
 	xcache_unset(CACHE_PREFIX.'model_name_count');
 	xcache_unset(CACHE_PREFIX.'zp_name');
-	xcache_unset(CACHE_PREFIX.'color_name');
 	xcache_unset(CACHE_PREFIX.'device_equip');
 	xcache_unset(CACHE_PREFIX.'zayav_expense'.$ws_id);
 	xcache_unset(CACHE_PREFIX.'remind_active'.$ws_id);
 	xcache_unset(CACHE_PREFIX.'workshop_'.$ws_id);
 	xcache_unset(CACHE_PREFIX.'cartridge'.$ws_id);
 	GvaluesCreate($ws_id);
-}//_cacheClear()
+}
 function _appScripts() {
 	return
 
@@ -42,13 +41,11 @@ function _appScripts() {
 			'<link rel="stylesheet" type="text/css" href="'.APP_HTML.'/css/sa'.(DEBUG ? '' : '.min').'.css?'.VERSION.'" />'.
 			'<script type="text/javascript" src="'.APP_HTML.'/js/sa'.(DEBUG ? '' : '.min').'.js?'.VERSION.'"></script>'
 		: '');
-}//_appScripts()
+}
 
 function GvaluesCreate($ws_id=WS_ID) {//Составление файла G_values.js
 	$save =
-		 'var COLOR_SPISOK='.query_selJson("SELECT `id`,`name` FROM `setup_color_name` ORDER BY `name` ASC").','.
-		"\n".'COLORPRE_SPISOK='.query_selJson("SELECT `id`,`predlog` FROM `setup_color_name` ORDER BY `predlog` ASC").','.
-		"\n".'FAULT_ASS='.query_assJson("SELECT `id`,`name` FROM `setup_fault` ORDER BY `sort`").','.
+		"\n".'var FAULT_ASS='.query_assJson("SELECT `id`,`name` FROM `setup_fault` ORDER BY `sort`").','.
 		"\n".'ZPNAME_SPISOK='.Gvalues_obj('setup_zp_name', '`name`', 'device_id').','.
 
 		"\n".'TOVAR_CATEGORY_SPISOK='.query_selJson("SELECT `id`,`name` FROM `tovar_category` ORDER BY `sort` ASC").','.
@@ -64,9 +61,8 @@ function GvaluesCreate($ws_id=WS_ID) {//Составление файла G_values.js
 		"\n".'MODEL_ASS={0:""};'.
 		"\n".'for(k in MODEL_SPISOK){for(n=0;n<MODEL_SPISOK[k].length;n++){var sp=MODEL_SPISOK[k][n];MODEL_ASS[sp.uid]=sp.title;}}'.
 
-		"\n".'CARTRIDGE_TYPE='._selJson(_cartridgeType()).','.
+		"\n".'CARTRIDGE_TYPE='._selJson(_cartridgeType()).';';
 
-		"\n".'PAY_TYPE='._selJson(_payType()).';';
 
 	$fp = fopen(APP_PATH.'/js/G_values.js', 'w+');
 	fwrite($fp, $save);
@@ -90,14 +86,7 @@ function GvaluesCreate($ws_id=WS_ID) {//Составление файла G_values.js
 			WHERE `app_id`=".APP_ID."
 			  AND `key`='G_VALUES'";
 	query($sql, GLOBAL_MYSQL_CONNECT);
-}//GvaluesCreate()
-
-function _button($id, $name, $width=0) {
-	return
-	'<div class="vkButton" id="'.$id.'">'.
-		'<button'.($width ? ' style="width:'.$width.'px"' : '').'>'.$name.'</button>'.
-	'</div>';
-}//_button()
+}
 
 function _wsType($i=false, $p=1) {
 	/*  $p - падеж
@@ -137,7 +126,7 @@ function _wsType($i=false, $p=1) {
 	if($i === false)
 		return $arr[$p];
 	return $arr[$p][$i];
-}//_wsType()
+}
 
 function _deviceName($device_id, $rod=false) {
 	if(!defined('DEVICE_LOADED')) {
@@ -159,7 +148,7 @@ function _deviceName($device_id, $rod=false) {
 		define('DEVICE_LOADED', true);
 	}
 	return constant('DEVICE_NAME_'.($rod ? 'ROD_' : '').$device_id).' ';
-}//_deviceName()
+}
 function _vendorName($vendor_id) {
 	if(!defined('VENDOR_LOADED')) {
 		$key = CACHE_PREFIX.'vendor_name';
@@ -176,7 +165,7 @@ function _vendorName($vendor_id) {
 		define('VENDOR_LOADED', true);
 	}
 	return defined('VENDOR_NAME_'.$vendor_id) ? constant('VENDOR_NAME_'.$vendor_id).' ' : '';
-}//_vendorName()
+}
 function _modelName($model_id) {
 	if(!defined('MODEL_LOADED')) {
 		$keyCount = CACHE_PREFIX.'model_name_count';
@@ -211,7 +200,7 @@ function _modelName($model_id) {
 		define('MODEL_LOADED', true);
 	}
 	return defined('MODEL_NAME_'.$model_id) ? constant('MODEL_NAME_'.$model_id) : '';
-}//_modelName()
+}
 function _zpName($name_id) {
 	if(!defined('ZP_NAME_LOADED')) {
 		$key = CACHE_PREFIX.'zp_name';
@@ -228,12 +217,12 @@ function _zpName($name_id) {
 		define('ZP_NAME_LOADED', true);
 	}
 	return constant('ZP_NAME_'.$name_id);
-}//_zpName()
+}
 function _zpCompatId($zp_id) {
 	$sql = "SELECT `id`,`compat_id` FROM `zp_catalog` WHERE `id`=".intval($zp_id);
 	$zp = mysql_fetch_assoc(query($sql));
 	return $zp['compat_id'] ? $zp['compat_id'] : $zp['id'];
-}//_zpCompatId()
+}
 function _zpAvaiSet($zp_id) { // Обновление количества наличия запчасти
 	$zp_id = _zpCompatId($zp_id);
 	$count = query_value("SELECT IFNULL(SUM(`count`),0) FROM `zp_move` WHERE `ws_id`=".WS_ID." AND `zp_id`=".$zp_id." LIMIT 1");
@@ -241,33 +230,7 @@ function _zpAvaiSet($zp_id) { // Обновление количества наличия запчасти
 	if($count > 0)
 		query("INSERT INTO `zp_avai` (`ws_id`,`zp_id`,`count`) VALUES (".WS_ID.",".$zp_id.",".$count.")");
 	return $count;
-}//_zpAvaiSet()
-function _color($color_id, $color_dop=0) {
-	if(!defined('COLOR_LOADED')) {
-		$key = CACHE_PREFIX.'color_name';
-		$zp = xcache_get($key);
-		if(empty($zp)) {
-			$sql = "SELECT * FROM `setup_color_name`";
-			$q = query($sql);
-			while($r = mysql_fetch_assoc($q))
-				$zp[$r['id']] = array(
-					'predlog' => $r['predlog'],
-					'name' => $r['name']
-				);
-			xcache_set($key, $zp, 86400);
-		}
-		foreach($zp as $id => $r) {
-			define('COLORPRE_'.$id, $r['predlog']);
-			define('COLOR_'.$id, $r['name']);
-		}
-		define('COLORPRE_0', '');
-		define('COLOR_0', '');
-		define('COLOR_LOADED', true);
-	}
-	if($color_dop)
-		return constant('COLORPRE_'.$color_id).' - '.strtolower(constant('COLOR_'.$color_dop));;
-	return constant('COLOR_'.$color_id);
-}//_color()
+}
 function _devPlace($place_id=false, $ws_type=WS_TYPE) {
 	$arr = array(
 		1 => _wsType($ws_type, 7),
@@ -283,16 +246,7 @@ function _devPlace($place_id=false, $ws_type=WS_TYPE) {
 	if($place_id === false)
 		return $arr;
 	return isset($arr[$place_id]) ? $arr[$place_id] : '';
-}//_devPlace()
-function _payType($type_id=false) {//вид расчёта
-	$arr = array(
-		1 => 'Наличный',
-		2 => 'Безналичный'
-	);
-	if($type_id === false)
-		return $arr;
-	return isset($arr[$type_id]) ? $arr[$type_id] : '';
-}//_payType()
+}
 
 function _cartridgeName($item_id) {
 	if(!defined('CARTRIDGE_NAME_LOADED')) {
@@ -310,14 +264,14 @@ function _cartridgeName($item_id) {
 		define('CARTRIDGE_NAME_LOADED', true);
 	}
 	return constant('CARTRIDGE_NAME_'.$item_id);
-}//_cartridgeName()
+}
 function _cartridgeType($type_id=0) {
 	$arr = array(
 		1 => 'Лазерные',
 		2 => 'Струйные'
 	);
 	return $type_id ? $arr[$type_id] : $arr;
-}//_cartridgeType()
+}
 
 function equipCache() {
 	$key = CACHE_PREFIX.'device_equip';
@@ -333,7 +287,7 @@ function equipCache() {
 		xcache_set($key, $spisok, 86400);
 	}
 	return $spisok;
-}//equipCache()
+}
 function devEquipCheck($device_id=0, $ids='') {//Получение списка комплектаций в виде чекбоксов для внесения или редактирования заявки
 	if($device_id) {
 		$v = query_value("SELECT `equip` FROM `base_device` WHERE `id`=".$device_id);
@@ -353,7 +307,7 @@ function devEquipCheck($device_id=0, $ids='') {//Получение списка комплектаций в
 		if(isset($equip[$id]) || !$device_id)
 			$send .= _check('eq_'.$id, $r['name'], isset($sel[$id]) ? 1 : 0);
 	return $send;
-}//devEquipCheck()
+}
 
 
 
@@ -378,7 +332,7 @@ function ws_create_info() {
 		'</div>'.
 		'<div class="vkButton"><button onclick="location.href=\''.URL.'&p=wscreate&d=step1\'">Приступить к созданию</button></div>'.
 	'</div>';
-}//ws_create_info()
+}
 function ws_create_step1() {
 	$sql = "SELECT `id`,`name_mn` FROM `base_device` ORDER BY `sort`";
 	$q = query($sql);
