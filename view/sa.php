@@ -2,58 +2,8 @@
 function sa_index() {
 	return
 		'<div><b>Устройства и запчасти:</b></div>'.
-		'<a href="'.URL.'&p=sa&d=tovar_category">Категории товаров</a>'.
 		'<a href="'.URL.'&p=sa&d=device">Устройства / Производители / Модели</a>'.
-		'<a href="'.URL.'&p=sa&d=equip">Комплектация и наименования запчастей для устройств</a>'.
-		'<a href="'.URL.'&p=sa&d=fault">Виды неисправностей</a>';
-		//'<a href="'.URL.'&p=sa&d=dev-spec">Характеристики устройств для информации</a>'.
-}
-
-
-function sa_tovar_category() {
-	return
-		'<div class="path">'.sa_cookie_back().'<a href="'.URL.'&p=sa">Администрирование</a> » Категории товаров</div>'.
-		'<div id="sa-tovar-category">'.
-			'<div class="headName">Категории товаров<a class="add">Новая категория</a></div>'.
-			'<div id="spisok">'.sa_tovar_category_spisok().'</div>'.
-		'</div>';
-}
-function sa_tovar_category_spisok() {
-	$sql = "SELECT
-	            *,
-				'' `dev`
-			FROM `tovar_category`
-			ORDER BY `sort`";
-	$q = query($sql);
-	if(!mysql_num_rows($q))
-		return 'Категории не определены.';
-	$spisok = array();
-	while($r = mysql_fetch_assoc($q))
-		$spisok[$r['id']] = $r;
-
-	$sql = "SELECT *
-			FROM `base_device`
-			WHERE `category_id`
-			ORDER BY `sort`";
-	$q = query($sql);
-	while($r = mysql_fetch_assoc($q))
-		$spisok[$r['category_id']]['dev'] .= '<div class="dev">'.$r['name'].'</div>';
-
-	$send =
-		'<table class="_spisok">'.
-			'<tr><th>Наименование'.
-				'<th>';
-	foreach($spisok as $id => $r)
-		$send .=
-			'<tr val="'.$id.'">'.
-				'<td class="td-name">'.
-					'<div class="img_add'._tooltip('Прикрепить устройство', -75).'</div>'.
-					'<div class="name">'.$r['name'].'</div>'.
-					$r['dev'].
-				'<td class="ed">'.
-					'<div class="img_edit"></div>';
-	$send .= '</table>';
-	return $send;
+		'<a href="'.URL.'&p=sa&d=equip">Комплектация и наименования запчастей для устройств</a>';
 }
 
 
@@ -403,34 +353,3 @@ function sa_zpname_spisok($device_id) {
 	return $send;
 }
 
-function sa_fault() {
-	return '<div class="path">'.sa_cookie_back().'<a href="'.URL.'&p=sa">Администрирование</a> » Виды неисправностей</div>'.
-	'<div class="sa-fault">'.
-		'<div class="headName">Виды неисправностей<a class="add">Добавить</a></div>'.
-		'<div class="spisok">'.sa_fault_spisok().'</div>'.
-	'</div>';
-
-}
-function sa_fault_spisok() {
-	$sql = "SELECT * FROM `setup_fault` ORDER BY `sort`";
-	$q = query($sql);
-	if(!mysql_num_rows($q))
-		return 'Список пуст.';
-
-	$send =
-		'<table class="_spisok">'.
-			'<tr><th class="name">Наименование'.
-				'<th class="set">'.
-		'</table>'.
-		'<dl class="_sort" val="setup_fault">';
-	while($r = mysql_fetch_assoc($q))
-		$send .= '<dd val="'.$r['id'].'">'.
-			'<table class="_spisok">'.
-				'<tr><td class="name">'.$r['name'].
-					'<td class="set">'.
-						'<div class="img_edit"></div>'.
-						'<div class="img_del"></div>'.
-			'</table>';
-	$send .= '</dl>';
-	return $send;
-}

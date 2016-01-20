@@ -45,10 +45,7 @@ function _appScripts() {
 
 function GvaluesCreate($ws_id=WS_ID) {//Составление файла G_values.js
 	$save =
-		"\n".'var FAULT_ASS='.query_assJson("SELECT `id`,`name` FROM `setup_fault` ORDER BY `sort`").','.
-		"\n".'ZPNAME_SPISOK='.Gvalues_obj('setup_zp_name', '`name`', 'device_id').','.
-
-		"\n".'TOVAR_CATEGORY_SPISOK='.query_selJson("SELECT `id`,`name` FROM `tovar_category` ORDER BY `sort` ASC").','.
+		"\n".'var ZPNAME_SPISOK='.Gvalues_obj('setup_zp_name', '`name`', 'device_id').','.
 
 		"\n".'DEV_SPISOK='.query_selJson("SELECT `id`,`name` FROM `base_device` ORDER BY `sort`").','.
 		"\n".'DEV_ASS=_toAss(DEV_SPISOK),'.

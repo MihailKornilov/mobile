@@ -86,63 +86,6 @@ function _zayavValToList($arr) {//вставка данных заявок в массив по zayav_id
 	return $arr;
 }
 */
-function _zayavCountToClient($spisok) {//прописывание квадратиков с количеством заявок в список клиентов
-	$ids = implode(',', array_keys($spisok));
-	/*
-	// общее количество заявок
-	$sql = "SELECT
-				`client_id` AS `id`,
-				COUNT(`id`) AS `count`
-			FROM `zayav`
-			WHERE `ws_id`=".WS_ID."
-			  AND `status`
-			  AND `client_id` IN (".implode(',', array_keys($spisok)).")
-			GROUP BY `client_id`";
-	$q = query($sql);
-	while($r = mysql_fetch_assoc($q))
-		$spisok[$r['id']]['zayav_count'] = $r['count'];
-*/
-	//заявки, ожидающие выполнения
-	$sql = "SELECT
-				`client_id` AS `id`,
-				COUNT(`id`) AS `count`
-			FROM `zayav`
-			WHERE `ws_id`=".WS_ID."
-			  AND `status`=1
-			  AND `client_id` IN (".$ids.")
-			GROUP BY `client_id`";
-	$q = query($sql);
-	while($r = mysql_fetch_assoc($q))
-		$spisok[$r['id']]['zayav_wait'] = $r['count'];
-
-	//выполненные заявки
-	$sql = "SELECT
-				`client_id` AS `id`,
-				COUNT(`id`) AS `count`
-			FROM `zayav`
-			WHERE `ws_id`=".WS_ID."
-			  AND `status`=2
-			  AND `client_id` IN (".$ids.")
-			GROUP BY `client_id`";
-	$q = query($sql);
-	while($r = mysql_fetch_assoc($q))
-		$spisok[$r['id']]['zayav_ready'] = $r['count'];
-
-	//отменённые заявки
-	$sql = "SELECT
-				`client_id` AS `id`,
-				COUNT(`id`) AS `count`
-			FROM `zayav`
-			WHERE `ws_id`=".WS_ID."
-			  AND `status`=3
-			  AND `client_id` IN (".$ids.")
-			GROUP BY `client_id`";
-	$q = query($sql);
-	while($r = mysql_fetch_assoc($q))
-		$spisok[$r['id']]['zayav_fail'] = $r['count'];
-
-	return $spisok;
-}
 /*
 function _zayavTooltip($z, $v) {
 	return
@@ -281,11 +224,12 @@ function zayavPlaceCheck($zayav_id, $place_id=0, $place_name='') {// Обновление 
 			if($place_id == 2)
 				_note(array(
 					'add' => 1,
+					'comment' => 1,
 					'p' => 'zayav',
 					'id' => $zayav_id,
 					'txt' => 'Передано клиенту.'
 				));
-
+/*
 			//удаление пустых местонахождений
 			$sql = "DELETE FROM `zayav_device_place` WHERE `id` IN (
 						SELECT id FROM (
@@ -300,6 +244,7 @@ function zayavPlaceCheck($zayav_id, $place_id=0, $place_name='') {// Обновление 
 						) `t` WHERE !`count`
 					)";
 			query($sql);
+*/
 			$gv += mysql_affected_rows();
 		}
 
