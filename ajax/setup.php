@@ -71,21 +71,6 @@ switch(@$_POST['op']) {
 		jsonSuccess();
 		break;
 
-	case 'cartridge_toggle'://подключение-отключение услуги заправки картриджей
-		if(!VIEWER_ADMIN)
-			jsonError();
-
-		$v = _bool($_POST['v']);
-
-		$old = query_value("SELECT `service_cartridge` FROM `setup` WHERE `ws_id`=".WS_ID);
-		if($old == $v)
-			jsonError();
-
-		query("UPDATE `setup` SET `service_cartridge`=".$v." WHERE `ws_id`=".WS_ID);
-		xcache_unset(CACHE_PREFIX.'workshop_'.WS_ID);
-
-		jsonSuccess();
-		break;
 	case 'cartridge_edit':
 		if(!$id = _num($_POST['id']))
 			jsonError();

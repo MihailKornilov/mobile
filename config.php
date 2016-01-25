@@ -19,7 +19,6 @@ if(WS_ID) {
 	$setup = query_assoc($sql);
 	define('WS_DEVS', $setup['devs']);
 	define('WS_TYPE', $setup['ws_type_id']);
-	define('SERVIVE_CARTRIDGE', $setup['service_cartridge']);
 }
 
 require_once API_PATH.'/nofunc.php';

@@ -12,7 +12,6 @@
 #zayav-cartridge .cart-prim u{font-size:10px}
 #zayav-cartridge .ready{background-color:#dfd}
 #zayav-cartridge .nomer{margin:0 4px;color:#777}
-#zayav-cartridge .ch{text-align:center}
 
 /* Таблица внесения нового картриджа */
 #cartridge-new-tab{border-spacing:10px}
@@ -114,88 +113,6 @@
 
 
 
-
-/* Товары */
-#tovar ._empty{margin:10px}
-#tovar #avai_check{margin-top:20px}
-#tovar ._search{margin-top:15px}
-
-#tovar-add-tab{border-spacing:10px}
-#tovar-add-tab #name{width:242px}
-
-
-.tovar-unit{margin:8px;cursor:pointer}
-.tovar-unit:hover{background-color:#e9edf1}
-.tovar-unit .tb{width:100%}
-.tovar-unit .img{
-	width:80px;
-	height:80px;
-	text-align:center;
-}
-.tovar-unit .cont{
-	padding-left:10px;
-	padding-top:5px;
-	vertical-align:top;
-}
-.tovar-unit:not(:hover) .avai_add{display:none}
-.tovar-unit .avai_add{
-	float:right;
-	margin-right:7px;
-	color:#292;
-	font-weight:bold;
-}
-.tovar-unit .avai{
-	float:right;
-	margin-right:7px;
-	padding:4px 8px;
-	color:#080;
-	font-weight:bold;
-	border:#ddd solid 1px;
-	background-color:#cfc;
-}
-
-#tovar-avai-add .tb{border-spacing:10px}
-#tovar-avai-add .label{text-align:right}
-#tovar-avai-add #count{width:45px}
-#tovar-avai-add span{color:#888;font-size:10px;margin-left:8px}
-
-#tovar-avai-show ._spisok{margin-top:10px}
-#tovar-avai-show tr:hover{background-color:#ffc}
-#tovar-avai-show .name{width:300px}
-#tovar-avai-show .color{
-	display:inline-block;
-	margin-left:5px;
-	padding:2px 7px;
-	color:#555;
-	border:#ddd solid 1px;
-	background-color:#f2f2f2;
-}
-#tovar-avai-show .count{text-align:center;font-weight:bold}
-#tovar-avai-show .bu{
-	display:inline-block;
-	margin-left:5px;
-	background-color:#fcc;
-	padding:2px 7px;
-	color:#900;
-}
-
-#tovar-catalog #filter{
-	background-color:#f7f7f7;
-	padding:10px;
-	border-bottom:#DAE1E8 solid 1px
-}
-#tovar-catalog #filter-tab{width:100%}
-#tovar-catalog #td-button-add{text-align:right}
-#tovar-catalog #tab{border-spacing:10px}
-#tovar-catalog .td{width:194px;vertical-align:top;padding-bottom:10px}
-#tovar-catalog .head{
-	display:block;
-	font-size:13px;
-	font-weight:bold;
-}
-#tovar-catalog ul{list-style-type:disc;margin-left:25px}
-#tovar-catalog li{margin-top:2px}
-#tovar-catalog li a{margin-left:-5px}
 
 
 /* Внесение нового наименования запчасти */

@@ -419,7 +419,7 @@ function zayavInfoCartridge($zayav_id) {
 		'<div class="headBlue">Список картриджей</div>'.
 		'<div id="zc-spisok">'.zayavInfoCartridge_spisok($zayav_id).'</div>'.
 	'</div>';
-}//_zayavInfoAccrual()
+}
 function zayavInfoCartridge_spisok($zayav_id) {//список картриджей в инфо по заявке
 	$sql = "SELECT *
  			FROM `zayav_cartridge`

@@ -4,8 +4,7 @@
 
 function setup() {
 	return array(
-		'info' => 'Основная информация',
-		'service' => 'Виды услуг'
+		'info' => 'Основная информация'
 	);
 /*
 	if(!RULES_INFO)
@@ -71,39 +70,6 @@ function setup_info() {
 }//setup_info()
 
 
-function setup_service() {
-	$r = query_assoc("SELECT * FROM `setup` WHERE `ws_id`=".WS_ID);
-	return
-	'<div id="setup-service">'.
-		'<div class="headName">Виды оказываемых услуг</div>'.
-
-		'<div class="unit'.($r['service_device'] ? ' on' : '').'">'.
-			'<h1>Ремонт электронного оборудования</h1>'.
-			'<h2>Приём в ремонт и на профилактическое обслуживание оборудования и электронных устройств: '.
-				'<ul><li>компьютеров;'.
-					'<li>ноутбуков;'.
-					'<li>планшетов;'.
-					'<li>мобильных телефонов;'.
-					'<li>принтеров;'.
-					'<li>фотоаппаратов;'.
-					'<li>др.'.
-				'</ul>'.
-			'</h2>'.
-//			'<h4><a>Настроить</a></h4>'.
-		'</div>'.
-
-		'<div class="unit'.($r['service_cartridge'] ? ' on' : '').'">'.
-			'<h1>Заправка картриджей</h1>'.
-			'<h2>Заправка, восстановление картриджей от лазерных принтеров, копиров и МФУ. Замена чипов, фотовалов.</h2>'.
-			'<h3><a class="s-cartridge-toggle">Включить</a></h3>'.
-			'<h4>'.
-				'<a href="'.URL.'&p=setup&d=service&d1=cartridge&id=1">Настроить</a> :: '.
-				'<a class="s-cartridge-toggle off">Отключить</a>'.
-			'</h4>'.
-		'</div>'.
-
-	'</div>';
-}//setup_service()
 function setup_service_cartridge() {
 	return
 		'<div id="setup-service-cartridge">'.

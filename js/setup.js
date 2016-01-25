@@ -162,27 +162,4 @@ $(document)
 				});
 			});
 		}
-		if($('#setup-service').length) {
-			$('.s-cartridge-toggle').click(function() {
-				var t = $(this),
-					p = t,
-					send = {
-						op:'cartridge_toggle',
-						v:t.hasClass('off') ? 0 : 1
-					};
-				while(!p.hasClass('unit'))
-					p = p.parent();
-				var h1 = p.find('h1');
-				if(h1.hasClass('_busy'))
-					return;
-				h1.addClass('_busy');
-				$.post(AJAX_MAIN, send, function(res) {
-					h1.removeClass('_busy');
-					if(res.success) {
-						p[(send.v ? 'add' : 'remove') + 'Class']('on');
-						_msg('Выполнено!');
-					}
-				}, 'json');
-			});
-		}
 	});
