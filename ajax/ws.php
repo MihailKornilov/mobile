@@ -22,12 +22,12 @@ switch(@$_POST['op']) {
 		break;
 
 	case 'base_device_add':
-		$name = win1251(htmlspecialchars(trim($_POST['name'])));
+		$name = _txt($_POST['name']);
 		if(empty($name))
 			jsonError();
 
-		$sql = "SELECT `name` FROM `base_device` WHERE `name`='".addslashes($name)."'";
-		if(mysql_num_rows(query($sql)))
+		$sql = "SELECT COUNT(*) FROM `base_device` WHERE `name`='".addslashes($name)."'";
+		if(query_value($sql))
 			jsonError();
 
 		$sort = query_value("SELECT IFNULL(MAX(`sort`)+1,0) FROM `base_device`");
@@ -45,28 +45,26 @@ switch(@$_POST['op']) {
 				".VIEWER_ID."
 			)";
 		query($sql);
-		$send['id'] = mysql_insert_id();
+		$send['id'] = query_insert_id('base_device');
 
-		$sql = "UPDATE `workshop` SET `devs`=CONCAT(`devs`,',".$send['id']."') WHERE `id`=".WS_ID;
+		$sql = "UPDATE `setup` SET `devs`=CONCAT(`devs`,',".$send['id']."') WHERE `ws_id`=".WS_ID;
 		query($sql);
 
 		GvaluesCreate();
 		xcache_unset(CACHE_PREFIX.'device_name');
-		xcache_unset(CACHE_PREFIX.'setup_global');
-		xcache_unset(CACHE_PREFIX.'workshop_'.WS_ID);
+
 		jsonSuccess($send);
 		break;
 	case 'base_vendor_add':
-		if(!preg_match(REGEXP_NUMERIC, $_POST['device_id']))
+		if(!$device_id = _num($_POST['device_id']))
 			jsonError();
 
-		$name = win1251(htmlspecialchars(trim($_POST['name'])));
+		$name = _txt($_POST['name']);
 		if(empty($name))
 			jsonError();
 
-		$device_id = intval($_POST['device_id']);
-		$sql = "SELECT `name` FROM `base_vendor` WHERE `device_id`=".$device_id." AND `name`='".addslashes($name)."'";
-		if(mysql_num_rows(query($sql)))
+		$sql = "SELECT COUNT(*) FROM `base_vendor` WHERE `device_id`=".$device_id." AND `name`='".addslashes($name)."'";
+		if(query_value($sql))
 			jsonError();
 
 		$sort = query_value("SELECT IFNULL(MAX(`sort`)+1,0) FROM `base_vendor` WHERE `device_id`=".$device_id);
@@ -82,32 +80,29 @@ switch(@$_POST['op']) {
 				".VIEWER_ID."
 			)";
 		query($sql);
-		$send['id'] = mysql_insert_id();
+		$send['id'] = query_insert_id('base_vendor');
 
 		GvaluesCreate();
 		xcache_unset(CACHE_PREFIX.'vendor_name');
-		xcache_unset(CACHE_PREFIX.'setup_global');
-		xcache_unset(CACHE_PREFIX.'workshop_'.WS_ID);
+
 		jsonSuccess($send);
 		break;
 	case 'base_model_add':
-		if(!preg_match(REGEXP_NUMERIC, $_POST['device_id']))
+		if(!$device_id = _num($_POST['device_id']))
 			jsonError();
-		if(!preg_match(REGEXP_NUMERIC, $_POST['vendor_id']))
+		if(!$vendor_id = _num($_POST['vendor_id']))
 			jsonError();
 
 		$name = win1251(htmlspecialchars(trim($_POST['name'])));
 		if(empty($name))
 			jsonError();
 
-		$device_id = intval($_POST['device_id']);
-		$vendor_id = intval($_POST['vendor_id']);
-		$sql = "SELECT `name`
+		$sql = "SELECT COUNT(*)
 				FROM `base_model`
 				WHERE `device_id`=".$device_id."
 				  AND `vendor_id`=".$vendor_id."
 				  AND `name`='".addslashes($name)."'";
-		if(mysql_num_rows(query($sql)))
+		if(query_value($sql))
 			jsonError();
 
 		$sql = "INSERT INTO `base_model` (
@@ -122,12 +117,11 @@ switch(@$_POST['op']) {
 				".VIEWER_ID."
 			)";
 		query($sql);
-		$send['id'] = mysql_insert_id();
+		$send['id'] = query_insert_id('base_model');
 
 		GvaluesCreate();
 		xcache_unset(CACHE_PREFIX.'model_name_count');
-		xcache_unset(CACHE_PREFIX.'setup_global');
-		xcache_unset(CACHE_PREFIX.'workshop_'.WS_ID);
+
 		jsonSuccess($send);
 		break;
 

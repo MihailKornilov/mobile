@@ -9,8 +9,6 @@ if(!WS_ID) {
 	die(_header().$html._footer());
 }
 
-if(!WS_ACCESS)
-	die(_header()._noauth()._footer());
 
 $html = _header();
 $html .= _menu();
@@ -18,40 +16,6 @@ $html .= _global_index();
 
 
 switch($_GET['p']) {
-	case 'zayav1':
-		switch(zayavCookie('get')) {
-			case 'add':
-				$v = array();
-				if(isset($_GET['imei']) && preg_match(REGEXP_WORD, $_GET['imei']))
-					$v['imei'] = strtoupper(htmlspecialchars(trim($_GET['imei'])));
-				if(isset($_GET['serial']) && preg_match(REGEXP_WORD, $_GET['serial']))
-					$v['serial'] = strtoupper(htmlspecialchars(trim($_GET['serial'])));
-				$html .= zayav_add($v);
-				break;
-			case 'cartridge': $html .= zayav_cartridge(_hashFilter('cartridge')); break;
-			case 'info': $html .= zayav_info(); break;
-			default: $html .= zayav_list(_hashFilter('zayav'));
-		}
-		break;
-	case 'tovar':
-		if(!WS_ID)
-			header('Location:'.URL.'&p=wscreate');
-
-		$v = array();
-		if(HASH_VALUES) {
-			$ex = explode('.', HASH_VALUES);
-			foreach($ex as $r) {
-				$arr = explode('=', $r);
-				$v[$arr[0]] = $arr[1];
-			}
-		} else
-			foreach($_COOKIE as $k => $val) {
-				$arr = explode(VIEWER_ID.'_tovar_', $k);
-				if(isset($arr[1]))
-					$v[$arr[1]] = $val;
-			}
-		$html .= tovar($v);
-		break;
 	case 'zp':
 		if(!WS_ID)
 			header('Location:'.URL.'&p=wscreate');

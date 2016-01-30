@@ -61,7 +61,7 @@ switch(@$_POST['op']) {
 
 		_cacheClear($ws_id);
 		_globalCacheClear($ws_id);
-		_globalValuesJS();
+//		_globalValuesJS();
 
 		jsonSuccess();
 		break;

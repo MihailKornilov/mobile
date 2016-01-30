@@ -5,9 +5,6 @@ function _cacheClear($ws_id=WS_ID) {
 	xcache_unset(CACHE_PREFIX.'model_name_count');
 	xcache_unset(CACHE_PREFIX.'zp_name');
 	xcache_unset(CACHE_PREFIX.'device_equip');
-	xcache_unset(CACHE_PREFIX.'zayav_expense'.$ws_id);
-	xcache_unset(CACHE_PREFIX.'remind_active'.$ws_id);
-	xcache_unset(CACHE_PREFIX.'workshop_'.$ws_id);
 	xcache_unset(CACHE_PREFIX.'cartridge'.$ws_id);
 	GvaluesCreate($ws_id);
 }
@@ -17,18 +14,15 @@ function _appScripts() {
 		'<link rel="stylesheet" type="text/css" href="'.APP_HTML.'/css/main'.(DEBUG ? '' : '.min').'.css?'.VERSION.'" />'.
 		'<script type="text/javascript" src="'.APP_HTML.'/js/main'.(DEBUG ? '' : '.min').'.js?'.VERSION.'"></script>'.
 
-		(WS_ID ?
-			'<script type="text/javascript">'.
-				'var WS_DEVS=['.WS_DEVS.'],'.
-					'WS_TYPE=['.WS_TYPE.'];'.
-			'</script>'.
-			'<script type="text/javascript" src="'.APP_HTML.'/js/G_values.js?'.G_VALUES.'"></script>'.
-			'<script type="text/javascript" src="'.APP_HTML.'/js/G_values_'.WS_ID.'.js?'.G_VALUES.'"></script>'.
-			'<script type="text/javascript" src="'.APP_HTML.'/js/ws'.(DEBUG ? '' : '.min').'.js?'.VERSION.'"></script>'.
-			'<script type="text/javascript" src="'.APP_HTML.'/js/ws_tovar'.(DEBUG ? '' : '.min').'.js?'.VERSION.'"></script>'.
-			'<script type="text/javascript" src="'.APP_HTML.'/js/ws_zp'.(DEBUG ? '' : '.min').'.js?'.VERSION.'"></script>'.
-			'<script type="text/javascript" src="'.APP_HTML.'/js/ws_report'.(DEBUG ? '' : '.min').'.js?'.VERSION.'"></script>'
-		: '').
+		'<script type="text/javascript">'.
+			'var WS_DEVS=['.WS_DEVS.'],'.
+				'WS_TYPE=['.WS_TYPE.'];'.
+		'</script>'.
+		'<script type="text/javascript" src="'.APP_HTML.'/js/G_values.js?'.WS_VALUES.'"></script>'.
+		'<script type="text/javascript" src="'.APP_HTML.'/js/G_values_'.WS_ID.'.js?'.WS_VALUES.'"></script>'.
+		'<script type="text/javascript" src="'.APP_HTML.'/js/ws'.(DEBUG ? '' : '.min').'.js?'.VERSION.'"></script>'.
+		'<script type="text/javascript" src="'.APP_HTML.'/js/ws_zp'.(DEBUG ? '' : '.min').'.js?'.VERSION.'"></script>'.
+		'<script type="text/javascript" src="'.APP_HTML.'/js/ws_report'.(DEBUG ? '' : '.min').'.js?'.VERSION.'"></script>'.
 
 		//Стили и скрипты для настроек
 		(@$_GET['p'] == 'setup' ?
@@ -77,11 +71,9 @@ function GvaluesCreate($ws_id=WS_ID) {//Составление файла G_values.js
 	fwrite($fp, $save);
 	fclose($fp);
 
-	//обновление значения версии файла G_values.js
-	$sql = "UPDATE `_setup`
-			SET `value`=`value`+1
-			WHERE `app_id`=".APP_ID."
-			  AND `key`='G_VALUES'";
+	$sql = "UPDATE `_ws`
+			SET `js_values`=`js_values`+1
+			WHERE `id`=".$ws_id;
 	query($sql, GLOBAL_MYSQL_CONNECT);
 }
 

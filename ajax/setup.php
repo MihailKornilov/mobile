@@ -36,7 +36,6 @@ switch(@$_POST['op']) {
 		$sql = "UPDATE `setup` SET `devs`='".$ids."' WHERE `id`=".WS_ID;
 		query($sql);
 
-		xcache_unset(CACHE_PREFIX.'workshop_'.WS_ID);
 
 		jsonSuccess();
 		break;

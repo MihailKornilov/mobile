@@ -661,10 +661,14 @@ $.fn.device = function(o) {
 	// проверка на совпадение имени при внесении нового элемента
 	function name_test(spisok, name) {
 		if(spisok) {
-		name = name.toLowerCase();
-		for(var n = 0; n < spisok.length; n++)
-			if(spisok[n].title.toLowerCase() == name)
-				return true;
+			name = name.toLowerCase();
+			for(var n = 0; n < spisok.length; n++) {
+				var sp = spisok[n].title;
+				if(sp == undefined)
+					continue;
+				if(sp.toLowerCase() == name)
+					return true;
+			}
 		}
 		return false;
 	}
