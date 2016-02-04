@@ -45,7 +45,7 @@ $(document)
 			filling = t.find('.filling').val(),
 			restore = t.find('.restore').val(),
 			chip = t.find('.chip').val(),
-			html = '<table class="setup-tab">' +
+			html = '<table id="setup-tab">' +
 				'<tr><td class="label">Вид:<td><input type="hidden" id="type_id" value="' + type_id + '" />' +
 				'<tr><td class="label"><b>Модель картриджа:</b><td><input type="text" id="name" value="' + name + '" />' +
 				'<tr><td class="label">Заправка:<td><input type="text" id="cost_filling" class="money" maxlength="11" value="' + filling + '" /> руб.' +

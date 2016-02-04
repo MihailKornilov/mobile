@@ -1,23 +1,30 @@
 <?php
 switch(@$_POST['op']) {
-	case 'scanner_word':
-		$word = win1251(htmlspecialchars(trim($_POST['word'])));
-		if(empty($word))
+	case 'zpname_add':
+		if(!$device_id = _num($_POST['device_id']))
 			jsonError();
-		if(!preg_match(REGEXP_WORD, $word))
+
+		$name = _txt($_POST['name']);
+
+		if(empty($name))
 			jsonError();
-		$sql = "SELECT `id`
-				FROM `zayav`
-				WHERE `ws_id`=".WS_ID."
-				  AND (`imei`='".$word."'
-				   OR `serial`='".$word."'
-				   OR `barcode`='".substr($word, 0, 12)."')";
-		$id = query_value($sql);
-		$send = array();
-		if($id)
-			$send['zayav_id'] = $id;
-		elseif(preg_match(REGEXP_NUMERIC, $word) && strlen($word) == 15)
-			$send['imei'] = 1;
+
+		$sql = "INSERT INTO `setup_zp_name` (
+					`device_id`,
+					`name`
+				) VALUES (
+					".$device_id.",
+					'".addslashes($name)."'
+				)";
+		query($sql);
+
+		$send['id'] = mysql_insert_id();
+
+		GvaluesCreate();
+		xcache_unset(CACHE_PREFIX.'zp_name');
+
+		$send['zp'] = SA ? utf8(sa_zpname_spisok($device_id)) : '';
+
 		jsonSuccess($send);
 		break;
 
@@ -409,7 +416,7 @@ switch(@$_POST['op']) {
 				)";
 		$send['id'] = query($sql);
 
-		jsonSuccess();
+		jsonSuccess($send);
 		break;
 	case 'zayav_diagnost':
 		if(!$zayav_id = _num($_POST['zayav_id']))

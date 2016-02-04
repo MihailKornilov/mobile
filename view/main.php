@@ -12,11 +12,11 @@ function _appScripts() {
 	return
 
 		'<link rel="stylesheet" type="text/css" href="'.APP_HTML.'/css/main'.(DEBUG ? '' : '.min').'.css?'.VERSION.'" />'.
-		'<script type="text/javascript" src="'.APP_HTML.'/js/main'.(DEBUG ? '' : '.min').'.js?'.VERSION.'"></script>'.
 
 		'<script type="text/javascript">'.
 			'var WS_DEVS=['.WS_DEVS.'],'.
-				'WS_TYPE=['.WS_TYPE.'];'.
+				'WS_TYPE=['.WS_TYPE.'],'.
+				'APP_HTML="'.APP_HTML.'";'.
 		'</script>'.
 		'<script type="text/javascript" src="'.APP_HTML.'/js/G_values.js?'.WS_VALUES.'"></script>'.
 		'<script type="text/javascript" src="'.APP_HTML.'/js/G_values_'.WS_ID.'.js?'.WS_VALUES.'"></script>'.
