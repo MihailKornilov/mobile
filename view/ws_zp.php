@@ -133,7 +133,7 @@ function zp_spisok($v) {
 	$send = array(
 		'all' => $all,
 		'result' => 'Показан'._end($all, 'а ', 'о ').$all.' запчаст'._end($all, 'ь', 'и', 'ей').
-					($filter['menu'] == 3 ? '<a id="xls-zakaz" href="'.APP_HTML.'/view/xls_zakaz.php?'.VALUES.'">Экспорт в xsl</a>' : ''),
+					($filter['menu'] == 3 ? '<a id="xls-zakaz" href="'.URL.'&p=print&d=zp_zakaz">Экспорт в xsl</a>' : ''),
 		'spisok' => '',
 		'filter' => $filter
 	);
