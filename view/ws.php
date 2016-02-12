@@ -229,22 +229,14 @@ function zayavPlaceCheck($zayav_id, $place_id=0, $place_name='') {// Обновление 
 					'id' => $zayav_id,
 					'txt' => 'Передано клиенту.'
 				));
-/*
+
 			//удаление пустых местонахождений
-			$sql = "DELETE FROM `zayav_device_place` WHERE `id` IN (
-						SELECT id FROM (
-							SELECT
-								`p`.`id`,
-								COUNT(`z`.`id`) `count`
-							FROM `zayav_device_place` `p`
-								LEFT JOIN  `zayav` `z`
-								ON `p`.`id`=`z`.`device_place`
-							WHERE `p`.`ws_id`=".WS_ID."
-							GROUP BY `p`.`id`
-						) `t` WHERE !`count`
-					)";
-			query($sql);
-*/
+			$sql = "SELECT DISTINCT `device_place` FROM `_zayav` WHERE `device_place`";
+			if($ids = query_ids($sql, GLOBAL_MYSQL_CONNECT)) {
+				$sql = "DELETE FROM `zayav_device_place` WHERE `id` NOT IN (".$ids.")";
+				query($sql);
+			}
+
 			$gv += mysql_affected_rows();
 		}
 
