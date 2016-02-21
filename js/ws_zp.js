@@ -292,7 +292,6 @@ $(document)
 			'<table class="zp-add-tab">' +
 				'<tr><td class="label">Наименование:<td><input type="hidden" id="name_id" value="' + ZP.name_id + '">' +
 				'<tr><td class="label topi">Устройство:<td id="add_dev">' +
-				'<tr><td><td>' + ZP.images +
 				'<tr><td class="label">Версия:<td><input type="text" id="version" value="' + ZP.version + '">' +
 				'<tr><td class="label">Цвет:<td><input type="hidden" id="color_id" value="' + ZP.color_id + '">' +
 				'<tr><td class="label">Радиомастер:<td><input type="hidden" id="price_id" value="' + ZP.price_id + '">' +

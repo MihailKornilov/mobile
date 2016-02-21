@@ -1,20 +1,23 @@
 var modelImageGet = function() {
 		var send = {
 				op:'model_img_get',
-				model_id:_num($('#dev_model').val())
+				model_id:_num($('#za-dev_model').val())
 			},
 			dev = $('#device_image');
+
 		dev.html('');
-		if(send.model_id) {
-			dev.addClass('busy');
-			$.post(AJAX_MAIN, send, function(res) {
-				if(res.success)
-					 dev.html(res.img)
-						.find('img').on('load', function() {
-							$(this).show().parent().removeClass('busy');
-						});
-			}, 'json');
-		}
+
+		if(!send.model_id)
+			return;
+
+		dev.addClass('busy');
+		$.post(AJAX_MAIN, send, function(res) {
+			if(res.success)
+				 dev.html(res.img)
+					.find('img').on('load', function() {
+						$(this).show().parent().removeClass('busy');
+					});
+		}, 'json');
 	},
 
 	zayavDevSelect = function(dev) {

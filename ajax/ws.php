@@ -133,11 +133,11 @@ switch(@$_POST['op']) {
 		break;
 
 	case 'model_img_get':
-		if(!preg_match(REGEXP_NUMERIC, $_POST['model_id']))
+		if(!$model_id = _num($_POST['model_id']))
 			jsonError();
-		$send['img'] = _imageGet(array(
-			'owner' => 'dev'.intval($_POST['model_id']),
-			'view' => 1
+
+		$send['img'] = _imageSmall(array(
+			'model_id' => $model_id
 		));
 		jsonSuccess($send);
 		break;
@@ -350,21 +350,6 @@ switch(@$_POST['op']) {
 				  AND `zayav_id`=".$zayav_id;
 		query($sql);
 
-		$zayav = 'zayav'.$z['id'];
-		$dev = 'dev'.$z['base_model_id'];
-		$v = array(
-			'owner' => array($zayav, $dev),
-			'size' => 'b',
-			'x' => 180,
-			'y' => 220
-		);
-		$img = _imageGet($v);
-		$image = '';
-		if($img[$zayav]['id'])
-			$image = $img[$zayav]['img'];
-		elseif($img[$dev]['id'])
-			$image = $img[$dev]['img'];
-
 		$sql = "INSERT INTO `zayav_kvit` (
 					`ws_id`,
 					`zayav_id`,
@@ -385,7 +370,6 @@ switch(@$_POST['op']) {
 					`client_fio`,
 					`client_telefon`,
 
-					`image`,
 					`defect`,
 					`active`,
 					`viewer_id_add`
@@ -409,7 +393,6 @@ switch(@$_POST['op']) {
 					'".addslashes(_clientVal($z['client_id'], 'name'))."',
 					'".addslashes(_clientVal($z['client_id'], 'phone'))."',
 
-					'".addslashes($image)."',
 					'".addslashes($defect)."',
 					".$active.",
 					".VIEWER_ID."

@@ -399,7 +399,6 @@ function zp_info($zp_id) {
 			'name:"'._zpName($zp['name_id']).' <b>'._vendorName($zp['base_vendor_id'])._modelName($zp['base_model_id']).'</b>",'.
 			'for:"для '._deviceName($zp['base_device_id'], 1).'",'.
 			'count:'.($avai ? $avai : 0).','.
-			'images:"'.addslashes(_imageAdd(array('owner'=>'zp'.$compat_id))).'",'.
 			'price_id:'.$zp['price_id'].
 		'};'.
 	'</script>'.
@@ -432,15 +431,7 @@ function zp_info($zp_id) {
 					'<div class="headBlue">Движение</div>'.
 					'<div class="move">'.zp_move($compat_id).'</div>'.
 				'<td class="right">'.
-					'<div id="foto">'.
-						_imageGet(array(
-							'owner' => 'zp'.$compat_id,
-							'size' => 'b',
-							'x' => 200,
-							'y' => 320,
-							'view' => 1
-						)).
-					'</div>'.
+					'<div id="foto">'._image200(array('zp_id'=>$compat_id)).'</div>'.
 					'<div class="rightLink">'.
 						'<a class="edit">Редактировать</a>'.
 						'<a class="avai_add">Внести наличие</a>'.

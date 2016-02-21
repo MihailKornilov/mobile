@@ -1,21 +1,6 @@
 <?php
 // ---===! zayav !===--- Секция заявок
 
-function zayavCase1() {
-	switch(zayavCookie('get')) {
-		case 'add':
-			$v = array();
-			if(isset($_GET['imei']) && preg_match(REGEXP_WORD, $_GET['imei']))
-				$v['imei'] = strtoupper(htmlspecialchars(trim($_GET['imei'])));
-			if(isset($_GET['serial']) && preg_match(REGEXP_WORD, $_GET['serial']))
-				$v['serial'] = strtoupper(htmlspecialchars(trim($_GET['serial'])));
-			return zayav_add($v);
-		case 'cartridge': return zayav_cartridge(_hashFilter('cartridge'));
-		case 'info': return zayav_info();
-	}
-	return zayav_list(_hashFilter('zayav'));
-}
-
 function zayavStatusChange($zayav_id, $status) {//изменение статуса заявки и внесение истории (для внесения начисления)
 	$sql = "SELECT *
 			FROM `zayav`
@@ -38,82 +23,6 @@ function zayavStatusChange($zayav_id, $status) {//изменение статуса заявки и вне
 		));
 	}
 }
-/*
-function _zayavValToList($arr) {//вставка данных заявок в массив по zayav_id
-	$ids = array();
-	$arrIds = array();
-	foreach($arr as $key => $r)
-		if(!empty($r['zayav_id'])) {
-			$ids[$r['zayav_id']] = 1;
-			$arrIds[$r['zayav_id']][] = $key;
-		}
-	if(empty($ids))
-		return $arr;
-
-	$sql = "SELECT *
-			FROM `zayav`
-			WHERE `ws_id`=".WS_ID."
-			  AND `id` IN (".implode(',', array_keys($ids)).")";
-	$zayav = query_arr($sql);
-
-
-	if(!isset($r['client_phone'])) {
-		foreach($zayav as $r)
-			foreach($arrIds[$r['id']] as $id)
-				$arr[$id] += array('client_id' => $r['client_id']);
-		$arr = _clientValToList($arr);
-	}
-
-	foreach($zayav as $r) {
-		foreach($arrIds[$r['id']] as $id) {
-			$dolg = $r['accrual_sum'] - $r['oplata_sum'];
-			$arr[$id] += array(
-				'zayav_link' =>
-					'<a href="'.URL.'&p=zayav&d=info&id='.$r['id'].'" class="zayav_link">'.
-						'№'.$r['nomer'].
-						'<div class="tooltip">'._zayavTooltip($r, $arr[$id]).'</div>'.
-					'</a>',
-				'zayav_color' => //подсветка заявки на основании статуса
-					'<a href="'.URL.'&p=zayav&d=info&id='.$r['id'].'" class="zayav_link color"'._zayavStatus($r['status'], 'bg').'>'.
-						'№'.$r['nomer'].
-						'<div class="tooltip">'._zayavTooltip($r, $arr[$id]).'</div>'.
-					'</a>',
-				'zayav_dolg' => $dolg ? '<span class="zayav-dolg'._tooltip('Долг по заявке', -45).$dolg.'</span>' : ''
-			);
-		}
-	}
-
-	return $arr;
-}
-*/
-/*
-function _zayavTooltip($z, $v) {
-	return
-		'<table>'.
-			'<tr><td><div class="image">'._zayavImg($z).'</div>'.
-				'<td class="inf">'.
-					'<div'._zayavStatus($z['status'], 'bg').' '.
-						'class="tstat'._tooltip('Статус заявки: '._zayavStatus($z['status']), -7, 'l').
-					'</div>'.
-					_deviceName($z['base_device_id']).
-					'<div class="tname">'._vendorName($z['base_vendor_id'])._modelName($z['base_model_id']).'</div>'.
-
-//		($z['cartridge'] ? '<b>Картриджи</b><br />'.
-//			$z['cartridge_count'].' шт.'
-//			:
-//
-//		).
-
-			'<table>'.
-				'<tr><td class="label top">Клиент:'.
-					'<td>'.$v['client_name'].
-						($v['client_phone'] ? '<br />'.$v['client_phone'] : '').
-				'<tr><td class="label">Баланс:'.
-					'<td><span class="bl" style=color:#'.($v['client_balans'] < 0 ? 'A00' : '090').'>'.$v['client_balans'].'</span>'.
-			'</table>'.
-		'</table>';
-}
-*/
 function _zayavBaseDeviceIds($client_id=0) { //список id устройств, которые используются в заявках
 	$ids = array();
 	$sql = "SELECT `b`.`id`
@@ -160,20 +69,6 @@ function _zayavBaseModelIds($client_id=0) { //список id производителей, которые 
 	while($r = mysql_fetch_assoc($q))
 		$ids[] = $r['id'];
 	return implode(',', $ids);
-}
-function _zayavImg($z, $size='s') {
-	$v = array(
-		'owner' => array('zayav'.$z['id'], 'dev'.$z['base_model_id'])
-	);
-	if($size == 'b')
-		$v += array(
-			'size' => 'b',
-			'x' => 200,
-			'y' => 320,
-			'view' => 1
-		);
-	$img = _imageGet($v);
-	return $img['zayav'.$z['id']]['id'] ? $img['zayav'.$z['id']]['img'] : $img['dev'.$z['base_model_id']]['img'];
 }
 function zayavPlaceCheck($zayav_id, $place_id=0, $place_name='') {// Обновление местонахождения заявки
 
@@ -247,19 +142,6 @@ function zayavPlaceCheck($zayav_id, $place_id=0, $place_name='') {// Обновление 
 	return $place_id;
 }
 
-function zayavCookie($action='set', $v='device') {//сохранение страницы с заявками в куках, чтобы было понятно, куда возвращаться
-	$key = APP_ID.'_'.VIEWER_ID.'_zayav_type';
-
-	if($action == 'get') {
-		if(empty($_GET['d']))
-			return @$_COOKIE[$key];
-		return $_GET['d'];
-	}
-
-	setcookie($key, $v, time() + 3600, '/');
-	return '';
-}
-
 function zayavEquipSpisok($ids) {//Список комплектации через запятую
 	if(empty($ids))
 		return '';
@@ -276,7 +158,6 @@ function zayavEquipSpisok($ids) {//Список комплектации через запятую
 function zayavInfoDevice($z) {
 	return
 	'<div id="zayav-info-device">'.
-		'<div id="foto">'._zayavImg($z, 'b').'</div>'.
 		'<div class="headBlue">Информация об устройстве</div>'.
 		'<div id="content">'.
 			'<div id="dev-name">'.
@@ -346,29 +227,27 @@ function zayav_zp($z) {
 	if(empty($zp))
 		return '<div class="_empty">Для '.$MODEL.' запчастей нет.</div>';
 
-	$img = array();
-	foreach($ids as $id)
-		$img[] = 'zp'.$id;
-	$img = _imageGet(array('owner' => $img));
+	$zp = _imageValToList($zp, 'zp_id');
 
 	$ids = implode(',', $ids);
 	$sql = "SELECT `zp_id` AS `id`,`count` FROM `zp_avai` WHERE `zp_id` IN (".$ids.")";
 	$q = query($sql);
 	while($r = mysql_fetch_assoc($q))
 		$zp[$r['id']]['avai'] = $r['count'];
+
 	$sql = "SELECT `zp_id` AS `id`,`count`
-				FROM `zp_zakaz`
-				WHERE `zp_id` IN (".$ids.")
-				  AND `zayav_id`=".$z['id'];
+			FROM `zp_zakaz`
+			WHERE `zp_id` IN (".$ids.")
+			  AND `zayav_id`=".$z['id'];
 	$q = query($sql);
 	while($r = mysql_fetch_assoc($q))
 		$zp[$r['id']]['zakaz'] = $r['count'];
 
 	$send = '';
-	foreach($zp as $id => $r)
+	foreach($zp as $r)
 		$send .=
 			'<div class="unit" val="'.$r['id'].'">'.
-				'<div class="image"><div>'.$img['zp'.$id]['img'].'</div></div>'.
+				'<div class="image"><div>'.$r['image_small'].'</div></div>'.
 				'<a href="'.URL.'&p=zp&d=info&id='.$r['id'].'"><b>'._zpName($r['name_id']).'</b> '.$MODEL.'</a>'.
 				($r['version'] ? '<div class="version">'.$r['version'].'</div>' : '').
 				($r['color_id'] ? '<div class="color">Цвет: '._color($r['color_id']).'</div>' : '').
