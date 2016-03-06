@@ -1,75 +1,6 @@
 <?php
 // ---===! zayav !===--- Секция заявок
 
-function zayavStatusChange($zayav_id, $status) {//изменение статуса заявки и внесение истории (для внесения начисления)
-	$sql = "SELECT *
-			FROM `zayav`
-			WHERE `ws_id`=".WS_ID."
-			  AND !`deleted`
-			  AND `id`=".$zayav_id;
-	$z = query_assoc($sql);
-
-	if($z['status'] != $status) {
-		$sql = "UPDATE `zayav`
-				SET `status`=".$status.",`status_dtime`=CURRENT_TIMESTAMP
-				WHERE `id`=".$zayav_id;
-		query($sql);
-		_history(array(
-			'type_id' => 71,
-			'client_id' => $z['client_id'],
-			'zayav_id' => $zayav_id,
-			'v1' => $z['status'],
-			'v2' => $status,
-		));
-	}
-}
-function _zayavBaseDeviceIds($client_id=0) { //список id устройств, которые используются в заявках
-	$ids = array();
-	$sql = "SELECT `b`.`id`
-			FROM `zayav` `z` USE INDEX(`i_zayav_status`),
-				 `base_device` `b`
-			WHERE `b`.`id`=`z`.`base_device_id`
-			  AND `z`.`status`
-			  AND `z`.`ws_id`=".WS_ID."
-			  ".($client_id ? "AND `z`.`client_id`=".$client_id : '')."
-			GROUP BY `b`.`id`
-			ORDER BY `b`.`sort`";
-	$q = query($sql);
-	while($r = mysql_fetch_assoc($q))
-		$ids[] = $r['id'];
-	return implode(',', $ids);
-}
-function _zayavBaseVendorIds($client_id=0) { //список id производителей, которые используются в заявках
-	$ids = array();
-	$sql = "SELECT `b`.`id`
-			FROM `zayav` `z`,
-				 `base_vendor` `b`
-			WHERE `b`.`id`=`z`.`base_vendor_id`
-			  AND `z`.`status`
-			  AND `z`.`ws_id`=".WS_ID."
-			  ".($client_id ? "AND `z`.`client_id`=".$client_id : '')."
-			GROUP BY `b`.`id`
-			ORDER BY `b`.`sort`";
-	$q = query($sql);
-	while($r = mysql_fetch_assoc($q))
-		$ids[] = $r['id'];
-	return implode(',', $ids);
-}
-function _zayavBaseModelIds($client_id=0) { //список id производителей, которые используются в заявках
-	$ids = array();
-	$sql = "SELECT `b`.`id`
-			FROM `zayav` `z`,
-				 `base_model` `b`
-			WHERE `b`.`id`=`z`.`base_model_id`
-			  AND `z`.`status`
-			  AND `z`.`ws_id`=".WS_ID."
-			  ".($client_id ? "AND `z`.`client_id`=".$client_id : '')."
-			GROUP BY `b`.`id`";
-	$q = query($sql);
-	while($r = mysql_fetch_assoc($q))
-		$ids[] = $r['id'];
-	return implode(',', $ids);
-}
 function zayavPlaceCheck($zayav_id, $place_id=0, $place_name='') {// Обновление местонахождения заявки
 
 	// - внесение нового местонахождения, если place_id = 0
@@ -84,15 +15,15 @@ function zayavPlaceCheck($zayav_id, $place_id=0, $place_name='') {// Обновление 
 	if(!$place_id && !empty($place_name)) {
 		$sql = "SELECT `id`
 			FROM `zayav_device_place`
-			WHERE `ws_id`=".WS_ID."
+			WHERE `app_id`=".APP_ID."
 			  AND `place`='".$place_name."'
 			LIMIT 1";
 		if (!$place_id = query_value($sql)) {
 			$sql = "INSERT INTO `zayav_device_place` (
-					`ws_id`,
+					`app_id`,
 					`place`
 				) VALUES (
-					".WS_ID.",
+					".APP_ID.",
 					'".addslashes($place_name)."'
 				)";
 			query($sql);
@@ -184,7 +115,7 @@ function zayavInfoDevice($z) {
 function zayav_kvit($zayav_id) {
 	$sql = "SELECT *
 			FROM `zayav_kvit`
-			WHERE `ws_id`=".WS_ID."
+			WHERE `app_id`=".APP_ID."
 			  AND `active`
 			  AND `zayav_id`=".$zayav_id."
 			ORDER BY `id`";

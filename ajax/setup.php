@@ -6,20 +6,18 @@ switch(@$_POST['op']) {
 		if(!$type = _num($_POST['type']))
 			jsonError();
 
-		$sql = "SELECT * FROM `setup` WHERE `id`=".WS_ID;
-		$r = query_assoc($sql);
-
-		if($r['ws_type_id'] == $type)
+		$ws_type_id = _app('ws_type_id');
+		if($ws_type_id == $type)
 			jsonError();
 
-		$sql = "UPDATE `setup` SET `ws_type_id`=".$type." WHERE `id`=".WS_ID;
-		query($sql);
+		$sql = "UPDATE `_app` SET `ws_type_id`=".$type." WHERE `id`=".APP_ID;
+		query($sql, GLOBAL_MYSQL_CONNECT);
 
 		_history(array(
 			'type_id' => 1031,
 			'v1' =>
 				'<table>'.
-					'<tr><td>'._wsType($r['ws_type_id']).'<td>»<td>'._wsType($type).
+					'<tr><td>'._wsType($ws_type_id).'<td>»<td>'._wsType($type).
 				'</table>'
 		));
 
@@ -33,8 +31,8 @@ switch(@$_POST['op']) {
 		if(!$ids = _ids($_POST['devs']))
 			jsonError();
 
-		$sql = "UPDATE `setup` SET `devs`='".$ids."' WHERE `id`=".WS_ID;
-		query($sql);
+		$sql = "UPDATE `_app` SET `devs`='".$ids."' WHERE `id`=".APP_ID;
+		query($sql, GLOBAL_MYSQL_CONNECT);
 
 
 		jsonSuccess();
@@ -45,19 +43,16 @@ switch(@$_POST['op']) {
 
 		xcache_unset(CACHE_PREFIX.'viewer_'.VIEWER_ADMIN);
 
-		$sql = "UPDATE `_ws`
+		$sql = "UPDATE `_app`
 				SET `deleted`=1,
 					`dtime_del`=CURRENT_TIMESTAMP
-				WHERE `app_id`=".APP_ID."
-				  AND `id`=".WS_ID;
+				WHERE `id`=".APP_ID;
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
 		$sql = "UPDATE `_vkuser`
-				SET `ws_id`=0,
-					`admin`=0,
+				SET `admin`=0,
 					`worker`=0
-				WHERE `app_id`=".APP_ID."
-				  AND `ws_id`=".WS_ID;
+				WHERE `app_id`=".APP_ID;
 		query($sql, GLOBAL_MYSQL_CONNECT);
 
 		_cacheClear();
@@ -117,7 +112,7 @@ switch(@$_POST['op']) {
 				WHERE `id`=".$id;
 		query($sql);
 
-		xcache_unset(CACHE_PREFIX.'cartridge'.WS_ID);
+		xcache_unset(CACHE_PREFIX.'cartridge'.APP_ID);
 		GvaluesCreate();
 
 		$changes =
@@ -135,7 +130,7 @@ switch(@$_POST['op']) {
 			));
 
 		$send['html'] = utf8(setup_service_cartridge_spisok($id));
-		$send['cart'] = query_selArray("SELECT `id`,`name` FROM `setup_cartridge` WHERE `ws_id`=".WS_ID." ORDER BY `name`");
+		$send['cart'] = query_selArray("SELECT `id`,`name` FROM `setup_cartridge` WHERE `app_id`=".APP_ID." ORDER BY `name`");
 		jsonSuccess($send);
 		break;
 }

@@ -313,7 +313,6 @@ $(document)
 			model_id:ZP.model,
 			func_device:zpNameSelect
 		});
-		imageSortable();
 		$('#color_id')._select({
 			width:130,
 			title0:'Цвет не указан',

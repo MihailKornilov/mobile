@@ -1,12 +1,12 @@
 <?php
-function _cacheClear($ws_id=WS_ID) {
+function _cacheClear() {
 	xcache_unset(CACHE_PREFIX.'device_name');
 	xcache_unset(CACHE_PREFIX.'vendor_name');
 	xcache_unset(CACHE_PREFIX.'model_name_count');
 	xcache_unset(CACHE_PREFIX.'zp_name');
 	xcache_unset(CACHE_PREFIX.'device_equip');
-	xcache_unset(CACHE_PREFIX.'cartridge'.$ws_id);
-	GvaluesCreate($ws_id);
+	xcache_unset(CACHE_PREFIX.'cartridge'.APP_ID);
+	GvaluesCreate();
 }
 function _appScripts() {
 	return
@@ -18,11 +18,10 @@ function _appScripts() {
 				'WS_TYPE=['.WS_TYPE.'],'.
 				'APP_HTML="'.APP_HTML.'";'.
 		'</script>'.
-		'<script type="text/javascript" src="'.APP_HTML.'/js/G_values.js?'.WS_VALUES.'"></script>'.
-		'<script type="text/javascript" src="'.APP_HTML.'/js/G_values_'.WS_ID.'.js?'.WS_VALUES.'"></script>'.
+		'<script type="text/javascript" src="'.APP_HTML.'/js/G_values.js?'.APP_VALUES.'"></script>'.
+		'<script type="text/javascript" src="'.APP_HTML.'/js/G_values_'.APP_ID.'.js?'.APP_VALUES.'"></script>'.
 		'<script type="text/javascript" src="'.APP_HTML.'/js/ws'.(DEBUG ? '' : '.min').'.js?'.VERSION.'"></script>'.
 		'<script type="text/javascript" src="'.APP_HTML.'/js/ws_zp'.(DEBUG ? '' : '.min').'.js?'.VERSION.'"></script>'.
-		'<script type="text/javascript" src="'.APP_HTML.'/js/ws_report'.(DEBUG ? '' : '.min').'.js?'.VERSION.'"></script>'.
 
 		//Стили и скрипты для настроек
 		(@$_GET['p'] == 'setup' ?
@@ -37,7 +36,7 @@ function _appScripts() {
 		: '');
 }
 
-function GvaluesCreate($ws_id=WS_ID) {//Составление файла G_values.js
+function GvaluesCreate() {//Составление файла G_values.js
 	$save =
 		"\n".'var ZPNAME_SPISOK='.Gvalues_obj('setup_zp_name', '`name`', 'device_id').','.
 
@@ -61,19 +60,19 @@ function GvaluesCreate($ws_id=WS_ID) {//Составление файла G_values.js
 
 	//составление файла G_values для конкретной мастерской
 	$save =
-		'var CARTRIDGE_SPISOK='.query_selJson("SELECT `id`,`name` FROM `setup_cartridge` WHERE `ws_id`=".$ws_id." ORDER BY `name`").','.
-		"\n".'CARTRIDGE_FILLING='.query_assJson("SELECT `id`,`cost_filling` FROM `setup_cartridge` WHERE `ws_id`=".$ws_id).','.
-		"\n".'CARTRIDGE_RESTORE='.query_assJson("SELECT `id`,`cost_restore` FROM `setup_cartridge` WHERE `ws_id`=".$ws_id).','.
-		"\n".'CARTRIDGE_CHIP='.query_assJson("SELECT `id`,`cost_chip` FROM `setup_cartridge` WHERE `ws_id`=".$ws_id).','.
+		'var CARTRIDGE_SPISOK='.query_selJson("SELECT `id`,`name` FROM `setup_cartridge` WHERE `app_id`=".APP_ID." ORDER BY `name`").','.
+		"\n".'CARTRIDGE_FILLING='.query_assJson("SELECT `id`,`cost_filling` FROM `setup_cartridge` WHERE `app_id`=".APP_ID).','.
+		"\n".'CARTRIDGE_RESTORE='.query_assJson("SELECT `id`,`cost_restore` FROM `setup_cartridge` WHERE `app_id`=".APP_ID).','.
+		"\n".'CARTRIDGE_CHIP='.query_assJson("SELECT `id`,`cost_chip` FROM `setup_cartridge` WHERE `app_id`=".APP_ID).','.
 		"\n".'DEVPLACE_SPISOK='._selJson(_devPlace()).';';
 
-	$fp = fopen(APP_PATH.'/js/G_values_'.$ws_id.'.js', 'w+');
+	$fp = fopen(APP_PATH.'/js/G_values_'.APP_ID.'.js', 'w+');
 	fwrite($fp, $save);
 	fclose($fp);
 
-	$sql = "UPDATE `_ws`
+	$sql = "UPDATE `_app`
 			SET `js_values`=`js_values`+1
-			WHERE `id`=".$ws_id;
+			WHERE `id`=".APP_ID;
 	query($sql, GLOBAL_MYSQL_CONNECT);
 }
 
@@ -214,10 +213,10 @@ function _zpCompatId($zp_id) {
 }
 function _zpAvaiSet($zp_id) { // Обновление количества наличия запчасти
 	$zp_id = _zpCompatId($zp_id);
-	$count = query_value("SELECT IFNULL(SUM(`count`),0) FROM `zp_move` WHERE `ws_id`=".WS_ID." AND `zp_id`=".$zp_id." LIMIT 1");
-	query("DELETE FROM `zp_avai` WHERE `ws_id`=".WS_ID." AND `zp_id`=".$zp_id);
+	$count = query_value("SELECT IFNULL(SUM(`count`),0) FROM `zp_move` WHERE `app_id`=".APP_ID." AND `zp_id`=".$zp_id." LIMIT 1");
+	query("DELETE FROM `zp_avai` WHERE `app_id`=".APP_ID." AND `zp_id`=".$zp_id);
 	if($count > 0)
-		query("INSERT INTO `zp_avai` (`ws_id`,`zp_id`,`count`) VALUES (".WS_ID.",".$zp_id.",".$count.")");
+		query("INSERT INTO `zp_avai` (`app_id`,`zp_id`,`count`) VALUES (".APP_ID.",".$zp_id.",".$count.")");
 	return $count;
 }
 function _devPlace($place_id=false, $ws_type=WS_TYPE) {
@@ -228,7 +227,7 @@ function _devPlace($place_id=false, $ws_type=WS_TYPE) {
 
 	$sql = "SELECT `id`,`place`
 			FROM `zayav_device_place`
-			WHERE `ws_id`=".WS_ID."
+			WHERE `app_id`=".APP_ID."
 			ORDER BY `place`";
 	$arr += query_ass($sql);
 
@@ -239,10 +238,10 @@ function _devPlace($place_id=false, $ws_type=WS_TYPE) {
 
 function _cartridgeName($item_id) {
 	if(!defined('CARTRIDGE_NAME_LOADED')) {
-		$key = CACHE_PREFIX.'cartridge'.WS_ID;
+		$key = CACHE_PREFIX.'cartridge'.APP_ID;
 		$arr = xcache_get($key);
 		if(empty($arr)) {
-			$sql = "SELECT `id`,`name` FROM `setup_cartridge` WHERE `ws_id`=".WS_ID;
+			$sql = "SELECT `id`,`name` FROM `setup_cartridge` WHERE `app_id`=".APP_ID;
 			$q = query($sql);
 			while($r = mysql_fetch_assoc($q))
 				$arr[$r['id']] = $r['name'];
@@ -356,7 +355,7 @@ function ws_create_step1() {
 /*
 mb_internal_encoding('UTF-8');
 function mb_ucfirst1($text) {
-	return mb_strtoupper(mb_substr($text, 0, 1)) . mb_substr($text, 1);
+	return mb_strtoupper(mb_substr($text, 0, 1)).mb_substr($text, 1);
 }
 
 function to_schet_spisok() {//внесение списка картриджей к счетам

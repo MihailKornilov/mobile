@@ -54,7 +54,7 @@ switch(@$_POST['op']) {
 		query($sql);
 		$send['id'] = query_insert_id('base_device');
 
-		$sql = "UPDATE `setup` SET `devs`=CONCAT(`devs`,',".$send['id']."') WHERE `ws_id`=".WS_ID;
+		$sql = "UPDATE `_app` SET `devs`=CONCAT(`devs`,',".$send['id']."') WHERE `app_id`=".APP_ID;
 		query($sql);
 
 		GvaluesCreate();
@@ -173,7 +173,6 @@ switch(@$_POST['op']) {
 					`base_model_id`
 				FROM `_zayav`
 				WHERE `app_id`=".APP_ID."
-				  AND `ws_id`=".WS_ID."
 				  AND !`deleted`
 				  AND `id`=".$zayav_id;
 		if(!$zp = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
@@ -198,12 +197,12 @@ switch(@$_POST['op']) {
 		$compat_id = $zp['compat_id'] ? $zp['compat_id'] : $zp['id'];
 
 		$sql = "INSERT INTO `zp_zakaz` (
-					`ws_id`,
+					`app_id`,
 					`zp_id`,
 					`zayav_id`,
 					`viewer_id_add`
 				) VALUES (
-					".WS_ID.",
+					".APP_ID.",
 					".$compat_id.",
 					".intval($_POST['zayav_id']).",
 					".VIEWER_ID."
@@ -232,7 +231,7 @@ switch(@$_POST['op']) {
 			jsonError();
 
 		$sql = "INSERT INTO `zp_move` (
-					`ws_id`,
+					`app_id`,
 					`zp_id`,
 					`count`,
 					`type`,
@@ -241,7 +240,7 @@ switch(@$_POST['op']) {
 					`prim`,
 					`viewer_id_add`
 				) VALUES (
-					".WS_ID.",
+					".APP_ID.",
 					".$compat_id.",
 					-".$count.",
 					'set',
@@ -256,7 +255,7 @@ switch(@$_POST['op']) {
 
 		//Удаление из заказа запчасти, привязанной к заявке
 		$sql = "DELETE FROM `zp_zakaz`
-				WHERE `ws_id`=".WS_ID."
+				WHERE `app_id`=".APP_ID."
 				  AND `zayav_id`=".$zayav_id."
 				  AND `zp_id`=".$zp_id;
 		query($sql);
@@ -266,11 +265,11 @@ switch(@$_POST['op']) {
 			'comment' => 1,
 			'p' => 'zayav',
 			'id' => $zayav_id,
-			'txt' => 'Установка запчасти: '.
-					 '<a class="zp-id" val="'.$zp_id.'">'.
-						_zpName($zp['name_id']).' '.
-						_vendorName($zp['base_vendor_id'])._modelName($zp['base_model_id']).
-					 '</a>'
+			'txt' => 'Установка запчасти: ' .
+				'<a class="zp-id" val="'.$zp_id.'">' .
+				_zpName($zp['name_id']).' ' .
+				_vendorName($zp['base_vendor_id'])._modelName($zp['base_model_id']) .
+				'</a>'
 		));
 
 		//добавление запчасти в расходы по заявке
@@ -283,14 +282,12 @@ switch(@$_POST['op']) {
 		$cena = query_value($sql);
 		$sql = "INSERT INTO `_zayav_expense` (
 							`app_id`,
-							`ws_id`,
 							`zayav_id`,
 							`category_id`,
 							`zp_id`,
 							`sum`
 						) VALUES (
 							".APP_ID.",
-							".WS_ID.",
 							".$zayav_id.",
 							2,
 							".$compat_id.",
@@ -315,20 +312,19 @@ switch(@$_POST['op']) {
 		$sql = "SELECT *
 				FROM `_zayav`
 				WHERE `app_id`=".APP_ID."
-				  AND `ws_id`=".WS_ID."
 				  AND `nomer`=".$nomer."
 				  AND `status`
 				LIMIT 1";
 		if(!$z = query_assoc($sql, GLOBAL_MYSQL_CONNECT))
 			$send['html'] = '<span class="zayavNomerTab">Заявка не найдена</span>';
 		else
-			$send['html'] = '<table class="zayavNomerTab">'.
-				'<tr><td>'._zayavImg($z).
-					'<td><a href="'.URL.'&p=zayav&d=info&id='.$z['id'].'">'._deviceName($z['base_device_id']).'<br />'.
-						   _vendorName($z['base_vendor_id'])._modelName($z['base_model_id']).
-						'</a>'.
-			'</table>'.
-			'<input type="hidden" id="zayavNomerId" value="'.$z['id'].'" />';
+			$send['html'] = '<table class="zayavNomerTab">' .
+				'<tr><td>'._zayavImg($z) .
+				'<td><a href="'.URL.'&p=zayav&d=info&id='.$z['id'].'">'._deviceName($z['base_device_id']).'<br />' .
+				_vendorName($z['base_vendor_id'])._modelName($z['base_model_id']) .
+				'</a>' .
+				'</table>' .
+				'<input type="hidden" id="zayavNomerId" value="'.$z['id'].'" />';
 
 		$send['html'] = utf8($send['html']);
 		jsonSuccess($send);
@@ -345,13 +341,13 @@ switch(@$_POST['op']) {
 			jsonError();
 
 		$sql = "DELETE FROM `zayav_kvit`
-				WHERE `ws_id`=".WS_ID."
+				WHERE `app_id`=".APP_ID."
 				  AND !`active`
 				  AND `zayav_id`=".$zayav_id;
 		query($sql);
 
 		$sql = "INSERT INTO `zayav_kvit` (
-					`ws_id`,
+					`app_id`,
 					`zayav_id`,
 					`nomer`,
 					`dtime`,
@@ -374,7 +370,7 @@ switch(@$_POST['op']) {
 					`active`,
 					`viewer_id_add`
 				) VALUES (
-					".WS_ID.",
+					".APP_ID.",
 					".$zayav_id.",
 					".$z['nomer'].",
 					'".$z['dtime_add']."',
@@ -460,14 +456,14 @@ switch(@$_POST['op']) {
 			jsonError();
 
 		$sql = "INSERT INTO `setup_cartridge` (
-					`ws_id`,
+					`app_id`,
 					`type_id`,
 					`name`,
 					`cost_filling`,
 					`cost_restore`,
 					`cost_chip`
 				) VALUES (
-					".WS_ID.",
+					".APP_ID.",
 					".$type_id.",
 					'".addslashes($name)."',
 					".$cost_filling.",
@@ -477,7 +473,7 @@ switch(@$_POST['op']) {
 		query($sql);
 		$send['insert_id'] = mysql_insert_id();
 
-		xcache_unset(CACHE_PREFIX.'cartridge'.WS_ID);
+		xcache_unset(CACHE_PREFIX.'cartridge'.APP_ID);
 		GvaluesCreate();
 
 		_history(array(
@@ -488,7 +484,7 @@ switch(@$_POST['op']) {
 		if($_POST['from'] == 'setup')
 			$send['spisok'] = utf8(setup_service_cartridge_spisok());
 		else {
-			$send['spisok'] = query_selArray("SELECT `id`,`name` FROM `setup_cartridge` WHERE `ws_id`=".WS_ID." ORDER BY `name`");
+			$send['spisok'] = query_selArray("SELECT `id`,`name` FROM `setup_cartridge` WHERE `app_id`=".APP_ID." ORDER BY `name`");
 		}
 
 		jsonSuccess($send);
@@ -559,8 +555,8 @@ switch(@$_POST['op']) {
 		query($sql);
 
 		$changes =
-			_historyChange('Модель', _cartridgeName($r['cartridge_id']), _cartridgeName($cartridge_id)).
-			_historyChange('Стоимость', $r['cost'], $cost).
+			_historyChange('Модель', _cartridgeName($r['cartridge_id']), _cartridgeName($cartridge_id)) .
+			_historyChange('Стоимость', $r['cost'], $cost) .
 			_historyChange('Примечание', $r['prim'], $prim);
 		if($r['filling'] != $filling || $r['restore'] != $restore || $r['chip'] != $chip) {
 			$old = array();
@@ -671,14 +667,14 @@ switch(@$_POST['op']) {
 		$summa = round($count * $cena, 2);
 
 		$sql = "INSERT INTO `zp_move` (
-					`ws_id`,
+					`app_id`,
 					`zp_id`,
 					`count`,
 					`cena`,
 					`summa`,
 					`viewer_id_add`
 				) VALUES (
-					".WS_ID.",
+					".APP_ID.",
 					".$zp_id.",
 					".$count.",
 					'".$cena."',
@@ -701,11 +697,11 @@ switch(@$_POST['op']) {
 			jsonError();
 		$zp_id = _zpCompatId($_POST['zp_id']);
 		$count = intval($_POST['count']);
-		$zakazId = query_value("SELECT `id` FROM `zp_zakaz` WHERE `ws_id`=".WS_ID." AND `zp_id`=".$zp_id." AND `zayav_id`=0 LIMIT 1");
+		$zakazId = query_value("SELECT `id` FROM `zp_zakaz` WHERE `app_id`=".APP_ID." AND `zp_id`=".$zp_id." AND `zayav_id`=0 LIMIT 1");
 		if($count > 0) {
 			$sql = "SELECT IFNULL(SUM(`count`),0)
 					FROM `zp_zakaz`
-					WHERE `ws_id`=".WS_ID."
+					WHERE `app_id`=".APP_ID."
 					  AND `zp_id`=".$zp_id."
 					  AND `zayav_id`>0
 					LIMIT 1";
@@ -718,12 +714,12 @@ switch(@$_POST['op']) {
 				query("UPDATE `zp_zakaz` SET `count`=".$count." WHERE `id`=".$zakazId);
 			else {
 				$sql = "INSERT INTO `zp_zakaz` (
-							`ws_id`,
+							`app_id`,
 							`zp_id`,
 							`count`,
 							`viewer_id_add`
 						) VALUES (
-							".WS_ID.",
+							".APP_ID.",
 							".$zp_id.",
 							".$count.",
 							".VIEWER_ID."
@@ -731,7 +727,7 @@ switch(@$_POST['op']) {
 				query($sql);
 			}
 		} else
-			query("DELETE FROM `zp_zakaz` WHERE `ws_id`=".WS_ID." AND `zp_id`=".$zp_id);
+			query("DELETE FROM `zp_zakaz` WHERE `app_id`=".APP_ID." AND `zp_id`=".$zp_id);
 		jsonSuccess();
 		break;
 	case 'zp_edit':
@@ -790,7 +786,6 @@ switch(@$_POST['op']) {
 		//внесение платежа
 		$sql = "INSERT INTO `_money_income` (
 					`app_id`,
-					`ws_id`,
 					`invoice_id`,
 					`zp_id`,
 					`sum`,
@@ -798,7 +793,6 @@ switch(@$_POST['op']) {
 					`viewer_id_add`
 				) VALUES (
 					".APP_ID.",
-					".WS_ID.",
 					".$invoice_id.",
 					".$zp_id.",
 					".$sum.",
@@ -812,7 +806,7 @@ switch(@$_POST['op']) {
 
 		//внесение движения запчасти
 		$sql = "INSERT INTO `zp_move` (
-				`ws_id`,
+				`app_id`,
 				`zp_id`,
 				`count`,
 				`cena`,
@@ -823,7 +817,7 @@ switch(@$_POST['op']) {
 				`prim`,
 				`viewer_id_add`
 			) VALUES (
-				".WS_ID.",
+				".APP_ID.",
 				".$zp_id.",
 				-".$count.",
 				".$cena.",
@@ -855,10 +849,17 @@ switch(@$_POST['op']) {
 			jsonError();
 
 		switch($_POST['type']) {
-			case 'defect': $type = 17; break;
-			case 'return': $type = 16; break;
-			case 'writeoff': $type = 15; break;
-			default: jsonError();
+			case 'defect':
+				$type = 17;
+				break;
+			case 'return':
+				$type = 16;
+				break;
+			case 'writeoff':
+				$type = 15;
+				break;
+			default:
+				jsonError();
 		}
 
 		$zp_id = _zpCompatId($zp_id);
@@ -866,14 +867,14 @@ switch(@$_POST['op']) {
 		$prim = _txt($_POST['prim']);
 
 		$sql = "INSERT INTO `zp_move` (
-					`ws_id`,
+					`app_id`,
 					`zp_id`,
 					`count`,
 					`type`,
 					`prim`,
 					`viewer_id_add`
 				) VALUES (
-					".WS_ID.",
+					".APP_ID.",
 					".$zp_id.",
 					".$count.",
 					'".$_POST['type']."',
@@ -903,13 +904,13 @@ switch(@$_POST['op']) {
 		if(!$id = _num($_POST['id']))
 			jsonError();
 
-		$sql = "SELECT * FROM `zp_move` WHERE `ws_id`=".WS_ID." AND `id`=".$id;
+		$sql = "SELECT * FROM `zp_move` WHERE `app_id`=".APP_ID." AND `id`=".$id;
 		if(!$move = query_assoc($sql))
 			jsonError();
 
 		$sql = "SELECT `id`
 				FROM `zp_move`
-				WHERE `ws_id`=".WS_ID."
+				WHERE `app_id`=".APP_ID."
 				  AND `zp_id`="._zpCompatId($move['zp_id'])."
 				ORDER BY `id` DESC
 				LIMIT 1";
@@ -924,7 +925,6 @@ switch(@$_POST['op']) {
 			$sql = "SELECT *
 					FROM `_money_income`
 					WHERE `app_id`=".APP_ID."
-					  AND `ws_id`=".WS_ID."
 					  AND !`deleted`
 					  AND `id`=".$move['income_id'];
 			if($r = query_assoc($sql, GLOBAL_MYSQL_CONNECT)) {
@@ -1105,10 +1105,10 @@ switch(@$_POST['op']) {
 				$diff = '<span>'.($res > 0 ? '+' : '').$res.'</span>';
 			}
 			$upd .=
-				'<tr><td class="row">'.$ass[$r['row']].
-					'<td>'.($r['row'] == 'cena' ? '<b>'.$r['old'].'</b>' : $r['old']).
-					'<td>'.($r['row'] == 'cena' ? '<b>'.$r['new'].'</b>' : $r['new']).$diff.
-					'<td class="dtime">'.FullData($r['dtime_add']);
+				'<tr><td class="row">'.$ass[$r['row']] .
+				'<td>'.($r['row'] == 'cena' ? '<b>'.$r['old'].'</b>' : $r['old']) .
+				'<td>'.($r['row'] == 'cena' ? '<b>'.$r['new'].'</b>' : $r['new']).$diff .
+				'<td class="dtime">'.FullData($r['dtime_add']);
 		}
 
 		if($upd)
@@ -1123,101 +1123,4 @@ switch(@$_POST['op']) {
 
 		jsonSuccess($send);
 		break;
-
-
-	case 'salary_bonus_spisok':
-		if(!$worker_id = _num($_POST['worker_id']))
-			jsonError();
-		if(!$year = _num($_POST['year']))
-			jsonError();
-		if(!$week = _num($_POST['week']))
-			jsonError();
-		$send['spisok'] = utf8(salary_worker_bonus($worker_id, $year, $week));
-		jsonSuccess($send);
-		break;
-	case 'salary_bonus':
-		if(!$worker_id = _num($_POST['worker_id']))
-			jsonError();
-		if(!$year = _num($_POST['year']))
-			jsonError();
-		if(!$week = _num($_POST['week']))
-			jsonError();
-
-		$bonus = array();
-		$bonusSum = 0;
-		foreach(explode(',', $_POST['bonus']) as $ex) {
-			$r = explode(':', $ex);
-			if(!$id = _num($r[0]))
-				jsonError();
-			$expense = _num($r[1]);
-			$sum = intval($r[2]);
-			$bonus[$id] = array(
-				'expense' => $expense,
-				'sum' => $sum
-			);
-			$bonusSum += $sum;
-		}
-
-		$sql = "INSERT INTO `zayav_expense` (
-					`ws_id`,
-					`worker_id`,
-					`sum`,
-					`mon`,
-					`year`
-				) VALUES (
-					".WS_ID.",
-					".$worker_id.",
-					".$bonusSum.",
-					".intval(strftime('%m')).",
-					".strftime('%Y')."
-				)";
-		query($sql);
-		$insert_id = mysql_insert_id();
-
-		$first_day = date('Y-m-d', ($week - 1) * 7 * 86400 + strtotime('1/1/'.$year) - date('w', strtotime('1/1/'.$year)) * 86400 + 86400);
-		$last_day = date('Y-m-d', $week * 7 * 86400 + strtotime('1/1/'.$year) - date('w', strtotime('1/1/'.$year)) * 86400);
-		$about = 'Бонус по платежам, '.__viewerRules($worker_id, 'RULES_MONEY_PROCENT').'%:'.
-				 '<br />'.
-				 '<a class="bonus-show" val="'.$insert_id.'">'.
-					$week.'-я неделя ('.FullData($first_day).' - '.FullData($last_day).')'.
-				 '</a>.';
-		query("UPDATE `zayav_expense` SET `txt`='".addslashes($about)."' WHERE `id`=".$insert_id);
-
-		// Внесение списка бонусов
-		$arr = array();
-		foreach($bonus as $id => $r)
-			$arr[] = '('.
-				WS_ID.','.
-				$insert_id.','.
-				$id.','.
-				$r['expense'].','.
-				$r['sum'].
-			')';
-		$sql = "INSERT INTO `zayav_expense_bonus` (
-					`ws_id`,
-					`expense_id`,
-					`money_id`,
-					`expense`,
-					`bonus`
-				) VALUES ".implode(',', $arr);
-		query($sql);
-
-		jsonSuccess();
-		break;
-	case 'salary_bonus_show':// просмотр бонуса по платежам
-		if(!$expense_id = _num($_POST['expense_id']))
-			jsonError();
-
-		$sql = "SELECT * FROM `zayav_expense` WHERE `id`=".$expense_id;
-		if(!$r = query_assoc($sql))
-			jsonError();
-
-		$send['html'] = utf8(salary_worker_bonus_show($r));
-
-		jsonSuccess($send);
-		break;
 }
-
-
-
-

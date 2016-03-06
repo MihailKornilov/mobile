@@ -91,17 +91,17 @@ function zp_spisok($v) {
 	}
 	switch($filter['menu']) {
 		case '1':
-			$sql = "SELECT `zp_id` FROM `zp_avai` WHERE `ws_id`=".WS_ID;
+			$sql = "SELECT `zp_id` FROM `zp_avai` WHERE `app_id`=".APP_ID;
 			$ids = query_ids($sql);
 			$cond .= " AND `c`.`id` IN (".$ids.")";
 			break;
 		case '2':
-			$sql = "SELECT `zp_id` FROM `zp_avai` WHERE `ws_id`=".WS_ID;
+			$sql = "SELECT `zp_id` FROM `zp_avai` WHERE `app_id`=".APP_ID;
 			$ids = query_ids($sql);
 			$cond .= " AND `c`.`id` NOT IN (".$ids.")";
 			break;
 		case '3':
-			$sql = "SELECT `zp_id` FROM `zp_zakaz` WHERE `ws_id`=".WS_ID." GROUP BY `zp_id`";
+			$sql = "SELECT `zp_id` FROM `zp_zakaz` WHERE `app_id`=".APP_ID." GROUP BY `zp_id`";
 			$ids = query_ids($sql);
 			$cond .= " AND `c`.`id` IN (".$ids.")";
 			break;
@@ -188,7 +188,7 @@ function zp_spisok($v) {
 				`zp_id`,
 				`count`
 			FROM `zp_avai`
-			WHERE `ws_id`=".WS_ID."
+			WHERE `app_id`=".APP_ID."
 			  AND `zp_id` IN (".implode(',', $ids).")";
 	$q = query($sql);
 	while($r = mysql_fetch_assoc($q))
@@ -200,7 +200,7 @@ function zp_spisok($v) {
 				`zp_id`,
 				SUM(`count`) AS `count`
 			FROM `zp_zakaz`
-			WHERE `ws_id`=".WS_ID."
+			WHERE `app_id`=".APP_ID."
 			  AND `zp_id` IN (".implode(',', $ids).")
 			GROUP BY `zp_id`";
 	$q = query($sql);
@@ -374,9 +374,9 @@ function zp_info($zp_id) {
 		$zp['color_id'] = $compat['color_id'];
 	}
 
-	$avai = query_value("SELECT `count` FROM `zp_avai` WHERE `ws_id`=".WS_ID." AND `zp_id`=".$compat_id);
+	$avai = query_value("SELECT `count` FROM `zp_avai` WHERE `app_id`=".APP_ID." AND `zp_id`=".$compat_id);
 
-	$zakazCount = query_value("SELECT IFNULL(SUM(`count`),0) FROM `zp_zakaz` WHERE `ws_id`=".WS_ID." AND `zp_id`=".$compat_id);
+	$zakazCount = query_value("SELECT IFNULL(SUM(`count`),0) FROM `zp_zakaz` WHERE `app_id`=".APP_ID." AND `zp_id`=".$compat_id);
 	$zakazEdit = '<span class="zzedit">ано: <tt>Ч</tt><b>'.$zakazCount.'</b><tt>+</tt></span>';
 
 	$compatSpisok = zp_compat_spisok($zp_id, $compat_id);
@@ -454,7 +454,7 @@ function zp_info($zp_id) {
 function zp_move($zp_id, $page=1) {
 	$sql = "SELECT COUNT(`id`)
 			FROM `zp_move`
-			WHERE `ws_id`=".WS_ID."
+			WHERE `app_id`=".APP_ID."
 			  AND `zp_id`=".$zp_id;
 	$all = query_value($sql);
 	if(!$all)
@@ -464,7 +464,7 @@ function zp_move($zp_id, $page=1) {
 	$start = ($page - 1) * $limit;
 	$sql = "SELECT *
 			FROM `zp_move`
-			WHERE `ws_id`=".WS_ID."
+			WHERE `app_id`=".APP_ID."
 			  AND `zp_id`=".$zp_id."
 			ORDER BY `id` DESC
 			LIMIT ".$start.",".$limit;

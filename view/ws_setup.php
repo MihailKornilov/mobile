@@ -20,22 +20,12 @@ function setup() {
 
 function setup_info() {
 	$sql = "SELECT *
-			FROM `_ws`
-			WHERE `app_id`=".APP_ID."
-			  AND `id`=".WS_ID;
-	if(!$ws = query_assoc($sql, GLOBAL_MYSQL_CONNECT)) {
-		_cacheClear();
-		header('Location:'.URL);
-	}
-
-
-	$sql = "SELECT *
-			FROM `setup`
-			WHERE `ws_id`=".WS_ID;
-	$setup = query_assoc($sql);
+			FROM `_app`
+			WHERE `id`=".APP_ID;
+	$app = query_assoc($sql, GLOBAL_MYSQL_CONNECT);
 
 	$devs = array();
-	foreach(explode(',', $setup['devs']) as $d)
+	foreach(explode(',', $app['devs']) as $d)
 		$devs[$d] = $d;
 
 	$sql = "SELECT `id`,`name_mn` FROM `base_device` ORDER BY `sort`";
@@ -50,10 +40,8 @@ function setup_info() {
 	'<div id="setup_info">'.
 		'<div class="headName">Основная информация</div>'.
 		'<table class="tab">'.
-			'<tr><td class="label">Название организации:<td><b>'.$ws['name'].'</b>'.
-			'<tr><td class="label">Город:<td>'.$ws['city_name'].', '.$ws['country_name'].
-			'<tr><td class="label">Главный администратор:<td>'._viewer($ws['admin_id'], 'viewer_name').
-			'<tr><td class="label">Вид организации:<td><input type="hidden" id="type" value="'.$setup['ws_type_id'].'" />'.
+			'<tr><td class="label">Название организации:<td><b>'.$app['name'].'</b>'.
+			'<tr><td class="label">Вид организации:<td><input type="hidden" id="type" value="'.$app['ws_type_id'].'" />'.
 			'<tr><td><td>'._button('info_save', 'Сохранить').
 		'</table>'.
 
@@ -61,9 +49,9 @@ function setup_info() {
 		'<div id="devs">'.$checkDevs.'</div>'.
 
 	(VIEWER_ADMIN ?
-		'<div class="headName">Удаление '._wsType($setup['ws_type_id'], 2).'</div>'.
-		'<div class="del_inf">'._wsType($setup['ws_type_id']).', а также все данные удаляются без возможности восстановления.</div>'.
-		_button('info_del', 'Удалить '._wsType($setup['ws_type_id'], 4))
+		'<div class="headName">Удаление '._wsType($app['ws_type_id'], 2).'</div>'.
+		'<div class="del_inf">'._wsType($app['ws_type_id']).', а также все данные удаляются без возможности восстановления.</div>'.
+		_button('info_del', 'Удалить '._wsType($app['ws_type_id'], 4))
 	: '').
 
 	'</div>';
@@ -86,7 +74,7 @@ function setup_service_cartridge_spisok($edit_id=0) {
 			FROM `setup_cartridge` `s`
 			  LEFT JOIN `zayav_cartridge` AS `z`
 			  ON `s`.`id`=`z`.`cartridge_id`
-			WHERE `ws_id`=".WS_ID."
+			WHERE `app_id`=".APP_ID."
 			  AND `type_id`=".$type_id."
 			GROUP BY `s`.`id`
 			ORDER BY `name`";
@@ -127,57 +115,3 @@ function setup_service_cartridge_spisok($edit_id=0) {
 	}
 	return $send ? $send : 'Список пуст.';
 }//setup_service_cartridge_spisok()
-
-/*
-function _setupRules($rls, $admin=0) {
-	$rules = array(
-		'RULES_MONEY_PROCENT' => array(	// процент от платежей
-			'def' => 0
-		),
-		'RULES_APPENTER' => array(	// Разрешать вход в приложение
-			'def' => 0,
-			'admin' => 1,
-			'childs' => array(
-				'RULES_INFO' => array(	    // Информация о мастерской
-					'def' => 0,
-					'admin' => 1
-				),
-				'RULES_WORKER' => array(	// Сотрудники
-					'def' => 0,
-					'admin' => 1
-				),
-				'RULES_RULES' => array(	    // Настройка прав сотрудников
-					'def' => 0,
-					'admin' => 1
-				),
-				'RULES_INVOICE' => array(	// Счета
-					'def' => 0,
-					'admin' => 1
-				),
-				'RULES_HISTORYSHOW' => array(// Видит историю действий
-					'def' => 0,
-					'admin' => 1
-				),
-				'RULES_HISTORYTRANSFER' => array(// Видит историю переводов
-					'def' => 0,
-					'admin' => 1
-				),
-				'RULES_MONEY' => array(	    // Может видеть платежи: только свои, все платежи
-					'def' => 0,
-					'admin' => 1
-				)
-			)
-		)
-	);
-	$ass = array();
-	foreach($rules as $i => $r) {
-		$ass[$i] = $admin && isset($r['admin']) ? $r['admin'] : (isset($rls[$i]) ? $rls[$i] : $r['def']);
-		//$parent = $ass[$i];
-		if(isset($r['childs']))
-			foreach($r['childs'] as $ci => $cr)
-				$ass[$ci] = $admin && isset($cr['admin']) ? $cr['admin'] : (isset($rls[$ci]) ? $rls[$ci] : $cr['def']);
-	}
-	return $ass;
-}//_setupRules()
-*/
-
